@@ -60,6 +60,7 @@ class SupplierPaymentValidationTests {
         procurementService = new ProcurementService(mock(PurchaseOrderRepository.class),
                 mock(PurchaseOrderLineRepository.class), mock(ProcurementDocumentSequenceRepository.class),
                 mock(GoodsReceiptRepository.class), supplierInvoiceRepository, supplierPaymentRepository,
+                mock(com.bemo.hr.trade.procurement.application.SupplierPaymentPlanService.class),
                 mock(SupplierReturnRepository.class), businessPartyRepository, mock(PartnerLedgerEntryRepository.class),
                 mock(AuditService.class), mock(ProcurementExcelExporter.class), mock(OperationsService.class),
                 tenantApplicationRepository, mock(CurrencyRepository.class),
@@ -110,6 +111,71 @@ class SupplierPaymentValidationTests {
     }
 
     @Test
+    void discountedSettlementClosesInvoiceAndBooksDiscountEntry() {
+        org.mockito.ArgumentCaptor<com.bemo.hr.operations.PartnerLedgerEntry> ledger =
+                org.mockito.ArgumentCaptor.forClass(com.bemo.hr.operations.PartnerLedgerEntry.class);
+        var ledgerRepo = mock(com.bemo.hr.operations.PartnerLedgerEntryRepository.class);
+        // rebuild service with a capturable ledger repo (all other mocks reused)
+        procurementService = new ProcurementService(mock(PurchaseOrderRepository.class),
+                mock(PurchaseOrderLineRepository.class), mock(ProcurementDocumentSequenceRepository.class),
+                mock(GoodsReceiptRepository.class), supplierInvoiceRepository, supplierPaymentRepository,
+                mock(com.bemo.hr.trade.procurement.application.SupplierPaymentPlanService.class),
+                mock(SupplierReturnRepository.class), businessPartyRepository, ledgerRepo,
+                mock(AuditService.class), mock(ProcurementExcelExporter.class), mock(OperationsService.class),
+                tenantApplicationRepository, mock(CurrencyRepository.class),
+                new IdempotencyService(idempotencyKeyRepository()), mock(FiscalPeriodGuard.class),
+                documentNumberService,
+                mock(com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository.class),
+                mock(com.bemo.hr.budget.application.BudgetService.class),
+                mock(ProcurementAccountingService.class));
+        com.bemo.hr.shared.security.TenantApplication app = new com.bemo.hr.shared.security.TenantApplication("TEST", "Test App");
+        when(tenantApplicationRepository.findById("app-1")).thenReturn(Optional.of(app));
+        when(supplierPaymentRepository.save(any(com.bemo.hr.trade.procurement.domain.SupplierPayment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentSequenceRepository.findByDocumentTypeAndYear("SUPPLIER_PAYMENT", 2026))
+                .thenReturn(Optional.of(new com.bemo.hr.shared.numbering.DocumentNumberSequence("SUPPLIER_PAYMENT", 2026, 1)));
+
+        ProcurementApi.SupplierPaymentPayload payload = new ProcurementApi.SupplierPaymentPayload(
+                null, LocalDate.of(2026, 8, 6).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                "supplier-a", invoice.getId(), new BigDecimal("90.00"), new BigDecimal("10.00"),
+                "BANK_TRANSFER", "settled for less", "op-disc");
+
+        ProcurementApi.SupplierPaymentResponse response = procurementService.createSupplierPayment(payload);
+
+        assertThat(response.settlementDiscount()).isEqualByComparingTo("10.00");
+        assertThat(invoice.getStatus()).isEqualTo("PAID");
+        org.mockito.Mockito.verify(ledgerRepo, org.mockito.Mockito.times(2)).save(ledger.capture());
+        assertThat(ledger.getAllValues().get(1).getEntryType()).isEqualTo("SUPPLIER_SETTLEMENT_DISCOUNT");
+        assertThat(ledger.getAllValues().get(1).getAmountDelta()).isEqualByComparingTo("10.00");
+        // paidAmount counts cash + discount, so the invoice reports fully paid on any further attempt
+        assertThatThrownBy(() -> procurementService.createSupplierPayment(payload("supplier-a", new BigDecimal("0.01"))))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("PROC_INVOICE_ALREADY_PAID"));
+    }
+
+    @Test
+    void rejectsNegativeSettlementDiscount() {
+        ProcurementApi.SupplierPaymentPayload payload = new ProcurementApi.SupplierPaymentPayload(
+                null, LocalDate.of(2026, 8, 6).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                "supplier-a", invoice.getId(), new BigDecimal("20.00"), new BigDecimal("-1.00"),
+                "BANK_TRANSFER", null, "op-neg");
+        assertThatThrownBy(() -> procurementService.createSupplierPayment(payload))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("PROC_SETTLEMENT_DISCOUNT_INVALID"));
+    }
+
+    @Test
+    void rejectsDiscountedPaymentAboveOutstanding() {
+        ProcurementApi.SupplierPaymentPayload payload = new ProcurementApi.SupplierPaymentPayload(
+                null, LocalDate.of(2026, 8, 6).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                "supplier-a", invoice.getId(), new BigDecimal("95.00"), new BigDecimal("6.00"),
+                "BANK_TRANSFER", null, "op-over");
+        assertThatThrownBy(() -> procurementService.createSupplierPayment(payload))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("PROC_SETTLEMENT_DISCOUNT_EXCEEDS"));
+    }
+
+    @Test
     void autoGeneratesPaymentNumberWhenDocumentNumberingEnabled() {
         com.bemo.hr.shared.security.TenantApplication app = new com.bemo.hr.shared.security.TenantApplication("TEST", "Test App");
         when(tenantApplicationRepository.findById("app-1")).thenReturn(Optional.of(app));
@@ -121,16 +187,23 @@ class SupplierPaymentValidationTests {
 
         ProcurementApi.SupplierPaymentPayload payload = new ProcurementApi.SupplierPaymentPayload(
                 null, LocalDate.of(2026, 8, 6).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
-                "supplier-a", invoice.getId(), new BigDecimal("50.00"), "BANK_TRANSFER", null, "op-auto");
+                "supplier-a", invoice.getId(), new BigDecimal("50.00"), null, "BANK_TRANSFER", null, "op-auto");
 
         ProcurementApi.SupplierPaymentResponse response = procurementService.createSupplierPayment(payload);
 
         assertThat(response.paymentNumber()).isEqualTo("PMT-2026-00001");
     }
 
+    private IdempotencyKeyRepository idempotencyKeyRepository() {
+        IdempotencyKeyRepository repo = mock(IdempotencyKeyRepository.class);
+        when(repo.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString())).thenReturn(1);
+        when(repo.findByOperationTypeAndOperationId(anyString(), anyString())).thenReturn(Optional.empty());
+        return repo;
+    }
+
     private ProcurementApi.SupplierPaymentPayload payload(String supplierId, BigDecimal amount) {
         long paymentDate = LocalDate.of(2026, 7, 29).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
         return new ProcurementApi.SupplierPaymentPayload("PMT-100", paymentDate, supplierId,
-                invoice.getId(), amount, "BANK_TRANSFER", null, "op-1");
+                invoice.getId(), amount, null, "BANK_TRANSFER", null, "op-1");
     }
 }

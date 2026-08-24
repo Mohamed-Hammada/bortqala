@@ -27,6 +27,12 @@
 **EN:** The payment dialog limits invoice choices to open invoices for the selected supplier and clears an incompatible invoice when the supplier changes. Each option shows invoice number, date, currency, total, and outstanding balance, and the amount cannot exceed that balance.
 
 **AR:** تقصر نافذة الدفع قائمة الفواتير على الفواتير المفتوحة للمورد المختار، وتلغي اختيار الفاتورة غير المتوافقة عند تغيير المورد. ويعرض كل خيار رقم الفاتورة وتاريخها وعملتها وإجماليها ورصيدها المتبقي، ولا تسمح النافذة بتجاوز هذا الرصيد.
+
+## Installment plans / خطط الأقساط
+
+**EN:** Open invoices expose an installment-plan action. Creating a plan splits the live outstanding balance into equal monthly installments (2–60; the last row absorbs rounding); an existing plan renders as read-only rows with per-installment paid/scheduled badges and epoch-milli due dates formatted through `core/date`. Rows load from `GET /api/v1/supplier-invoices/{id}/payment-plan`; creation posts `{installmentCount, firstDueDate}` to the same URL, shows a success toast, and reloads the dialog state.
+
+**AR:** تتيح الفواتير المفتوحة إجراء خطة الأقساط. تقسّم الخطة الرصيد المتبقي الفعلي إلى أقساط شهرية متساوية (٢–٦٠، ويمتص القسط الأخير كسور التقريب)، وتُعرض الخطة القائمة صفوفاً للقراءة فقط مع شارة مدفوع/مجدول لكل قسط وتواريخ استحقاق بأجزاء المللي منسّقة عبر `core/date`. تُجلب الصفوف من `GET /api/v1/supplier-invoices/{id}/payment-plan`، ويُنشأ الطلب بإرسال `{installmentCount, firstDueDate}` إلى العنوان نفسه مع رسالة نجاح وإعادة تحميل حالة النافذة.
 # Currency snapshot UX / تجربة لقطة العملة
 
 **EN:** PO and invoice dialogs show the exchange rate and totals in transaction and base currencies, require a reason for manual overrides, and display the frozen values returned by the server.
@@ -44,3 +50,9 @@
 **AR:** يمكن للمستخدم تحديد عدة فواتير مفتوحة للمورد والعملة نفسيهما، وتعديل تخصيص كل فاتورة ضمن رصيدها المتبقي، ثم مراجعة جميع مراجع دفعات المورد الناتجة من صف المقترح. تظل حالات التحميل والفراغ والخطأ والانشغال والاعتماد والتنفيذ واضحة.
 
 **AR:** عند تعديل أمر شراء محفوظ تظهر حقول لقطة سعر الصرف مقفلة بوضوح، بينما تظل حقول المورد والشروط والصنف والكمية وسعر الوحدة قابلة للتعديل.
+
+## Purchase requests (WP-03) / طلبات الشراء
+
+**EN:** A dedicated first tab manages the full purchase-request lifecycle: create/edit drafts with item lines, submit, approve or reject (procurement-manager roles), and convert approved requests into exactly one purchase order by picking a supplier. Status badges follow DRAFT → SUBMITTED → APPROVED → CONVERTED (or REJECTED/CANCELLED); destructive actions confirm through the shared dialog. The list reloads from `GET /api/v1/purchase-requests`, creation posts epoch-milli `neededBy` plus line snapshots, and conversion calls `POST /api/v1/purchase-requests/{id}/convert {supplierId}` then refreshes both request and PO lists.
+
+**AR:** يدير تبويب "طلبات الشراء" دورة الطلب كاملة: إنشاء المسودات وتعديلها ببنود الأصناف، الإرسال، الاعتماد أو الرفض (أدوار مدير المشتريات)، وتحويل الطلب المعتمد إلى أمر شراء واحد باختيار المورد. تتبع شارات الحالة مسار DRAFT ← SUBMITTED ← APPROVED ← CONVERTED (أو REJECTED/CANCELLED)، وتُؤكد الإجراءات الحساسة عبر نافذة التأكيد المشتركة. تُجلب القائمة من `GET /api/v1/purchase-requests`، ويُرسل الإنشاء بتاريخ مطلوب بأجزاء المللي مع لقطة البنود، ويستدعي التحويل `POST /api/v1/purchase-requests/{id}/convert {supplierId}` ثم يحدّث قائمتي الطلبات وأوامر الشراء.

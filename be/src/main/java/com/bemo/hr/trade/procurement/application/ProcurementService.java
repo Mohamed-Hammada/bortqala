@@ -46,6 +46,7 @@ public class ProcurementService {
     private final GoodsReceiptRepository goodsReceiptRepository;
     private final SupplierInvoiceRepository supplierInvoiceRepository;
     private final SupplierPaymentRepository supplierPaymentRepository;
+    private final com.bemo.hr.trade.procurement.application.SupplierPaymentPlanService supplierPaymentPlanService;
     private final SupplierReturnRepository supplierReturnRepository;
     private final BusinessPartyRepository businessPartyRepository;
     private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
@@ -67,6 +68,7 @@ public class ProcurementService {
                               GoodsReceiptRepository goodsReceiptRepository,
                               SupplierInvoiceRepository supplierInvoiceRepository,
                               SupplierPaymentRepository supplierPaymentRepository,
+                              SupplierPaymentPlanService supplierPaymentPlanService,
                               SupplierReturnRepository supplierReturnRepository,
                               BusinessPartyRepository businessPartyRepository,
                               PartnerLedgerEntryRepository partnerLedgerEntryRepository,
@@ -87,6 +89,7 @@ public class ProcurementService {
         this.goodsReceiptRepository = goodsReceiptRepository;
         this.supplierInvoiceRepository = supplierInvoiceRepository;
         this.supplierPaymentRepository = supplierPaymentRepository;
+        this.supplierPaymentPlanService = supplierPaymentPlanService;
         this.supplierReturnRepository = supplierReturnRepository;
         this.businessPartyRepository = businessPartyRepository;
         this.partnerLedgerEntryRepository = partnerLedgerEntryRepository;
@@ -436,10 +439,18 @@ public class ProcurementService {
         requirePayableSupplier(payload.supplierId());
         if (payload.amount().signum() <= 0)
             throw new BusinessRuleException("Payment amount must be greater than zero.", "PROC_PAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
+        BigDecimal discount = payload.settlementDiscount() == null ? BigDecimal.ZERO : payload.settlementDiscount();
+        if (discount.compareTo(BigDecimal.ZERO) < 0)
+            throw new BusinessRuleException("Settlement discount cannot be negative.", "PROC_SETTLEMENT_DISCOUNT_INVALID", HttpStatus.BAD_REQUEST);
         BigDecimal paidBefore = paidAmount(inv.getId());
         BigDecimal outstanding = inv.getNetAmount().subtract(paidBefore);
-        if (payload.amount().compareTo(outstanding) > 0)
+        if (payload.amount().add(discount).compareTo(outstanding) > 0) {
+            if (discount.compareTo(BigDecimal.ZERO) > 0)
+                throw new BusinessRuleException("Payment plus settlement discount (" + payload.amount().add(discount)
+                        + ") exceeds the outstanding balance of " + outstanding + " " + inv.getCurrencyCode() + ".",
+                        "PROC_SETTLEMENT_DISCOUNT_EXCEEDS", HttpStatus.CONFLICT);
             throw new BusinessRuleException("Payment amount exceeds the outstanding balance of " + outstanding + " " + inv.getCurrencyCode() + ".", "PROC_PAYMENT_EXCEEDS_BALANCE", HttpStatus.CONFLICT);
+        }
 
         LocalDate paymentDate = Instant.ofEpochMilli(payload.paymentDate()).atZone(ZoneOffset.UTC).toLocalDate();
         fiscalPeriodGuard.requireOpen(paymentDate);
@@ -447,20 +458,31 @@ public class ProcurementService {
                 payload.supplierInvoiceId(), payload.operationId(), payload.amount(), payload.paymentMethod(), payload.notes());
         pmt.freezeBeneficiaryBankAccount(businessPartyRepository.findById(payload.supplierId())
                 .map(com.bemo.hr.party.BusinessParty::getBankAccount).orElse(null));
+        if (discount.compareTo(BigDecimal.ZERO) > 0)
+            pmt.applySettlementDiscount(discount);
         SupplierPayment saved = supplierPaymentRepository.save(pmt);
 
-        inv.updatePaymentStatus(paidBefore.add(saved.getAmount()));
+        inv.updatePaymentStatus(paidBefore.add(saved.getAmount()).add(discount));
+        supplierPaymentPlanService.markInstallmentsSettled(inv.getId(), paidBefore.add(saved.getAmount()).add(discount));
 
         partnerLedgerEntryRepository.save(new PartnerLedgerEntry(
                 saved.getSupplierId(), "SUPPLIER_PAYMENT",
                 saved.getAmount().multiply(inv.getExchangeRate()).setScale(2, java.math.RoundingMode.HALF_UP),
                 saved.getPaymentNumber(), "Supplier payment: " + saved.getPaymentNumber(),
                 saved.getPaymentDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
+        if (discount.compareTo(BigDecimal.ZERO) > 0)
+            partnerLedgerEntryRepository.save(new PartnerLedgerEntry(
+                    saved.getSupplierId(), "SUPPLIER_SETTLEMENT_DISCOUNT",
+                    discount.multiply(inv.getExchangeRate()).setScale(2, java.math.RoundingMode.HALF_UP),
+                    saved.getPaymentNumber(), "Settlement discount on invoice " + inv.getInvoiceNumber()
+                            + " via payment " + saved.getPaymentNumber(),
+                    saved.getPaymentDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
         procurementAccountingService.postSupplierPayment(saved, inv, getCurrentUser());
+        String auditExtra = discount.compareTo(BigDecimal.ZERO) > 0 ? ",\"settlementDiscount\":" + discount : "";
         auditService.record("CREATE", "SUPPLIER_PAYMENT", saved.getId(), getCurrentUser(),
                 "{\"paymentNumber\":\"" + saved.getPaymentNumber() + "\",\"operationId\":\""
-                        + saved.getOperationId() + "\",\"amount\":" + saved.getAmount() + "}", null);
+                        + saved.getOperationId() + "\",\"amount\":" + saved.getAmount() + auditExtra + "}", null);
         log.info("SupplierPayment {} created with number {} successfully", saved.getId(), saved.getPaymentNumber());
         return toPaymentResponse(saved, resolveNames(List.of(saved.getSupplierId())));
     }
@@ -735,7 +757,7 @@ public class ProcurementService {
     private ProcurementApi.SupplierPaymentResponse toPaymentResponse(SupplierPayment pmt, Map<String, String> supplierNames) {
         return new ProcurementApi.SupplierPaymentResponse(pmt.getId(), pmt.getPaymentNumber(),
                 toEpochMs(pmt.getPaymentDate()), pmt.getSupplierId(), supplierNames.get(pmt.getSupplierId()),
-                pmt.getSupplierInvoiceId(), pmt.getAmount(), supplierPaymentCurrency(pmt), pmt.getPaymentMethod(), pmt.getNotes(),
+                pmt.getSupplierInvoiceId(), pmt.getAmount(), pmt.getSettlementDiscount(), supplierPaymentCurrency(pmt), pmt.getPaymentMethod(), pmt.getNotes(),
                 pmt.getOperationId(), pmt.getStatus(), pmt.getCreatedAt());
     }
 
@@ -747,7 +769,8 @@ public class ProcurementService {
     private BigDecimal paidAmount(String invoiceId) {
         return supplierPaymentRepository.findBySupplierInvoiceId(invoiceId).stream()
                 .filter(payment -> "POSTED".equals(payment.getStatus()))
-                .map(SupplierPayment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(payment -> payment.getAmount().add(payment.getSettlementDiscount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private String getCurrentUser() {

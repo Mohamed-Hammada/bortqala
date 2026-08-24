@@ -28,6 +28,12 @@ public class SupplierPayment {
     private String operationId;
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
+    @Column(name = "settlement_discount", nullable = false, precision = 15, scale = 2)
+    private BigDecimal settlementDiscount = BigDecimal.ZERO;
+
+    public BigDecimal getSettlementDiscount() { return settlementDiscount == null ? BigDecimal.ZERO : settlementDiscount; }
+
+    public void applySettlementDiscount(BigDecimal discount) { this.settlementDiscount = discount; }
     @Column(name = "payment_method", nullable = false, length = 30)
     private String paymentMethod;
     @Column(name = "beneficiary_bank_account", length = 100)

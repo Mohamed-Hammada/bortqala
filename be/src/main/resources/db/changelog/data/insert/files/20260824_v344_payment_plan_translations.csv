@@ -1,0 +1,33 @@
+id;translation_key;locale;text_value
+v344-001-en;PROC_PAYMENT_PLAN_ALREADY_EXISTS;en-US;An installment plan already exists for this invoice.
+v344-001-ar;PROC_PAYMENT_PLAN_ALREADY_EXISTS;ar-EG;توجد بالفعل خطة أقساط لهذه الفاتورة.
+v344-002-en;procurement.planTitle;en-US;Installment plan
+v344-002-ar;procurement.planTitle;ar-EG;خطة الأقساط
+v344-003-en;procurement.planOutstanding;en-US;Outstanding balance
+v344-003-ar;procurement.planOutstanding;ar-EG;الرصيد المتبقي
+v344-004-en;procurement.planColInstallment;en-US;No.
+v344-004-ar;procurement.planColInstallment;ar-EG;القسط
+v344-005-en;procurement.planColDueDate;en-US;Due date
+v344-005-ar;procurement.planColDueDate;ar-EG;تاريخ الاستحقاق
+v344-006-en;procurement.planColAmount;en-US;Amount
+v344-006-ar;procurement.planColAmount;ar-EG;المبلغ
+v344-007-en;procurement.planColStatus;en-US;Status
+v344-007-ar;procurement.planColStatus;ar-EG;الحالة
+v344-008-en;procurement.planStatusPaid;en-US;Paid
+v344-008-ar;procurement.planStatusPaid;ar-EG;مدفوع
+v344-009-en;procurement.planStatusScheduled;en-US;Scheduled
+v344-009-ar;procurement.planStatusScheduled;ar-EG;مجدول
+v344-010-en;procurement.planCreateHint;en-US;Split the outstanding balance into equal monthly installments. Pay each one through the normal payment flow.
+v344-010-ar;procurement.planCreateHint;ar-EG;قسّم الرصيد المتبقي إلى أقساط شهرية متساوية، وادفع كل قسط عبر مسار الدفع المعتاد.
+v344-011-en;procurement.planCountLabel;en-US;Number of installments
+v344-011-ar;procurement.planCountLabel;ar-EG;عدد الأقساط
+v344-012-en;procurement.planCountInvalid;en-US;Enter a number of installments between 2 and 60.
+v344-012-ar;procurement.planCountInvalid;ar-EG;أدخل عدد أقساط بين ٢ و ٦٠.
+v344-013-en;procurement.planFirstDueDateLabel;en-US;First due date
+v344-013-ar;procurement.planFirstDueDateLabel;ar-EG;تاريخ استحقاق أول قسط
+v344-014-en;procurement.planMonthlyHint;en-US;Each following installment falls on the same day of the next month.
+v344-014-ar;procurement.planMonthlyHint;ar-EG;يستحق كل قسط تالٍ في اليوم نفسه من الشهر التالي.
+v344-015-en;procurement.planCreateAction;en-US;Create plan
+v344-015-ar;procurement.planCreateAction;ar-EG;إنشاء الخطة
+v344-016-en;procurement.planCreateSuccess;en-US;Installment plan created.
+v344-016-ar;procurement.planCreateSuccess;ar-EG;تم إنشاء خطة الأقساط.

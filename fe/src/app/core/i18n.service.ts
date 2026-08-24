@@ -57,6 +57,8 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.peakHint': 'التوقيت الذي تحدث فيه معظم البصمات لكل فئة خلال الفترة المحددة.',
     'dashboard.peakHour': 'الساعة',
     'dashboard.peakEmpty': 'لا توجد بيانات بصمة في الفترة المحددة بعد.',
+    'procurement.settlementDiscount': 'خصم التسوية',
+    'procurement.settlementDiscountHint': 'اختياري. المبلغ النقدي مضافاً إليه هذا الخصم يجب أن يساوي أو يقل عن الرصيد المتبقي؛ يُقيَّد الخصم في دفتر الحساب ويُغلق الفاتورة.',
   },
   'en-US': {
     'nav.settingsHint': 'System settings and preferences',
@@ -78,6 +80,8 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.peakHint': 'When most punches happen for each category across the selected period.',
     'dashboard.peakHour': 'Hour',
     'dashboard.peakEmpty': 'No punch data in the selected period yet.',
+    'procurement.settlementDiscount': 'Settlement discount',
+    'procurement.settlementDiscountHint': 'Optional. Cash paid plus this discount must equal or stay below the outstanding balance; the discount is booked to the partner ledger and closes the invoice.',
     'review.aiHeading': 'Rule-based operational recommendations',
     'review.aiSummary': 'Deterministic suggestions based on current attendance states: single punch {singlePunch}, no punch {noPunch}, manual entry {manualEntry}, missing schedule {missingSchedule}.',
     'review.progressLabel': 'Review progress',

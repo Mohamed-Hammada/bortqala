@@ -7,6 +7,7 @@
     </div>
     <div class="header-actions">
       <button class="button secondary" (click)="exportExcel()">⇩ Excel</button>
+      @if (activeTab() === 'pr') {<button class="button primary" (click)="openNewPr()">＋ {{ i18n.t('procurement.prNew') }}</button>}
       @if (activeTab() === 'po') {<button class="button primary" (click)="openNewPo()">＋ {{ i18n.t('procurement.poNew') }}</button>}
       @if (activeTab() === 'grn') {<button class="button primary" (click)="openNewGrn()">＋ {{ i18n.t('procurement.grnNew') }}</button>}
       @if (activeTab() === 'invoice') {<button class="button primary" (click)="openNewInvoice()">＋ {{ i18n.t('procurement.invoiceNew') }}</button>}
@@ -19,6 +20,7 @@
 
   <!-- Tabs -->
   <nav class="app-tabs" [attr.aria-label]="i18n.t('procurement.title')">
+    <button class="app-tab" [class.active]="activeTab() === 'pr'" (click)="activeTab.set('pr')">{{ i18n.t('procurement.prTab') }}</button>
     <button class="app-tab" [class.active]="activeTab() === 'po'" (click)="activeTab.set('po')">{{ i18n.t('procurement.tabPo') }}</button>
     <button class="app-tab" [class.active]="activeTab() === 'grn'" (click)="activeTab.set('grn')">{{ i18n.t('procurement.tabGrn') }}</button>
     <button class="app-tab" [class.active]="activeTab() === 'invoice'" (click)="activeTab.set('invoice')">{{ i18n.t('procurement.tabInvoice') }}</button>
@@ -41,6 +43,42 @@
   </div>
 
   @if (!loading()) {
+    <!-- ──── PURCHASE REQUESTS ──── -->
+    @if (activeTab() === 'pr') {
+    <div class="table-card">
+      <table>
+        <thead><tr><th>{{ i18n.t('procurement.prNumber') }}</th><th>{{ i18n.t('procurement.prRequestedBy') }}</th><th>{{ i18n.t('procurement.department') }}</th><th>{{ i18n.t('procurement.prNeededBy') }}</th><th>{{ i18n.t('procurement.prLines') }}</th><th>{{ i18n.t('procurement.colTotal') }}</th><th>{{ i18n.t('procurement.prStatus') }}</th><th>{{ i18n.t('procurement.poColActions') }}</th></tr></thead>
+        <tbody>
+          @for (request of purchaseRequests(); track request.id) {
+          <tr>
+            <td><strong class="ltr">{{ request.requestNumber }}</strong></td>
+            <td>{{ request.requestedBy }}</td>
+            <td>{{ request.departmentName || request.departmentId || '—' }}</td>
+            <td class="ltr">{{ request.neededBy ? date(request.neededBy) : '—' }}</td>
+            <td>{{ request.lines?.length ?? 0 }}</td>
+            <td class="ltr"><strong>{{ (request.estimatedTotal ?? 0) | number:'1.2-2' }}</strong></td>
+            <td><span class="status" [class.warning]="request.status === 'DRAFT' || request.status === 'SUBMITTED'" [class.success]="request.status === 'APPROVED' || request.status === 'CONVERTED'" [class.neutral]="request.status === 'REJECTED' || request.status === 'CANCELLED'">{{ request.status }}</span></td>
+            <td>
+              <div class="table-row-actions">
+                @if (request.status === 'DRAFT') {
+                  <button class="button secondary btn-sm" (click)="openEditPr(request)">✏️ {{ i18n.t('procurement.poEdit') }}</button>
+                  <button class="button primary btn-sm" (click)="prAction(request, 'submit')">📨 {{ i18n.t('procurement.prSubmit') }}</button>
+                }
+                @if (request.status === 'SUBMITTED') {
+                  <button class="button success btn-sm" (click)="prAction(request, 'approve')">✅ {{ i18n.t('procurement.prApprove') }}</button>
+                  <button class="button danger btn-sm" (click)="prAction(request, 'reject')">⛔ {{ i18n.t('procurement.prReject') }}</button>
+                }
+                @if (request.status === 'APPROVED') {<button class="button primary btn-sm" (click)="openConvert(request)">🔀 {{ i18n.t('procurement.prConvert') }}</button>}
+                @if (request.status === 'DRAFT' || request.status === 'SUBMITTED') {<button class="button danger btn-sm" (click)="prAction(request, 'cancel')">❌ {{ i18n.t('procurement.cancel') }}</button>}
+              </div>
+            </td>
+          </tr>
+          } @empty { <tr><td colspan="8"><div class="empty-state">{{ i18n.t('procurement.prEmpty') }}</div></td></tr> }
+        </tbody>
+      </table>
+    </div>
+    }
+
     <!-- ──── PURCHASE ORDERS ──── -->
     @if (activeTab() === 'po') {
     <div class="table-card">
@@ -135,6 +173,7 @@
               }
               <button class="button secondary btn-sm" type="button" (click)="performThreeWayMatch(inv)">🔍 {{ i18n.t('procurement.threeWayMatch', undefined, 'المطابقة الثلاثية') }}</button>
               @if (inv.status !== 'PAID') {
+                <button class="button secondary btn-sm" type="button" (click)="openPaymentPlan(inv)">📅 {{ i18n.t('procurement.planTitle') }}</button>
                 <button class="button secondary btn-sm" type="button" [disabled]="savingProposal()" (click)="createPaymentProposal(inv)">{{ i18n.t('procurement.createProposal') }}</button>
                 <button class="button primary btn-sm" type="button" (click)="openNewPayment(inv)">💰 {{ i18n.t('procurement.invPay') }}</button>
               }
@@ -471,6 +510,7 @@
         <div class="field"><label>{{ i18n.t('procurement.poSupplier') }} *</label><select formControlName="supplierId" (change)="onPaymentSupplierChanged()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
         <div class="field"><label>{{ i18n.t('procurement.pmtInvoiceLabel') }} *</label><select formControlName="supplierInvoiceId" (change)="onPaymentInvoiceChanged()"><option value="">{{ i18n.t('procurement.pmtSelectInvoicePlaceholder') }}</option>@for (inv of payableInvoices(); track inv.id) {<option [value]="inv.id">{{ invoiceReference(inv) }} · {{ date(inv.invoiceDate) }} · {{ inv.currencyCode }} · {{ i18n.t('procurement.pmtTotal') }} {{ inv.netAmount | number:'1.2-2' }} · {{ i18n.t('procurement.invOutstanding') }} {{ inv.outstandingAmount | number:'1.2-2' }}</option>}</select><small>{{ i18n.t('procurement.pmtInvoiceHint') }}</small></div>
         <div class="field"><label>{{ i18n.t('procurement.pmtColAmount') }} *</label><input type="number" min="0.01" formControlName="amount" /></div>
+          <div class="field"><label>{{ i18n.t('procurement.settlementDiscount') }}</label><input type="number" min="0" step="0.01" formControlName="settlementDiscount" /><small>{{ i18n.t('procurement.settlementDiscountHint') }}</small></div>
         <div class="field"><label>{{ i18n.t('procurement.pmtColMethod') }} *</label><select formControlName="paymentMethod"><option value="BANK_TRANSFER">{{ i18n.t('procurement.pmtMethodBankTransfer') }}</option><option value="CASH">{{ i18n.t('procurement.pmtMethodCash') }}</option><option value="CHEQUE">{{ i18n.t('procurement.pmtMethodCheque') }}</option></select></div>
         <div class="field span-2"><label>{{ i18n.t('procurement.colNotes') }}</label><input formControlName="notes" /></div>
       </div>
@@ -524,6 +564,139 @@
     </div>
     <div modal-actions class="modal-actions-bar">
       <button class="button secondary" type="button" (click)="matchModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
+    </div>
+  </app-modal-dialog>
+  }
+
+  <!-- ══════════════ INSTALLMENT PLAN MODAL ══════════════ -->
+  @if (planModalOpen()) {
+    @if (planInvoice(); as planInv) {
+  <app-modal-dialog [isOpen]="true" [title]="i18n.t('procurement.planTitle') + ' — ' + invoiceReference(planInv)" size="large" (close)="planModalOpen.set(false)">
+    <p class="plan-outstanding">{{ i18n.t('procurement.planOutstanding') }}: <strong class="ltr">{{ planInv.outstandingAmount | number:'1.2-2' }} {{ planInv.currencyCode }}</strong></p>
+    @if (planRows().length > 0) {
+      <div class="table-card">
+        <table>
+          <thead><tr><th>{{ i18n.t('procurement.planColInstallment') }}</th><th>{{ i18n.t('procurement.planColDueDate') }}</th><th>{{ i18n.t('procurement.planColAmount') }}</th><th>{{ i18n.t('procurement.planColStatus') }}</th></tr></thead>
+          <tbody>
+            @for (row of planRows(); track row.id) {
+            <tr>
+              <td>{{ row.installmentNo }}</td>
+              <td class="ltr">{{ date(row.dueDate) }}</td>
+              <td class="ltr"><strong>{{ row.amount | number:'1.2-2' }} {{ planInv.currencyCode }}</strong></td>
+              <td><span class="status" [class.success]="row.paidAt !== null" [class.warning]="row.paidAt === null">{{ row.paidAt !== null ? i18n.t('procurement.planStatusPaid') : i18n.t('procurement.planStatusScheduled') }}</span></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <form [formGroup]="planForm" (ngSubmit)="submitPaymentPlan()" class="plan-create-form">
+        <p>{{ i18n.t('procurement.planCreateHint') }}</p>
+        <div class="field">
+          <label for="plan-count">{{ i18n.t('procurement.planCountLabel') }} *</label>
+          <input id="plan-count" type="number" min="2" max="60" formControlName="installmentCount" />
+          @if (planForm.controls.installmentCount.invalid && planForm.controls.installmentCount.touched) {
+            <small class="plan-field-error">{{ i18n.t('procurement.planCountInvalid') }}</small>
+          }
+        </div>
+        <div class="field">
+          <label for="plan-due-date">{{ i18n.t('procurement.planFirstDueDateLabel') }} *</label>
+          <input id="plan-due-date" type="date" class="ltr" formControlName="firstDueDate" />
+          <small>{{ i18n.t('procurement.planMonthlyHint') }}</small>
+        </div>
+        <button class="button primary" type="submit" [disabled]="savingPlan() || planForm.invalid">{{ i18n.t('procurement.planCreateAction') }}</button>
+      </form>
+    }
+    <div modal-actions class="modal-actions-bar">
+      <button class="button secondary" type="button" (click)="planModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
+    </div>
+  </app-modal-dialog>
+    }
+  }
+
+  <!-- ══════════════ PURCHASE REQUEST MODAL ══════════════ -->
+  @if (prModalOpen()) {
+  <app-modal-dialog [isOpen]="true" [title]="editingPrId() ? i18n.t('procurement.prEditTitle') : i18n.t('procurement.prNewTitle')" size="wide" (close)="prModalOpen.set(false)">
+    <form [formGroup]="prForm" (ngSubmit)="submitPr()" class="form-grid">
+      <div class="field">
+        <label for="pr-requested-by">{{ i18n.t('procurement.prRequestedBy') }} *</label>
+        <input id="pr-requested-by" type="text" formControlName="requestedBy" />
+      </div>
+      <div class="field">
+        <label for="pr-department">{{ i18n.t('procurement.department') }}</label>
+        <select id="pr-department" formControlName="departmentId">
+          <option value="">—</option>
+          @for (department of departments(); track department.id) {<option [value]="department.id">{{ department.name }}</option>}
+        </select>
+      </div>
+      <div class="field">
+        <label for="pr-needed-by">{{ i18n.t('procurement.prNeededBy') }}</label>
+        <input id="pr-needed-by" type="date" class="ltr" formControlName="neededBy" />
+      </div>
+      <div class="field">
+        <label for="pr-notes">{{ i18n.t('procurement.prNotes') }}</label>
+        <input id="pr-notes" type="text" formControlName="notes" />
+      </div>
+    </form>
+
+    <div class="table-card">
+      <table>
+        <thead><tr><th>{{ i18n.t('procurement.prItem') }} *</th><th>{{ i18n.t('procurement.prQuantity') }} *</th><th>{{ i18n.t('procurement.poUnitLabel') }}</th><th>{{ i18n.t('procurement.prUnitPrice') }}</th><th></th></tr></thead>
+        <tbody>
+          @for (line of prLines(); track $index) {
+          <tr>
+            <td>
+              <select [value]="line.itemId" (change)="onPrItemChange($index, $any($event.target).value)">
+                <option value="">—</option>
+                @for (item of inventoryItems(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}
+              </select>
+            </td>
+            <td><input type="number" min="0.001" class="ltr" [ngModel]="line.quantity" (ngModelChange)="prLines.update(lines => lines.map((l, i) => i === $index ? { ...l, quantity: +$event } : l))" [ngModelOptions]="{ standalone: true }" /></td>
+            <td><input type="text" class="ltr" [value]="line.unitOfMeasure" disabled /></td>
+            <td><input type="number" min="0" step="0.01" class="ltr" [ngModel]="line.estimatedUnitPrice" (ngModelChange)="prLines.update(lines => lines.map((l, i) => i === $index ? { ...l, estimatedUnitPrice: +$event } : l))" [ngModelOptions]="{ standalone: true }" /></td>
+            <td><button class="button danger btn-sm" type="button" (click)="removePrLine($index)" [disabled]="prLines().length <= 1">✕</button></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      <button class="button secondary btn-sm" type="button" (click)="addPrLine()">＋ {{ i18n.t('procurement.prAddLine') }}</button>
+    </div>
+
+    <div modal-actions class="modal-actions-bar">
+      <button class="button secondary" type="button" (click)="prModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submitPr()" [disabled]="savingPr()">{{ i18n.t('procurement.prSave') }}</button>
+    </div>
+  </app-modal-dialog>
+  }
+
+  <!-- ══════════════ CONVERT REQUEST TO PO MODAL ══════════════ -->
+  @if (convertingPr(); as convertRequest) {
+  <app-modal-dialog [isOpen]="true" [title]="i18n.t('procurement.prConvertTitle')" size="large" (close)="convertingPr.set(null)">
+    <p>{{ i18n.t('procurement.prConvertHint') }} <strong class="ltr">{{ convertRequest.requestNumber }}</strong></p>
+    <div class="table-card">
+      <table>
+        <thead><tr><th>{{ i18n.t('procurement.prItem') }}</th><th>{{ i18n.t('procurement.prQuantity') }}</th><th>{{ i18n.t('procurement.prUnitPrice') }}</th></tr></thead>
+        <tbody>
+          @for (line of convertRequest.lines; track line.id) {
+          <tr>
+            <td>{{ line.itemName }}</td>
+            <td class="ltr">{{ line.quantity | number:'1.0-3' }} {{ line.unitOfMeasure || '' }}</td>
+            <td class="ltr">{{ line.estimatedUnitPrice ?? 0 | number:'1.2-2' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="field" [formGroup]="convertForm">
+      <label for="convert-supplier">{{ i18n.t('procurement.poColSupplier') }} *</label>
+      <select id="convert-supplier" formControlName="supplierId">
+        <option value="">—</option>
+        @for (supplier of suppliers(); track supplier.id) {<option [value]="supplier.id">{{ supplier.name }}</option>}
+      </select>
+    </div>
+    <div modal-actions class="modal-actions-bar">
+      <button class="button secondary" type="button" (click)="convertingPr.set(null)">{{ i18n.t('procurement.cancel') }}</button>
+      <button class="button primary" type="button" (click)="confirmConvert()" [disabled]="convertForm.invalid">{{ i18n.t('procurement.prConvert') }}</button>
     </div>
   </app-modal-dialog>
   }

@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260823-v343-settlement-discount-column
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-02: persist the agreed settlement discount on supplier payments."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: supplier_payments
+              columnName: settlement_discount
+      changes:
+        - addColumn:
+            tableName: supplier_payments
+            columns:
+              - column:
+                  name: settlement_discount
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: supplier_payments
+            columnName: settlement_discount

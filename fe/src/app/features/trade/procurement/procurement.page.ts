@@ -19,7 +19,11 @@ interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplier
 interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId?: string; lotNumber?: string; qualityReason?: string; projectId?: string; wbsNodeId?: string; costCodeId?: string; }
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
 interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; projectId?: string; wbsNodeId?: string; costCodeId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
-interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
+interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; settlementDiscount?: number | null; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
+interface SupplierPaymentPlanRow { id: string; invoiceId: string; installmentNo: number; dueDate: number; amount: number; paidAt: number | null; }
+interface PurchaseRequestLineResponse { id: string; itemId: string; itemName: string; quantity: number; unitOfMeasure?: string; estimatedUnitPrice?: number; convertedQuantity: number; }
+interface PurchaseRequest { id: string; requestNumber: string; requestedBy: string; departmentId?: string; departmentName?: string; status: string; neededBy?: number | null; notes?: string; convertedPoId?: string; estimatedTotal?: number; lines: PurchaseRequestLineResponse[]; createdAt: number; updatedAt: number; }
+interface PrDraftLine { itemId: string; itemName: string; quantity: number; unitOfMeasure: string; estimatedUnitPrice: number; }
 interface PaymentProposalAllocation { id: string; invoiceId: string; amount: number; supplierPaymentId?: string; paymentOperationId?: string; }
 interface PaymentProposal { id: string; proposalNumber: string; supplierId: string; invoiceId: string; proposedAmount: number; currencyCode: string; dueDate: string; status: string; createdBy: string; approvedBy?: string; executedBy?: string; supplierPaymentId?: string; allocations: PaymentProposalAllocation[]; }
 interface PaymentProposalDraftAllocation { invoiceId: string; amount: number; }
@@ -103,12 +107,64 @@ export class ProcurementPage {
   readonly departments = signal<Department[]>([]);
   readonly projects = signal<ProjectOption[]>([]);
   readonly supplierScorecards = signal<SupplierScorecard[]>([]);
-  readonly activeTab = signal<'po' | 'grn' | 'invoice' | 'proposal' | 'payment' | 'scorecard'>('po');
+  readonly activeTab = signal<'pr' | 'po' | 'grn' | 'invoice' | 'proposal' | 'payment' | 'scorecard'>('po');
   readonly automaticNumbering = signal(true);
   readonly documentAutomaticNumbering = signal(true);
 
   readonly matchModalOpen = signal(false);
   readonly activeMatch = signal<ProcurementThreeWayMatch | null>(null);
+
+  // ─── Installment Plans ────────────────────────────────────────────
+
+  readonly planModalOpen = signal(false);
+  readonly planInvoice = signal<SupplierInvoice | null>(null);
+  readonly planRows = signal<SupplierPaymentPlanRow[]>([]);
+  readonly loadingPlan = signal(false);
+  readonly savingPlan = signal(false);
+  readonly planForm = new FormGroup({
+    installmentCount: new FormControl(3, { nonNullable: true, validators: [Validators.required, Validators.min(2), Validators.max(60)] }),
+    firstDueDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
+  });
+
+  async openPaymentPlan(invoice: SupplierInvoice): Promise<void> {
+    this.planInvoice.set(invoice);
+    this.planRows.set([]);
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    this.planForm.reset({ installmentCount: 3, firstDueDate: nextMonth.toISOString().substring(0, 10) });
+    this.planModalOpen.set(true);
+    this.loadingPlan.set(true);
+    try {
+      const rows = await firstValueFrom(
+        this.http.get<SupplierPaymentPlanRow[]>(`/api/v1/supplier-invoices/${invoice.id}/payment-plan`)
+      );
+      this.planRows.set(rows ?? []);
+    } catch {
+      this.planRows.set([]);
+    } finally {
+      this.loadingPlan.set(false);
+    }
+  }
+
+  async submitPaymentPlan(): Promise<void> {
+    if (this.savingPlan()) return;
+    const invoice = this.planInvoice();
+    if (!invoice || this.planForm.invalid) { this.planForm.markAllAsTouched(); return; }
+    this.savingPlan.set(true);
+    try {
+      const v = this.planForm.getRawValue();
+      await firstValueFrom(this.http.post(`/api/v1/supplier-invoices/${invoice.id}/payment-plan`, {
+        installmentCount: v.installmentCount,
+        firstDueDate: new Date(v.firstDueDate).getTime(),
+      }));
+      this.notification.success(this.i18n.t('procurement.planCreateSuccess'));
+      await this.openPaymentPlan(invoice);
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
+    } finally {
+      this.savingPlan.set(false);
+    }
+  }
 
   async performThreeWayMatch(invoice: SupplierInvoice): Promise<void> {
     try {
@@ -141,6 +197,152 @@ export class ProcurementPage {
       this.notification.error(apiErrorMessage(err, this.i18n));
     } finally {
       this.resolvingMatch.set(false);
+    }
+  }
+
+  // ─── Purchase Requests ────────────────────────────────────────────
+
+  readonly purchaseRequests = signal<PurchaseRequest[]>([]);
+  readonly prModalOpen = signal(false);
+  readonly editingPrId = signal<string | null>(null);
+  readonly savingPr = signal(false);
+  readonly prLines = signal<PrDraftLine[]>([]);
+  readonly convertingPr = signal<PurchaseRequest | null>(null);
+  readonly convertForm = new FormGroup({
+    supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+  readonly prForm = new FormGroup({
+    requestedBy: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    departmentId: new FormControl('', { nonNullable: true }),
+    neededBy: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true }),
+    notes: new FormControl('', { nonNullable: true }),
+  });
+
+  async loadPurchaseRequests() {
+    try {
+      this.purchaseRequests.set(await firstValueFrom(this.http.get<PurchaseRequest[]>('/api/v1/purchase-requests')) ?? []);
+    } catch {
+      this.purchaseRequests.set([]);
+    }
+  }
+
+  openNewPr() {
+    this.editingPrId.set(null);
+    this.prForm.reset({ requestedBy: '', departmentId: '', neededBy: new Date().toISOString().substring(0, 10), notes: '' });
+    this.prLines.set([{ itemId: '', itemName: '', quantity: 1, unitOfMeasure: '', estimatedUnitPrice: 0 }]);
+    this.prModalOpen.set(true);
+  }
+
+  openEditPr(request: PurchaseRequest) {
+    this.editingPrId.set(request.id);
+    this.prForm.reset({
+      requestedBy: request.requestedBy,
+      departmentId: request.departmentId ?? '',
+      neededBy: request.neededBy ? epochToDateInput(request.neededBy) : '',
+      notes: request.notes ?? '',
+    });
+    this.prLines.set(request.lines.map(line => ({
+      itemId: line.itemId,
+      itemName: line.itemName,
+      quantity: line.quantity,
+      unitOfMeasure: line.unitOfMeasure ?? '',
+      estimatedUnitPrice: line.estimatedUnitPrice ?? 0,
+    })));
+    this.prModalOpen.set(true);
+  }
+
+  addPrLine() {
+    this.prLines.update(lines => [...lines, { itemId: '', itemName: '', quantity: 1, unitOfMeasure: '', estimatedUnitPrice: 0 }]);
+  }
+
+  removePrLine(index: number) {
+    if (this.prLines().length <= 1) return;
+    this.prLines.update(lines => lines.filter((_, i) => i !== index));
+  }
+
+  onPrItemChange(index: number, itemId: string) {
+    const item = this.inventoryItems().find(entry => entry.id === itemId);
+    this.prLines.update(lines => lines.map((line, i) => i === index
+      ? { ...line, itemId, itemName: item?.name ?? itemId, unitOfMeasure: line.unitOfMeasure || item?.unitCode || item?.uomName || '' }
+      : line));
+  }
+
+  async submitPr() {
+    if (this.savingPr()) return;
+    if (this.prForm.invalid || this.prLines().some(line => !line.itemId || !(line.quantity > 0))) {
+      this.prForm.markAllAsTouched();
+      this.notification.error(this.i18n.t('procurement.prLineInvalid'));
+      return;
+    }
+    this.savingPr.set(true);
+    const body = {
+      requestedBy: this.prForm.controls.requestedBy.value,
+      departmentId: this.prForm.controls.departmentId.value || undefined,
+      neededBy: dateInputToEpoch(this.prForm.controls.neededBy.value),
+      notes: this.prForm.controls.notes.value || undefined,
+      lines: this.prLines(),
+    };
+    try {
+      const editing = this.editingPrId();
+      if (editing) {
+        await firstValueFrom(this.http.put(`/api/v1/purchase-requests/${editing}`, body));
+      } else {
+        await firstValueFrom(this.http.post('/api/v1/purchase-requests', body));
+      }
+      this.notification.success(this.i18n.t(editing ? 'procurement.prActionSuccess' : 'procurement.prCreateSuccess'));
+      this.prModalOpen.set(false);
+      await this.loadPurchaseRequests();
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
+    } finally {
+      this.savingPr.set(false);
+    }
+  }
+
+  prAction(request: PurchaseRequest, action: 'submit' | 'approve' | 'reject' | 'cancel') {
+    const actionLabels: Record<string, string> = {
+      submit: this.i18n.t('procurement.prSubmit'),
+      approve: this.i18n.t('procurement.prApprove'),
+      reject: this.i18n.t('procurement.prReject'),
+      cancel: this.i18n.t('procurement.cancel'),
+    };
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'procurement.prConfirmTitle',
+        messageKey: 'procurement.prConfirmMessage',
+        params: { number: request.requestNumber, action: actionLabels[action] },
+        confirmKey: 'procurement.prConfirmOk',
+      },
+      async () => {
+        try {
+          await firstValueFrom(this.http.post(`/api/v1/purchase-requests/${request.id}/${action}`, {}));
+          this.notification.success(this.i18n.t('procurement.prActionSuccess') + ' ✓');
+          await this.loadPurchaseRequests();
+        } catch (e) {
+          this.notification.error(apiErrorMessage(e, this.i18n));
+          throw e;
+        }
+      },
+    );
+  }
+
+  openConvert(request: PurchaseRequest) {
+    this.convertingPr.set(request);
+    this.convertForm.reset({ supplierId: '' });
+  }
+
+  async confirmConvert() {
+    const request = this.convertingPr();
+    if (!request || this.convertForm.invalid) { this.convertForm.markAllAsTouched(); return; }
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/purchase-requests/${request.id}/convert`, {
+        supplierId: this.convertForm.controls.supplierId.value,
+      }));
+      this.notification.success(this.i18n.t('procurement.prConvertSuccess'));
+      this.convertingPr.set(null);
+      await Promise.all([this.loadPurchaseRequests(), this.loadOrders()]);
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
     }
   }
 
@@ -230,6 +432,7 @@ export class ProcurementPage {
     supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     supplierInvoiceId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     amount: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0.01)] }),
+    settlementDiscount: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     paymentMethod: new FormControl('BANK_TRANSFER', { nonNullable: true }),
     notes: new FormControl('', { nonNullable: true }),
   });
@@ -263,7 +466,7 @@ export class ProcurementPage {
   async loadAll() {
     this.loading.set(true);
     this.error.set(null);
-    try { await Promise.all([this.loadNumberingSettings(), this.loadDocumentNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadDepartments(), this.loadProjects(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPaymentProposals(), this.loadPayments(), this.loadSupplierScorecards()]); }
+    try { await Promise.all([this.loadNumberingSettings(), this.loadDocumentNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadDepartments(), this.loadProjects(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPaymentProposals(), this.loadPayments(), this.loadSupplierScorecards(), this.loadPurchaseRequests()]); }
     catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -727,7 +930,7 @@ export class ProcurementPage {
     const supplierId = inv ? inv.supplierId : (s.length > 0 ? s[0].id : '');
     this.paymentOperationId.set(crypto.randomUUID());
     this.selectedPaymentSupplierId.set(supplierId);
-    this.pmtForm.reset({ paymentNumber: '', paymentDate: new Date().toISOString().substring(0, 10), supplierId, supplierInvoiceId: inv ? inv.id : '', amount: inv ? inv.outstandingAmount : 0, paymentMethod: 'BANK_TRANSFER', notes: '' });
+    this.pmtForm.reset({ paymentNumber: '', paymentDate: new Date().toISOString().substring(0, 10), supplierId, supplierInvoiceId: inv ? inv.id : '', amount: inv ? inv.outstandingAmount : 0, settlementDiscount: 0, paymentMethod: 'BANK_TRANSFER', notes: '' });
     this.applyPaymentNumberingValidators();
     this.pmtModalOpen.set(true);
   }
@@ -755,8 +958,9 @@ export class ProcurementPage {
       const v = this.pmtForm.getRawValue();
       const invoice = this.payableInvoices().find(item => item.id === v.supplierInvoiceId);
       if (!invoice) { this.notification.error(this.i18n.t('procurement.paymentSelectOpenInvoice')); return; }
-      if (v.amount > invoice.outstandingAmount) { this.notification.error(this.i18n.t('procurement.paymentExceedsOutstanding', { outstanding: invoice.outstandingAmount, currency: invoice.currencyCode })); return; }
-      await firstValueFrom(this.http.post('/api/v1/trade/procurement/payments', { paymentNumber: v.paymentNumber.trim() || null, paymentDate: new Date(v.paymentDate).getTime(), supplierId: v.supplierId, supplierInvoiceId: v.supplierInvoiceId, amount: v.amount, paymentMethod: v.paymentMethod, notes: v.notes || null, operationId: this.paymentOperationId() }));
+      const discount = v.settlementDiscount > 0 ? v.settlementDiscount : 0;
+      if (v.amount > invoice.outstandingAmount || v.amount + discount > invoice.outstandingAmount) { this.notification.error(this.i18n.t('procurement.paymentExceedsOutstanding', { outstanding: invoice.outstandingAmount, currency: invoice.currencyCode })); return; }
+      await firstValueFrom(this.http.post('/api/v1/trade/procurement/payments', { paymentNumber: v.paymentNumber.trim() || null, paymentDate: new Date(v.paymentDate).getTime(), supplierId: v.supplierId, supplierInvoiceId: v.supplierInvoiceId, amount: v.amount, settlementDiscount: discount > 0 ? discount : null, paymentMethod: v.paymentMethod, notes: v.notes || null, operationId: this.paymentOperationId() }));
       this.notification.success(this.i18n.t('procurement.paymentSaveSuccess'));
       this.pmtModalOpen.set(false);
       await this.loadAll();
@@ -817,10 +1021,12 @@ export class ProcurementPage {
 
   exportCsv() {
     const rows: any[] = this.activeTab() === 'po' ? this.orders().map(p => ({ poNumber: p.poNumber, poDate: this.date(p.poDate), supplier: p.supplierName || p.supplierId, paymentTerms: p.paymentTerms || '', totalAmount: p.totalAmount, status: p.status }))
+      : this.activeTab() === 'pr' ? this.purchaseRequests().map(r => ({ requestNumber: r.requestNumber, requestedBy: r.requestedBy, department: r.departmentName || r.departmentId || '', neededBy: r.neededBy ? this.date(r.neededBy) : '', lines: r.lines?.length ?? 0, estimatedTotal: r.estimatedTotal ?? 0, status: r.status }))
       : this.activeTab() === 'grn' ? this.goodsReceipts().map(g => ({ grnNumber: g.grnNumber, receiptDate: this.date(g.receiptDate), supplier: g.supplierName || g.supplierId, notes: g.notes || '', status: g.status }))
       : this.activeTab() === 'invoice' ? this.invoices().map(i => ({ invoiceNumber: i.invoiceNumber, supplier: i.supplierName || i.supplierId, totalAmount: i.totalAmount, netAmount: i.netAmount, paidAmount: i.paidAmount, outstandingAmount: i.outstandingAmount, status: i.status }))
       : this.payments().map(p => ({ paymentNumber: p.paymentNumber, paymentDate: this.date(p.paymentDate), supplier: p.supplierName || p.supplierId, amount: p.amount, method: p.paymentMethod }));
     const cols = this.activeTab() === 'po' ? [{ key: 'poNumber', label: this.i18n.t('procurement.colPoNumber') }, { key: 'poDate', label: this.i18n.t('procurement.colPoDate') }, { key: 'supplier', label: this.i18n.t('procurement.colSupplier') }, { key: 'paymentTerms', label: this.i18n.t('procurement.colPaymentTerms') }, { key: 'totalAmount', label: this.i18n.t('procurement.colTotal') }, { key: 'status', label: this.i18n.t('procurement.colStatus') }]
+      : this.activeTab() === 'pr' ? [{ key: 'requestNumber', label: this.i18n.t('procurement.prNumber') }, { key: 'requestedBy', label: this.i18n.t('procurement.prRequestedBy') }, { key: 'department', label: this.i18n.t('procurement.department') }, { key: 'neededBy', label: this.i18n.t('procurement.prNeededBy') }, { key: 'lines', label: this.i18n.t('procurement.prLines') }, { key: 'estimatedTotal', label: this.i18n.t('procurement.colTotal') }, { key: 'status', label: this.i18n.t('procurement.prStatus') }]
       : this.activeTab() === 'grn' ? [{ key: 'grnNumber', label: this.i18n.t('procurement.colGrnNumber') }, { key: 'receiptDate', label: this.i18n.t('procurement.colReceiptDate') }, { key: 'supplier', label: this.i18n.t('procurement.colSupplier') }, { key: 'notes', label: this.i18n.t('procurement.colNotes') }, { key: 'status', label: this.i18n.t('procurement.colStatus') }]
       : this.activeTab() === 'invoice' ? [{ key: 'invoiceNumber', label: this.i18n.t('procurement.colInvoiceNumber') }, { key: 'supplier', label: this.i18n.t('procurement.colSupplier') }, { key: 'totalAmount', label: this.i18n.t('procurement.colTotal') }, { key: 'netAmount', label: this.i18n.t('procurement.colNetAmount') }, { key: 'status', label: this.i18n.t('procurement.colStatus') }]
       : [{ key: 'paymentNumber', label: this.i18n.t('procurement.colPaymentNumber') }, { key: 'paymentDate', label: this.i18n.t('procurement.colPaymentDate') }, { key: 'supplier', label: this.i18n.t('procurement.colSupplier') }, { key: 'amount', label: this.i18n.t('procurement.colAmount') }, { key: 'method', label: this.i18n.t('procurement.colPaymentMethod') }];

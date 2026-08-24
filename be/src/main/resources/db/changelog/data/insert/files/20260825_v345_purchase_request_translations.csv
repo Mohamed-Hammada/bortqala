@@ -1,0 +1,71 @@
+id;translation_key;locale;text_value
+v345-001-en;PR_NOT_FOUND;en-US;Purchase request not found.
+v345-001-ar;PR_NOT_FOUND;ar-EG;طلب الشراء غير موجود.
+v345-002-en;PR_INVALID_STATE;en-US;This action is not allowed for the current purchase request status.
+v345-002-ar;PR_INVALID_STATE;ar-EG;هذا الإجراء غير مسموح في حالة طلب الشراء الحالية.
+v345-003-en;PR_EMPTY_LINES;en-US;A purchase request requires at least one line.
+v345-003-ar;PR_EMPTY_LINES;ar-EG;يجب أن يحتوي طلب الشراء على بند واحد على الأقل.
+v345-004-en;PR_ALREADY_CONVERTED;en-US;This purchase request was already converted to a purchase order.
+v345-004-ar;PR_ALREADY_CONVERTED;ar-EG;تم تحويل طلب الشراء بالفعل إلى أمر شراء.
+v345-005-en;PR_QUANTITY_EXCEEDED;en-US;Converting this request would exceed its requested quantities.
+v345-005-ar;PR_QUANTITY_EXCEEDED;ar-EG;تحويل هذا الطلب سيتجاوز الكميات المطلوبة.
+v345-006-en;PR_LINE_QUANTITY_INVALID;en-US;Purchase request line quantities must be greater than zero.
+v345-006-ar;PR_LINE_QUANTITY_INVALID;ar-EG;يجب أن تكون كميات بنود طلب الشراء أكبر من صفر.
+v345-007-en;procurement.prTab;en-US;Purchase requests
+v345-007-ar;procurement.prTab;ar-EG;طلبات الشراء
+v345-008-en;procurement.prNumber;en-US;Request no.
+v345-008-ar;procurement.prNumber;ar-EG;رقم الطلب
+v345-009-en;procurement.prRequestedBy;en-US;Requested by
+v345-009-ar;procurement.prRequestedBy;ar-EG;مقدم الطلب
+v345-010-en;procurement.prNeededBy;en-US;Needed by
+v345-010-ar;procurement.prNeededBy;ar-EG;مطلوب في
+v345-011-en;procurement.prStatus;en-US;Status
+v345-011-ar;procurement.prStatus;ar-EG;الحالة
+v345-012-en;procurement.prLines;en-US;Lines
+v345-012-ar;procurement.prLines;ar-EG;البنود
+v345-013-en;procurement.prNew;en-US;New request
+v345-013-ar;procurement.prNew;ar-EG;طلب جديد
+v345-014-en;procurement.prSubmit;en-US;Submit
+v345-014-ar;procurement.prSubmit;ar-EG;إرسال
+v345-015-en;procurement.prApprove;en-US;Approve
+v345-015-ar;procurement.prApprove;ar-EG;اعتماد
+v345-016-en;procurement.prReject;en-US;Reject
+v345-016-ar;procurement.prReject;ar-EG;رفض
+v345-017-en;procurement.prConvert;en-US;Convert to PO
+v345-017-ar;procurement.prConvert;ar-EG;تحويل إلى أمر شراء
+v345-018-en;procurement.prItem;en-US;Item
+v345-018-ar;procurement.prItem;ar-EG;الصنف
+v345-019-en;procurement.prQuantity;en-US;Quantity
+v345-019-ar;procurement.prQuantity;ar-EG;الكمية
+v345-020-en;procurement.prUnitPrice;en-US;Est. unit price
+v345-020-ar;procurement.prUnitPrice;ar-EG;سعر الوحدة التقديري
+v345-021-en;procurement.prAddLine;en-US;Add line
+v345-021-ar;procurement.prAddLine;ar-EG;إضافة بند
+v345-022-en;procurement.prNotes;en-US;Notes
+v345-022-ar;procurement.prNotes;ar-EG;ملاحظات
+v345-023-en;procurement.prEmpty;en-US;No purchase requests yet. Create one to start the procurement flow.
+v345-023-ar;procurement.prEmpty;ar-EG;لا توجد طلبات شراء بعد. أنشئ طلباً لبدء دورة المشتريات.
+v345-024-en;procurement.prNewTitle;en-US;New purchase request
+v345-024-ar;procurement.prNewTitle;ar-EG;طلب شراء جديد
+v345-025-en;procurement.prEditTitle;en-US;Edit purchase request
+v345-025-ar;procurement.prEditTitle;ar-EG;تعديل طلب الشراء
+v345-026-en;procurement.prSave;en-US;Save request
+v345-026-ar;procurement.prSave;ar-EG;حفظ الطلب
+v345-027-en;procurement.prCreateSuccess;en-US;Purchase request created.
+v345-027-ar;procurement.prCreateSuccess;ar-EG;تم إنشاء طلب الشراء.
+v345-028-en;procurement.prActionSuccess;en-US;Request updated successfully.
+v345-028-ar;procurement.prActionSuccess;ar-EG;تم تحديث الطلب بنجاح.
+v345-029-en;procurement.prLineInvalid;en-US;Every line needs an item and a quantity greater than zero.
+v345-029-ar;procurement.prLineInvalid;ar-EG;كل بند يحتاج إلى صنف وكمية أكبر من صفر.
+v345-030-en;procurement.prConvertTitle;en-US;Convert request to purchase order
+v345-030-ar;procurement.prConvertTitle;ar-EG;تحويل الطلب إلى أمر شراء
+v345-031-en;procurement.prConvertHint;en-US;Choose the supplier to raise purchase order
+v345-031-ar;procurement.prConvertHint;ar-EG;اختر المورد لإنشاء أمر الشراء
+v345-032-en;procurement.prConvertSuccess;en-US;Purchase order created from request.
+v345-032-ar;procurement.prConvertSuccess;ar-EG;تم إنشاء أمر الشراء من الطلب.
+v345-033-en;procurement.prConfirmTitle;en-US;Confirm action
+v345-033-ar;procurement.prConfirmTitle;ar-EG;تأكيد الإجراء
+v345-034-en;procurement.prConfirmMessage;en-US;"Apply ""{action}"" on request {number}?"
+v345-034-ar;procurement.prConfirmMessage;ar-EG;"تطبيق ""{action}"" على الطلب {number}؟"
+v345-035-en;procurement.prConfirmOk;en-US;Yes, proceed
+v345-035-ar;procurement.prConfirmOk;ar-EG;نعم، متابعة

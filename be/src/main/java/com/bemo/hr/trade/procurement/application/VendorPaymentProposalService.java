@@ -121,7 +121,7 @@ public class VendorPaymentProposalService {
             String paymentOperationId = operationId + ":" + (index + 1);
             paymentPayloads.add(new ProcurementApi.SupplierPaymentPayload(
                     "AUTO", System.currentTimeMillis(), proposal.getSupplierId(), allocation.getInvoiceId(),
-                    allocation.getAmount(), paymentMethod, "Payment proposal " + proposal.getProposalNumber(), paymentOperationId));
+                    allocation.getAmount(), null, paymentMethod, "Payment proposal " + proposal.getProposalNumber(), paymentOperationId));
         }
         List<ProcurementApi.SupplierPaymentResponse> payments = procurementService.createSupplierPaymentsForProposal(paymentPayloads);
         String firstPaymentId = null;

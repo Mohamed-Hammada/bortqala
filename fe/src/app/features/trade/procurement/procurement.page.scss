@@ -546,3 +546,23 @@
 .remove-btn {
   color: var(--danger);
 }
+
+/* ─── Installment plan modal ─── */
+.plan-outstanding {
+  margin: 0 0 1rem;
+  color: var(--muted, #64748b);
+}
+
+.plan-create-form {
+  display: grid;
+  gap: .9rem;
+  max-width: 26rem;
+
+  p { margin: 0; color: var(--muted, #64748b); }
+  .field {
+    display: grid;
+    gap: .3rem;
+    label { font-weight: 600; }
+  }
+  .plan-field-error { color: var(--danger); }
+}

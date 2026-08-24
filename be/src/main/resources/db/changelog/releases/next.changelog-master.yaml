@@ -683,3 +683,26 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260823_v342_peak_clock_translations.yaml
       relativeToChangelogFile: false
+  # WP-02: settlement discount column + bilingual copy
+  - include:
+      file: db/changelog/schema/update/20260823_v343_settlement_discount.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260823_v343_settlement_discount_translations.yaml
+      relativeToChangelogFile: false
+  # WP-01: supplier invoice installment plans
+  - include:
+      file: db/changelog/schema/create/20260824_v344_supplier_payment_plans.yaml
+      relativeToChangelogFile: false
+  # WP-01: installment-plan bilingual error copy
+  - include:
+      file: db/changelog/data/insert/20260824_v344_payment_plan_translations.yaml
+      relativeToChangelogFile: false
+  # WP-03: purchase requests (PRQ) with approval lifecycle and PO conversion
+  - include:
+      file: db/changelog/schema/create/20260825_v345_purchase_requests.yaml
+      relativeToChangelogFile: false
+  # WP-03: purchase-request bilingual error copy
+  - include:
+      file: db/changelog/data/insert/20260825_v345_purchase_request_translations.yaml
+      relativeToChangelogFile: false

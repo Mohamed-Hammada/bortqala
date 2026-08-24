@@ -2,6 +2,7 @@ package com.bemo.hr.trade.procurement.api;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -189,7 +190,7 @@ public class ProcurementApi {
 
     public record SupplierPaymentResponse(
             String id, String paymentNumber, long paymentDate, String supplierId,
-            String supplierName, String supplierInvoiceId, BigDecimal amount,
+            String supplierName, String supplierInvoiceId, BigDecimal amount, BigDecimal settlementDiscount,
             String currencyCode, String paymentMethod, String notes, String operationId, String status, long createdAt
     ) {
     }
@@ -197,13 +198,28 @@ public class ProcurementApi {
     public record SupplierPaymentPayload(
             String paymentNumber, long paymentDate, @NotBlank String supplierId,
             @NotBlank String supplierInvoiceId, @NotNull @DecimalMin("0.01") BigDecimal amount,
+            @DecimalMin("0") BigDecimal settlementDiscount,
             String paymentMethod, String notes, String operationId
     ) {
         public SupplierPaymentPayload(String paymentNumber, long paymentDate, String supplierId,
                                       String supplierInvoiceId, BigDecimal amount,
                                       String paymentMethod, String notes) {
-            this(paymentNumber, paymentDate, supplierId, supplierInvoiceId, amount, paymentMethod, notes, null);
+            this(paymentNumber, paymentDate, supplierId, supplierInvoiceId, amount, null, paymentMethod, notes, null);
         }
+    }
+
+    // ─── Supplier Payment Plan ────────────────────────────────────────
+
+    public record SupplierPaymentPlanPayload(
+            @NotNull @Min(2) Integer installmentCount,
+            @NotNull Long firstDueDate
+    ) {
+    }
+
+    public record SupplierPaymentPlanResponse(
+            String id, String invoiceId, int installmentNo, long dueDate,
+            BigDecimal amount, Long paidAt
+    ) {
     }
 
     // ─── Supplier Return ──────────────────────────────────────────────

@@ -225,6 +225,6 @@ class VendorPaymentProposalServiceTests {
 
     private ProcurementApi.SupplierPaymentResponse payment(String id, String invoiceId, String amount, String operationId) {
         return new ProcurementApi.SupplierPaymentResponse(id, "PMT-1", System.currentTimeMillis(), "supp-12", "Supplier",
-                invoiceId, new BigDecimal(amount), "EGP", "BANK", null, operationId, "POSTED", System.currentTimeMillis());
+                invoiceId, new BigDecimal(amount), BigDecimal.ZERO, "EGP", "BANK", null, operationId, "POSTED", System.currentTimeMillis());
     }
 }

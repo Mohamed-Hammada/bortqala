@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { ProcurementPage, calculatePurchaseOrderTotal, filterPayableInvoices } from './procurement.page';
 
@@ -214,4 +215,75 @@ describe('ProcurementPage invoice adjustments', () => {
     expect(page.scorecardRatingClass('FAIR')).toBe('warning');
     expect(page.scorecardRatingClass('AT_RISK')).toBe('danger');
   });
+
+  it('rejects installment plans outside the 2-60 range via the form validator', () => {
+    const page = createPage();
+    page.planForm.controls.installmentCount.setValue(1);
+    expect(page.planForm.controls.installmentCount.invalid).toBe(true);
+    page.planForm.controls.installmentCount.setValue(61);
+    expect(page.planForm.controls.installmentCount.invalid).toBe(true);
+    page.planForm.controls.installmentCount.setValue(6);
+    expect(page.planForm.controls.installmentCount.valid).toBe(true);
+    page.planForm.controls.firstDueDate.setValue('');
+    expect(page.planForm.invalid).toBe(true);
+  });
+
+  it('blocks plan submission when the form is invalid', async () => {
+    const page = createPage();
+    vi.spyOn(page.notification, 'error');
+    page.planInvoice.set({ id: 'inv-1' } as any);
+    page.planForm.controls.firstDueDate.setValue('');
+    await page.submitPaymentPlan();
+    expect(page.savingPlan()).toBe(false);
+  });
+
+  it('blocks purchase-request submission when a line misses an item or quantity', async () => {
+    const page = createPage();
+    vi.spyOn(page.notification, 'error');
+    const http = TestBed.inject(HttpClient);
+    const post = vi.spyOn(http, 'post');
+    page.openNewPr();
+    page.prForm.controls.requestedBy.setValue('merl');
+    await page.submitPr();
+    expect(page.savingPr()).toBe(false);
+    expect(post).not.toHaveBeenCalled();
+
+    page.prLines.set([{ itemId: '', itemName: '', quantity: 0, unitOfMeasure: '', estimatedUnitPrice: 0 }]);
+    await page.submitPr();
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('submits a valid purchase request with epoch neededBy and reloads the list', async () => {
+    const page = createPage();
+    const http = TestBed.inject(HttpClient);
+    const post = vi.spyOn(http, 'post').mockReturnValue(of({}));
+    vi.spyOn(page, 'loadPurchaseRequests').mockResolvedValue(undefined);
+    page.openNewPr();
+    page.prForm.controls.requestedBy.setValue('merl');
+    page.prLines.set([{ itemId: 'item-1', itemName: 'Steel', quantity: 4, unitOfMeasure: 'TON', estimatedUnitPrice: 120 }]);
+    await page.submitPr();
+    expect(post).toHaveBeenCalledWith('/api/v1/purchase-requests', expect.objectContaining({
+      requestedBy: 'merl',
+      lines: [expect.objectContaining({ itemId: 'item-1', quantity: 4 })],
+    }));
+    expect(typeof post.mock.calls[0][1].neededBy).toBe('number');
+    expect(page.prModalOpen()).toBe(false);
+  });
+
+  it('sends convert calls to the request-scoped convert endpoint with the chosen supplier', async () => {
+    const page = createPage();
+    const http = TestBed.inject(HttpClient);
+    const post = vi.spyOn(http, 'post').mockReturnValue(of({}));
+    vi.spyOn(page, 'loadPurchaseRequests').mockResolvedValue(undefined);
+    vi.spyOn(page, 'loadOrders').mockResolvedValue(undefined);
+    page.convertingPr.set({
+      id: 'pr-9', requestNumber: 'PRQ-2026-00001', requestedBy: 'merl', status: 'APPROVED',
+      lines: [], createdAt: 0, updatedAt: 0,
+    } as any);
+    page.convertForm.controls.supplierId.setValue('sup-1');
+    await page.confirmConvert();
+    expect(post).toHaveBeenCalledWith('/api/v1/purchase-requests/pr-9/convert', { supplierId: 'sup-1' });
+    expect(page.convertingPr()).toBeNull();
+  });
 });
+
