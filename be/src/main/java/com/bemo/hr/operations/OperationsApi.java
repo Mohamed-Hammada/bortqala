@@ -148,11 +148,12 @@ public final class OperationsApi {
 
     public record ItemValuationView(String itemId, String itemCode, String itemName, BigDecimal quantityOnHand,
                                     BigDecimal valuedQuantity, BigDecimal inventoryValue, BigDecimal averageUnitCost,
-                                    BigDecimal openingQuantityGap) {
+                                    BigDecimal openingQuantityGap, String valuationMethod) {
     }
 
     public record ValuationReport(ValuationPolicyView policy, BigDecimal totalInventoryValue,
-                                  List<ItemValuationView> items, List<MovementCostView> movementCosts) {
+                                  List<ItemValuationView> items, List<MovementCostView> movementCosts,
+                                  BigDecimal glInventoryAccountBalance, BigDecimal inventoryVarianceFromGl) {
     }
 
     public record RevaluationRequest(@NotBlank String itemId, @NotNull @DecimalMin("0.000001") BigDecimal newUnitCost,

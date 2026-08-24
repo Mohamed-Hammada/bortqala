@@ -30,6 +30,7 @@ public class DataExportService {
     private final BusinessPartyRepository businessPartyRepository;
     private final DashboardService dashboardService;
     private final com.bemo.hr.assets.infrastructure.FixedAssetRepository fixedAssetRepository;
+    private final com.bemo.hr.operations.InventoryValuationService inventoryValuationService;
 
     public byte[] categories(ExcelExportOptions options) {
         var messages = ExcelExportSupport.messages(translationService, options);
@@ -122,6 +123,18 @@ public class DataExportService {
         return workbook("export.sheet.fixedAssets", "FixedAssetsTable",
                 List.of("assetName", "category", "acquisitionDate", "cost", "salvage", "lifeMonths",
                         "monthlyCharge", "accumulated", "netBookValue", "lastPosted", "status"), rows, options);
+    }
+
+    public byte[] inventoryValuation(ExcelExportOptions options) {
+        var messages = ExcelExportSupport.messages(translationService, options);
+        var report = inventoryValuationService.report(null, null, null);
+        var rows = report.items().stream().<List<?>>map(item -> List.of(
+                item.itemCode(), item.itemName(), item.quantityOnHand(), item.averageUnitCost(),
+                item.inventoryValue(),
+                item.valuationMethod() == null ? "" : item.valuationMethod(),
+                item.openingQuantityGap())).toList();
+        return workbook("export.sheet.inventoryValuation", "InventoryValuationTable",
+                List.of("itemCode", "itemName", "onHand", "unitCost", "valuationValue", "method", "openingGap"), rows, options);
     }
 
     private byte[] workbook(String sheetKey, String tableName, List<String> headerKeys,

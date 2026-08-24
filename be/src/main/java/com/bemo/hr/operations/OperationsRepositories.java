@@ -34,8 +34,14 @@ interface InventoryMovementCostRepository extends JpaRepository<InventoryMovemen
     @Query("select coalesce(sum(c.valueEffect), 0) from InventoryMovementCost c where c.itemId = :itemId")
     BigDecimal inventoryValue(String itemId);
 
+    @Query("select coalesce(sum(c.valueEffect), 0) from InventoryMovementCost c where c.itemId = :itemId and c.occurredAt <= :asOf")
+    BigDecimal inventoryValueAsOf(String itemId, java.time.Instant asOf);
+
     @Query("select coalesce(sum(c.quantityEffect), 0) from InventoryMovementCost c where c.itemId = :itemId")
     BigDecimal valuedQuantity(String itemId);
+
+    @Query("select coalesce(sum(c.quantityEffect), 0) from InventoryMovementCost c where c.itemId = :itemId and c.occurredAt <= :asOf")
+    BigDecimal valuedQuantityAsOf(String itemId, java.time.Instant asOf);
 }
 
 interface InventoryRevaluationRepository extends JpaRepository<InventoryRevaluation, String> {
@@ -45,6 +51,9 @@ interface InventoryRevaluationRepository extends JpaRepository<InventoryRevaluat
 
     @Query("select coalesce(sum(r.valueDifference), 0) from InventoryRevaluation r where r.itemId = :itemId")
     BigDecimal revaluationValue(String itemId);
+
+    @Query("select coalesce(sum(r.valueDifference), 0) from InventoryRevaluation r where r.itemId = :itemId and r.occurredAt <= :asOf")
+    BigDecimal revaluationValueAsOf(String itemId, java.time.Instant asOf);
 }
 
 interface EmployeeAdvanceEntryRepository extends JpaRepository<EmployeeAdvanceEntry, String> {

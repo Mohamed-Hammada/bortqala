@@ -442,6 +442,9 @@ public class ProcurementService {
         BigDecimal discount = payload.settlementDiscount() == null ? BigDecimal.ZERO : payload.settlementDiscount();
         if (discount.compareTo(BigDecimal.ZERO) < 0)
             throw new BusinessRuleException("Settlement discount cannot be negative.", "PROC_SETTLEMENT_DISCOUNT_INVALID", HttpStatus.BAD_REQUEST);
+        if (discount.compareTo(BigDecimal.ZERO) > 0 && !actorHasFinanceRole())
+            throw new BusinessRuleException("Settlement discounts can only be granted by finance roles.",
+                    "PROC_SETTLEMENT_DISCOUNT_FORBIDDEN", HttpStatus.FORBIDDEN);
         BigDecimal paidBefore = paidAmount(inv.getId());
         BigDecimal outstanding = inv.getNetAmount().subtract(paidBefore);
         if (payload.amount().add(discount).compareTo(outstanding) > 0) {
@@ -460,6 +463,7 @@ public class ProcurementService {
                 .map(com.bemo.hr.party.BusinessParty::getBankAccount).orElse(null));
         if (discount.compareTo(BigDecimal.ZERO) > 0)
             pmt.applySettlementDiscount(discount);
+        pmt.applyOriginalDue(outstanding);
         SupplierPayment saved = supplierPaymentRepository.save(pmt);
 
         inv.updatePaymentStatus(paidBefore.add(saved.getAmount()).add(discount));
@@ -479,7 +483,10 @@ public class ProcurementService {
                     saved.getPaymentDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
         procurementAccountingService.postSupplierPayment(saved, inv, getCurrentUser());
-        String auditExtra = discount.compareTo(BigDecimal.ZERO) > 0 ? ",\"settlementDiscount\":" + discount : "";
+        if (discount.compareTo(BigDecimal.ZERO) > 0)
+            procurementAccountingService.postSupplierSettlementDiscount(saved, inv, discount, getCurrentUser());
+        String auditExtra = discount.compareTo(BigDecimal.ZERO) > 0 ? ",\"settlementDiscount\":" + discount
+                + ",\"originalDue\":" + outstanding : "";
         auditService.record("CREATE", "SUPPLIER_PAYMENT", saved.getId(), getCurrentUser(),
                 "{\"paymentNumber\":\"" + saved.getPaymentNumber() + "\",\"operationId\":\""
                         + saved.getOperationId() + "\",\"amount\":" + saved.getAmount() + auditExtra + "}", null);
@@ -488,6 +495,21 @@ public class ProcurementService {
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────
+
+    private boolean actorHasFinanceRole() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null)
+            return false;
+        for (org.springframework.security.core.GrantedAuthority granted : authentication.getAuthorities()) {
+            String authority = granted.getAuthority();
+            if (authority.startsWith("ROLE_"))
+                authority = authority.substring("ROLE_".length());
+            if ("SUPER_ADMIN".equals(authority) || "ADMIN".equals(authority)
+                    || "FINANCE_MANAGER".equals(authority) || "ACCOUNTANT".equals(authority))
+                return true;
+        }
+        return false;
+    }
 
     private PurchaseOrder requirePo(String id) {
         return purchaseOrderRepository.findById(id)
@@ -757,7 +779,7 @@ public class ProcurementService {
     private ProcurementApi.SupplierPaymentResponse toPaymentResponse(SupplierPayment pmt, Map<String, String> supplierNames) {
         return new ProcurementApi.SupplierPaymentResponse(pmt.getId(), pmt.getPaymentNumber(),
                 toEpochMs(pmt.getPaymentDate()), pmt.getSupplierId(), supplierNames.get(pmt.getSupplierId()),
-                pmt.getSupplierInvoiceId(), pmt.getAmount(), pmt.getSettlementDiscount(), supplierPaymentCurrency(pmt), pmt.getPaymentMethod(), pmt.getNotes(),
+                pmt.getSupplierInvoiceId(), pmt.getAmount(), pmt.getSettlementDiscount(), pmt.getOriginalDue(), supplierPaymentCurrency(pmt), pmt.getPaymentMethod(), pmt.getNotes(),
                 pmt.getOperationId(), pmt.getStatus(), pmt.getCreatedAt());
     }
 

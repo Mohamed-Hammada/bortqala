@@ -140,4 +140,100 @@ describe('EmployeesPage drawer dirty-check', () => {
     expect(component.contractsList().length).toBe(1);
     expect(component.contractsList()[0].contractNumber).toBe('CNT-2026-001');
   });
+
+  it('shows the apply-deduction action only when a MANUAL policy resolves', async () => {
+    const { component } = createPage();
+    const http = TestBed.inject(HttpTestingController);
+    expect(component.applyDeductionVisible()).toBe(false);
+
+    const policiesReq = http.expectOne('/api/v1/workforce/advances/policies');
+    policiesReq.flush([
+      {
+        scopeType: 'GLOBAL',
+        deductionMode: 'MANUAL',
+        deductionFrequency: 'MONTHLY',
+        maxDeductionPercent: 50,
+        defaultInstallments: 1,
+        deferralPeriods: 0,
+        version: 2,
+        effectiveFrom: '2026-01-01',
+        active: true,
+      },
+      {
+        scopeType: 'EMPLOYEE_CATEGORY',
+        scopeId: 'cat-auto',
+        deductionMode: 'AUTO',
+        deductionFrequency: 'MONTHLY',
+        maxDeductionPercent: 50,
+        defaultInstallments: 1,
+        deferralPeriods: 0,
+        version: 1,
+        effectiveFrom: '2026-01-01',
+        active: true,
+      },
+    ]);
+    await Promise.resolve();
+
+    expect(component.applyDeductionVisible()).toBe(true);
+    const manualEmployee = {
+      id: 'emp-m', employeeCode: 'EMP-M', fullName: 'Manual Emp', categoryId: 'cat-other',
+      employmentType: 'FIXED', baseSalary: 5000, activeFrom: 1, activeTo: null, active: true, version: 1,
+    } as import('./employees.models').Employee;
+    const autoEmployee = {
+      ...manualEmployee, id: 'emp-a', employeeCode: 'EMP-A', categoryId: 'cat-auto',
+    } as import('./employees.models').Employee;
+    component.store.items.set([manualEmployee, autoEmployee]);
+
+    const affected = component.affectedEmployees().map((item) => item.id);
+    expect(affected).toEqual(['emp-m']);
+  });
+
+  it('apply-deduction posts one request per affected employee and reports success', async () => {
+    const { component, confirm } = createPage();
+    const http = TestBed.inject(HttpTestingController);
+    const policiesReq = http.expectOne('/api/v1/workforce/advances/policies');
+    policiesReq.flush([
+      {
+        scopeType: 'GLOBAL',
+        deductionMode: 'MANUAL',
+        deductionFrequency: 'MONTHLY',
+        maxDeductionPercent: 50,
+        defaultInstallments: 1,
+        deferralPeriods: 0,
+        version: 1,
+        effectiveFrom: '2026-01-01',
+        active: true,
+      },
+    ]);
+    await Promise.resolve();
+
+    const employee = {
+      id: 'emp-x', employeeCode: 'EMP-X', fullName: 'X', categoryId: 'cat-1',
+      employmentType: 'FIXED', baseSalary: 5000, activeFrom: 1, activeTo: null, active: true, version: 1,
+    } as import('./employees.models').Employee;
+    component.store.items.set([employee]);
+    vi.spyOn(component.notification, 'success');
+
+    component.openApplyDeduction();
+    const state = confirm.confirmState();
+    expect(state).not.toBeNull();
+    confirm.proceed();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth() + 1;
+    const post = http.expectOne(`/api/v1/workforce/advances/apply-deduction`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({ employeeId: 'emp-x', periodId: `${year}/${month}` });
+    post.flush({
+      employeeId: 'emp-x', periodId: `${year}/${month}`,
+      appliedAmount: 250, duplicate: false, lines: [],
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(component.notification.success).toHaveBeenCalled();
+  });
 });

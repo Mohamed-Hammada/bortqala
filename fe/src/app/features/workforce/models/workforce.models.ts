@@ -357,6 +357,28 @@ export interface AdvancePolicy {
   updatedAt?: number;
 }
 
+export interface ResolvedDeductionPolicy {
+  mode: string;
+  cadence: string;
+  source: 'CATEGORY' | 'GLOBAL' | 'DEFAULTS' | 'EMPLOYEE';
+  policyId?: string | null;
+  policyVersion?: number | null;
+  manual: boolean;
+}
+
+export interface ManualDeductionLine {
+  advanceId: string;
+  appliedAmount: number;
+}
+
+export interface ManualDeductionResult {
+  employeeId: string;
+  periodId: string;
+  appliedAmount: number;
+  duplicate: boolean;
+  lines: ManualDeductionLine[];
+}
+
 export interface AdvanceEmployeeOption {
   id: string;
   employeeCode: string;

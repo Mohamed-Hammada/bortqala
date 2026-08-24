@@ -37,6 +37,20 @@ public class WorkforceAdvanceController {
         return advanceService.effectivePolicy(recipientType, workerId, employeeId, date);
     }
 
+    @GetMapping("/resolved-policy")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
+    public WorkforceApi.ResolvedDeductionPolicyResponse resolvedPolicy(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String employeeId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String categoryId) {
+        return advanceService.resolveDeductionPolicy(employeeId, categoryId, java.time.LocalDate.now());
+    }
+
+    @PostMapping("/apply-deduction")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_FINANCE')")
+    public WorkforceApi.ManualDeductionResult applyManualDeduction(@Valid @RequestBody WorkforceApi.ManualDeductionRequest request, Authentication auth) {
+        return advanceService.applyManualDeduction(request, auth != null ? auth.getName() : "system");
+    }
+
     @PutMapping("/policies")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     public WorkforceApi.AdvancePolicyResponse savePolicy(@Valid @RequestBody WorkforceApi.AdvancePolicyRequest request, Authentication auth) {

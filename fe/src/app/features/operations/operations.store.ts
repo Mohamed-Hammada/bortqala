@@ -125,6 +125,26 @@ export class OperationsStore {
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
   }
 
+  async loadValuation(filters?: { asOf?: number; warehouseId?: string; itemId?: string }): Promise<void> {
+    try {
+      const params = new URLSearchParams();
+      if (filters?.asOf) params.set('asOf', String(filters.asOf));
+      if (filters?.warehouseId) params.set('warehouseId', filters.warehouseId);
+      if (filters?.itemId) params.set('itemId', filters.itemId);
+      const query = params.toString();
+      const report = await firstValueFrom(this.http.get<ValuationReport>(
+        '/api/v1/operations/valuation/report' + (query ? `?${query}` : '')));
+      this.valuation.set(report);
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
+  }
+
+  async exportValuation(): Promise<void> {
+    try {
+      downloadBlob(await firstValueFrom(this.http.get('/api/v1/exports/inventory-valuation.xlsx', { responseType: 'blob' })),
+        timestampedExcelFileName('تقييم-المخزون', 'inventory-valuation', this.i18n.locale()));
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
+  }
+
   private normalizeSnapshot(snapshot: OperationsSnapshot): OperationsSnapshot {
     return {
       ...snapshot,

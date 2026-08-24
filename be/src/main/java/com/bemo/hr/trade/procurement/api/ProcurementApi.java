@@ -191,6 +191,7 @@ public class ProcurementApi {
     public record SupplierPaymentResponse(
             String id, String paymentNumber, long paymentDate, String supplierId,
             String supplierName, String supplierInvoiceId, BigDecimal amount, BigDecimal settlementDiscount,
+            BigDecimal originalDue,
             String currencyCode, String paymentMethod, String notes, String operationId, String status, long createdAt
     ) {
     }

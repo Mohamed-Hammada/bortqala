@@ -156,7 +156,7 @@
             <td class="ltr">{{ inv.totalAmount | number:'1.2-2' }}</td>
             <td class="ltr">{{ (inv.discountAmount ?? 0) | number:'1.2-2' }}</td>
             <td class="ltr">{{ (inv.taxAmount ?? 0) | number:'1.2-2' }}</td>
-            <td class="ltr"><strong>{{ inv.netAmount | number:'1.2-2' }}</strong><small> / {{ i18n.t('procurement.invOutstanding') }} {{ inv.outstandingAmount | number:'1.2-2' }}</small></td>
+            <td class="ltr" [title]="i18n.t('procurement.settlementDiscount') + ': ' + (settlementDiscountsByInvoice(inv.id) | number:'1.2-2')"><strong>{{ inv.netAmount | number:'1.2-2' }}</strong><small> / {{ i18n.t('procurement.invOutstanding') }} {{ inv.outstandingAmount | number:'1.2-2' }}</small></td>
             <td><span class="status" [class.warning]="inv.status !== 'PAID'" [class.success]="inv.status === 'PAID'">{{ inv.status === 'PAID' ? i18n.t('procurement.invStatusPaid') : inv.status === 'PARTIALLY_PAID' ? i18n.t('procurement.invStatusPartiallyPaid') : i18n.t('procurement.invStatusUnpaid') }}</span></td>
             <td>
               @if (inv.status !== 'PAID') {
@@ -221,7 +221,7 @@
     @if (activeTab() === 'payment') {
     <div class="table-card">
       <table>
-        <thead><tr><th>{{ i18n.t('procurement.pmtColNumber') }}</th><th>{{ i18n.t('procurement.pmtColDate') }}</th><th>{{ i18n.t('procurement.pmtColSupplier') }}</th><th>{{ i18n.t('procurement.pmtColInvoice') }}</th><th>{{ i18n.t('procurement.pmtColAmount') }}</th><th>{{ i18n.t('procurement.pmtColCurrency') }}</th><th>{{ i18n.t('procurement.pmtColMethod') }}</th><th>{{ i18n.t('procurement.pmtColStatus') }}</th></tr></thead>
+        <thead><tr><th>{{ i18n.t('procurement.pmtColNumber') }}</th><th>{{ i18n.t('procurement.pmtColDate') }}</th><th>{{ i18n.t('procurement.pmtColSupplier') }}</th><th>{{ i18n.t('procurement.pmtColInvoice') }}</th><th>{{ i18n.t('procurement.pmtColAmount') }}</th><th>{{ i18n.t('procurement.settlementDiscount') }}</th><th>{{ i18n.t('procurement.pmtColCurrency') }}</th><th>{{ i18n.t('procurement.pmtColMethod') }}</th><th>{{ i18n.t('procurement.pmtColStatus') }}</th></tr></thead>
         <tbody>
           @for (pmt of payments(); track pmt.id) {
           <tr>
@@ -230,11 +230,12 @@
             <td>{{ pmt.supplierName || pmt.supplierId }}</td>
             <td class="ltr">{{ pmt.supplierInvoiceId }}</td>
             <td class="ltr"><strong>{{ pmt.amount | number:'1.2-2' }}</strong></td>
+            <td class="ltr">{{ (pmt.settlementDiscount ?? 0) | number:'1.2-2' }}</td>
             <td class="ltr">{{ pmt.currencyCode }}</td>
             <td>{{ pmt.paymentMethod === 'BANK_TRANSFER' ? i18n.t('procurement.pmtMethodBankTransfer') : pmt.paymentMethod === 'CASH' ? i18n.t('procurement.pmtMethodCash') : pmt.paymentMethod === 'CHEQUE' ? i18n.t('procurement.pmtMethodCheque') : pmt.paymentMethod }}</td>
             <td><span class="status success">{{ pmt.status === 'POSTED' ? i18n.t('procurement.pmtStatusPosted') : pmt.status }}</span></td>
           </tr>
-          } @empty { <tr><td colspan="8"><div class="empty-state">{{ i18n.t('procurement.pmtEmpty') }}</div></td></tr> }
+          } @empty { <tr><td colspan="9"><div class="empty-state">{{ i18n.t('procurement.pmtEmpty') }}</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -510,12 +511,22 @@
         <div class="field"><label>{{ i18n.t('procurement.poSupplier') }} *</label><select formControlName="supplierId" (change)="onPaymentSupplierChanged()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
         <div class="field"><label>{{ i18n.t('procurement.pmtInvoiceLabel') }} *</label><select formControlName="supplierInvoiceId" (change)="onPaymentInvoiceChanged()"><option value="">{{ i18n.t('procurement.pmtSelectInvoicePlaceholder') }}</option>@for (inv of payableInvoices(); track inv.id) {<option [value]="inv.id">{{ invoiceReference(inv) }} · {{ date(inv.invoiceDate) }} · {{ inv.currencyCode }} · {{ i18n.t('procurement.pmtTotal') }} {{ inv.netAmount | number:'1.2-2' }} · {{ i18n.t('procurement.invOutstanding') }} {{ inv.outstandingAmount | number:'1.2-2' }}</option>}</select><small>{{ i18n.t('procurement.pmtInvoiceHint') }}</small></div>
         <div class="field"><label>{{ i18n.t('procurement.pmtColAmount') }} *</label><input type="number" min="0.01" formControlName="amount" /></div>
+        <details class="field span-2 settlement-section" [attr.open]="pmtForm.controls.settlementDiscount.value > 0 ? '' : null">
+          <summary>{{ i18n.t('procurement.settlementSection') }}</summary>
           <div class="field"><label>{{ i18n.t('procurement.settlementDiscount') }}</label><input type="number" min="0" step="0.01" formControlName="settlementDiscount" /><small>{{ i18n.t('procurement.settlementDiscountHint') }}</small></div>
+          <dl class="settlement-preview">
+            <div><dt>{{ i18n.t('procurement.originalDue') }}</dt><dd class="ltr">{{ settlementPreview().originalDue | number:'1.2-2' }}</dd></div>
+            <div><dt>{{ i18n.t('procurement.pmtColAmount') }}</dt><dd class="ltr">{{ settlementPreview().cash | number:'1.2-2' }}</dd></div>
+            <div><dt>{{ i18n.t('procurement.settlementDiscount') }}</dt><dd class="ltr">{{ settlementPreview().discount | number:'1.2-2' }}</dd></div>
+            <div><dt>{{ i18n.t('procurement.remainingAfter') }}</dt><dd class="ltr" [class.warning]="settlementExceeds()">{{ settlementPreview().remainingAfter | number:'1.2-2' }}</dd></div>
+          </dl>
+          @if (settlementExceeds()) {<small class="settlement-warning">{{ i18n.t('procurement.settlementExceedsBalance') }}</small>}
+        </details>
         <div class="field"><label>{{ i18n.t('procurement.pmtColMethod') }} *</label><select formControlName="paymentMethod"><option value="BANK_TRANSFER">{{ i18n.t('procurement.pmtMethodBankTransfer') }}</option><option value="CASH">{{ i18n.t('procurement.pmtMethodCash') }}</option><option value="CHEQUE">{{ i18n.t('procurement.pmtMethodCheque') }}</option></select></div>
         <div class="field span-2"><label>{{ i18n.t('procurement.colNotes') }}</label><input formControlName="notes" /></div>
       </div>
       <div modal-actions class="modal-actions-bar">
-        <button class="button primary" type="submit" [disabled]="savingPayment() || pmtForm.invalid">{{ i18n.t('procurement.pmtSubmit') }}</button>
+        <button class="button primary" type="submit" [disabled]="savingPayment() || pmtForm.invalid || settlementExceeds()">{{ i18n.t('procurement.pmtSubmit') }}</button>
         <button class="button secondary" type="button" (click)="pmtModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
       </div>
     </form>

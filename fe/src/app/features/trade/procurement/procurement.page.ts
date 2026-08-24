@@ -19,7 +19,7 @@ interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplier
 interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId?: string; lotNumber?: string; qualityReason?: string; projectId?: string; wbsNodeId?: string; costCodeId?: string; }
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
 interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; projectId?: string; wbsNodeId?: string; costCodeId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
-interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; settlementDiscount?: number | null; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
+interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; settlementDiscount?: number | null; originalDue?: number | null; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
 interface SupplierPaymentPlanRow { id: string; invoiceId: string; installmentNo: number; dueDate: number; amount: number; paidAt: number | null; }
 interface PurchaseRequestLineResponse { id: string; itemId: string; itemName: string; quantity: number; unitOfMeasure?: string; estimatedUnitPrice?: number; convertedQuantity: number; }
 interface PurchaseRequest { id: string; requestNumber: string; requestedBy: string; departmentId?: string; departmentName?: string; status: string; neededBy?: number | null; notes?: string; convertedPoId?: string; estimatedTotal?: number; lines: PurchaseRequestLineResponse[]; createdAt: number; updatedAt: number; }
@@ -948,6 +948,25 @@ export class ProcurementPage {
   onPaymentInvoiceChanged(): void {
     const invoice = this.payableInvoices().find(item => item.id === this.pmtForm.controls.supplierInvoiceId.value);
     this.pmtForm.controls.amount.setValue(invoice?.outstandingAmount ?? 0);
+  }
+
+  settlementDiscountsByInvoice(invoiceId: string): number {
+    return this.payments().filter(pmt => pmt.supplierInvoiceId === invoiceId)
+      .reduce((sum, pmt) => sum + (pmt.settlementDiscount ?? 0), 0);
+  }
+
+  settlementPreview(): { originalDue: number; cash: number; discount: number; remainingAfter: number } {
+    const invoice = this.payableInvoices().find(item => item.id === this.pmtForm.controls.supplierInvoiceId.value);
+    const v = this.pmtForm.getRawValue();
+    const cash = Number(v.amount) || 0;
+    const discount = v.settlementDiscount > 0 ? Number(v.settlementDiscount) : 0;
+    const originalDue = invoice?.outstandingAmount ?? 0;
+    return { originalDue, cash, discount, remainingAfter: Math.max(originalDue - cash - discount, 0) };
+  }
+
+  settlementExceeds(): boolean {
+    const preview = this.settlementPreview();
+    return preview.cash + preview.discount > preview.originalDue;
   }
 
   async submitPayment() {

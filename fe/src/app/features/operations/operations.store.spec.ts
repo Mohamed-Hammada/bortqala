@@ -99,6 +99,21 @@ describe('OperationsStore', () => {
     expect(store.valuation()?.policy.valuationMethod).toBe('FIFO');
   });
 
+  it('reloads the valuation report with as-of and warehouse filters', async () => {
+    const promise = store.loadValuation({ asOf: 1754784000000, warehouseId: 'wh-1' });
+    const req = httpMock.expectOne('/api/v1/operations/valuation/report?asOf=1754784000000&warehouseId=wh-1');
+    req.flush({ policy: null, totalInventoryValue: 40, items: [], movementCosts: [],
+      glInventoryAccountBalance: 35, inventoryVarianceFromGl: 5 });
+    await promise;
+    expect(store.valuation()?.inventoryVarianceFromGl).toBe(5);
+  });
+
+  it('downloads the valuation export from the exports endpoint', async () => {
+    const promise = store.exportValuation();
+    httpMock.expectOne('/api/v1/exports/inventory-valuation.xlsx').flush(new Blob());
+    await promise;
+  });
+
   it('creates and transitions a warehouse transfer while updating local state', async () => {
     const transfer = { id: 'tr-1', transferNumber: 'TR-001', sourceWarehouseId: 'wh-1', sourceWarehouseName: 'Main',
       targetWarehouseId: 'wh-2', targetWarehouseName: 'Secondary', transferDate: 1785628800000,

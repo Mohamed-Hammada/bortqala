@@ -156,11 +156,17 @@ public class WorkforceAdvanceService {
         List<WorkforceAdvancePolicy> versions = policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream()
                 .filter(item -> item.getScopeType().equals(scopeType) && java.util.Objects.equals(item.getScopeId(), scopeId))
                 .toList();
+        boolean laterOpenVersionExists = versions.stream()
+                .anyMatch(item -> item.isActive() && item.getEffectiveTo() == null
+                        && item.getEffectiveFrom().isAfter(effectiveFrom));
+        if (laterOpenVersionExists)
+            throw new BusinessRuleException("An open policy version with a later effective date already exists for this scope.", "ADVANCE_POLICY_EXISTS", HttpStatus.CONFLICT);
         int version = versions.stream().mapToInt(WorkforceAdvancePolicy::getVersion).max().orElse(0) + 1;
         versions.stream().filter(item -> item.isActive() && item.getEffectiveTo() == null
                 && !effectiveFrom.isBefore(item.getEffectiveFrom())).forEach(item -> item.closeBefore(effectiveFrom));
-        WorkforceAdvancePolicy policy = new WorkforceAdvancePolicy(scopeType, scopeId, request.deductionMode(),
-                request.deductionFrequency(), request.maxDeductionPercent(), request.defaultInstallments(),
+        WorkforceAdvancePolicy policy = new WorkforceAdvancePolicy(scopeType, scopeId,
+                normalizeDeductionMode(request.deductionMode()),
+                normalizeDeductionFrequency(request.deductionFrequency()), request.maxDeductionPercent(), request.defaultInstallments(),
                 request.deferralPeriods(), request.active(), version, effectiveFrom, effectiveTo);
         WorkforceAdvancePolicy saved = policyRepository.save(policy);
         log.info("AdvancePolicy {} created (version {})", saved.getId(), version);
@@ -214,6 +220,118 @@ public class WorkforceAdvanceService {
         if (policy == null)
             throw new BusinessRuleException("No active advance policy found for the beneficiary on the specified date.", "ADVANCE_POLICY_NOT_FOUND", HttpStatus.CONFLICT);
         return mapPolicy(policy);
+    }
+
+    @Transactional(readOnly = true)
+    public WorkforceApi.ResolvedDeductionPolicyResponse resolveDeductionPolicy(String employeeId, String categoryId, LocalDate date) {
+        log.debug("resolveDeductionPolicy called with employeeId={}, categoryId={}, date={}", employeeId, categoryId, date);
+        WorkforceAdvancePolicy policy = null;
+        String source = "DEFAULTS";
+        if (employeeId != null && !employeeId.isBlank()) {
+            policy = effectivePolicy("EMPLOYEE", null, employeeId, date);
+            if (policy != null) {
+                source = "EMPLOYEE".equals(policy.getScopeType()) ? "EMPLOYEE"
+                        : "EMPLOYEE_CATEGORY".equals(policy.getScopeType()) ? "CATEGORY" : "GLOBAL";
+            }
+        } else {
+            String effectiveCategoryId = categoryId == null || categoryId.isBlank() ? null : categoryId;
+            policy = policiesEffectiveOn(date).stream()
+                    .filter(item -> "EMPLOYEE_CATEGORY".equals(item.getScopeType())
+                            && java.util.Objects.equals(effectiveCategoryId, item.getScopeId()))
+                    .max(Comparator.comparingInt(WorkforceAdvancePolicy::getVersion))
+                    .orElseGet(() -> policiesEffectiveOn(date).stream()
+                            .filter(item -> "GLOBAL".equals(item.getScopeType()))
+                            .max(Comparator.comparingInt(WorkforceAdvancePolicy::getVersion))
+                            .orElse(null));
+            if (policy != null) source = "EMPLOYEE_CATEGORY".equals(policy.getScopeType()) ? "CATEGORY" : "GLOBAL";
+        }
+        String mode = policy == null ? "AUTO" : policy.getDeductionMode();
+        String cadence = policy == null ? "MONTHLY" : mapCadenceOut(policy.getDeductionFrequency());
+        return new WorkforceApi.ResolvedDeductionPolicyResponse(
+                mode, cadence, source,
+                policy == null ? null : policy.getId(),
+                policy == null ? null : (long) policy.getVersion(),
+                "MANUAL".equalsIgnoreCase(mode));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isManualDeductionPolicy(String employeeId, LocalDate date) {
+        log.debug("isManualDeductionPolicy called with employeeId={}, date={}", employeeId, date);
+        WorkforceAdvancePolicy policy = effectivePolicy("EMPLOYEE", null, employeeId, date);
+        return policy != null && "MANUAL".equalsIgnoreCase(policy.getDeductionMode());
+    }
+
+    @Transactional
+    public WorkforceApi.ManualDeductionResult applyManualDeduction(WorkforceApi.ManualDeductionRequest request, String actor) {
+        log.debug("applyManualDeduction called with employeeId={}, periodId={}", request.employeeId(), request.periodId());
+        Employee employee = employeeRepository.findById(request.employeeId())
+                .orElseThrow(() -> new NotFoundException("Employee not found."));
+        String periodId = request.periodId() == null ? "" : request.periodId().strip();
+        if (periodId.isEmpty())
+            throw new BusinessRuleException("Period reference is required for manual deduction.", "ADVANCE_POLICY_INVALID", HttpStatus.CONFLICT);
+        if (!isManualDeductionPolicy(employee.getId(), LocalDate.now()))
+            throw new BusinessRuleException("Manual deduction is only available when the resolved policy mode is MANUAL.", "ADVANCE_MANUAL_NOT_DUE", HttpStatus.CONFLICT);
+
+        List<WorkforceAdvance> advances = advanceRepository.findByEmployeeIdOrderByCreatedAtAsc(employee.getId()).stream()
+                .filter(item -> "ACTIVE".equals(item.getStatus()))
+                .toList();
+        List<String> advanceIds = advances.stream().map(WorkforceAdvance::getId).toList();
+        for (String advanceId : advanceIds) {
+            boolean alreadyApplied = ledgerRepository.findByAdvanceId(advanceId).stream()
+                    .anyMatch(entry -> "PAYROLL_DEDUCTION".equals(entry.getEntryType())
+                            && entry.getNotes() != null && entry.getNotes().endsWith(periodId));
+            if (alreadyApplied) {
+                log.info("Manual deduction for employee {} period {} already applied (idempotent replay)", employee.getId(), periodId);
+                return new WorkforceApi.ManualDeductionResult(employee.getId(), periodId, BigDecimal.ZERO, true, List.of());
+            }
+        }
+
+        BigDecimal due = BigDecimal.ZERO;
+        List<WorkforceApi.ManualDeductionLine> lines = new java.util.ArrayList<>();
+        for (WorkforceAdvance advance : advances) {
+            if (!"AUTO".equalsIgnoreCase(advance.getDeductionMode())) continue;
+            BigDecimal dueForAdvance = installmentRepository.findByAdvanceId(advance.getId()).stream()
+                    .filter(installment -> !LocalDate.parse(installment.getDueDate()).isAfter(LocalDate.now()))
+                    .map(WorkforceAdvanceInstallment::remainingAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .min(advance.getRemainingBalance());
+            if (dueForAdvance.signum() > 0) {
+                due = due.add(dueForAdvance);
+                lines.add(new WorkforceApi.ManualDeductionLine(advance.getId(), dueForAdvance));
+            }
+        }
+        if (due.signum() <= 0)
+            throw new BusinessRuleException("No advance installment is due for this employee in the current period.", "ADVANCE_NOTHING_DUE", HttpStatus.CONFLICT);
+
+        applyEmployeePayrollSettlement(employee.getId(), due, periodId, actor);
+        auditService.record("APPLY_MANUAL_DEDUCTION", "ADVANCE", employee.getId(), actor,
+                "{\"periodId\":\"" + periodId + "\",\"amount\":" + due + ",\"lines\":" + lines.size() + "}", null);
+        log.info("Manual deduction applied for employee {} period {} amount {}", employee.getId(), periodId, due);
+        return new WorkforceApi.ManualDeductionResult(employee.getId(), periodId, due, false, lines);
+    }
+
+    private List<WorkforceAdvancePolicy> policiesEffectiveOn(LocalDate date) {
+        return policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream()
+                .filter(item -> item.isEffectiveOn(date)).toList();
+    }
+
+    private String normalizeDeductionMode(String mode) {
+        String value = mode == null ? "" : mode.strip().toUpperCase(java.util.Locale.ROOT);
+        if (value.isEmpty() || "AUTO".equals(value) || "AUTO_IN_PAYROLL".equals(value)) return "AUTO";
+        if ("MANUAL".equals(value) || "MANUAL_BUTTON".equals(value)) return "MANUAL";
+        throw new BusinessRuleException("Deduction mode must be AUTO or MANUAL.", "ADVANCE_POLICY_INVALID", HttpStatus.CONFLICT);
+    }
+
+    private String normalizeDeductionFrequency(String frequency) {
+        String value = frequency == null ? "" : frequency.strip().toUpperCase(java.util.Locale.ROOT);
+        if (value.isEmpty()) return "HALF_MONTH";
+        if ("MONTHLY".equals(value) || "MID_MONTH_SPLIT".equals(value)) return value;
+        if ("HALF_MONTH".equals(value)) return "HALF_MONTH";
+        throw new BusinessRuleException("Deduction cadence must be MONTHLY or MID_MONTH_SPLIT.", "ADVANCE_POLICY_INVALID", HttpStatus.CONFLICT);
+    }
+
+    private String mapCadenceOut(String frequency) {
+        return "HALF_MONTH".equalsIgnoreCase(frequency) ? "MID_MONTH_SPLIT" : frequency;
     }
 
     private WorkforceApi.AdvancePolicyResponse mapPolicy(WorkforceAdvancePolicy policy) {

@@ -295,12 +295,15 @@ export interface ItemValuation {
   inventoryValue: number;
   averageUnitCost: number;
   openingQuantityGap: number;
+  valuationMethod?: string | null;
 }
 export interface ValuationReport {
   policy: ValuationPolicy;
   totalInventoryValue: number;
   items: ItemValuation[];
   movementCosts: MovementCost[];
+  glInventoryAccountBalance?: number | null;
+  inventoryVarianceFromGl?: number | null;
 }
 export interface AccountOption {
   id: string;

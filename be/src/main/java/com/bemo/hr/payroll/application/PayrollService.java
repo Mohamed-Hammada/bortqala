@@ -138,6 +138,15 @@ public class PayrollService {
                     payment.getId(), "ADVANCE_DEDUCTION", "Gross - Active Advance Installment", "{\"advanceDeduction\":" + adv + "}",
                     adv, "Deduction of active monthly advance installment", "Deduction of active monthly advance installment"
             ));
+        } else if (workforceAdvanceService.isManualDeductionPolicy(payment.getEmployeeId(),
+                YearMonth.of(payment.getPeriodYear(), payment.getPeriodMonth()).atEndOfMonth())) {
+            explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
+                    payment.getId(), "ADVANCE_DEDUCTION", "Skipped - manual deduction policy",
+                    "{\"advanceDeduction\":0,\"skipped\":true,\"reason\":\"MANUAL_DEDUCTION_POLICY\"}",
+                    BigDecimal.ZERO,
+                    "لم يتم خصم السلفة تلقائياً: سياسة الخصم اليدوي مفعلة لهذا الموظف",
+                    "No automatic advance deduction: the MANUAL deduction policy is active for this employee"
+            ));
         }
         explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                 payment.getId(), "NET_PAYABLE", "Gross - Deductions = Net Payable", "{\"netAmount\":" + net + "}",
@@ -257,8 +266,13 @@ public class PayrollService {
             } else {
                 // Derived immutable estimation with advance safety
                 BigDecimal availableForAdvance = gross.subtract(deductions).max(BigDecimal.ZERO);
-                advances = workforceAdvanceService.calculateEmployeePayrollDeduction(
-                        emp.getId(), end, availableForAdvance, activeAdvances);
+                if (workforceAdvanceService.isManualDeductionPolicy(emp.getId(), end)) {
+                    // WP-07: MANUAL deduction policy blocks automatic payroll collection
+                    advances = BigDecimal.ZERO;
+                } else {
+                    advances = workforceAdvanceService.calculateEmployeePayrollDeduction(
+                            emp.getId(), end, availableForAdvance, activeAdvances);
+                }
                 net = gross.subtract(advances).subtract(deductions).max(BigDecimal.ZERO);
             }
 

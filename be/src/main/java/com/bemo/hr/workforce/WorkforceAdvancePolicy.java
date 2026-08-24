@@ -68,7 +68,12 @@ public class WorkforceAdvancePolicy {
         this.scopeType = scopeType.strip().toUpperCase(Locale.ROOT);
         this.scopeId = "GLOBAL".equals(this.scopeType) ? null : scopeId;
         this.scopeKey = this.scopeId == null ? "GLOBAL" : this.scopeId;
-        this.deductionMode = deductionMode == null ? "AUTO" : deductionMode.strip().toUpperCase(Locale.ROOT);
+        String normalizedMode = deductionMode == null ? "" : deductionMode.strip().toUpperCase(Locale.ROOT);
+        this.deductionMode = switch (normalizedMode) {
+            case "", "AUTO_IN_PAYROLL" -> "AUTO";
+            case "MANUAL_BUTTON" -> "MANUAL";
+            default -> normalizedMode;
+        };
         this.deductionFrequency = deductionFrequency == null ? "HALF_MONTH" : deductionFrequency.strip().toUpperCase(Locale.ROOT);
         this.maxDeductionPercent = maxDeductionPercent == null ? new BigDecimal("50") : maxDeductionPercent;
         this.defaultInstallments = Math.max(1, defaultInstallments);

@@ -1,0 +1,33 @@
+id;translation_key;locale;text_value
+v349-001-en;export.sheet.inventoryValuation;en-US;Inventory Valuation
+v349-001-ar;export.sheet.inventoryValuation;ar-EG;تقييم المخزون
+v349-002-en;export.column.itemCode;en-US;Item Code
+v349-002-ar;export.column.itemCode;ar-EG;كود الصنف
+v349-003-en;export.column.itemName;en-US;Item Name
+v349-003-ar;export.column.itemName;ar-EG;اسم الصنف
+v349-004-en;export.column.onHand;en-US;On Hand
+v349-004-ar;export.column.onHand;ar-EG;الرصيد المتاح
+v349-005-en;export.column.unitCost;en-US;Unit Cost
+v349-005-ar;export.column.unitCost;ar-EG;تكلفة الوحدة
+v349-006-en;export.column.valuationValue;en-US;Inventory Value
+v349-006-ar;export.column.valuationValue;ar-EG;قيمة المخزون
+v349-007-en;export.column.method;en-US;Valuation Method
+v349-007-ar;export.column.method;ar-EG;طريقة التقييم
+v349-008-en;export.column.openingGap;en-US;Opening Gap
+v349-008-ar;export.column.openingGap;ar-EG;فجوة الرصيد الافتتاحي
+v349-009-en;operations.valuation.asOf;en-US;As of date
+v349-009-ar;operations.valuation.asOf;ar-EG;كما في تاريخ
+v349-010-en;operations.valuation.warehouseFilter;en-US;Warehouse
+v349-010-ar;operations.valuation.warehouseFilter;ar-EG;المخزن
+v349-011-en;operations.valuation.allWarehouses;en-US;All warehouses
+v349-011-ar;operations.valuation.allWarehouses;ar-EG;كل المخازن
+v349-012-en;operations.valuation.methodBadge;en-US;Method
+v349-012-ar;operations.valuation.methodBadge;ar-EG;الطريقة
+v349-013-en;operations.valuation.glBalance;en-US;GL inventory account balance
+v349-013-ar;operations.valuation.glBalance;ar-EG;رصيد حساب المخزون في الأستاذ العام
+v349-014-en;operations.valuation.variance;en-US;Reconciliation variance
+v349-014-ar;operations.valuation.variance;ar-EG;فرق التسوية
+v349-015-en;operations.valuation.export;en-US;Export valuation
+v349-015-ar;operations.valuation.export;ar-EG;تصدير التقييم
+v349-016-en;operations.valuation.itemFilter;en-US;Item
+v349-016-ar;operations.valuation.itemFilter;ar-EG;الصنف

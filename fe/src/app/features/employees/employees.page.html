@@ -9,7 +9,17 @@
       <button class="button secondary" type="button" (click)="openEmployeeAdvances()">
         {{ i18n.t('workforce.advances.title') }}
       </button
-      ><button class="button secondary" (click)="store.export()">⇩ Excel</button
+      >@if (applyDeductionVisible()) {
+        <button
+          class="button secondary"
+          type="button"
+          (click)="openApplyDeduction()"
+          [disabled]="applyDeductionBusy()"
+        >
+          {{ i18n.t('employees.applyDeductionAction') }}
+        </button>
+      }
+      <button class="button secondary" (click)="store.export()">⇩ Excel</button
       ><button class="button primary" (click)="openNew()" [disabled]="!store.categories().length">
         ＋ {{ i18n.t('employees.add') }}
       </button>

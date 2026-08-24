@@ -476,6 +476,38 @@ public final class WorkforceApi {
     ) {
     }
 
+    // --- Advance Deduction Policy DTOs (WP-07) ---
+    public record ResolvedDeductionPolicyResponse(
+            String mode,
+            String cadence,
+            String source,
+            String policyId,
+            Long policyVersion,
+            boolean manual
+    ) {
+    }
+
+    public record ManualDeductionRequest(
+            @jakarta.validation.constraints.NotBlank String employeeId,
+            @jakarta.validation.constraints.NotBlank String periodId
+    ) {
+    }
+
+    public record ManualDeductionResult(
+            String employeeId,
+            String periodId,
+            BigDecimal appliedAmount,
+            boolean duplicate,
+            List<ManualDeductionLine> lines
+    ) {
+    }
+
+    public record ManualDeductionLine(
+            String advanceId,
+            BigDecimal appliedAmount
+    ) {
+    }
+
     // --- Project Labor Cost Report DTOs ---
     public record ProjectLaborCostItem(
             String workerId,

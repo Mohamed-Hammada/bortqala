@@ -19,6 +19,15 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, St
     @Query("select coalesce(sum(m.quantityDelta), 0) from StockMovement m where m.itemId = :itemId")
     BigDecimal balance(String itemId);
 
+    @Query("select coalesce(sum(m.quantityDelta), 0) from StockMovement m where m.itemId = :itemId and m.occurredAt <= :asOf")
+    BigDecimal balanceAsOf(String itemId, java.time.Instant asOf);
+
+    @Query("select coalesce(sum(m.quantityDelta), 0) from StockMovement m where m.itemId = :itemId and m.warehouse = :warehouse")
+    BigDecimal balanceByWarehouse(String itemId, String warehouse);
+
+    @Query("select coalesce(sum(m.quantityDelta), 0) from StockMovement m where m.itemId = :itemId and m.warehouse = :warehouse and m.occurredAt <= :asOf")
+    BigDecimal balanceAsOfAndWarehouse(String itemId, String warehouse, java.time.Instant asOf);
+
     @Query("select m.itemId, coalesce(sum(m.quantityDelta), 0) from StockMovement m group by m.itemId having coalesce(sum(m.quantityDelta), 0) < 0")
     List<Object[]> findNegativeBalanceItemIds();
 

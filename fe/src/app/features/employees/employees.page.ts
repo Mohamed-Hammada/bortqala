@@ -24,6 +24,8 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { apiErrorMessage } from '../../core/api-error';
+import { WorkforceService } from '../workforce/data-access/workforce.service';
+import { AdvancePolicy } from '../workforce/models/workforce.models';
 
 @Component({
   selector: 'app-employees-page',
@@ -49,6 +51,7 @@ export class EmployeesPage {
   private readonly confirm = inject(ConfirmDialogService);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
+  private readonly workforceService = inject(WorkforceService);
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
   readonly pagination = new TablePagination();
@@ -104,6 +107,85 @@ export class EmployeesPage {
     });
   }
 
+  // WP-07: manual advance deduction, gated on the resolved MANUAL policy
+  readonly applyDeductionVisible = signal(false);
+  readonly applyDeductionBusy = signal(false);
+  private globalManual = false;
+  private categoryPolicyModes = new Map<string, boolean>();
+
+  private async loadDeductionGate(): Promise<void> {
+    try {
+      const policies = await firstValueFrom(this.workforceService.loadAdvancePolicies());
+      const latestByScope = new Map<string, AdvancePolicy>();
+      for (const policy of policies) {
+        const key = `${policy.scopeType}:${policy.scopeId ?? ''}`;
+        const existing = latestByScope.get(key);
+        if (!existing || policy.version >= existing.version) latestByScope.set(key, policy);
+      }
+      this.globalManual = latestByScope.get('GLOBAL:')?.deductionMode === 'MANUAL';
+      this.categoryPolicyModes = new Map(
+        [...latestByScope.values()]
+          .filter((policy) => policy.scopeType === 'EMPLOYEE_CATEGORY' && policy.scopeId)
+          .map((policy) => [policy.scopeId as string, policy.deductionMode === 'MANUAL']),
+      );
+      this.applyDeductionVisible.set(
+        this.globalManual || [...this.categoryPolicyModes.values()].some((manual) => manual),
+      );
+    } catch {
+      this.applyDeductionVisible.set(false);
+    }
+  }
+
+  affectedEmployees(): Employee[] {
+    return this.store.items().filter((item) =>
+      this.categoryPolicyModes.has(item.categoryId)
+        ? this.categoryPolicyModes.get(item.categoryId) === true
+        : this.globalManual,
+    );
+  }
+
+  openApplyDeduction(): void {
+    if (this.applyDeductionBusy()) return;
+    const targets = this.affectedEmployees();
+    if (!targets.length) {
+      this.notification.info(this.i18n.t('employees.applyDeductionNoTargets'));
+      return;
+    }
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'employees.applyDeductionAction',
+        messageKey: 'employees.applyDeductionConfirmBody',
+        params: { count: targets.length },
+        confirmKey: 'common.confirm',
+      },
+      async () => {
+        this.applyDeductionBusy.set(true);
+        try {
+          const now = new Date();
+          const periodId = `${now.getFullYear()}/${now.getMonth() + 1}`;
+          let applied = 0;
+          let firstError: unknown = null;
+          for (const target of targets) {
+            try {
+              await firstValueFrom(this.workforceService.applyManualDeduction(target.id, periodId));
+              applied++;
+            } catch (error) {
+              if (!firstError) firstError = error;
+            }
+          }
+          if (applied > 0) {
+            this.notification.success(this.i18n.t('employees.applyDeductionSuccess', { count: applied }));
+          }
+          if (firstError) {
+            this.notification.error(apiErrorMessage(firstError));
+          }
+        } finally {
+          this.applyDeductionBusy.set(false);
+        }
+      },
+    );
+  }
+
   isBiometricCategorySelected(): boolean {
     const selectedId = this.form.controls.categoryId.value;
     const cat = this.store.categories().find((c) => c.id === selectedId);
@@ -143,6 +225,7 @@ export class EmployeesPage {
 
   constructor() {
     void this.reloadAndApplyBiometricPrefill();
+    void this.loadDeductionGate();
     this.form.controls.categoryId.valueChanges.subscribe((catId) => {
       const cat = this.store.categories().find((c) => c.id === catId);
       if (cat?.attendanceMode === 'BIOMETRIC') {

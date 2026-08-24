@@ -285,5 +285,62 @@ describe('ProcurementPage invoice adjustments', () => {
     expect(post).toHaveBeenCalledWith('/api/v1/purchase-requests/pr-9/convert', { supplierId: 'sup-1' });
     expect(page.convertingPr()).toBeNull();
   });
+
+  it('previews the settlement triple and remaining-after for a discounted payment', () => {
+    const page = createPage();
+    const invoice = invoiceFixture('inv-1', 1000);
+    page.invoices.set([invoice]);
+    page.openNewPayment(invoice);
+    page.pmtForm.patchValue({ amount: 900, settlementDiscount: 100 });
+
+    expect(page.settlementPreview()).toEqual({ originalDue: 1000, cash: 900, discount: 100, remainingAfter: 0 });
+    expect(page.settlementExceeds()).toBe(false);
+  });
+
+  it('blocks settlement submission when cash plus discount exceeds the outstanding balance', async () => {
+    const page = createPage();
+    const invoice = invoiceFixture('inv-1', 1000);
+    page.invoices.set([invoice]);
+    page.openNewPayment(invoice);
+    page.pmtForm.patchValue({ amount: 950, settlementDiscount: 100 });
+
+    expect(page.settlementPreview().remainingAfter).toBe(0);
+    expect(page.settlementExceeds()).toBe(true);
+
+    const notification = page.notification;
+    vi.spyOn(notification, 'error');
+    await page.submitPayment();
+    expect(notification.error).toHaveBeenCalled();
+  });
+
+  it('totals the discounts taken per invoice from the recorded payments', () => {
+    const page = createPage();
+    page.payments.set([
+      paymentFixture('pmt-1', 'inv-1', 40),
+      paymentFixture('pmt-2', 'inv-1', 60),
+      paymentFixture('pmt-3', 'inv-2', 15),
+    ]);
+
+    expect(page.settlementDiscountsByInvoice('inv-1')).toBe(100);
+    expect(page.settlementDiscountsByInvoice('inv-2')).toBe(15);
+    expect(page.settlementDiscountsByInvoice('inv-missing')).toBe(0);
+  });
 });
+
+function invoiceFixture(id: string, outstandingAmount: number) {
+  return {
+    id, invoiceNumber: 'INV-' + id, internalReference: 'REF-' + id, currencyCode: 'EGP', baseCurrencyCode: 'EGP',
+    exchangeRate: 1, exchangeRateDate: 0, exchangeRateSource: 'BASE', baseNetAmount: outstandingAmount,
+    supplierId: 'supplier-a', invoiceDate: 0, totalAmount: outstandingAmount, netAmount: outstandingAmount,
+    paidAmount: 0, outstandingAmount, status: 'UNPAID', createdAt: 0, updatedAt: 0,
+  } as any;
+}
+
+function paymentFixture(id: string, invoiceId: string, discount: number) {
+  return {
+    id, paymentNumber: 'PMT-' + id, paymentDate: 0, supplierId: 'supplier-a', supplierInvoiceId: invoiceId,
+    amount: 100, settlementDiscount: discount, originalDue: null, currencyCode: 'EGP',
+    paymentMethod: 'CASH', operationId: 'op-' + id, status: 'POSTED', createdAt: 0,
+  } as any;
+}
 

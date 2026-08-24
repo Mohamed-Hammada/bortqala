@@ -14,6 +14,8 @@ import {
   ManualAttendanceEntry,
   BatchAttendanceResponse,
   AdvancePolicy,
+  ResolvedDeductionPolicy,
+  ManualDeductionResult,
   SettlementIssue,
   WorkforceImportBatch,
   WorkforceImportValidation,
@@ -231,6 +233,20 @@ export class WorkforceService {
     return this.http.put<AdvancePolicy>('/api/v1/workforce/advances/policies', payload).pipe(
       tap(() => this.loadAdvancePolicies().subscribe())
     );
+  }
+
+  loadResolvedDeductionPolicy(employeeId?: string, categoryId?: string): Observable<ResolvedDeductionPolicy> {
+    const params: Record<string, string> = {};
+    if (employeeId) params['employeeId'] = employeeId;
+    if (categoryId) params['categoryId'] = categoryId;
+    return this.http.get<ResolvedDeductionPolicy>('/api/v1/workforce/advances/resolved-policy', { params });
+  }
+
+  applyManualDeduction(employeeId: string, periodId: string): Observable<ManualDeductionResult> {
+    return this.http.post<ManualDeductionResult>('/api/v1/workforce/advances/apply-deduction', {
+      employeeId,
+      periodId,
+    });
   }
 
   loadEffectiveAdvancePolicy(recipientType: 'WORKER' | 'EMPLOYEE', recipientId: string, date: string): Observable<AdvancePolicy> {

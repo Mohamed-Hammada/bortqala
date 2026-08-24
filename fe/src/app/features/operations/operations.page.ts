@@ -431,6 +431,22 @@ export class OperationsPage {
       ? 'operations.valuation.fifo'
       : 'operations.valuation.weightedAverage');
   }
+  valuationMethodBadge(method: string | null | undefined): string {
+    return this.i18n.t(method === 'FIFO' ? 'operations.valuation.fifo' : 'operations.valuation.weightedAverage');
+  }
+  readonly valuationAsOf = signal<string>('');
+  readonly valuationWarehouseId = signal<string>('');
+  async applyValuationFilters(): Promise<void> {
+    const asOfRaw = this.valuationAsOf();
+    await this.store.loadValuation({
+      asOf: asOfRaw ? new Date(asOfRaw).getTime() : undefined,
+      warehouseId: this.valuationWarehouseId() || undefined,
+    });
+  }
+  valuationVarianceNonZero(): boolean {
+    const variance = this.store.valuation()?.inventoryVarianceFromGl;
+    return variance != null && Math.abs(variance) >= 0.005;
+  }
   date(value: number): string {
     return formatDateTime(value);
   }

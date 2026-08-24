@@ -722,3 +722,19 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260825_v347_fixed_assets_translations.yaml
       relativeToChangelogFile: false
+  # WP-02 completion: original-due column on supplier payments
+  - include:
+      file: db/changelog/schema/update/20260824_v348_settlement_discount_original_due.yaml
+      relativeToChangelogFile: false
+  # WP-02 completion: settlement-discount guard + payment dialog copy
+  - include:
+      file: db/changelog/data/insert/20260824_v348_settlement_discount_forbidden_translations.yaml
+      relativeToChangelogFile: false
+  # WP-05: inventory valuation report surface translations
+  - include:
+      file: db/changelog/data/insert/20260826_v349_valuation_report_translations.yaml
+      relativeToChangelogFile: false
+  # WP-07: advance deduction policy errors + settings/employees copy
+  - include:
+      file: db/changelog/data/insert/20260826_v350_advance_deduction_policy_translations.yaml
+      relativeToChangelogFile: false

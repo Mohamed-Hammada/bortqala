@@ -145,6 +145,39 @@ class PayrollServiceTests {
         assertThat(response.rows()).isEmpty();
     }
 
+    @Test
+    void getSheet_skipsAdvanceDeductionAndKeepsZeroWhenPolicyIsManual() {
+        Employee employee = new Employee("E-M", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        when(employeeRepository.findAllByOrderByFullNameAsc()).thenReturn(List.of(employee));
+        when(attendanceCategoryRepository.findAll()).thenReturn(List.of());
+        when(operationsService.getAdvanceBalance(employee.getId())).thenReturn(new BigDecimal("800"));
+        when(workforceAdvanceService.isManualDeductionPolicy(eq(employee.getId()), any())).thenReturn(true);
+
+        var sheet = payrollService.getSheet(2026, 8, null);
+
+        assertThat(sheet.rows()).hasSize(1);
+        assertThat(sheet.rows().get(0).advancesDeducted()).isEqualByComparingTo("0");
+        assertThat(sheet.rows().get(0).activeAdvancesBalance()).isEqualByComparingTo("800");
+        verify(workforceAdvanceService, never()).calculateEmployeePayrollDeduction(any(), any(), any(), any());
+    }
+
+    @Test
+    void getSheet_stillAutoDeductsAdvancesWhenPolicyIsAuto() {
+        Employee employee = new Employee("E-A", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        when(employeeRepository.findAllByOrderByFullNameAsc()).thenReturn(List.of(employee));
+        when(attendanceCategoryRepository.findAll()).thenReturn(List.of());
+        when(operationsService.getAdvanceBalance(employee.getId())).thenReturn(new BigDecimal("800"));
+        when(workforceAdvanceService.calculateEmployeePayrollDeduction(eq(employee.getId()), any(),
+                any(), any())).thenReturn(new BigDecimal("250"));
+
+        var sheet = payrollService.getSheet(2026, 8, null);
+
+        assertThat(sheet.rows().get(0).advancesDeducted()).isEqualByComparingTo("250");
+        verify(workforceAdvanceService).calculateEmployeePayrollDeduction(eq(employee.getId()), any(), any(), any());
+    }
+
 
     @Test
     void reversePayment_throwsWhenPaymentNotFound() {

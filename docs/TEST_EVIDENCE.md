@@ -241,6 +241,10 @@ below a recorded baseline or reports failures fails the release gate.
 - Backend: `./gradlew test -PskipDockerTests` in `/tmp/opencode/be-build` → **BUILD SUCCESSFUL in 3m 49s**; JUnit XML summary: **800 tests, 196 suites, 0 failures, 0 errors, 1 skipped**. New suites: `FixedAssetTests` (7) + `AssetDepreciationServiceTests` (8). Gates: `check-error-codes.py` **596/596**, `check-translation-catalog.py` **13,938 rows PASS**, `check-test-count.py` baselines raised to ≥800/≥196.
 - Frontend: `npx ng test --watch=false` under node `v24.19.0` → **100 files passed, 475 tests passed, 0 failed**. New spec: `fixed-assets.page.spec.ts` (8 tests). Gates: `check:i18n` **4,646 keys** (+33 from V347); `check:hardcoded` 0 findings across 113 templates + 237 TS files; `ng build` green. FE baseline raised to ≥475/≥100.
 
+### 2026-08-24 — WP-02 settlement-discount completion (working tree, V348 landed)
+- Backend: `./gradlew test -PskipDockerTests` in `/tmp/opencode/be-build` → **BUILD SUCCESSFUL in 4m 4s**; JUnit XML summary: **801 tests, 196 suites, 0 failures, 1 skipped**. New test: `rejectsSettlementDiscountWithoutFinanceRole`; extended `discountedSettlementClosesInvoiceAndBooksDiscountEntry` (originalDue=100.00, subledger verify). Gates: `check-error-codes.py` **597/597** (+1 PROC_SETTLEMENT_DISCOUNT_FORBIDDEN), `check-translation-catalog.py` **13,948 rows PASS** (+10 v348 rows), baseline raised to ≥801/≥196.
+- Frontend: `npx ng test --watch=false` under node `v24.19.0` → **100 files passed, 478 tests passed, 0 failed** (+3 procurement settlement specs). Gates: `check:i18n` **4,650 keys** (+4 v348 UI keys); `check:hardcoded` 0 findings; `ng build` green. Baseline raised to ≥478/≥100.
+
 ## How to refresh a baseline
 1. Update the evidence log entry above with the new date + HEAD SHA.
 2. Re-run the exact command listed and paste the observed counts.

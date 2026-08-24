@@ -566,3 +566,43 @@
   }
   .plan-field-error { color: var(--danger); }
 }
+
+// ─── WP-02: settlement-discount section ────
+.settlement-section {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  padding: .6rem .8rem;
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary, #1d4ed8);
+    margin-bottom: .4rem;
+  }
+
+  .settlement-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: .5rem .9rem;
+    margin: .7rem 0 0;
+
+    div {
+      display: grid;
+      gap: .15rem;
+    }
+
+    dt { font-size: .78rem; color: var(--muted, #64748b); }
+    dd {
+      margin: 0;
+      font-weight: 600;
+
+      &.warning { color: var(--danger, #dc2626); }
+    }
+  }
+
+  .settlement-warning {
+    color: var(--danger, #dc2626);
+    display: block;
+    margin-top: .4rem;
+  }
+}

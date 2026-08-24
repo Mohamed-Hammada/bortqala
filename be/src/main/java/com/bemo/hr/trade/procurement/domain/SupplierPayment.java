@@ -30,10 +30,16 @@ public class SupplierPayment {
     private BigDecimal amount;
     @Column(name = "settlement_discount", nullable = false, precision = 15, scale = 2)
     private BigDecimal settlementDiscount = BigDecimal.ZERO;
+    @Column(name = "original_due", precision = 15, scale = 2)
+    private BigDecimal originalDue;
 
     public BigDecimal getSettlementDiscount() { return settlementDiscount == null ? BigDecimal.ZERO : settlementDiscount; }
 
     public void applySettlementDiscount(BigDecimal discount) { this.settlementDiscount = discount; }
+
+    public BigDecimal getOriginalDue() { return originalDue; }
+
+    public void applyOriginalDue(BigDecimal due) { this.originalDue = due; }
     @Column(name = "payment_method", nullable = false, length = 30)
     private String paymentMethod;
     @Column(name = "beneficiary_bank_account", length = 100)

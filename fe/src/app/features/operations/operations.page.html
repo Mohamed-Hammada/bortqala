@@ -171,10 +171,28 @@
     </div>
     <div class="toolbar">
       <span class="status neutral">{{ valuationMethodLabel() }}</span>
+      <input type="date" class="ltr valuation-asof" [value]="valuationAsOf()" (change)="valuationAsOf.set($any($event.target).value)" [placeholder]="i18n.t('operations.valuation.asOf')" [title]="i18n.t('operations.valuation.asOf')" />
+      <select class="valuation-warehouse" (change)="valuationWarehouseId.set($any($event.target).value)" [title]="i18n.t('operations.valuation.warehouseFilter')">
+        <option value="">{{ i18n.t('operations.valuation.allWarehouses') }}</option>
+        @for (warehouse of store.warehouses(); track warehouse.id) {<option [value]="warehouse.id">{{ warehouse.name }}</option>}
+      </select>
+      <button class="button secondary" type="button" (click)="applyValuationFilters()">{{ i18n.t('operations.valuation.asOf') }}</button>
+      <button class="button secondary" type="button" (click)="store.exportValuation()">{{ i18n.t('operations.valuation.export') }}</button>
       <button class="button secondary" type="button" (click)="open('valuation')">{{ i18n.t('operations.valuation.settings') }}</button>
       <button class="button secondary" type="button" (click)="open('revaluation')">{{ i18n.t('operations.valuation.revalue') }}</button>
     </div>
   </div>
+  @if (store.valuation()?.glInventoryAccountBalance != null) {
+  <div class="table-card valuation-reconciliation">
+    <strong>{{ i18n.t('operations.valuation.glBalance') }}:</strong>
+    <span class="ltr">{{ money(store.valuation()?.glInventoryAccountBalance ?? 0) }}</span>
+    @if (valuationVarianceNonZero()) {
+      <span class="status warning">{{ i18n.t('operations.valuation.variance') }}: {{ money(store.valuation()?.inventoryVarianceFromGl ?? 0) }}</span>
+    } @else {
+      <span class="status success">{{ i18n.t('operations.valuation.variance') }}: {{ money(0) }}</span>
+    }
+  </div>
+  }
   <div class="table-card">
     <table>
       <thead><tr>
@@ -183,6 +201,7 @@
         <th>{{ i18n.t('operations.valuation.onHand') }}</th>
         <th>{{ i18n.t('operations.valuation.averageCost') }}</th>
         <th>{{ i18n.t('operations.valuation.inventoryValue') }}</th>
+        <th>{{ i18n.t('operations.valuation.methodBadge') }}</th>
         <th>{{ i18n.t('operations.valuation.openingGap') }}</th>
       </tr></thead>
       <tbody>
@@ -191,10 +210,11 @@
             <td class="ltr">{{ row.itemCode }}</td><td>{{ row.itemName }}</td>
             <td>{{ row.quantityOnHand }}</td><td>{{ money(row.averageUnitCost) }}</td>
             <td><strong>{{ money(row.inventoryValue) }}</strong></td>
+            <td><span class="status neutral">{{ valuationMethodBadge(row.valuationMethod) }}</span></td>
             <td [class.warning-text]="row.openingQuantityGap !== 0">{{ row.openingQuantityGap }}</td>
           </tr>
         } @empty {
-          <tr><td colspan="6"><div class="empty-state">{{ i18n.t('operations.valuation.empty') }}</div></td></tr>
+          <tr><td colspan="7"><div class="empty-state">{{ i18n.t('operations.valuation.empty') }}</div></td></tr>
         }
       </tbody>
     </table>

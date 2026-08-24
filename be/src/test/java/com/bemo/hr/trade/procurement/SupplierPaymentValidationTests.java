@@ -17,6 +17,7 @@ import com.bemo.hr.trade.procurement.application.ProcurementExcelExporter;
 import com.bemo.hr.trade.procurement.application.ProcurementService;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.infrastructure.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SupplierPaymentValidationTests {
@@ -43,6 +45,11 @@ class SupplierPaymentValidationTests {
     private ProcurementService procurementService;
     private SupplierInvoice invoice;
 
+    @AfterEach
+    void tearDown() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
     @BeforeEach
     void setUp() {
         supplierInvoiceRepository = mock(SupplierInvoiceRepository.class);
@@ -52,6 +59,9 @@ class SupplierPaymentValidationTests {
         documentSequenceRepository = mock(com.bemo.hr.shared.numbering.DocumentNumberSequenceRepository.class);
         documentNumberService = new com.bemo.hr.shared.numbering.DocumentNumberService(documentSequenceRepository);
         TenantContext.set("app-1");
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("finance-officer",
+                        "n/a", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_FINANCE_MANAGER"))));
         IdempotencyKeyRepository idempotencyKeyRepository = mock(IdempotencyKeyRepository.class);
         when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(1);
@@ -115,6 +125,7 @@ class SupplierPaymentValidationTests {
         org.mockito.ArgumentCaptor<com.bemo.hr.operations.PartnerLedgerEntry> ledger =
                 org.mockito.ArgumentCaptor.forClass(com.bemo.hr.operations.PartnerLedgerEntry.class);
         var ledgerRepo = mock(com.bemo.hr.operations.PartnerLedgerEntryRepository.class);
+        var accountingService = mock(ProcurementAccountingService.class);
         // rebuild service with a capturable ledger repo (all other mocks reused)
         procurementService = new ProcurementService(mock(PurchaseOrderRepository.class),
                 mock(PurchaseOrderLineRepository.class), mock(ProcurementDocumentSequenceRepository.class),
@@ -127,7 +138,7 @@ class SupplierPaymentValidationTests {
                 documentNumberService,
                 mock(com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository.class),
                 mock(com.bemo.hr.budget.application.BudgetService.class),
-                mock(ProcurementAccountingService.class));
+                accountingService);
         com.bemo.hr.shared.security.TenantApplication app = new com.bemo.hr.shared.security.TenantApplication("TEST", "Test App");
         when(tenantApplicationRepository.findById("app-1")).thenReturn(Optional.of(app));
         when(supplierPaymentRepository.save(any(com.bemo.hr.trade.procurement.domain.SupplierPayment.class)))
@@ -143,7 +154,11 @@ class SupplierPaymentValidationTests {
         ProcurementApi.SupplierPaymentResponse response = procurementService.createSupplierPayment(payload);
 
         assertThat(response.settlementDiscount()).isEqualByComparingTo("10.00");
+        assertThat(response.originalDue()).isEqualByComparingTo("100.00");
         assertThat(invoice.getStatus()).isEqualTo("PAID");
+        // WP-02: the discount also reaches the GL subledger as its own balanced event
+        verify(accountingService).postSupplierSettlementDiscount(any(), any(),
+                org.mockito.ArgumentMatchers.refEq(new BigDecimal("10.00")), anyString());
         org.mockito.Mockito.verify(ledgerRepo, org.mockito.Mockito.times(2)).save(ledger.capture());
         assertThat(ledger.getAllValues().get(1).getEntryType()).isEqualTo("SUPPLIER_SETTLEMENT_DISCOUNT");
         assertThat(ledger.getAllValues().get(1).getAmountDelta()).isEqualByComparingTo("10.00");
@@ -162,6 +177,24 @@ class SupplierPaymentValidationTests {
         assertThatThrownBy(() -> procurementService.createSupplierPayment(payload))
                 .isInstanceOf(BusinessRuleException.class)
                 .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("PROC_SETTLEMENT_DISCOUNT_INVALID"));
+    }
+
+    @Test
+    void rejectsSettlementDiscountWithoutFinanceRole() {
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("clerk",
+                        "n/a", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_PROCUREMENT_USER"))));
+        ProcurementApi.SupplierPaymentPayload payload = new ProcurementApi.SupplierPaymentPayload(
+                null, LocalDate.of(2026, 8, 6).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                "supplier-a", invoice.getId(), new BigDecimal("90.00"), new BigDecimal("10.00"),
+                "BANK_TRANSFER", null, "op-forbidden");
+        assertThatThrownBy(() -> procurementService.createSupplierPayment(payload))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> {
+                    BusinessRuleException exception = (BusinessRuleException) ex;
+                    assertThat(exception.getCode()).isEqualTo("PROC_SETTLEMENT_DISCOUNT_FORBIDDEN");
+                    assertThat(exception.getStatus()).isEqualTo(org.springframework.http.HttpStatus.FORBIDDEN);
+                });
     }
 
     @Test

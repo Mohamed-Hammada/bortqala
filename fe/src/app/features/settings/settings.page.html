@@ -205,6 +205,8 @@
   @if (activeTab() === 'session' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
     <app-business-vertical-setup></app-business-vertical-setup>
 
+    <app-advances-policy-settings></app-advances-policy-settings>
+
     <form
       class="card settings-card admin-settings"
       [formGroup]="appSettingsForm"
