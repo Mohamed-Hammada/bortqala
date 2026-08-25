@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v351_user_role_templates_seed
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM user_role_templates WHERE id LIKE 'urt-%'" }
+      changes:
+        - loadData:
+            tableName: user_role_templates
+            file: db/changelog/data/insert/files/20260826_v351_user_role_templates.csv
+            separator: ";"
+            encoding: UTF-8
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: app_id, name: app_id, type: STRING }
+              - column: { header: vertical, name: vertical, type: STRING }
+              - column: { header: code, name: code, type: STRING }
+              - column: { header: name_key, name: name_key, type: STRING }
+              - column: { header: menu_ids, name: menu_ids, type: STRING }
+              - column: { header: permission_prefixes, name: permission_prefixes, type: STRING }
+              - column: { header: sort_order, name: sort_order, type: NUMERIC }
+              - column: { header: created_at, name: created_at, type: NUMERIC }
+              - column: { header: updated_at, name: updated_at, type: NUMERIC }
+        - sql:
+            sql: "UPDATE user_role_templates SET app_id = NULL WHERE app_id = ''"
+      rollback:
+        - delete: { tableName: user_role_templates, where: "id LIKE 'urt-%'" }

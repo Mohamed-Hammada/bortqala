@@ -138,7 +138,7 @@
               </div>
             </td>
             <td>
-              <span class="status neutral">🖥️ {{ allowedMenuCount(item) }} / {{ menuOptions.length }}</span>
+              <span class="status neutral">🖥️ {{ allowedMenuCount(item) }} / {{ menuOptions().length }}</span>
             </td>
             <td>
               <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
@@ -501,6 +501,25 @@
               </div>
             }
 
+            @if (!editingId() && roleTemplates().length > 0) {
+              <div class="job-template-block">
+                <label for="user-job-template">{{ i18n.t('users.jobTemplate') }}</label>
+                <select
+                  id="user-job-template"
+                  [value]="activeTemplateCode()"
+                  (change)="applyJobTemplate($any($event.target).value)"
+                >
+                  <option value="">—</option>
+                  @for (template of roleTemplates(); track template.code) {
+                    <option [value]="template.code" [selected]="template.code === activeTemplateCode()">
+                      {{ i18n.t(template.nameKey) }}
+                    </option>
+                  }
+                </select>
+                <small>{{ i18n.t('users.jobTemplateHint') }}</small>
+              </div>
+            }
+
             <div class="module-groups-grid">
               @for (group of menuGroups; track group.titleKey) {
                 <div class="module-group-card">
@@ -519,16 +538,21 @@
                   </label>
                   <div class="module-group-items">
                     @for (id of group.ids; track id) {
-                      <label class="menu-item-check" [class.menu-disabled]="adminOverrideActive()">
+                      <label
+                        class="menu-item-check"
+                        [class.menu-disabled]="adminOverrideActive()"
+                        [class.feature-locked]="menuFeature(id)"
+                        [attr.title]="menuFeature(id) ? i18n.t('users.menuNotEnabledForVertical') : null"
+                      >
                         <input
                           type="checkbox"
                           [checked]="hasMenu(id)"
-                          [disabled]="adminOverrideActive()"
+                          [disabled]="adminOverrideActive() || !!menuFeature(id)"
                           (change)="toggleMenu(id, $event)"
                         />
                         <span>{{ getMenuLabel(id) }}</span>
                         @if (menuFeature(id)) {
-                          <span class="chip chip-warn" [attr.title]="menuFeature(id)">{{ i18n.t('access.menuFeatureDisabled') }}</span>
+                          <span class="chip chip-warn">{{ i18n.t('access.menuFeatureDisabled') }}</span>
                         } @else if (menuRoleMismatch(id)) {
                           <span class="chip chip-warn">{{ i18n.t('access.menuRoleMismatch') }}</span>
                         }

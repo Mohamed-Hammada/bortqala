@@ -89,6 +89,46 @@
   opacity: 0.6;
 }
 
+/* WP-10: feature-gated (vertical-disabled) menus are grayed and unclickable. */
+.menu-item-check.feature-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+
+  input[type='checkbox'] {
+    cursor: not-allowed;
+  }
+}
+
+.job-template-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-muted);
+
+  label {
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  select {
+    max-width: 320px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm, 6px);
+    background: var(--input-bg);
+    color: var(--ink);
+  }
+
+  small {
+    color: var(--muted);
+    font-size: 11px;
+  }
+}
+
 .menu-item-check .chip-warn {
   margin-inline-start: auto;
   font-size: 10px;

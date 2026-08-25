@@ -12,6 +12,8 @@ import {
   AccessRole,
   AccessValidateResult,
   EffectivePageAccess,
+  MenuOption,
+  RoleTemplate,
 } from './access.models';
 
 /**
@@ -47,6 +49,34 @@ export class AccessService {
   async reloadCatalog(): Promise<AccessCatalog | null> {
     this.catalog.set(null);
     return this.loadCatalog();
+  }
+
+  /** WP-10: server menu catalog; null on failure so callers keep the static fallback. */
+  readonly serverMenuOptions = signal<MenuOption[] | null>(null);
+
+  async loadMenuOptions(): Promise<MenuOption[] | null> {
+    if (this.serverMenuOptions()) return this.serverMenuOptions();
+    try {
+      const options = await firstValueFrom(
+        this.http.get<MenuOption[]>('/api/v1/users/menu-options'),
+      );
+      this.serverMenuOptions.set(options);
+      return options;
+    } catch {
+      return null;
+    }
+  }
+
+  /** WP-10: vertical job role templates; empty list on failure. */
+  async loadRoleTemplates(vertical?: string): Promise<RoleTemplate[]> {
+    try {
+      return await firstValueFrom(
+        this.http.get<RoleTemplate[]>('/api/v1/users/role-templates',
+          vertical ? { params: { vertical } } : {}),
+      );
+    } catch {
+      return [];
+    }
   }
 
   roles(): AccessRole[] {

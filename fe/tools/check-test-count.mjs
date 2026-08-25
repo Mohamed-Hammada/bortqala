@@ -10,7 +10,7 @@
 import { createInterface } from 'node:readline';
 import { stdin, stdout, exit } from 'node:process';
 
-const MIN_TESTS = 487;
+const MIN_TESTS = 490;
 const MIN_FILES = 101;
 
 const ANSI = /\u001B\[[0-?]*[ -/]*[@-~]/g;

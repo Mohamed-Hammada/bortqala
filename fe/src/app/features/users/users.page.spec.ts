@@ -1,10 +1,10 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { provideRouter } from '@angular/router';
-import { UsersPage } from './users.page';
+import { UsersPage, USER_MENU_OPTIONS } from './users.page';
 import { AuthService } from '../../core/auth/auth.service';
 import { AuthUser } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
@@ -93,6 +93,14 @@ const CATALOG: AccessCatalog = {
 describe('UsersPage', () => {
   let httpMock: HttpTestingController;
   let page: UsersPage;
+
+  /** WP-10: openNew() lazily fetches server menu options + job templates. */
+  async function flushDialogOptions(): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    httpMock.expectOne('/api/v1/users/menu-options').flush([]);
+    httpMock.expectOne('/api/v1/users/role-templates').flush([]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -230,11 +238,12 @@ describe('UsersPage', () => {
       allowedMenus: ['dashboard'],
     } as unknown as AuthUser;
 
-    expect(page.allowedMenuCount(user)).toBe(page.menuOptions.length);
+    expect(page.allowedMenuCount(user)).toBe(page.menuOptions().length);
   });
 
-  it('derives menu access from selected roles for a new user until menus are customized', () => {
+  it('derives menu access from selected roles for a new user until menus are customized', async () => {
     page.openNew();
+    await flushDialogOptions();
     page.form.controls.roles.setValue([]);
     page.form.controls.allowedMenus.setValue([]);
 
@@ -247,8 +256,9 @@ describe('UsersPage', () => {
     expect(page.form.controls.allowedMenus.value).toEqual(['workforce-workers']);
   });
 
-  it('preserves manual menu overrides when roles change', () => {
+  it('preserves manual menu overrides when roles change', async () => {
     page.openNew();
+    await flushDialogOptions();
     page.toggleMenu('reports', { target: { checked: true } } as unknown as Event);
 
     page.toggleRole(
@@ -359,6 +369,7 @@ describe('UsersPage', () => {
     ]);
 
     page.openNew();
+    await flushDialogOptions();
     expect(page.userPolicyAssignments()).toHaveLength(1);
     expect(page.userPolicyAssignments()[0].selected).toBe(false);
 
@@ -388,5 +399,150 @@ describe('UsersPage', () => {
         scopeCostCenterId: 'CC-101',
       },
     ]);
+  });
+});
+
+describe('WP-10 job templates and server menu options', () => {
+  let httpMock: HttpTestingController;
+  let page: UsersPage;
+  let fixture: ComponentFixture<UsersPage>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [UsersPage],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: AuthService,
+          useValue: {
+            user: () => ({
+              id: 'u1',
+              username: 'admin',
+              displayName: 'Admin',
+              roles: ['ADMIN'],
+              allowedMenus: [],
+              activeFeatures: [],
+              active: true,
+              version: 1,
+            }),
+            appSettings: () =>
+              of({
+                minPasswordLength: 8,
+                maxPasswordLength: 128,
+                disallowSpaces: false,
+                requireUppercase: false,
+                requireLowercase: false,
+                requireNumbers: false,
+                requireSpecialChars: false,
+              }),
+            isSuperAdmin: () => true,
+          },
+        },
+        { provide: I18nService, useValue: { t: (key: string) => key } },
+        {
+          provide: NotificationService,
+          useValue: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
+        },
+      ],
+    }).compileComponents();
+
+    httpMock = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(UsersPage);
+    page = fixture.componentInstance;
+
+    httpMock.expectOne('/api/v1/users').flush([]);
+    httpMock.expectOne('/api/v1/auth/user-categories').flush([]);
+    httpMock.expectOne('/api/v1/access/catalog').flush(CATALOG);
+    httpMock.expectOne('/api/v1/access/policy-groups').flush([]);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    httpMock.verify();
+  });
+
+  it('renders a feature-locked menu grayed, unclickable, and with the vertical tooltip (AC-1)', async () => {
+    page.openNew();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    httpMock.expectOne('/api/v1/users/menu-options').flush([
+      { id: 'dashboard', labelKey: 'nav.dashboard', groupKey: 'DASHBOARD', verticalTags: ['GENERAL'], enabled: false },
+      { id: 'reports', labelKey: 'nav.attendanceReports', groupKey: 'HR', verticalTags: ['GENERAL'], enabled: true },
+    ]);
+    httpMock.expectOne('/api/v1/users/role-templates').flush([]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+
+    // ModalDialogComponent teleports its content to document.body when open.
+    const labels = Array.from(document.body.querySelectorAll('.menu-item-check')) as HTMLElement[];
+    const lockedLabel = labels.find((el) => el.textContent.includes('nav.dashboard')) as HTMLElement;
+    expect(lockedLabel).toBeDefined();
+    expect(lockedLabel.classList.contains('feature-locked')).toBe(true);
+    expect(lockedLabel.getAttribute('title')).toBe('users.menuNotEnabledForVertical');
+    const lockedInput = lockedLabel.querySelector('input[type=checkbox]') as HTMLInputElement;
+    expect(lockedInput.disabled).toBe(true);
+
+    const openLabel = labels.find((el) => el.textContent.includes('nav.attendanceReports')) as HTMLElement;
+    expect(openLabel).toBeDefined();
+    expect((openLabel.querySelector('input[type=checkbox]') as HTMLInputElement).disabled).toBe(false);
+  });
+
+  it('applying a template pre-checks its menus and selects suggested policy groups', async () => {
+    page.availablePolicyGroups.set([
+      {
+        id: 'g-pharmacy',
+        groupName: 'Pharmacy',
+        description: 'pharmacy',
+        isSystem: true,
+        permissionsCount: 3,
+        assignedUsersCount: 0,
+        createdAt: 0,
+        updatedAt: 0,
+        version: 1,
+      } as never,
+    ]);
+    page.openNew();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    httpMock.expectOne('/api/v1/users/menu-options').flush([
+      { id: 'sales', labelKey: 'nav.sales', groupKey: 'TRADE', verticalTags: ['MEDICAL'], enabled: true },
+      { id: 'pos', labelKey: 'pos.title', groupKey: 'TRADE', verticalTags: ['RETAIL'], enabled: true },
+    ]);
+    httpMock.expectOne('/api/v1/users/role-templates').flush([
+      {
+        code: 'PHARMACIST',
+        nameKey: 'users.template.pharmacist',
+        vertical: 'MEDICAL',
+        menuIds: ['sales', 'pos', 'reports'],
+        permissionPrefixes: ['sales:so'],
+        suggestedPolicyGroupIds: ['g-pharmacy'],
+        sortOrder: 30,
+      },
+    ]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    page.applyJobTemplate('PHARMACIST');
+
+    const menus = page.form.controls.allowedMenus.value;
+    expect(menus).toContain('sales');
+    expect(menus).toContain('pos');
+    expect(page.customMenuAccess()).toBe(true);
+    expect(
+      page.userPolicyAssignments().find((a) => a.policyGroupId === 'g-pharmacy')?.selected,
+    ).toBe(true);
+  });
+
+  it('falls back to the static menu catalog when the endpoint fails (AC-3)', async () => {
+    page.openNew();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    httpMock
+      .expectOne('/api/v1/users/menu-options')
+      .flush(null, { status: 500, statusText: 'Server Error' });
+    httpMock.expectOne('/api/v1/users/role-templates').flush([]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(page.access.serverMenuOptions()).toBeNull();
+    expect(page.menuOptions().length).toBe(USER_MENU_OPTIONS.length);
+    expect(page.roleTemplates().length).toBe(0);
   });
 });

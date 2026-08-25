@@ -738,3 +738,16 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260826_v350_advance_deduction_policy_translations.yaml
       relativeToChangelogFile: false
+  # WP-10: vertical job role templates table
+  - include:
+      file: db/changelog/schema/create/20260826_v351_user_role_templates.yaml
+      relativeToChangelogFile: false
+  # WP-10: idempotent per-vertical template seed (24 roles)
+  - include:
+      file: db/changelog/data/insert/20260826_v351_user_role_templates_seed.yaml
+      relativeToChangelogFile: false
+  # WP-10: template names + users-page template UI copy
+  - include:
+      file: db/changelog/data/insert/20260826_v351_user_role_template_translations.yaml
+      relativeToChangelogFile: false
+

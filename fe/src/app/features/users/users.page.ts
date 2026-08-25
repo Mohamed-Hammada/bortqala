@@ -20,7 +20,7 @@ import { exportCsv } from '../../core/download';
 
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
-import { AccessRole, AccessValidateResult, ACCESS_LEVEL_PRECEDENCE } from './access.models';
+import { AccessRole, AccessValidateResult, ACCESS_LEVEL_PRECEDENCE, MenuOption, RoleTemplate } from './access.models';
 import { AccessService } from './access.service';
 
 
@@ -88,7 +88,19 @@ export class UsersPage {
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
   readonly access = inject(AccessService);
-  readonly menuOptions = USER_MENU_OPTIONS;
+  // WP-10: server-side menu catalog enriches the static fallback; on endpoint
+  // failure the constant list is used verbatim (AC-3 fallback contract).
+  readonly menuOptions = computed<Array<{ id: string; labelKey: string; enabled?: boolean }>>(() => {
+    const server = this.access.serverMenuOptions();
+    if (!server || server.length === 0) return USER_MENU_OPTIONS;
+    const byId = new Map(server.map((option) => [option.id, option]));
+    return USER_MENU_OPTIONS.map((option) => {
+      const enriched = byId.get(option.id);
+      return enriched ? { ...option, enabled: enriched.enabled } : option;
+    });
+  });
+  readonly roleTemplates = signal<RoleTemplate[]>([]);
+  readonly activeTemplateCode = signal('');
   readonly drawerOpen = signal(false);
   readonly submitted = signal(false);
   readonly showPassword = signal(false);
@@ -284,6 +296,14 @@ export class UsersPage {
 
   /** Feature gate state for a menu: which feature disables it, if any. */
   menuFeature(menuId: string): string | null {
+    // WP-10: when the server menu catalog loads successfully it is authoritative;
+    // otherwise fall back to the local catalog+activeFeatures derivation.
+    const server = this.access.serverMenuOptions();
+    if (server && server.length > 0) {
+      const option = server.find((item) => item.id === menuId);
+      if (!option) return null;
+      return option.enabled ? null : option.id;
+    }
     const page = this.access.pages().find((item) => item.menuId === menuId);
     if (!page || page.requiredFeature === null || page.requiredFeature === undefined) return null;
     const activeFeatures = this.auth.user()?.activeFeatures ?? [];
@@ -305,7 +325,7 @@ export class UsersPage {
     const role = catalog.roles.find((item) => item.code === roleCode);
     if (!role) return [];
     const granted = new Set(role.permissions);
-    const menus = new Set(this.menuOptions.map((menu) => menu.id));
+    const menus = new Set(this.menuOptions().map((menu) => menu.id));
     const activeFeatures = this.auth.user()?.activeFeatures ?? [];
     const isAdmin = roleCode === 'ADMIN' || roleCode === 'SUPER_ADMIN';
     const result: Array<{ code: string; titleKey: string; level: string }> = [];
@@ -348,13 +368,13 @@ export class UsersPage {
   }
 
   getMenuLabel(id: string): string {
-    const option = this.menuOptions.find((item) => item.id === id);
+    const option = this.menuOptions().find((item) => item.id === id);
     return option ? this.i18n.t(option.labelKey) : id;
   }
 
   selectAllMenus(): void {
     this.customMenuAccess.set(true);
-    const allIds = this.menuOptions.map((o) => o.id);
+    const allIds = this.menuOptions().map((o) => o.id);
     this.form.controls.allowedMenus.setValue(allIds);
   }
 
@@ -446,7 +466,44 @@ export class UsersPage {
     });
     this.syncMenusToRoles();
     this.initPolicyAssignmentsForNew();
+    this.activeTemplateCode.set('');
+    this.roleTemplates.set([]);
     this.drawerOpen.set(true);
+    void this.loadUserDialogOptions();
+  }
+
+  /** WP-10: best-effort load of server menu options + job templates (silent fallback). */
+  private async loadUserDialogOptions(): Promise<void> {
+    await this.access.loadCatalog();
+    const [templates] = await Promise.all([
+      this.access.loadRoleTemplates(),
+      this.access.loadMenuOptions(),
+    ]);
+    this.roleTemplates.set(templates);
+  }
+
+  /**
+   * WP-10: applying a template pre-checks its menus and selects its suggested
+   * policy groups. Everything stays manually editable afterwards.
+   */
+  applyJobTemplate(code: string): void {
+    this.activeTemplateCode.set(code);
+    const template = this.roleTemplates().find((item) => item.code === code);
+    if (!template) return;
+    const merged = new Set(this.form.controls.allowedMenus.value);
+    for (const menuId of template.menuIds) merged.add(menuId);
+    this.form.controls.allowedMenus.setValue(Array.from(merged));
+    this.customMenuAccess.set(true);
+    if (template.suggestedPolicyGroupIds.length > 0) {
+      const suggested = new Set(template.suggestedPolicyGroupIds);
+      this.userPolicyAssignments.set(
+        this.userPolicyAssignments().map((assignment) =>
+          suggested.has(assignment.policyGroupId)
+            ? { ...assignment, selected: true }
+            : assignment,
+        ),
+      );
+    }
   }
 
   openEdit(item: AuthUser) {
@@ -456,14 +513,14 @@ export class UsersPage {
     // Never overwrite an existing user's explicit menu configuration while editing.
     this.customMenuAccess.set(true);
     this.baselineRoles.set(item.roles);
-    this.baselineMenus.set(item.allowedMenus ?? this.menuOptions.map((m) => m.id));
+    this.baselineMenus.set(item.allowedMenus ?? this.menuOptions().map((m) => m.id));
     this.needCodes.set([]);
     this.form.reset({
       username: item.username,
       displayName: item.displayName,
       password: '',
       roles: item.roles,
-      allowedMenus: item.allowedMenus ?? this.menuOptions.map((m) => m.id),
+      allowedMenus: item.allowedMenus ?? this.menuOptions().map((m) => m.id),
       canViewSalary: item.canViewSalary ?? true,
       dashboardCustomizationEnabled: item.dashboardCustomizationEnabled ?? true,
       active: item.active,
@@ -554,9 +611,9 @@ export class UsersPage {
 
   allowedMenuCount(item: AuthUser): number {
     if (item.roles.some((role) => role === 'SUPER_ADMIN' || role === 'ADMIN')) {
-      return this.menuOptions.length;
+      return this.menuOptions().length;
     }
-    return item.allowedMenus ? item.allowedMenus.length : this.menuOptions.length;
+    return item.allowedMenus ? item.allowedMenus.length : this.menuOptions().length;
   }
 
   primaryRole(): RoleCode | '' {
@@ -629,7 +686,7 @@ export class UsersPage {
       }
     }
 
-    const knownMenus = new Set(this.menuOptions.map((item) => item.id));
+    const knownMenus = new Set(this.menuOptions().map((item) => item.id));
     const recommended = catalog.pages
       .filter((page) => pageCodes.has(page.code) && knownMenus.has(page.menuId))
       .map((page) => page.menuId);

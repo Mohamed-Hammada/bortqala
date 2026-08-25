@@ -1,5 +1,7 @@
 package com.bemo.hr.shared.security;
 
+import com.bemo.hr.access.api.AccessTemplateApi;
+import com.bemo.hr.access.application.UserRoleTemplateService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,17 +28,20 @@ public class AuthController {
     private final AuthService authService;
     private final RefreshCookieCodec refreshCookieCodec;
     private final ClientIpResolver clientIpResolver;
+    private final UserRoleTemplateService userRoleTemplateService;
     private final String refreshCookieName;
     private final boolean refreshCookieSecure;
 
     public AuthController(AuthService authService,
                           RefreshCookieCodec refreshCookieCodec,
                           ClientIpResolver clientIpResolver,
+                          UserRoleTemplateService userRoleTemplateService,
                           @Value("${hr.security.refresh-cookie-name:bemo_refresh}") String refreshCookieName,
                           @Value("${hr.security.refresh-cookie-secure:true}") boolean refreshCookieSecure) {
         this.authService = authService;
         this.refreshCookieCodec = refreshCookieCodec;
         this.clientIpResolver = clientIpResolver;
+        this.userRoleTemplateService = userRoleTemplateService;
         this.refreshCookieName = refreshCookieName;
         this.refreshCookieSecure = refreshCookieSecure;
     }
@@ -167,6 +172,19 @@ public class AuthController {
     @PreAuthorize("@auth.hasPermission('users.read')")
     List<AuthApi.UserResponse> users() {
         return authService.listUsers();
+    }
+
+    @GetMapping("/users/menu-options")
+    @PreAuthorize("@auth.hasPermission('users.read')")
+    List<AccessTemplateApi.MenuOptionResponse> menuOptions() {
+        return userRoleTemplateService.menuOptions();
+    }
+
+    @GetMapping("/users/role-templates")
+    @PreAuthorize("@auth.hasPermission('users.read')")
+    List<AccessTemplateApi.RoleTemplateResponse> roleTemplates(
+            @RequestParam(name = "vertical", required = false) String vertical) {
+        return userRoleTemplateService.roleTemplates(vertical);
     }
 
     @PostMapping("/users")

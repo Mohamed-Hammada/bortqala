@@ -136,3 +136,23 @@ export const ACCESS_LEVEL_PRECEDENCE: AccessLevel[] = [
   'CREATE',
   'VIEW',
 ];
+
+/** WP-10: server-side menu catalog entry (fallback = USER_MENU_OPTIONS constant). */
+export interface MenuOption {
+  id: string;
+  labelKey: string;
+  groupKey: string;
+  verticalTags: string[];
+  enabled: boolean;
+}
+
+/** WP-10: vertical job role template. */
+export interface RoleTemplate {
+  code: string;
+  nameKey: string;
+  vertical: string;
+  menuIds: string[];
+  permissionPrefixes: string[];
+  suggestedPolicyGroupIds: string[];
+  sortOrder: number;
+}
