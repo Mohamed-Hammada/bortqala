@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { dateInputToEpoch, epochToDateInput, formatDate, formatDateTime } from '../../core/date';
 import { AuthService } from '../../core/auth/auth.service';
 import { AppSettings } from '../../core/auth/auth.models';
-import { PeriodOption, ReportPayCycle, ReportPreview, ReportStatus } from './reports.models';
+import { GeneratedPeriod, PeriodOption, ReportPayCycle, ReportPreview, ReportStatus } from './reports.models';
 import { ReportsStore } from './reports.store';
 import { I18nService } from '../../core/i18n.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
@@ -135,6 +135,16 @@ export class ReportsPage {
   cycleLabel(period: PeriodOption): string {
     return this.i18n.t(period.kind === 'MONTHLY' ? 'reports.cycleMonthly' : 'reports.cycleHalf');
   }
+
+  /**
+   * Returns the finalized report overlapping this preset period, if any.
+   * Finalized = APPROVED or EXPORTED; drafts never lock a month (WP-06 AC-2).
+   */
+  generatedFor(period: PeriodOption): GeneratedPeriod | null {
+    return this.store.generated().find((generated) =>
+      generated.from <= period.end && generated.to >= period.start) ?? null;
+  }
+
   date(value: number): string { return formatDate(value); }
   dateTime(value: number): string { return formatDateTime(value); }
   label(status: ReportStatus): string {

@@ -749,5 +749,7 @@ databaseChangeLog:
   # WP-10: template names + users-page template UI copy
   - include:
       file: db/changelog/data/insert/20260826_v351_user_role_template_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260826_v352_generated_periods_translations.yaml
       relativeToChangelogFile: false
 

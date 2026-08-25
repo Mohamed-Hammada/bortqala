@@ -125,15 +125,32 @@
       </div>
       <div class="periods">
         @for (period of store.periods(); track period.start + period.end) {
-          <button
-            [disabled]="store.loading()"
-            (click)="applyPreset(period)"
-            [attr.aria-label]="i18n.t('reports.usePeriodAria', { period: periodName(period) })"
-          >
-            <strong>{{ i18n.t('reports.useThisPeriod') }}</strong>
-            <small>{{ periodName(period) }} · {{ cycleLabel(period) }}</small>
-            <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
-          </button>
+          @if (generatedFor(period); as generated) {
+            <div class="preset-item generated" role="group"
+                 [attr.aria-label]="i18n.t('reports.usePeriodAria', { period: periodName(period) })">
+              <button type="button" disabled
+                      [title]="i18n.t('reports.alreadyGenerated')">
+                <strong>{{ i18n.t('reports.useThisPeriod') }}</strong>
+                <small>{{ periodName(period) }} · {{ cycleLabel(period) }}</small>
+                <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
+                <em class="generated-note">{{ i18n.t('reports.alreadyGenerated') }}</em>
+              </button>
+              @if (!store.generatedLoading()) {
+                <a class="view-existing" [routerLink]="['/reports', generated.reportId]">{{
+                  i18n.t('reports.viewExisting')
+                }}</a>
+              }
+            </div>
+          } @else {
+            <div class="preset-item" role="group"
+                 [attr.aria-label]="i18n.t('reports.usePeriodAria', { period: periodName(period) })">
+              <button type="button" [disabled]="store.loading()" (click)="applyPreset(period)">
+                <strong>{{ i18n.t('reports.useThisPeriod') }}</strong>
+                <small>{{ periodName(period) }} · {{ cycleLabel(period) }}</small>
+                <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
+              </button>
+            </div>
+          }
         } @empty {
           <div class="empty-state compact">
             <strong>{{ i18n.t('reports.noPeriods') }}</strong>

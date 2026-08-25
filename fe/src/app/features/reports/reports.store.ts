@@ -8,7 +8,7 @@ import { NotificationService } from '../../core/notification.service';
 import { TransitionResponse } from '../../core/api.models';
 import {
   AttendanceDecision, BulkDecisionRequest, BulkDecisionResponse, DayAnomalyActionResponse,
-  DayAnomalyDecisionRequest, DowntimeDecisionRequest, HolidayProposalStatus, PeriodOption,
+  DayAnomalyDecisionRequest, DowntimeDecisionRequest, GeneratedPeriod, HolidayProposalStatus, PeriodOption,
   ReportDetails, ReportPayCycle, ReportPeriodSelection, ReportPreview, ReportSummary,
   AttendanceExceptionWorkbench, AttendanceExceptionBulkRequest, AttendanceExceptionBulkPreview,
   AttendanceExceptionBulkResult,
@@ -21,13 +21,28 @@ export class ReportsStore {
   private readonly notification = inject(NotificationService);
   readonly reports = signal<ReportSummary[]>([]);
   readonly periods = signal<PeriodOption[]>([]);
+  readonly generated = signal<GeneratedPeriod[]>([]);
+  readonly generatedLoading = signal(false);
   readonly details = signal<ReportDetails | null>(null);
   readonly exceptionWorkbench = signal<AttendanceExceptionWorkbench | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  private generatedRequestToken = 0;
 
   async list(year: number): Promise<void> {
     this.loading.set(true); this.error.set(null);
+    this.generated.set([]); this.generatedLoading.set(true);
+    // Generated-periods fetch is deliberately independent: the picker renders
+    // immediately and chips flip to their finalized state when this resolves.
+    // The token discards stale responses when the year changes mid-flight.
+    const requestId = ++this.generatedRequestToken;
+    firstValueFrom(this.http.get<GeneratedPeriod[]>('/api/v1/reports/generated-periods', { params: { year } }))
+      .then((periods) => {
+        if (requestId !== this.generatedRequestToken || !this.generatedLoading()) return;
+        this.generated.set(periods ?? []);
+      })
+      .catch(() => { if (requestId === this.generatedRequestToken) this.generated.set([]); })
+      .finally(() => { if (requestId === this.generatedRequestToken) this.generatedLoading.set(false); });
     try {
       const [reports, periods] = await Promise.all([
         firstValueFrom(this.http.get<ReportSummary[]>('/api/v1/reports')),

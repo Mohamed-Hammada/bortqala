@@ -149,6 +149,18 @@ public class ReportingService {
         return List.copyOf(options);
     }
 
+    public List<ReportingApi.GeneratedPeriod> generatedPeriods(Integer year) {
+        if (year == null || year < 2000 || year > 2200)
+            return List.of();
+        var finalized = attendanceReportRepository.findByPeriodStartBetweenAndStatusIn(
+                LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31),
+                java.util.List.of(ReportStatus.APPROVED, ReportStatus.EXPORTED));
+        return finalized.stream()
+                .map(report -> new ReportingApi.GeneratedPeriod(
+                        report.getPeriodStart(), report.getPeriodEnd(), report.getPayCycle(), report.getId()))
+                .toList();
+    }
+
     public ReportingApi.PreviewResponse preview(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle) {
         validatePeriod(periodStart, periodEnd);
         var categories = employeeCategories().stream()

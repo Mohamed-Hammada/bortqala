@@ -43,6 +43,12 @@ public class ReportController {
         return reportingService.availablePeriods(year);
     }
 
+    @GetMapping("/generated-periods")
+    @PreAuthorize("@auth.hasPermission('reports.read')")
+    List<ReportingApi.GeneratedPeriod> generatedPeriods(@RequestParam(required = false) Integer year) {
+        return reportingService.generatedPeriods(year);
+    }
+
     @GetMapping("/preview")
     @PreAuthorize("@auth.hasPermission('reports.read')")
     ReportingApi.PreviewResponse preview(@RequestParam LocalDate periodStart, @RequestParam LocalDate periodEnd,

@@ -185,6 +185,47 @@ class ReportingServicePeriodTests {
         assertThat(preview.overlappingReportIds()).containsExactly(overlapping.getId());
     }
 
+    @Test
+    void generatedPeriodsReturnsOnlyFinalizedReportsWithTheirExactRanges() {
+        var approved = new AttendanceReport(LocalDate.of(2026, 7, 1),
+                LocalDate.of(2026, 7, 31), PayCycle.MONTHLY, "config", "tester");
+        approved.startReview(0);
+        approved.approve("approver");
+        var exported = new AttendanceReport(LocalDate.of(2026, 8, 16),
+                LocalDate.of(2026, 8, 31), PayCycle.HALF_MONTHLY, "config", "tester");
+        exported.startReview(0);
+        exported.approve("approver");
+        exported.markExported();
+        var draft = new AttendanceReport(LocalDate.of(2026, 9, 1),
+                LocalDate.of(2026, 9, 30), PayCycle.MONTHLY, "config", "tester");
+        when(attendanceReportRepository.findByPeriodStartBetweenAndStatusIn(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31),
+                List.of(com.bemo.hr.reporting.domain.ReportStatus.APPROVED,
+                        com.bemo.hr.reporting.domain.ReportStatus.EXPORTED)))
+                .thenReturn(List.of(approved, exported));
+
+        var generated = reportingService.generatedPeriods(2026);
+
+        assertThat(generated).hasSize(2);
+        assertThat(generated).anySatisfy(period -> {
+            assertThat(period.from()).isEqualTo(LocalDate.of(2026, 7, 1));
+            assertThat(period.to()).isEqualTo(LocalDate.of(2026, 7, 31));
+            assertThat(period.type()).isEqualTo(PayCycle.MONTHLY);
+            assertThat(period.reportId()).isEqualTo(approved.getId());
+        });
+        assertThat(generated).noneSatisfy(period ->
+                assertThat(period.to()).isEqualTo(LocalDate.of(2026, 9, 30)));
+    }
+
+    @Test
+    void generatedPeriodsNeverErrorsOnMissingOrOutOfRangeYears() {
+        assertThat(reportingService.generatedPeriods(null)).isEmpty();
+        assertThat(reportingService.generatedPeriods(1999)).isEmpty();
+        assertThat(reportingService.generatedPeriods(2201)).isEmpty();
+
+        verify(attendanceReportRepository, never()).findByPeriodStartBetweenAndStatusIn(any(), any(), any());
+    }
+
     private AttendanceCategory category(String code, PayCycle payCycle) {
         return new AttendanceCategory(code, code, 480, payCycle, AttendanceMode.MANUAL,
                 false, 127, true);
