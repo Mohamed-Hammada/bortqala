@@ -119,6 +119,8 @@ public final class AccessCatalog {
     public static final String P_CRM_OMNICHANNEL = "crm.omnichannel";
     public static final String P_VERTICALS_READ = "verticals.read";
     public static final String P_VERTICALS_MANAGE = "verticals.manage";
+    public static final String P_EXPENSE_READ = "expense.read";
+    public static final String P_EXPENSE_MANAGE = "expense.manage";
 
     /**
      * Every permission a super user can act on.
@@ -152,15 +154,18 @@ public final class AccessCatalog {
             P_ETA_TAX_READ, P_ETA_TAX_MANAGE,
             P_POS_READ, P_POS_OPERATE, P_POS_MANAGE,
             P_CRM_READ, P_CRM_MANAGE, P_CRM_OMNICHANNEL,
-            P_VERTICALS_READ, P_VERTICALS_MANAGE);
+            P_VERTICALS_READ, P_VERTICALS_MANAGE,
+            P_EXPENSE_READ, P_EXPENSE_MANAGE);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
-            P_REPORTS_READ, P_PAYROLL_READ, P_ORGANIZATION_READ, P_LEAVES_READ, P_PERFORMANCE_READ);
+            P_REPORTS_READ, P_PAYROLL_READ, P_ORGANIZATION_READ, P_LEAVES_READ, P_PERFORMANCE_READ,
+            P_EXPENSE_READ);
 
     private static final Set<String> HR_WRITE = Set.of(
             P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE, P_CATEGORIES_MANAGE, P_IMPORTS_MANAGE,
-            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE, P_ORGANIZATION_MANAGE, P_LEAVES_MANAGE, P_PERFORMANCE_MANAGE);
+            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE, P_ORGANIZATION_MANAGE, P_LEAVES_MANAGE,
+            P_PERFORMANCE_MANAGE, P_EXPENSE_MANAGE);
 
     private static final Set<String> WORKFORCE_READ = Set.of(
             P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ, P_LABOR_REQUESTS_READ, P_DISPATCH_DISPUTES_READ,
@@ -403,6 +408,9 @@ public final class AccessCatalog {
             page("ORGANIZATION", "HR", "/organization", "organization", "nav.organization",
                     P_ORGANIZATION_READ, HR_ROLES, null,
                     action("MANAGE", P_ORGANIZATION_MANAGE, false)),
+            page("EXPENSES", "HR", "/expenses", "expenses", "nav.expenses", P_EXPENSE_READ,
+                    HR_ROLES, null,
+                    action("MANAGE", P_EXPENSE_MANAGE, false)),
             page("AUDIT_LOGS", "ADMINISTRATION", "/audit-logs", "audit-logs", "nav.auditLogs", P_AUDIT_READ,
                     ADMIN_ONLY, null),
             page("USERS", "ADMINISTRATION", "/users", "users", "nav.users", P_USERS_READ,

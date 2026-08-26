@@ -59,6 +59,11 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.peakEmpty': 'لا توجد بيانات بصمة في الفترة المحددة بعد.',
     'procurement.settlementDiscount': 'خصم التسوية',
     'procurement.settlementDiscountHint': 'اختياري. المبلغ النقدي مضافاً إليه هذا الخصم يجب أن يساوي أو يقل عن الرصيد المتبقي؛ يُقيَّد الخصم في دفتر الحساب ويُغلق الفاتورة.',
+    'workspace.expenses': 'المصروفات',
+    'nav.expenses': 'المصروفات',
+    'nav.expensesHint': 'مطالبات مصروفات الموظفين والاستردادات',
+    'common.created': 'تم الإنشاء',
+    'common.submit': 'تقديم',
   },
   'en-US': {
     'nav.settingsHint': 'System settings and preferences',
@@ -108,6 +113,11 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'nav.posHint': 'Point of sale cashier retail engine and shift reconciliation',
     'nav.crm': 'CRM & Omnichannel',
     'nav.crmHint': 'CRM sales pipeline, leads and WhatsApp/FB omnichannel chatbot',
+    'workspace.expenses': 'Expenses',
+    'nav.expenses': 'Expenses',
+    'nav.expensesHint': 'Employee expense claims and reimbursements',
+    'common.created': 'Created',
+    'common.submit': 'Submit',
   },
 };
 

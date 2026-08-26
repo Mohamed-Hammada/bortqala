@@ -1,0 +1,89 @@
+id;translation_key;locale;text_value
+v355-001-en;EXPENSE_NOT_FOUND;en-US;Expense claim not found.
+v355-001-ar;EXPENSE_NOT_FOUND;ar-EG;لم يتم العثور على مصروف.
+v355-002-en;EXPENSE_NOT_OWN;en-US;You can only access your own expense claims.
+v355-002-ar;EXPENSE_NOT_OWN;ar-EG;يمكنك الوصول إلى مطالب المصروفات الخاصة بك فقط.
+v355-003-en;EXPENSE_INVALID_STATE;en-US;Expense claim is in an invalid state for this operation.
+v355-003-ar;EXPENSE_INVALID_STATE;ar-EG;مطلب المصروفات في حالة غير صالحة لهذه العملية.
+v355-004-en;EXPENSE_SELF_APPROVAL;en-US;You cannot approve your own expense claim.
+v355-004-ar;EXPENSE_SELF_APPROVAL;ar-EG;لا يمكنك الموافقة على مطلب مصروفاتك الخاص.
+v355-005-en;EXPENSE_NO_EMPLOYEE_LINKED;en-US;No employee record is linked to the signed-in user.
+v355-005-ar;EXPENSE_NO_EMPLOYEE_LINKED;ar-EG;لا يوجد سجل موظف مرتبط بحساب المستخدم الحالي.
+v355-006-en;EXPENSE_RECEIPT_TOO_LARGE;en-US;Receipt file must be 5MB or smaller.
+v355-006-ar;EXPENSE_RECEIPT_TOO_LARGE;ar-EG;يجب أن يكون حجم الإيصال 5 ميجابايت أو أقل.
+v355-007-en;EXPENSE_RECEIPT_INVALID_TYPE;en-US;Receipt must be an image, PDF, or Excel file.
+v355-007-ar;EXPENSE_RECEIPT_INVALID_TYPE;ar-EG;يجب أن يكون الإيصال صورة أو ملف PDF أو Excel.
+v355-008-en;nav.expenses;en-US;Expenses
+v355-008-ar;nav.expenses;ar-EG;المصروفات
+v355-009-en;nav.expensesHint;en-US;Employee expense claims and reimbursements
+v355-009-ar;nav.expensesHint;ar-EG;مطالبات مصروفات الموظفين والاستردادات
+v355-010-en;workspace.expenses;en-US;Expenses
+v355-010-ar;workspace.expenses;ar-EG;المصروفات
+v355-011-en;expenses.title;en-US;Expense Claims
+v355-011-ar;expenses.title;ar-EG;مطالبات المصروفات
+v355-012-en;expenses.newClaim;en-US;New Claim
+v355-012-ar;expenses.newClaim;ar-EG;مطلب جديد
+v355-013-en;expenses.myClaims;en-US;My Claims
+v355-013-ar;expenses.myClaims;ar-EG;مطالباتي
+v355-014-en;expenses.pendingApprovals;en-US;Pending Approvals
+v355-014-ar;expenses.pendingApprovals;ar-EG;موافقات معلقة
+v355-015-en;expenses.amount;en-US;Amount
+v355-015-ar;expenses.amount;ar-EG;المبلغ
+v355-016-en;expenses.category;en-US;Category
+v355-016-ar;expenses.category;ar-EG;الفئة
+v355-017-en;expenses.status;en-US;Status
+v355-017-ar;expenses.status;ar-EG;الحالة
+v355-018-en;expenses.description;en-US;Description
+v355-018-ar;expenses.description;ar-EG;الوصف
+v355-019-en;expenses.receipt;en-US;Receipt
+v355-019-ar;expenses.receipt;ar-EG;إيصال
+v355-020-en;expenses.spentOn;en-US;Spent On
+v355-020-ar;expenses.spentOn;ar-EG;تاريخ الصرف
+v355-021-en;expenses.decisionNote;en-US;Decision Note
+v355-021-ar;expenses.decisionNote;ar-EG;ملاحظة القرار
+v355-022-en;expenses.reimbursementRef;en-US;Reimbursement Reference
+v355-022-ar;expenses.reimbursementRef;ar-EG;مرجع الاسترداد
+v355-023-en;expenses.approver;en-US;Approver
+v355-023-ar;expenses.approver;ar-EG;الموافق
+v355-024-en;expenses.decidedAt;en-US;Decided At
+v355-024-ar;expenses.decidedAt;ar-EG;تاريخ القرار
+v355-025-en;expenses.empty;en-US;No expense claims yet.
+v355-025-ar;expenses.empty;ar-EG;لا توجد مطالبات مصروفات بعد.
+v355-026-en;expenses.noPending;en-US;No pending claims to review.
+v355-026-ar;expenses.noPending;ar-EG;لا توجد مطالبات معلقة للمراجعة.
+v355-027-en;expenses.category.meal;en-US;Meal
+v355-027-ar;expenses.category.meal;ar-EG;وجبة
+v355-028-en;expenses.category.transport;en-US;Transport
+v355-028-ar;expenses.category.transport;ar-EG;مواصلات
+v355-029-en;expenses.category.lodging;en-US;Lodging
+v355-029-ar;expenses.category.lodging;ar-EG;إقامة
+v355-030-en;expenses.category.supplies;en-US;Supplies
+v355-030-ar;expenses.category.supplies;ar-EG;مستلزمات
+v355-031-en;expenses.category.other;en-US;Other
+v355-031-ar;expenses.category.other;ar-EG;أخرى
+v355-032-en;expenses.status.draft;en-US;Draft
+v355-032-ar;expenses.status.draft;ar-EG;مسودة
+v355-033-en;expenses.status.submitted;en-US;Submitted
+v355-033-ar;expenses.status.submitted;ar-EG;مُقدَّم
+v355-034-en;expenses.status.approved;en-US;Approved
+v355-034-ar;expenses.status.approved;ar-EG;مُوافَق عليه
+v355-035-en;expenses.status.rejected;en-US;Rejected
+v355-035-ar;expenses.status.rejected;ar-EG;مرفوض
+v355-036-en;expenses.status.reimbursed;en-US;Reimbursed
+v355-036-ar;expenses.status.reimbursed;ar-EG;مُستردَّ
+v355-037-en;expenses.submitSuccess;en-US;Claim submitted successfully.
+v355-037-ar;expenses.submitSuccess;ar-EG;تم تقديم المطلب بنجاح.
+v355-038-en;expenses.approveSuccess;en-US;Claim approved successfully.
+v355-038-ar;expenses.approveSuccess;ar-EG;تمت الموافقة على المطلب بنجاح.
+v355-039-en;expenses.rejectSuccess;en-US;Claim rejected.
+v355-039-ar;expenses.rejectSuccess;ar-EG;تم رفض المطلب.
+v355-040-en;expenses.reimburseSuccess;en-US;Reimbursement recorded successfully.
+v355-040-ar;expenses.reimburseSuccess;ar-EG;تم تسجيل الاسترداد بنجاح.
+v355-041-en;expenses.receiptType;en-US;Receipt Type
+v355-041-ar;expenses.receiptType;ar-EG;نوع الإيصال
+v355-042-en;expenses.selectCategory;en-US;Select category
+v355-042-ar;expenses.selectCategory;ar-EG;اختر الفئة
+v355-043-en;expenses.confirmSubmit;en-US;Submit this claim for approval?
+v355-043-ar;expenses.confirmSubmit;ar-EG;تقديم هذا المطلب للموافقة؟
+v355-044-en;expenses.confirmReimburse;en-US;Record reimbursement?
+v355-044-ar;expenses.confirmReimburse;ar-EG;تسجيل الاسترداد؟

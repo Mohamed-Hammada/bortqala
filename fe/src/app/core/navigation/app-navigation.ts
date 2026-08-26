@@ -150,6 +150,15 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
   },
   {
+    menuId: 'expenses',
+    labelKey: 'nav.expenses',
+    descriptionKey: 'nav.expensesHint',
+    path: '/expenses',
+    icon: 'dashboard',
+    workspace: 'workspace.peopleHr',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+  },
+  {
     menuId: 'organization',
     labelKey: 'nav.organization',
     descriptionKey: 'nav.organizationHint',

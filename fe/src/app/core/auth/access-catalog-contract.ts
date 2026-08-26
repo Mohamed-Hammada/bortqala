@@ -104,6 +104,7 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     requiredFeature: 'finance.enabled',
   },
   { menuId: 'organization', route: '/organization', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'], requiredFeature: null },
+  { menuId: 'expenses', route: '/expenses', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'], requiredFeature: null },
   { menuId: 'audit-logs', route: '/audit-logs', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },
   { menuId: 'users', route: '/users', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },
   { menuId: 'settings', route: '/settings', roles: [], requiredFeature: null },

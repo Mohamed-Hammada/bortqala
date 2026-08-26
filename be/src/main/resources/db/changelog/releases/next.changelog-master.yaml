@@ -755,4 +755,15 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260826_v353_peak_clock_completion_translations.yaml
   - include:
       file: db/changelog/data/insert/20260826_v354_export_filename_translations.yaml
+  # WP-11: expense claims schema + translations
+  - include:
+      file: db/changelog/schema/create/20260826_v355_expense_claims.yaml
+  - include:
+      file: db/changelog/data/insert/20260826_v355_expense_claims_translations.yaml
+  # WP-11: expense permission seed + translations
+  - include:
+      file: db/changelog/data/insert/20260826_v356_expense_permissions.yaml
+  # WP-11: common.created + common.submit translations
+  - include:
+      file: db/changelog/data/insert/20260826_v357_common_translations.yaml
 
