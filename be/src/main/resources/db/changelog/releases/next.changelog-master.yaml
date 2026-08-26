@@ -751,5 +751,8 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260826_v351_user_role_template_translations.yaml
   - include:
       file: db/changelog/data/insert/20260826_v352_generated_periods_translations.yaml
-      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260826_v353_peak_clock_completion_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260826_v354_export_filename_translations.yaml
 

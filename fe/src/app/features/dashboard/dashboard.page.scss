@@ -861,3 +861,6 @@ td small {
 .peak-track { display:block; height:.85rem; background: var(--surface-muted, rgba(0,0,0,.06)); border-radius:.4rem; overflow:hidden; }
 .peak-fill { display:block; height:100%; background: var(--gold, #b8860b); border-radius:.4rem; }
 .peak-count { font-size:.82rem; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.peak-legend { display:flex; flex-wrap:wrap; gap:.75rem 1.25rem; margin-bottom:.85rem; }
+.peak-legend-item { display:inline-flex; align-items:center; gap:.35rem; font-size:.8rem; color: var(--muted); }
+.legend-dot { display:inline-block; width:.6rem; height:.6rem; border-radius:50%; flex:none; }

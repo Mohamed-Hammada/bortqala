@@ -104,6 +104,15 @@ public class DataExportService {
                 "pendingCount", "grossTotal", "paidTotal"), rows, options);
     }
 
+    public byte[] clockInHistogram(int months, String categoryId, ExcelExportOptions options) {
+        var rows = dashboardService.clockInHistogram(months, categoryId).stream()
+                .flatMap(bucket -> bucket.countsByCategory().entrySet().stream()
+                        .map(entry -> List.<Object>of(bucket.hour(), entry.getKey(), entry.getValue())))
+                .toList();
+        return workbook("export.sheet.clockInHistogram", "ClockInHistogramTable",
+                List.of("hour", "category", "punches"), rows, options);
+    }
+
     public byte[] fixedAssets(ExcelExportOptions options) {
         var messages = ExcelExportSupport.messages(translationService, options);
         var rows = fixedAssetRepository.findAllByOrderByAcquisitionDateDesc().stream().<List<?>>map(item -> List.of(

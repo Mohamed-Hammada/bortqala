@@ -159,7 +159,7 @@ export class ReportsStore {
   async export(id: string): Promise<void> {
     try {
       downloadBlob(await firstValueFrom(this.http.get(`/api/v1/reports/${id}/export`, { responseType: 'blob' })),
-        timestampedExcelFileName('تقرير-الحضور', 'attendance-report', this.i18n.locale()));
+        timestampedExcelFileName(this.i18n.t('export.file.attendance-report'), 'attendance-report', this.i18n.locale()));
       await this.load(id);
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
   }

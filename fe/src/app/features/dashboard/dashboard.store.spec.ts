@@ -29,6 +29,17 @@ describe('DashboardStore', () => {
     expect(store).toBeTruthy();
   });
 
+  it('downloads the clock-in histogram export honoring the category filter (WP-08)', async () => {
+    const promise = store.downloadClockInHistogram(12, 'SECURITY');
+    const request = httpMock.expectOne(
+      (req) => req.url === '/api/v1/exports/clock-in-histogram.xlsx'
+        && req.params.get('months') === '12'
+        && req.params.get('categoryId') === 'SECURITY');
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['xlsx']));
+    expect(await promise).toBeInstanceOf(Blob);
+  });
+
   it('loads the peak clock-in histogram and clears it on failure (WP-08)', async () => {
     const promise = store.loadClockInHistogram(6);
     const request = httpMock.expectOne('/api/v1/dashboard/clock-in-histogram?months=6');

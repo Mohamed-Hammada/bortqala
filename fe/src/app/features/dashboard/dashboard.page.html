@@ -457,18 +457,39 @@
           <p>{{ i18n.t('dashboard.peakHint') }}</p>
         </div>
         <div class="trend-tools">
+          <select class="trend-months-select" [value]="peakCategoryId() ?? ''"
+            (change)="changePeakCategory($any($event.target).value)" [attr.aria-label]="i18n.t('dashboard.peakAllCategories')">
+            <option value="">{{ i18n.t('dashboard.peakAllCategories') }}</option>
+            @for (category of store.data()?.categories ?? []; track category.categoryId) {
+              <option [value]="category.categoryId">{{ category.categoryName }}</option>
+            }
+          </select>
           <select class="trend-months-select" [value]="peakMonths()"
             (change)="changePeakMonths($any($event.target).value)" [attr.aria-label]="i18n.t('dashboard.peakTitle')">
             @for (count of peakMonthOptions; track count) {
               <option [value]="count">{{ count }} {{ i18n.t('dashboard.trendMonths') }}</option>
             }
           </select>
+          <button type="button" class="button secondary" (click)="exportPeak()"
+            [disabled]="peakExporting() || !peakHasData()">
+            ⇩ {{ i18n.t('common.export') }}
+          </button>
         </div>
       </div>
       @if (store.clockInLoading()) {
         <div class="chart-loading">{{ i18n.t('common.loading') }}</div>
       } @else if (peakHasData(); as hasData) {
         @if (hasData) {
+          @if (peakLegend().length > 1) {
+            <div class="peak-legend" role="list">
+              @for (item of peakLegend(); track item.categoryId) {
+                <span class="peak-legend-item" role="listitem">
+                  <span class="legend-dot" [style.background]="item.color"></span>
+                  {{ item.categoryName }}
+                </span>
+              }
+            </div>
+          }
           <div class="peak-bars">
             @for (row of peakRows().rows; track row.hour) {
               @if (row.total > 0) {
@@ -479,6 +500,7 @@
                   </span>
                   <span class="peak-count">
                     @for (entry of row.entries; track entry.categoryId; let last = $last) {
+                      <span class="legend-dot" [style.background]="entry.color"></span>
                       {{ entry.categoryName }} × {{ entry.count }}@if (!last) {<span> · </span>}
                     }
                   </span>

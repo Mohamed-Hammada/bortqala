@@ -123,7 +123,7 @@ export class PartiesStore {
         await firstValueFrom(
           this.httpClient.get('/api/v1/exports/parties.xlsx', { responseType: 'blob' }),
         ),
-        timestampedExcelFileName('جهات-التعامل', 'business-parties', this.i18n.locale()),
+        timestampedExcelFileName(this.i18n.t('export.file.parties'), 'business-parties', this.i18n.locale()),
       );
     } catch (error) {
       this.error.set(apiErrorMessage(error, this.i18n));

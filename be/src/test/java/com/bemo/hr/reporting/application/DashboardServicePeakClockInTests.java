@@ -119,6 +119,32 @@ class DashboardServicePeakClockInTests {
     }
 
     @Test
+    void bucketsShiftWithConfiguredCompanyZone() {
+        var tokyo = new DashboardService(attendanceCategoryRepository, employeeRepository,
+                attendanceReportRepository, dailyAttendanceResultRepository,
+                importBatchRepository, punchRecordRepository, salaryPaymentRepository,
+                operationsService, attendanceReportRefreshService, "Asia/Tokyo");
+        var anchor = YearMonth.now(cairo);
+        LocalDate date = anchor.atDay(2);
+        // 06:15 at UTC+3 (June Cairo) == 03:15 UTC == 12:15 in Tokyo (UTC+9).
+        mockReport(anchor, List.of(row("SECURITY", 6, date)));
+
+        int cairoHour = hourWithPunches(service.clockInHistogram(1, null));
+        int tokyoHour = hourWithPunches(tokyo.clockInHistogram(1, null));
+        org.junit.jupiter.api.Assertions.assertEquals(6, cairoHour);
+        org.junit.jupiter.api.Assertions.assertEquals(12, tokyoHour);
+    }
+
+    private int hourWithPunches(java.util.List<com.bemo.hr.reporting.api.DashboardApi.ClockInBucket> buckets) {
+        return buckets.stream()
+                .filter(bucket -> bucket.countsByCategory().values().stream()
+                        .mapToLong(Long::longValue).sum() > 0)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("expected one bucket with punches"))
+                .hour();
+    }
+
+    @Test
     void missingReportsAndPunchlessRowsAreSkippedAndMonthsAreCapped() {
         when(attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
                 any(), any(), any())).thenReturn(Optional.empty());

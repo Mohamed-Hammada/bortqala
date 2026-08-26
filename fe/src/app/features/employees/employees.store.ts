@@ -61,7 +61,7 @@ export class EmployeesStore {
         await firstValueFrom(
           this.http.get('/api/v1/exports/employees.xlsx', { responseType: 'blob' }),
         ),
-        timestampedExcelFileName('الموظفون', 'employees', this.i18n.locale()),
+        timestampedExcelFileName(this.i18n.t('export.file.employees'), 'employees', this.i18n.locale()),
       );
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));

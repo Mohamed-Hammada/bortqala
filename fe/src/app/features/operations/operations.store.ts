@@ -121,7 +121,7 @@ export class OperationsStore {
   async export(): Promise<void> {
     try {
       downloadBlob(await firstValueFrom(this.http.get('/api/v1/operations/export.xlsx', { responseType: 'blob' })),
-        timestampedExcelFileName('المخزون-والحسابات', 'inventory-and-ledgers', this.i18n.locale()));
+        timestampedExcelFileName(this.i18n.t('export.file.inventory-and-ledgers'), 'inventory-and-ledgers', this.i18n.locale()));
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
   }
 
@@ -141,7 +141,7 @@ export class OperationsStore {
   async exportValuation(): Promise<void> {
     try {
       downloadBlob(await firstValueFrom(this.http.get('/api/v1/exports/inventory-valuation.xlsx', { responseType: 'blob' })),
-        timestampedExcelFileName('تقييم-المخزون', 'inventory-valuation', this.i18n.locale()));
+        timestampedExcelFileName(this.i18n.t('export.file.inventory-valuation'), 'inventory-valuation', this.i18n.locale()));
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
   }
 

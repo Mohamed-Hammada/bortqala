@@ -60,7 +60,7 @@ export class CategoriesStore {
         await firstValueFrom(
           this.http.get('/api/v1/exports/categories.xlsx', { responseType: 'blob' }),
         ),
-        timestampedExcelFileName('الفئات', 'categories', this.i18n.locale()),
+        timestampedExcelFileName(this.i18n.t('export.file.categories'), 'categories', this.i18n.locale()),
       );
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));

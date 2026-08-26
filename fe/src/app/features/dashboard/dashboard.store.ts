@@ -119,6 +119,15 @@ export class DashboardStore {
     );
   }
 
+  /** WP-08: Excel export of the peak clock-in histogram (honors the category filter). */
+  downloadClockInHistogram(months: number, categoryId?: string): Promise<Blob> {
+    const params: Record<string, string | number> = { months };
+    if (categoryId) params['categoryId'] = categoryId;
+    return firstValueFrom(
+      this.httpClient.get('/api/v1/exports/clock-in-histogram.xlsx', { params, responseType: 'blob' }),
+    );
+  }
+
   async loadAll(year: number, month: number, period = 'MONTH', departmentId: string | null = null, trendMonths = 6): Promise<void> {
     await Promise.all([
       this.load(year, month),

@@ -2,6 +2,7 @@ package com.bemo.hr.reporting.api;
 
 import com.bemo.hr.reporting.application.DataExportService;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
+import com.bemo.hr.shared.i18n.TranslationService;
 import com.bemo.hr.shared.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
@@ -23,12 +24,14 @@ import java.time.format.DateTimeFormatter;
 public class DataExportController {
     private final DataExportService dataExportService;
     private final AuthService authService;
+    private final TranslationService translationService;
 
     @GetMapping("/{scope}.xlsx")
     ResponseEntity<byte[]> export(@PathVariable String scope,
                                   @RequestParam(required = false) Integer months,
                                   @RequestParam(required = false) Integer year,
                                   @RequestParam(required = false) Integer month,
+                                  @RequestParam(name = "categoryId", required = false) String categoryId,
                                   Authentication authentication) {
         var preference = authService.currentPreferences(authentication.getName());
         var options = new ExcelExportOptions(preference.locale(), preference.excelTableStyle());
@@ -45,21 +48,14 @@ public class DataExportController {
             case "fixed-assets" -> dataExportService.fixedAssets(options);
             case "inventory-valuation" -> dataExportService.inventoryValuation(options);
             case "trends" -> dataExportService.trends(monthsCount, y, m, options);
+            case "clock-in-histogram" -> dataExportService.clockInHistogram(monthsCount, categoryId, options);
             default -> throw new com.bemo.hr.shared.domain.NotFoundException("Export scope not found.");
         };
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        String localizedScope = preference.locale().startsWith("ar") ? switch (scope) {
-            case "categories" -> "الفئات";
-            case "employees" -> "الموظفون";
-            case "imports" -> "سجل-الاستيراد";
-            case "unmatched" -> "هويات-غير-مربوطة";
-            case "parties" -> "جهات-التعامل";
-            case "fixed-assets" -> "الأصول-الثابتة";
-            case "inventory-valuation" -> "تقييم-المخزون";
-            case "trends" -> "اتجاهات-متعددة-الفترات";
-            default -> scope;
-        } : scope;
+        String localizedScope = preference.locale().startsWith("ar")
+                ? translationService.translateOrDefault("export.file." + scope, preference.locale(), scope)
+                : scope;
         headers.setContentDisposition(ContentDisposition.attachment()
                 .filename(localizedScope + "-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm")) + ".xlsx",
                         StandardCharsets.UTF_8).build());
