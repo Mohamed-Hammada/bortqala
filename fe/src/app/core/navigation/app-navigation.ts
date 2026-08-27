@@ -20,6 +20,8 @@ export type WorkspaceGroup =
   | 'workspace.manufacturingDomain'
   | 'workspace.businessPartners'
   | 'workspace.financeAccounting'
+  | 'workspace.documents'
+  | 'workspace.esign'
   | 'workspace.administration'
   | 'workspace.platformAdministration';
 
@@ -58,6 +60,8 @@ export const WORKSPACE_ORDER: readonly WorkspaceGroup[] = [
   'workspace.manufacturingDomain',
   'workspace.businessPartners',
   'workspace.financeAccounting',
+  'workspace.documents',
+  'workspace.esign',
   'workspace.administration',
   'workspace.platformAdministration',
 ];
@@ -158,6 +162,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'dashboard',
     workspace: 'workspace.peopleHr',
     roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+  },
+  {
+    menuId: 'recruitment',
+    labelKey: 'nav.recruitment',
+    descriptionKey: 'nav.recruitmentHint',
+    path: '/recruitment',
+    icon: 'employees',
+    workspace: 'workspace.peopleHr',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
   },
   {
     menuId: 'organization',
@@ -400,6 +413,60 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'categories',
     workspace: 'workspace.salesCommercial',
     roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER', 'HR_MANAGER', 'FINANCE_MANAGER'],
+  },
+  {
+    menuId: 'helpdesk',
+    labelKey: 'nav.helpdesk',
+    descriptionKey: 'nav.helpdeskHint',
+    path: '/helpdesk',
+    icon: 'dashboard',
+    workspace: 'workspace.homeOverview',
+    roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
+  {
+    menuId: 'kb',
+    labelKey: 'nav.kb',
+    descriptionKey: 'nav.kbHint',
+    path: '/kb',
+    icon: 'reports',
+    workspace: 'workspace.homeOverview',
+    roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
+  {
+    menuId: 'marketing',
+    labelKey: 'nav.marketing',
+    descriptionKey: 'nav.marketingHint',
+    path: '/marketing',
+    icon: 'dashboard',
+    workspace: 'workspace.salesCommercial',
+    roles: ['ADMIN', 'SALES_MANAGER'],
+  },
+  {
+    menuId: 'report-builder',
+    labelKey: 'nav.reportBuilder',
+    descriptionKey: 'nav.reportBuilderHint',
+    path: '/report-builder',
+    icon: 'reports',
+    workspace: 'workspace.homeOverview',
+    roles: ['ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER', 'VIEWER'],
+  },
+  {
+    menuId: 'documents',
+    labelKey: 'nav.documents',
+    descriptionKey: 'nav.documentsHint',
+    path: '/documents',
+    icon: 'reports',
+    workspace: 'workspace.documents',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
+  {
+    menuId: 'esign',
+    labelKey: 'nav.esign',
+    descriptionKey: 'nav.esignHint',
+    path: '/esign',
+    icon: 'reports',
+    workspace: 'workspace.esign',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
   },
 
   // Manufacturing

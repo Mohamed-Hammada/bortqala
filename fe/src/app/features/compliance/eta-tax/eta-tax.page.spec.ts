@@ -185,6 +185,18 @@ describe('EtaTaxPage', () => {
   });
 
   function flushLoad() {
+    http.expectOne('/api/v1/einvoicing/settings').flush({
+      id: 'es-1',
+      provider: 'NONE',
+      environment: 'TEST',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    http.expectOne('/api/v1/einvoicing/providers').flush([
+      { type: 'EGYPT_ETA', labelKey: 'compliance.provider.egyptEta', supported: true },
+      { type: 'KSA_ZATCA', labelKey: 'compliance.provider.ksaZatca', supported: false },
+      { type: 'NONE', labelKey: 'compliance.provider.none', supported: true },
+    ]);
     http.expectOne('/api/v1/compliance/eta/summary').flush({
       totalSubmitted: 10,
       validCount: 8,

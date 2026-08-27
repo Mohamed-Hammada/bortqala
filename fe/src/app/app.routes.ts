@@ -525,6 +525,36 @@ export const routes: Routes = [
           import('./features/growth/growth.page').then((module) => module.GrowthPage),
       },
       {
+        path: 'recruitment',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'recruitment',
+          roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+        },
+        loadComponent: () =>
+          import('./features/recruitment/recruitment.page').then((module) => module.RecruitmentPage),
+      },
+      {
+        path: 'documents',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'documents',
+          roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+        },
+        loadComponent: () =>
+          import('./features/documents/documents.page').then((module) => module.DocumentsPage),
+      },
+      {
+        path: 'esign',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'esign',
+          roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+        },
+        loadComponent: () =>
+          import('./features/esign/esign.page').then((module) => module.ESignPage),
+      },
+      {
         path: 'forbidden',
         loadComponent: () =>
           import('./features/errors/forbidden.page').then((module) => module.ForbiddenPage),

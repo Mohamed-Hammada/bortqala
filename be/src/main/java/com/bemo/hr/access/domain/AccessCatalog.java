@@ -123,6 +123,14 @@ public final class AccessCatalog {
     public static final String P_VERTICALS_MANAGE = "verticals.manage";
     public static final String P_EXPENSE_READ = "expense.read";
     public static final String P_EXPENSE_MANAGE = "expense.manage";
+    public static final String P_RECRUITMENT_READ = "recruitment.read";
+    public static final String P_RECRUITMENT_MANAGE = "recruitment.manage";
+    public static final String P_DOCUMENTS_READ = "documents.read";
+    public static final String P_DOCUMENTS_MANAGE = "documents.manage";
+    public static final String P_ESIGN_READ = "esign.read";
+    public static final String P_ESIGN_MANAGE = "esign.manage";
+    public static final String P_EINVOICING_READ = "einvoicing.read";
+    public static final String P_EINVOICING_MANAGE = "einvoicing.manage";
 
     /**
      * Every permission a super user can act on.
@@ -157,25 +165,29 @@ public final class AccessCatalog {
             P_POS_READ, P_POS_OPERATE, P_POS_MANAGE,
             P_CRM_READ, P_CRM_MANAGE, P_CRM_OMNICHANNEL,
             P_VERTICALS_READ, P_VERTICALS_MANAGE,
-            P_EXPENSE_READ, P_EXPENSE_MANAGE);
+            P_EXPENSE_READ, P_EXPENSE_MANAGE,
+            P_RECRUITMENT_READ, P_RECRUITMENT_MANAGE,
+            P_DOCUMENTS_READ, P_DOCUMENTS_MANAGE,
+            P_ESIGN_READ, P_ESIGN_MANAGE,
+            P_EINVOICING_READ, P_EINVOICING_MANAGE);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
             P_REPORTS_READ, P_PAYROLL_READ, P_ORGANIZATION_READ, P_LEAVES_READ, P_PERFORMANCE_READ,
-            P_EXPENSE_READ);
+            P_EXPENSE_READ, P_RECRUITMENT_READ, P_DOCUMENTS_READ, P_ESIGN_READ);
 
     private static final Set<String> HR_WRITE = Set.of(
             P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE, P_CATEGORIES_MANAGE, P_IMPORTS_MANAGE,
             P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE, P_ORGANIZATION_MANAGE, P_LEAVES_MANAGE,
-            P_PERFORMANCE_MANAGE, P_EXPENSE_MANAGE);
+            P_PERFORMANCE_MANAGE, P_EXPENSE_MANAGE, P_RECRUITMENT_MANAGE, P_DOCUMENTS_MANAGE, P_ESIGN_MANAGE);
 
     private static final Set<String> WORKFORCE_READ = Set.of(
             P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ, P_LABOR_REQUESTS_READ, P_DISPATCH_DISPUTES_READ,
             P_ATTENDANCE_READ, P_SETTLEMENTS_READ, P_ADVANCES_READ,
             P_CONTRACTOR_ACCOUNTS_READ, P_WORKFORCE_REPORTS_READ, P_CATEGORIES_READ);
 
-    private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ, P_ETA_TAX_READ, P_ASSET_READ);
-    private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST, P_ETA_TAX_MANAGE, P_ASSET_MANAGE);
+    private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ, P_ETA_TAX_READ, P_ASSET_READ, P_EINVOICING_READ);
+    private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST, P_ETA_TAX_MANAGE, P_ASSET_MANAGE, P_EINVOICING_MANAGE);
 
     // ------------------------------------------------------------------
     // Page route-guard role matrices (mirrors the frontend route guards,
@@ -423,6 +435,15 @@ public final class AccessCatalog {
             page("EXPENSES", "HR", "/expenses", "expenses", "nav.expenses", P_EXPENSE_READ,
                     HR_ROLES, null,
                     action("MANAGE", P_EXPENSE_MANAGE, false)),
+            page("RECRUITMENT", "HR", "/recruitment", "recruitment", "nav.recruitment", P_RECRUITMENT_READ,
+                    HR_ROLES, null,
+                    action("MANAGE", P_RECRUITMENT_MANAGE, false)),
+            page("DOCUMENTS", "HR", "/documents", "documents", "nav.documents", P_DOCUMENTS_READ,
+                    HR_ROLES, null,
+                    action("MANAGE", P_DOCUMENTS_MANAGE, false)),
+            page("ESIGN", "HR", "/esign", "esign", "nav.esign", P_ESIGN_READ,
+                    HR_ROLES, null,
+                    action("MANAGE", P_ESIGN_MANAGE, true)),
             page("AUDIT_LOGS", "ADMINISTRATION", "/audit-logs", "audit-logs", "nav.auditLogs", P_AUDIT_READ,
                     ADMIN_ONLY, null),
             page("USERS", "ADMINISTRATION", "/users", "users", "nav.users", P_USERS_READ,

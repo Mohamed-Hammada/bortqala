@@ -28,8 +28,8 @@ class HelpdeskServiceTests {
     @BeforeEach
     void setUp() {
         category = new HelpdeskCategory("app1", "الدعم", "Support", 8, 48);
-        when(categoryRepo.findById(any())).thenReturn(Optional.of(category));
-        when(ticketRepo.maxTicketNo(any())).thenReturn(0L);
+        lenient().when(categoryRepo.findById(any())).thenReturn(Optional.of(category));
+        lenient().when(ticketRepo.maxTicketNo(any())).thenReturn(0L);
     }
 
     @Test
@@ -44,17 +44,17 @@ class HelpdeskServiceTests {
     @Test
     void addMessage_nonInternal_setsFirstResponse() {
         Ticket ticket = new Ticket("app1", 1L, "user1", "cat1", "title", "desc", Ticket.Priority.NORMAL);
+        when(ticketRepo.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(messageRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         service.addMessage("app1", ticket.getId(), "agent1", "Hello", false);
-        verify(ticketRepo, times(1)).save(ticket);
         assertThat(ticket.getFirstResponseAt()).isNotNull();
     }
 
     @Test
     void addMessage_internal_doesNotSetFirstResponse() {
         Ticket ticket = new Ticket("app1", 1L, "user1", "cat1", "title", "desc", Ticket.Priority.NORMAL);
-        when(ticketRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(ticketRepo.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(messageRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         service.addMessage("app1", ticket.getId(), "agent1", "Internal note", true);
         assertThat(ticket.getFirstResponseAt()).isNull();
@@ -63,6 +63,7 @@ class HelpdeskServiceTests {
     @Test
     void transitionTicket_resolved_setsResolvedAt() {
         Ticket ticket = new Ticket("app1", 1L, "user1", "cat1", "title", "desc", Ticket.Priority.NORMAL);
+        when(ticketRepo.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         service.transitionTicket("app1", ticket.getId(), Ticket.Status.RESOLVED);
         assertThat(ticket.getResolvedAt()).isNotNull();

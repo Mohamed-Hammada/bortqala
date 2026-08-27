@@ -1,0 +1,157 @@
+id;translation_key;locale;text_value
+v401-001-en;workspace.documents;en-US;Documents
+v401-001-ar;workspace.documents;ar-EG;المستندات
+v401-002-en;nav.documents;en-US;Document Center
+v401-002-ar;nav.documents;ar-EG;مركز المستندات
+v401-003-en;nav.documentsHint;en-US;Organize company documents into folders and tags
+v401-003-ar;nav.documentsHint;ar-EG;تنظيم مستندات الشركة في مجلدات ووسوم
+v401-004-en;workspace.esign;en-US;Signatures
+v401-004-ar;workspace.esign;ar-EG;التوقيعات
+v401-005-en;nav.esign;en-US;eSign Workflows
+v401-005-ar;nav.esign;ar-EG;مهام التوقيع الإلكتروني
+v401-006-en;nav.esignHint;en-US;Route documents for sequential signature approval
+v401-006-ar;nav.esignHint;ar-EG;إرسال المستندات للتوقيع بالموافقة المتسلسلة
+v401-007-en;doc.folders;en-US;Folders
+v401-007-ar;doc.folders;ar-EG;المجلدات
+v401-008-en;doc.tags;en-US;Tags
+v401-008-ar;doc.tags;ar-EG;الوسوم
+v401-009-en;doc.documents;en-US;Documents
+v401-009-ar;doc.documents;ar-EG;المستندات
+v401-010-en;doc.createFolder;en-US;New Folder
+v401-010-ar;doc.createFolder;ar-EG;مجلد جديد
+v401-011-en;doc.folderName;en-US;Folder Name
+v401-011-ar;doc.folderName;ar-EG;اسم المجلد
+v401-012-en;doc.createTag;en-US;New Tag
+v401-012-ar;doc.createTag;ar-EG;وسم جديد
+v401-013-en;doc.tagName;en-US;Tag Name
+v401-013-ar;doc.tagName;ar-EG;اسم الوسم
+v401-014-en;doc.search;en-US;Search documents
+v401-014-ar;doc.search;ar-EG;بحث في المستندات
+v401-015-en;doc.searchPlaceholder;en-US;Type a filename or tag…
+v401-015-ar;doc.searchPlaceholder;ar-EG;اكتب اسم ملف أو وسم…
+v401-016-en;doc.assignTag;en-US;Assign Tag
+v401-016-ar;doc.assignTag;ar-EG;إضافة وسم
+v401-017-en;doc.rename;en-US;Rename
+v401-017-ar;doc.rename;ar-EG;إعادة تسمية
+v401-018-en;doc.move;en-US;Move
+v401-018-ar;doc.move;ar-EG;نقل
+v401-019-en;doc.selectFolder;en-US;Select destination folder
+v401-019-ar;doc.selectFolder;ar-EG;اختر المجلد الوجهة
+v401-020-en;doc.folderCreated;en-US;Folder created
+v401-020-ar;doc.folderCreated;ar-EG;تم إنشاء المجلد
+v401-021-en;doc.tagCreated;en-US;Tag created
+v401-021-ar;doc.tagCreated;ar-EG;تم إنشاء الوسم
+v401-022-en;doc.tagAssigned;en-US;Tag assigned
+v401-022-ar;doc.tagAssigned;ar-EG;تمت إضافة الوسم
+v401-023-en;doc.noDocuments;en-US;No documents found
+v401-023-ar;doc.noDocuments;ar-EG;لا توجد مستندات
+v401-024-en;doc.folder;en-US;Folder
+v401-024-ar;doc.folder;ar-EG;المجلد
+v401-025-en;esign.packets;en-US;Signature Packets
+v401-025-ar;esign.packets;ar-EG;مهام التوقيع
+v401-026-en;esign.createPacket;en-US;New Signature Request
+v401-026-ar;esign.createPacket;ar-EG;طلب توقيع جديد
+v401-027-en;esign.title;en-US;Title
+v401-027-ar;esign.title;ar-EG;العنوان
+v401-028-en;esign.documentName;en-US;Document
+v401-028-ar;esign.documentName;ar-EG;المستند
+v401-029-en;esign.signer;en-US;Signer
+v401-029-ar;esign.signer;ar-EG;الموقّع
+v401-030-en;esign.role;en-US;Role
+v401-030-ar;esign.role;ar-EG;الدور
+v401-031-en;esign.addSigner;en-US;Add Signer
+v401-031-ar;esign.addSigner;ar-EG;إضافة موقّع
+v401-032-en;esign.startRouting;en-US;Start Routing
+v401-032-ar;esign.startRouting;ar-EG;بدء التوقيع
+v401-033-en;esign.signNow;en-US;Sign Now
+v401-033-ar;esign.signNow;ar-EG;وقّع الآن
+v401-034-en;esign.decline;en-US;Decline
+v401-034-ar;esign.decline;ar-EG;رفض
+v401-035-en;esign.declineReason;en-US;Reason for declining
+v401-035-ar;esign.declineReason;ar-EG;سبب الرفض
+v401-036-en;esign.accept;en-US;I accept the document
+v401-036-ar;esign.accept;ar-EG;أوافق على المستند
+v401-037-en;esign.drawnSignature;en-US;Draw your signature
+v401-037-ar;esign.drawnSignature;ar-EG;ارسم توقيعك
+v401-038-en;esign.manifest;en-US;Export Evidence Bundle
+v401-038-ar;esign.manifest;ar-EG;تصدير حزمة الإثبات
+v401-039-en;esign.tracker;en-US;Signature Tracker
+v401-039-ar;esign.tracker;ar-EG;متابعة التوقيعات
+v401-040-en;esign.steps;en-US;Approval Steps
+v401-040-ar;esign.steps;ar-EG;خطوات الموافقة
+v401-041-en;esign.packetCreated;en-US;Signature request created
+v401-041-ar;esign.packetCreated;ar-EG;تم إنشاء طلب التوقيع
+v401-042-en;esign.signedSuccess;en-US;Document signed successfully
+v401-042-ar;esign.signedSuccess;ar-EG;تم توقيع المستند بنجاح
+v401-043-en;esign.declinedSuccess;en-US;Document declined
+v401-043-ar;esign.declinedSuccess;ar-EG;تم رفض المستند
+v401-044-en;esign.contentHash;en-US;Content SHA-256
+v401-044-ar;esign.contentHash;ar-EG;هاش المحتوى SHA-256
+v401-045-en;esign.awaitingMe;en-US;Awaiting my signature
+v401-045-ar;esign.awaitingMe;ar-EG;بانتظار توقيعي
+v401-046-en;DOC_FOLDER_NOT_FOUND;en-US;Folder not found
+v401-046-ar;DOC_FOLDER_NOT_FOUND;ar-EG;المجلد غير موجود
+v401-047-en;DOC_TAG_NOT_FOUND;en-US;Tag not found
+v401-047-ar;DOC_TAG_NOT_FOUND;ar-EG;الوسم غير موجود
+v401-048-en;DOC_FOLDER_SELF_MOVE;en-US;Cannot move a folder into itself
+v401-048-ar;DOC_FOLDER_SELF_MOVE;ar-EG;لا يمكن نقل مجلد داخل نفسه
+v401-049-en;SIGN_PACKET_NOT_FOUND;en-US;Signature packet not found
+v401-049-ar;SIGN_PACKET_NOT_FOUND;ar-EG;طلب التوقيع غير موجود
+v401-050-en;SIGN_STEP_NOT_FOUND;en-US;Signature step not found
+v401-050-ar;SIGN_STEP_NOT_FOUND;ar-EG;خطوة التوقيع غير موجودة
+v401-051-en;SIGN_INVALID_STATE;en-US;Signature packet is not in a valid state for this action
+v401-051-ar;SIGN_INVALID_STATE;ar-EG;طلب التوقيع غير صالح لهذا الإجراء
+v401-052-en;SIGN_STEP_NOT_PENDING;en-US;Signature step is not pending
+v401-052-ar;SIGN_STEP_NOT_PENDING;ar-EG;خطوة التوقيع ليست بانتظار الإجراء
+v401-053-en;SIGN_PREVIOUS_NOT_SIGNED;en-US;The previous step must be signed first
+v401-053-ar;SIGN_PREVIOUS_NOT_SIGNED;ar-EG;يجب توقيع الخطوة السابقة أولاً
+v401-054-en;esign.stepOrder;en-US;Order
+v401-054-ar;esign.stepOrder;ar-EG;الترتيب
+v401-055-en;esign.signedAt;en-US;Signed At
+v401-055-ar;esign.signedAt;ar-EG;تاريخ التوقيع
+v401-056-en;esign.status;en-US;Status
+v401-056-ar;esign.status;ar-EG;الحالة
+v401-057-en;esign.ipAddress;en-US;IP Address
+v401-057-ar;esign.ipAddress;ar-EG;عنوان IP
+v401-058-en;esign.method;en-US;Method
+v401-058-ar;esign.method;ar-EG;الطريقة
+v401-059-en;esign.sign;en-US;Sign Step
+v401-059-ar;esign.sign;ar-EG;توقيع الخطوة
+v401-060-en;esign.reject;en-US;Reject Document
+v401-060-ar;esign.reject;ar-EG;رفض المستند
+v401-101-en;doc.renamed;en-US;Folder renamed
+v401-101-ar;doc.renamed;ar-EG;تمت إعادة تسمية المجلد
+v401-102-en;doc.folderMoved;en-US;Folder moved
+v401-102-ar;doc.folderMoved;ar-EG;تم نقل المجلد
+v401-103-en;doc.folderDeleted;en-US;Folder deleted
+v401-103-ar;doc.folderDeleted;ar-EG;تم حذف المجلد
+v401-104-en;doc.tagDeleted;en-US;Tag deleted
+v401-104-ar;doc.tagDeleted;ar-EG;تم حذف الوسم
+v401-105-en;doc.tagRemoved;en-US;Tag removed from document
+v401-105-ar;doc.tagRemoved;ar-EG;تمت إزالة الوسم من المستند
+v401-106-en;doc.tagColor;en-US;Tag color
+v401-106-ar;doc.tagColor;ar-EG;لون الوسم
+v401-200-en;esign.status.DRAFT;en-US;Draft
+v401-200-ar;esign.status.DRAFT;ar-EG;مسودة
+v401-201-en;esign.status.IN_PROGRESS;en-US;In Progress
+v401-201-ar;esign.status.IN_PROGRESS;ar-EG;جارية
+v401-202-en;esign.status.COMPLETED;en-US;Completed
+v401-202-ar;esign.status.COMPLETED;ar-EG;مكتملة
+v401-203-en;esign.status.DECLINED;en-US;Declined
+v401-203-ar;esign.status.DECLINED;ar-EG;مرفوضة
+v401-204-en;esign.stepStatus.PENDING;en-US;Pending
+v401-204-ar;esign.stepStatus.PENDING;ar-EG;بانتظار
+v401-205-en;esign.stepStatus.SIGNED;en-US;Signed
+v401-205-ar;esign.stepStatus.SIGNED;ar-EG;موقّع
+v401-206-en;esign.stepStatus.DECLINED;en-US;Declined
+v401-206-ar;esign.stepStatus.DECLINED;ar-EG;مرفوض
+v401-207-en;esign.stepStatus.CANCELLED;en-US;Cancelled
+v401-207-ar;esign.stepStatus.CANCELLED;ar-EG;ملغى
+v401-210-en;esign.signerUserId;en-US;User ID
+v401-210-ar;esign.signerUserId;ar-EG;معرف المستخدم
+v401-211-en;esign.method.DRAWN;en-US;Drawn signature
+v401-211-ar;esign.method.DRAWN;ar-EG;توقيع مرسوم
+v401-212-en;esign.method.TYPED;en-US;Typed signature
+v401-212-ar;esign.method.TYPED;ar-EG;توقيع مكتوب
+v401-213-en;esign.method.UPLOADED;en-US;Uploaded signature
+v401-213-ar;esign.method.UPLOADED;ar-EG;توقيع مرفوع

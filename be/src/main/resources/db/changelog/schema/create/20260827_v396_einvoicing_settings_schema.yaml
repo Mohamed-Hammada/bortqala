@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v396_einvoicing_settings_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: einvoicing_settings
+      changes:
+        - createTable:
+            tableName: einvoicing_settings
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: provider, type: varchar(30), constraints: { nullable: false }, defaultValue: "NONE" }
+              - column: { name: environment, type: varchar(30), constraints: { nullable: false }, defaultValue: "TEST" }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            constraintName: uq_einvoicing_settings_app
+            tableName: einvoicing_settings
+            columnNames: app_id
+      rollback:
+        - dropTable:
+            tableName: einvoicing_settings

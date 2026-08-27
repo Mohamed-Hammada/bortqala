@@ -1,0 +1,176 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('workspace.esign') }}</p>
+      <h1>{{ i18n.t('nav.esign') }}</h1>
+      <p>
+        <span class="status">{{ i18n.t('esign.awaitingMe') }}: {{ pendingForMe() }}</span>
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="button primary" (click)="openCreate()">＋ {{ i18n.t('esign.createPacket') }}</button>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <label>{{ i18n.t('esign.status') }}:</label>
+    <select [value]="statusFilter()" (change)="onFilterChange($any($event.target).value)">
+      <option value="">—</option>
+      @for (status of ['DRAFT', 'IN_PROGRESS', 'COMPLETED', 'DECLINED']; track status) {
+        <option [value]="status">{{ i18n.t(`esign.status.${status}`) }}</option>
+      }
+    </select>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('esign.title') }}</th>
+            <th>{{ i18n.t('esign.documentName') }}</th>
+            <th>{{ i18n.t('esign.status') }}</th>
+            <th>{{ i18n.t('esign.steps') }}</th>
+            <th>{{ i18n.t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (packet of filteredPackets(); track packet.id) {
+            <tr>
+              <td><strong>{{ packet.title }}</strong>
+                <span class="hash ltr" title="{{ i18n.t('esign.contentHash') }}">{{ packet.contentHash.slice(0, 12) }}…</span>
+              </td>
+              <td>{{ packet.documentName ?? '—' }}</td>
+              <td><span class="status" [class.success]="packet.status === 'COMPLETED'" [class.danger]="packet.status === 'DECLINED'">{{ packetStatusLabel(packet.status) }}</span></td>
+              <td>
+                <div class="step-tracker">
+                  @for (step of sortedSteps(packet); track step.id) {
+                    <span class="step-dot"
+                          [class.done]="step.status === 'SIGNED'"
+                          [class.declined]="step.status === 'DECLINED'"
+                          [class.current]="step.status === 'PENDING'"
+                          title="{{ step.signerName }} ({{ stepStatusLabel(step.status) }})"></span>
+                  }
+                </div>
+              </td>
+              <td class="actions-cell">
+                <button class="button secondary btn-sm" (click)="exportManifest(packet)">{{ i18n.t('esign.manifest') }}</button>
+                @if (packet.status === 'IN_PROGRESS') {
+                  @if (currentStep(packet); as step) {
+                    <button class="button primary btn-sm" (click)="openSign(packet, step)">{{ i18n.t('esign.signNow') }}</button>
+                    <button class="button danger btn-sm" (click)="openDecline(packet, step)">{{ i18n.t('esign.decline') }}</button>
+                  }
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="muted">{{ i18n.t('esign.packets') }} —</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <app-modal-dialog [isOpen]="createOpen()" [title]="i18n.t('esign.createPacket')" size="wide" [showFooter]="false" (close)="closeCreate()">
+    <form class="form-grid dialog-form-grid" [formGroup]="packetForm" (ngSubmit)="submitPacket()">
+      <div class="field span-2">
+        <label>{{ i18n.t('esign.title') }} *</label>
+        <input type="text" formControlName="title" maxlength="300" />
+      </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('esign.documentName') }}</label>
+        <input type="text" formControlName="documentName" maxlength="300" />
+      </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('esign.contentHash') }} *</label>
+        <input type="text" class="ltr" formControlName="contentHash" placeholder="SHA-256…" />
+      </div>
+      <div class="span-2">
+        <div class="signers-head">
+          <h3>{{ i18n.t('esign.steps') }}</h3>
+          <button type="button" class="button secondary btn-sm" (click)="addSigner()">＋ {{ i18n.t('esign.addSigner') }}</button>
+        </div>
+        @for (row of signers(); track row; let index = $index) {
+          <div class="signer-row">
+            <div class="field">
+              <label>{{ i18n.t('esign.signer') }}</label>
+              <input type="text" [value]="row.signerName" (input)="onSignerInput(index, 'signerName', $event)" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('esign.signerUserId') }}</label>
+              <input type="text" class="ltr" [value]="row.signerUserId" (input)="onSignerInput(index, 'signerUserId', $event)" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('esign.role') }}</label>
+              <input type="text" [value]="row.roleLabel" (input)="onSignerInput(index, 'roleLabel', $event)" />
+            </div>
+            @if (signers().length > 1) {
+              <button type="button" class="button danger btn-sm" (click)="removeSigner(index)">✕</button>
+            }
+          </div>
+        }
+      </div>
+      <div class="span-2 actions-right">
+        <button type="button" class="button secondary" (click)="closeCreate()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button primary" [disabled]="submitting()">{{ i18n.t('esign.startRouting') }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="signOpen()" [title]="i18n.t('esign.signNow')" size="wide" [showFooter]="false" (close)="closeSign()">
+    @if (signTarget(); as step) {
+      <form class="form-grid dialog-form-grid" [formGroup]="signForm" (ngSubmit)="submitSign()">
+        <div class="field span-2">
+          <label>{{ i18n.t('esign.signer') }}</label>
+          <input type="text" class="ltr" [value]="step.signerName + (step.roleLabel ? ' · ' + step.roleLabel : '')" disabled />
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('esign.contentHash') }}</label>
+          <input type="text" class="ltr" formControlName="contentSha256" />
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('esign.method') }}</label>
+          <select formControlName="method">
+            <option value="DRAWN">{{ i18n.t('esign.method.DRAWN') }}</option>
+            <option value="TYPED">{{ i18n.t('esign.method.TYPED') }}</option>
+            <option value="UPLOADED">{{ i18n.t('esign.method.UPLOADED') }}</option>
+          </select>
+        </div>
+        <div class="span-2 check-line">
+          <label>
+            <input type="checkbox" required />
+            {{ i18n.t('esign.accept') }}
+          </label>
+        </div>
+        <div class="span-2 actions-right">
+          <button type="button" class="button secondary" (click)="closeSign()">{{ i18n.t('common.cancel') }}</button>
+          <button type="submit" class="button primary" [disabled]="submitting()">{{ i18n.t('esign.signNow') }}</button>
+        </div>
+      </form>
+    }
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="declineOpen()" [title]="i18n.t('esign.reject')" [showFooter]="false" (close)="closeDecline()">
+    <form class="form-grid dialog-form-grid" [formGroup]="declineForm" (ngSubmit)="submitDecline()">
+      <div class="field span-2">
+        <label>{{ i18n.t('esign.declineReason') }} *</label>
+        <textarea formControlName="reason" rows="3" maxlength="1000"></textarea>
+      </div>
+      <div class="span-2 actions-right">
+        <button type="button" class="button secondary" (click)="closeDecline()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button danger" [disabled]="submitting()">{{ i18n.t('esign.decline') }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="manifestText() !== null" [title]="i18n.t('esign.manifest')" size="wide" (close)="closeManifest()">
+    <pre class="manifest-json ltr">{{ manifestText() }}</pre>
+  </app-modal-dialog>
+</section>

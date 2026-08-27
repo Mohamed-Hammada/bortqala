@@ -1,0 +1,189 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('workspace.documents') }}</p>
+      <h1>{{ i18n.t('nav.documents') }}</h1>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <div class="docs-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>{{ i18n.t('doc.folders') }}</h2>
+          <button class="button secondary btn-sm" (click)="openNewFolder()">＋ {{ i18n.t('doc.createFolder') }}</button>
+        </div>
+        <ul class="folder-list">
+          @for (folder of rootFolders(); track folder.id) {
+            <li>
+              <span class="folder-icon">📁</span>
+              <strong>{{ folder.name }}</strong>
+              <span class="folder-actions">
+                <button class="link-btn" (click)="openRenameFolder(folder)">{{ i18n.t('doc.rename') }}</button>
+                <button class="link-btn" (click)="openMoveFolder(folder)">{{ i18n.t('doc.move') }}</button>
+                <button class="link-btn danger" (click)="deleteFolder(folder)">{{ i18n.t('common.delete') }}</button>
+              </span>
+              @for (child of childrenOf()(folder.id); track child.id) {
+                <ul class="folder-list child">
+                  <li>
+                    <span class="folder-icon">📂</span>
+                    <strong>{{ child.name }}</strong>
+                    <span class="folder-actions">
+                      <button class="link-btn" (click)="openRenameFolder(child)">{{ i18n.t('doc.rename') }}</button>
+                      <button class="link-btn" (click)="openMoveFolder(child)">{{ i18n.t('doc.move') }}</button>
+                      <button class="link-btn danger" (click)="deleteFolder(child)">{{ i18n.t('common.delete') }}</button>
+                    </span>
+                  </li>
+                </ul>
+              } @empty {
+                <span class="muted">{{ folderPath(folder.id) }}</span>
+              }
+            </li>
+          } @empty {
+            <li class="muted">{{ i18n.t('doc.noDocuments') }}</li>
+          }
+        </ul>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h2>{{ i18n.t('doc.tags') }}</h2>
+          <button class="button secondary btn-sm" (click)="openNewTag()">＋ {{ i18n.t('doc.createTag') }}</button>
+        </div>
+        <div class="tag-list">
+          @for (tag of tags(); track tag.id) {
+            <span class="tag-chip" [style.--tag-color]="tag.color ?? '#d4af37'">
+              <button class="tag-filter" [class.active]="activeTag() === tag.id"
+                      (click)="activeTag.set(activeTag() === tag.id ? null : tag.id)">
+                {{ tag.name }}
+              </button>
+              <button class="tag-x" (click)="deleteTag(tag)">✕</button>
+            </span>
+          } @empty {
+            <span class="muted">{{ i18n.t('doc.tags') }} —</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="panel search-panel">
+      <div class="panel-header">
+        <h2>{{ i18n.t('doc.search') }}</h2>
+        <div class="search-row">
+          <input type="text" [value]="query()" placeholder="{{ i18n.t('doc.searchPlaceholder') }}"
+                 (input)="query.set($any($event.target).value)" (keyup.enter)="search()" />
+          <button class="button primary" (click)="search()" [disabled]="searchLoading()">{{ i18n.t('common.search') }}</button>
+        </div>
+      </div>
+
+      @if (searchLoading()) {
+        <div class="loading">{{ i18n.t('common.loading') }}</div>
+      }
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('doc.documents') }}</th>
+            <th>{{ i18n.t('doc.folder') }}</th>
+            <th>{{ i18n.t('doc.tags') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of results(); track result.id) {
+            <tr>
+              <td><strong class="ltr">{{ result.name }}</strong></td>
+              <td>{{ result.folderName ?? '—' }}</td>
+              <td>
+                <span class="tag-list inline">
+                  @for (tag of result.tags; track tag.id) {
+                    <span class="tag-chip" [style.--tag-color]="tag.color ?? '#d4af37'">
+                      {{ tag.name }}
+                      <button class="tag-x" (click)="removeTag(result, tag)">✕</button>
+                    </span>
+                  }
+                  @if (assignableTags(result).length > 0) {
+                    <select class="tag-select" (change)="onAssignTag(result, $event)">
+                      <option value="">+ {{ i18n.t('doc.assignTag') }}</option>
+                      @for (tag of assignableTags(result); track tag.id; let i = $index) {
+                        <option [value]="i">{{ tag.name }}</option>
+                      }
+                    </select>
+                  }
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="3" class="muted">{{ i18n.t('doc.noDocuments') }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <app-modal-dialog [isOpen]="folderDrawerOpen()" [title]="editingFolderId() ? i18n.t('doc.rename') : i18n.t('doc.createFolder')" size="wide" [showFooter]="false" (close)="closeFolderDrawer()">
+    <form class="form-grid dialog-form-grid" [formGroup]="folderForm" (ngSubmit)="submitFolder()">
+      <div class="field span-2">
+        <label>{{ i18n.t('doc.folderName') }} *</label>
+        <input type="text" formControlName="name" maxlength="200" />
+      </div>
+      @if (!editingFolderId()) {
+        <div class="field span-2">
+          <label>{{ i18n.t('doc.selectFolder') }}</label>
+          <select formControlName="parentId">
+            <option value="">—</option>
+            @for (folder of folders(); track folder.id) {
+              <option [value]="folder.id">{{ folder.name }}</option>
+            }
+          </select>
+        </div>
+      }
+      <div class="span-2 actions-right">
+        <button type="button" class="button secondary" (click)="closeFolderDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button primary" [disabled]="submitting()">{{ i18n.t('common.save') }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="tagDrawerOpen()" [title]="i18n.t('doc.createTag')" size="wide" [showFooter]="false" (close)="closeTagDrawer()">
+    <form class="form-grid dialog-form-grid" [formGroup]="tagForm" (ngSubmit)="submitTag()">
+      <div class="field span-2">
+        <label>{{ i18n.t('doc.tagName') }} *</label>
+        <input type="text" formControlName="name" maxlength="100" />
+      </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('doc.tagColor') }}</label>
+        <input type="color" formControlName="color" class="ltr" />
+      </div>
+      <div class="span-2 actions-right">
+        <button type="button" class="button secondary" (click)="closeTagDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button primary" [disabled]="submitting()">{{ i18n.t('common.save') }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="moveFolderId() !== null" [title]="i18n.t('doc.move')" size="wide" [showFooter]="false" (close)="closeMoveFolder()">
+    <form class="form-grid dialog-form-grid" [formGroup]="moveForm" (ngSubmit)="submitMove()">
+      <div class="field span-2">
+        <label>{{ i18n.t('doc.selectFolder') }}</label>
+        <select formControlName="parentId">
+          <option value="">—</option>
+          @for (folder of folders(); track folder.id) {
+            @if (folder.id !== moveFolderId()) {
+              <option [value]="folder.id">{{ folder.name }}</option>
+            }
+          }
+        </select>
+      </div>
+      <div class="span-2 actions-right">
+        <button type="button" class="button secondary" (click)="closeMoveFolder()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button primary" [disabled]="submitting()">{{ i18n.t('common.save') }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+</section>

@@ -1254,3 +1254,31 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260827_v394_survey_report_translations.yaml
       relativeToChangelogFile: false
+  # Missing translation cleanup
+  - include:
+      file: db/changelog/data/insert/20260827_v395_missing_translations.yaml
+      relativeToChangelogFile: false
+  # WP-51: Multi-country e-invoicing settings schema
+  - include:
+      file: db/changelog/schema/create/20260827_v396_einvoicing_settings_schema.yaml
+      relativeToChangelogFile: false
+  # WP-51: e-invoicing translations
+  - include:
+      file: db/changelog/data/insert/20260827_v397_einvoicing_translations.yaml
+      relativeToChangelogFile: false
+  # WP-50: Recruitment ATS schema
+  - include:
+      file: db/changelog/schema/create/20260827_v398_recruitment_schema.yaml
+      relativeToChangelogFile: false
+  # WP-50: Recruitment ATS translations
+  - include:
+      file: db/changelog/data/insert/20260827_v399_recruitment_translations.yaml
+      relativeToChangelogFile: false
+  # WP-47: eSign + Document Management schema
+  - include:
+      file: db/changelog/schema/create/20260828_v400_doc_esign_schema.yaml
+      relativeToChangelogFile: false
+  # WP-47: eSign + Document Management translations
+  - include:
+      file: db/changelog/data/insert/20260828_v401_doc_esign_translations.yaml
+      relativeToChangelogFile: false

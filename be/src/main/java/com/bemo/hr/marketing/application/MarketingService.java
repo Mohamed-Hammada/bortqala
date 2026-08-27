@@ -57,17 +57,22 @@ public class MarketingService {
         for (CampaignRecipient r : queued) {
             try {
                 r.markSent(System.currentTimeMillis());
+                c.incrementSent();
                 sent++;
             } catch (Exception ex) {
                 r.markFailed(ex.getMessage());
+                c.incrementFailed();
                 failed++;
             }
             recipientRepo.save(r);
         }
-        c.incrementSent();
-        if (failed > 0) c.incrementFailed();
-        if (failed == queued.size()) c.markFailed("All recipients failed");
-        else if (c.getSentCount() + c.getFailedCount() >= c.getTotalRecipients()) c.markSent();
+        if (queued.isEmpty()) {
+            c.markSent();
+        } else if (failed == queued.size()) {
+            c.markFailed("All recipients failed");
+        } else if (c.getSentCount() + c.getFailedCount() >= c.getTotalRecipients()) {
+            c.markSent();
+        }
         campaignRepo.save(c);
         return c;
     }

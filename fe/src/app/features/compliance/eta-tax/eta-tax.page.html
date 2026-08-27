@@ -19,6 +19,22 @@
     </div>
   </div>
 
+  <!-- Provider badge -->
+  <div class="provider-banner">
+    <span class="provider-badge">
+      <strong>{{ i18n.t('compliance.provider.badge') }}:</strong>
+      {{ einvoicingSettings() ? providerLabel(einvoicingSettings()!.provider) : i18n.t('compliance.provider.none') }}
+    </span>
+    @if (einvoicingSettings(); as settings) {
+      <span class="provider-env">
+        {{ i18n.t('compliance.provider.environment') }}: {{ settings.environment }}
+      </span>
+    }
+    <button class="btn btn-secondary" (click)="openProviderModal()">
+      {{ i18n.t('compliance.provider.settingsTitle') }}
+    </button>
+  </div>
+
   <!-- KPI Cards -->
   <div class="kpi-grid">
     <div class="kpi-card">
@@ -328,6 +344,40 @@
           <div class="modal-actions">
             <button type="button" class="btn btn-subtle" (click)="closeMappingModal()">{{ i18n.t('common.cancel') }}</button>
             <button type="submit" class="btn btn-primary" [disabled]="mappingForm.invalid || savingMapping()">{{ i18n.t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Provider settings modal -->
+  @if (showProviderModal()) {
+    <div class="modal-backdrop" (click)="closeProviderModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('compliance.provider.settingsTitle') }}</h3>
+          <button class="modal-close" (click)="closeProviderModal()">✕</button>
+        </div>
+        <form [formGroup]="providerForm" (ngSubmit)="saveProviderSettings()">
+          <div class="form-group">
+            <label>{{ i18n.t('compliance.provider.badge') }} *</label>
+            <select class="form-control" formControlName="provider" (change)="onProviderChange()">
+              @for (provider of einvoicingProviders(); track provider.type) {
+                <option [value]="provider.type">{{ i18n.t(provider.labelKey) }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('compliance.provider.environment') }} *</label>
+            <select class="form-control" formControlName="environment">
+              <option value="TEST">{{ i18n.t('compliance.provider.environment') }} — TEST</option>
+              <option value="PRODUCTION">{{ i18n.t('compliance.provider.environment') }} — PRODUCTION</option>
+            </select>
+          </div>
+          <p class="provider-hint">{{ i18n.t('compliance.provider.confirmSwitch') }}</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-subtle" (click)="closeProviderModal()">{{ i18n.t('common.cancel') }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="providerForm.invalid || savingProvider()">{{ i18n.t('compliance.provider.save') }}</button>
           </div>
         </form>
       </div>

@@ -1,0 +1,97 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260828_v400_doc_esign_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: doc_folders
+      changes:
+        - createTable:
+            tableName: doc_folders
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: parent_id, type: varchar(36) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createTable:
+            tableName: doc_tags
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: color, type: varchar(20) }
+        - createTable:
+            tableName: doc_attachment_tags
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { nullable: false, primaryKey: true } }
+              - column: { name: attachment_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: tag_id, type: varchar(36), constraints: { nullable: false } }
+        - addUniqueConstraint:
+            constraintName: uq_doc_attachment_tag
+            tableName: doc_attachment_tags
+            columnNames: attachment_id, tag_id
+        - addForeignKeyConstraint:
+            constraintName: fk_doc_attachment_tags_tag
+            baseTableName: doc_attachment_tags
+            baseColumnNames: tag_id
+            referencedTableName: doc_tags
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createTable:
+            tableName: signature_packets
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: title, type: varchar(300), constraints: { nullable: false } }
+              - column: { name: document_name, type: varchar(300) }
+              - column: { name: content_hash, type: varchar(100) }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "DRAFT" }
+              - column: { name: manifest_json, type: varchar(8000) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createTable:
+            tableName: signature_steps
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: packet_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: step_order, type: int, constraints: { nullable: false } }
+              - column: { name: signer_name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: signer_user_id, type: varchar(100) }
+              - column: { name: role_label, type: varchar(100) }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "PENDING" }
+              - column: { name: signed_at, type: bigint }
+              - column: { name: ip_address, type: varchar(50) }
+              - column: { name: content_sha256, type: varchar(100) }
+              - column: { name: method, type: varchar(30) }
+              - column: { name: decline_reason, type: varchar(1000) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - addUniqueConstraint:
+            constraintName: uq_signature_step_packet_order
+            tableName: signature_steps
+            columnNames: packet_id, step_order
+        - addForeignKeyConstraint:
+            constraintName: fk_signature_steps_packet
+            baseTableName: signature_steps
+            baseColumnNames: packet_id
+            referencedTableName: signature_packets
+            referencedColumnNames: id
+            onDelete: CASCADE
+      rollback:
+        - dropTable:
+            tableName: signature_steps
+        - dropTable:
+            tableName: signature_packets
+        - dropTable:
+            tableName: doc_attachment_tags
+        - dropTable:
+            tableName: doc_tags
+        - dropTable:
+            tableName: doc_folders

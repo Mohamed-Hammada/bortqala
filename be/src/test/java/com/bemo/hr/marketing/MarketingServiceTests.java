@@ -2,7 +2,6 @@ package com.bemo.hr.marketing;
 
 import com.bemo.hr.marketing.application.MarketingService;
 import com.bemo.hr.marketing.domain.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,11 +28,11 @@ class MarketingServiceTests {
     @Test
     void sendCampaign_movesDraftToSending() {
         Campaign c = new Campaign("app1", "Test", Campaign.Channel.EMAIL, "sub", "ar", "en", "{}");
-        when(campaignRepo.findById(any())).thenReturn(Optional.of(c));
+        when(campaignRepo.findById(c.getId())).thenReturn(Optional.of(c));
         when(campaignRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(recipientRepo.findByCampaignIdAndStatus(any(), any())).thenReturn(List.of());
+        when(recipientRepo.findByCampaignIdAndStatus(c.getId(), CampaignRecipient.Status.QUEUED.name())).thenReturn(List.of());
         Campaign result = service.sendCampaign("app1", c.getId());
-        assertThat(result.getStatus()).isEqualTo("SENDING");
+        assertThat(result.getStatus()).isEqualTo("SENT");
     }
 
     @Test
@@ -64,11 +63,12 @@ class MarketingServiceTests {
 
     @Test
     void addRecipients_savesEachRecipient() {
-        when(campaignRepo.findById(any())).thenReturn(Optional.of(new Campaign("app1", "C", Campaign.Channel.EMAIL, "s", "ar", "en", "{}")));
+        Campaign c = new Campaign("app1", "C", Campaign.Channel.EMAIL, "s", "ar", "en", "{}");
+        when(campaignRepo.findById(c.getId())).thenReturn(Optional.of(c));
         List<MarketingService.RecipientDto> dtos = List.of(
                 new MarketingService.RecipientDto("ref1", "a@b.com", "+123", "ar"),
                 new MarketingService.RecipientDto("ref2", "c@d.com", "+456", "en"));
-        service.addRecipients("app1", "c1", dtos);
+        service.addRecipients("app1", c.getId(), dtos);
         verify(recipientRepo, times(2)).save(any());
     }
 }

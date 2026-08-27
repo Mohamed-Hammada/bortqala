@@ -13,6 +13,9 @@ import {
 } from './eta-tax.models';
 import { EtaTaxService } from './eta-tax.service';
 import { HttpClient } from '@angular/common/http';
+import { EinvoicingProviderInfo, EinvoicingSettings, EinvoicingProviderType, EinvoicingEnvironment } from '../einvoicing.models';
+import { EinvoicingService } from '../einvoicing.service';
+import { apiErrorMessage } from '../../../core/api-error';
 
 @Component({
   selector: 'app-eta-tax-page',
@@ -27,6 +30,11 @@ export class EtaTaxPage implements OnInit {
   private readonly notification = inject(NotificationService);
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
+  private readonly einvoicingService = inject(EinvoicingService);
+  readonly einvoicingSettings = signal<EinvoicingSettings | null>(null);
+  readonly einvoicingProviders = signal<EinvoicingProviderInfo[]>([]);
+  readonly showProviderModal = signal(false);
+  readonly savingProvider = signal(false);
 
   readonly activeTab = signal<'SUBMISSIONS' | 'CONFIG' | 'MAPPINGS'>('SUBMISSIONS');
   readonly loading = signal(false);
@@ -62,6 +70,11 @@ export class EtaTaxPage implements OnInit {
     active: [true],
   });
 
+  readonly providerForm = this.fb.group({
+    provider: ['NONE' as EinvoicingProviderType, [Validators.required]],
+    environment: ['TEST' as EinvoicingEnvironment, [Validators.required]],
+  });
+
   readonly queueForm = this.fb.group({
     invoiceId: ['', [Validators.required]],
     documentType: ['INVOICE' as EtaDocumentType, [Validators.required]],
@@ -92,6 +105,70 @@ export class EtaTaxPage implements OnInit {
     this.loadConfig();
     this.loadItemMappings();
     this.loadOpenInvoices();
+    this.loadEinvoicing();
+  }
+
+  loadEinvoicing(): void {
+    this.einvoicingService.getSettings().then((settings) => {
+      this.einvoicingSettings.set(settings);
+      if (settings) {
+        this.providerForm.patchValue({
+          provider: settings.provider,
+          environment: settings.environment,
+        });
+      }
+    }).catch(() => {});
+    this.einvoicingService.listProviders().then((providers) => {
+      this.einvoicingProviders.set(providers ?? []);
+    }).catch(() => {});
+  }
+
+  providerLabel(provider: EinvoicingProviderType): string {
+    const info = this.einvoicingProviders().find((item) => item.type === provider);
+    return info ? this.i18n.t(info.labelKey) : provider;
+  }
+
+  providerSupported(provider: EinvoicingProviderType): boolean {
+    return this.einvoicingProviders().find((item) => item.type === provider)?.supported ?? false;
+  }
+
+  openProviderModal(): void {
+    const settings = this.einvoicingSettings();
+    this.providerForm.patchValue({
+      provider: settings?.provider ?? 'NONE',
+      environment: settings?.environment ?? 'TEST',
+    });
+    this.showProviderModal.set(true);
+  }
+
+  closeProviderModal(): void {
+    this.showProviderModal.set(false);
+  }
+
+  onProviderChange(): void {
+    const provider = this.providerForm.get('provider')?.value as EinvoicingProviderType;
+    if (!this.providerSupported(provider)) {
+      this.notification.error(this.i18n.t('compliance.provider.notImplemented'));
+    }
+  }
+
+  async saveProviderSettings(): Promise<void> {
+    if (this.providerForm.invalid || this.savingProvider()) return;
+    const value = this.providerForm.value;
+    this.savingProvider.set(true);
+    try {
+      const saved = await this.einvoicingService.saveSettings({
+        provider: value.provider as EinvoicingProviderType,
+        environment: value.environment as EinvoicingEnvironment,
+      });
+      this.einvoicingSettings.set(saved);
+      this.showProviderModal.set(false);
+      this.notification.success(this.i18n.t('compliance.provider.saved'));
+    } catch (e: unknown) {
+      this.notification.error(apiErrorMessage(e as never, this.i18n));
+    } finally {
+      this.savingProvider.set(false);
+    }
   }
 
   loadSummary(): void {

@@ -211,6 +211,48 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER', 'HR_MANAGER', 'FINANCE_MANAGER'],
     requiredFeature: null,
   },
+  {
+    menuId: 'helpdesk',
+    route: '/helpdesk',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'kb',
+    route: '/kb',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'marketing',
+    route: '/marketing',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'report-builder',
+    route: '/report-builder',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER', 'VIEWER'],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'recruitment',
+    route: '/recruitment',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'documents',
+    route: '/documents',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'esign',
+    route: '/esign',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+    requiredFeature: null,
+  },
 ];
 
 
