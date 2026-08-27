@@ -183,7 +183,9 @@
             <span class="accordion-chevron">{{ isGroupExpanded(group.key) ? '▾' : '▸' }}</span>
             <span class="accordion-title">{{ i18n.t(group.titleKey) }}</span>
             <span class="accordion-hint">{{ i18n.t(group.hintKey) }}</span>
-            @if (submitAttempted() && requiredFieldCount(group.key) > 0 && !isGroupExpanded(group.key)) {
+            @if (submitAttempted() && isGroupExpanded(group.key) && groupHasInvalidFields(group.key)) {
+              <span class="accordion-badge invalid-badge">{{ i18n.t('employees.group.invalidFields') }}</span>
+            } @else if (submitAttempted() && requiredFieldCount(group.key) > 0 && !isGroupExpanded(group.key)) {
               <span class="accordion-badge required-badge">{{ requiredFieldCount(group.key) }} *</span>
             }
           </summary>
@@ -318,13 +320,13 @@
                 <small>{{ i18n.t(group.hintKey) }}</small>
               </div>
               <div class="preview-fields">
-                @for (fieldId of group.fieldIds; track fieldId) {
+                @for (fieldId of previewFields(group.key); track fieldId) {
                   <div class="preview-field">
                     <span class="preview-field-label">{{ fieldLabel(fieldId) }}</span>
                     <span class="preview-field-value">{{ (form.get(fieldId)?.value) ?? '—' }}</span>
                   </div>
                 }
-                @if (group.fieldIds.length === 0) {
+                @if (previewFields(group.key).length === 0) {
                   <div class="preview-field">
                     <span class="preview-field-value muted">{{ i18n.t('common.noResults') }}</span>
                   </div>

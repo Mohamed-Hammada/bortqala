@@ -200,6 +200,10 @@ code {
   background: var(--danger-soft);
   color: var(--danger);
 }
+.invalid-badge {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+}
 .accordion-body {
   padding: 4px 14px 14px;
 }

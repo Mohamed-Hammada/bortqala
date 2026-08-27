@@ -294,4 +294,42 @@ describe('EmployeesPage WP-20 form groups', () => {
     component.previewOpen.set(true);
     expect(component.previewOpen()).toBe(true);
   });
+
+  it('every form control is covered by at least one group (AC-1 reachability)', () => {
+    const { component } = createPage();
+    const covered = new Set(FORM_GROUPS.flatMap((g) => g.fieldIds));
+    for (const controlName of Object.keys(component.form.controls)) {
+      if (controlName === 'version') continue;
+      expect(covered.has(controlName)).toBe(true);
+    }
+  });
+
+  it('invalid submit auto-expands collapsed groups holding invalid fields (AC-2)', () => {
+    const { component } = createPage();
+    component.form.controls.fullName.setValue('Test User');
+    component.form.controls.categoryId.setValue('cat-1');
+    component.form.controls.employeeCode.setValue('EMP-1');
+    component.form.controls.activeFrom.setValue('');
+    expect(component.isGroupExpanded('dates')).toBe(false);
+    void component.submit();
+    expect(component.submitAttempted()).toBe(true);
+    expect(component.isGroupExpanded('dates')).toBe(true);
+  });
+
+  it('expanded groups with invalid fields surface an invalid badge (AC-2)', () => {
+    const { component } = createPage();
+    component.form.controls.fullName.setValue('');
+    component.form.markAllAsTouched();
+    expect(component.groupHasInvalidFields('identity')).toBe(true);
+    expect(component.groupHasInvalidFields('salary')).toBe(false);
+  });
+
+  it('preview hides salary when the viewer lacks salary permission (AC-3 parity)', () => {
+    const { component } = createPage();
+    const spy = vi.spyOn(component.auth, 'canViewSalary').mockReturnValue(false);
+    expect(component.previewFields('salary')).not.toContain('baseSalary');
+    spy.mockReturnValue(true);
+    expect(component.previewFields('salary')).toContain('baseSalary');
+    spy.mockRestore();
+  });
 });

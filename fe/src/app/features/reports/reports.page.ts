@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { dateInputToEpoch, epochToDateInput, formatDate, formatDateTime } from '../../core/date';
+import { dateInputToEpoch, epochToDateInput, formatDate, formatDateHijri, formatDateTime } from '../../core/date';
 import { AuthService } from '../../core/auth/auth.service';
 import { AppSettings } from '../../core/auth/auth.models';
 import { GeneratedPeriod, PeriodOption, ReportPayCycle, ReportPreview, ReportStatus } from './reports.models';
@@ -167,6 +167,10 @@ export class ReportsPage {
   }
 
   date(value: number): string { return formatDate(value); }
+  readonly hijriEnabled = signal<boolean>(
+    typeof localStorage === 'undefined' ? false : localStorage.getItem('calendar.hijriOverlay') === 'true',
+  );
+  readonly hijriDate = (value: number): string => formatDateHijri(value);
   dateTime(value: number): string { return formatDateTime(value); }
   label(status: ReportStatus): string {
     return this.i18n.t({

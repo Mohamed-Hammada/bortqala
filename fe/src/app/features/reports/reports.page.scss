@@ -47,6 +47,16 @@
   color: var(--muted);
   font-size: 12px;
 }
+.preview-range {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.preview-range .hijri {
+  font-size: 11px;
+  opacity: 0.8;
+}
 .preview-stats {
   display: flex;
   flex-wrap: wrap;

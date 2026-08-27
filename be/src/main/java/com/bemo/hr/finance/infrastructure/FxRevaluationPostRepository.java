@@ -11,4 +11,6 @@ public interface FxRevaluationPostRepository extends JpaRepository<FxRevaluation
     boolean existsByCurrencyCodeAndYearMonth(String currencyCode, String yearMonth);
 
     List<FxRevaluationPost> findAllByOrderByPostedAtDesc();
+
+    java.util.Optional<FxRevaluationPost> findFirstByCurrencyCodeOrderByYearMonthDesc(String currencyCode);
 }

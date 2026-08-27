@@ -84,7 +84,12 @@
       <div class="preview-card">
         <div class="preview-head">
           <strong>{{ i18n.t('reports.previewHead', {}, 'معاينة التوليد') }}</strong>
-          <span class="ltr">{{ date(preview.periodStart) }} → {{ date(preview.periodEnd) }}</span>
+          <span class="preview-range">
+            <span class="ltr">{{ date(preview.periodStart) }} → {{ date(preview.periodEnd) }}</span>
+            @if (hijriEnabled()) {
+              <span class="hijri" dir="rtl">{{ hijriDate(preview.periodStart) }} → {{ hijriDate(preview.periodEnd) }}</span>
+            }
+          </span>
         </div>
         <div class="preview-stats">
           <span><small>{{ i18n.t('reports.previewCategories', {}, 'الفئات') }}</small> {{ preview.categories.length }}</span>

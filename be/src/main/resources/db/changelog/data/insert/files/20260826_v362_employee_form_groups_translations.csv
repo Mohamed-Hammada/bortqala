@@ -35,3 +35,5 @@ v362-017-en;employees.group.collapsed;en-US;Collapsed
 v362-017-ar;employees.group.collapsed;ar-EG;مطوي
 v362-018-en;employees.group.expanded;en-US;Expanded
 v362-018-ar;employees.group.expanded;ar-EG;موسّع
+v362-019-en;employees.group.invalidFields;en-US;Fix required fields
+v362-019-ar;employees.group.invalidFields;ar-EG;أكمل الحقول المطلوبة

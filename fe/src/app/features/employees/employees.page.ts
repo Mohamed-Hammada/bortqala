@@ -95,6 +95,18 @@ export class EmployeesPage {
     return !(this.collapsedSignals[key] as ReturnType<typeof signal<boolean>>)();
   }
 
+  private expandInvalidGroups(): void {
+    for (const group of FORM_GROUPS) {
+      const hasInvalid = group.fieldIds.some((fieldId) => {
+        const control = this.form.get(fieldId);
+        return !!control && control.invalid;
+      });
+      if (!hasInvalid) continue;
+      const signalFor = this.collapsedSignals[group.key] as ReturnType<typeof signal<boolean>> | undefined;
+      if (signalFor && signalFor()) signalFor.set(false);
+    }
+  }
+
   requiredFieldCount(groupKey: string): number {
     const fieldMap: Record<string, string> = {
       fullName: 'required',
@@ -126,6 +138,17 @@ export class EmployeesPage {
       active: 'employees.activeCheck',
     };
     return this.i18n.t(map[fieldId] ?? fieldId);
+  }
+
+  isFieldVisible(fieldId: string): boolean {
+    if (fieldId === 'baseSalary') return this.auth.canViewSalary();
+    return true;
+  }
+
+  previewFields(groupKey: string): string[] {
+    return (FORM_GROUPS.find((g) => g.key === groupKey)?.fieldIds ?? []).filter((f) =>
+      this.isFieldVisible(f),
+    );
   }
 
   // Contracts Workbench State
@@ -373,10 +396,20 @@ export class EmployeesPage {
     this.drawerOpen.set(true);
   }
 
+  groupHasInvalidFields(groupKey: string): boolean {
+    const group = FORM_GROUPS.find((g) => g.key === groupKey);
+    if (!group) return false;
+    return group.fieldIds.some((fieldId) => {
+      const control = this.form.get(fieldId);
+      return !!control && control.invalid && (control.touched || this.submitAttempted());
+    });
+  }
+
   async submit() {
     this.submitAttempted.set(true);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.expandInvalidGroups();
       return;
     }
     const raw = this.form.getRawValue();

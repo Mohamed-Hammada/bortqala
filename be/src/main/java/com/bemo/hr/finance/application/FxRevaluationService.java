@@ -32,11 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -137,6 +132,20 @@ public class FxRevaluationService {
 
             BigDecimal bookValueInEgp = netBalance.multiply(currentRate).setScale(2, RoundingMode.HALF_UP);
 
+            BigDecimal previousBookValue = fxRevaluationPostRepository
+                    .findFirstByCurrencyCodeOrderByYearMonthDesc(currencyCode)
+                    .map(p -> p.getTotalUnrealizedGain().subtract(p.getTotalUnrealizedLoss()))
+                    .orElse(BigDecimal.ZERO);
+
+            BigDecimal delta = bookValueInEgp.subtract(previousBookValue);
+            if (delta.signum() == 0) {
+                log.info("No FX movement for {} at {} — delta is zero, skipping", currencyCode, yearMonth);
+                results.add(new FxRevaluationApi.CurrencyResult(
+                        currencyCode, netBalance, currentRate, bookValueInEgp,
+                        BigDecimal.ZERO, null));
+                continue;
+            }
+
             String entryNumber = "FX-REV-" + yearMonth + "-" + currencyCode;
             String description = "Month-end FX revaluation " + currencyCode + " " + yearMonth;
             long entryDateMs = asOf.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
@@ -144,25 +153,23 @@ public class FxRevaluationService {
             Account fxGainLossAccount = findAccountByCode("4200");
             Account currencyHoldingAccount = findAccountByCode("10101");
 
-            BigDecimal absAmount = bookValueInEgp.abs();
+            BigDecimal absAmount = delta.abs();
 
             List<AccountingApi.JournalEntryLinePayload> lines = new ArrayList<>();
-            if (bookValueInEgp.compareTo(BigDecimal.ZERO) > 0) {
+            if (delta.compareTo(BigDecimal.ZERO) > 0) {
                 lines.add(new AccountingApi.JournalEntryLinePayload(
                         fxGainLossAccount.getId(), null, absAmount, null,
                         "FX unrealized gain " + currencyCode, null, null, null));
                 lines.add(new AccountingApi.JournalEntryLinePayload(
                         currencyHoldingAccount.getId(), null, null, absAmount,
                         "FX unrealized gain " + currencyCode, null, null, null));
-            } else if (bookValueInEgp.compareTo(BigDecimal.ZERO) < 0) {
+            } else {
                 lines.add(new AccountingApi.JournalEntryLinePayload(
                         currencyHoldingAccount.getId(), null, absAmount, null,
                         "FX unrealized loss " + currencyCode, null, null, null));
                 lines.add(new AccountingApi.JournalEntryLinePayload(
                         fxGainLossAccount.getId(), null, null, absAmount,
                         "FX unrealized loss " + currencyCode, null, null, null));
-            } else {
-                continue;
             }
 
             AccountingApi.JournalEntryPayload journalPayload = new AccountingApi.JournalEntryPayload(
@@ -176,21 +183,23 @@ public class FxRevaluationService {
                     "FX-REV-" + yearMonth + "-" + currencyCode, null, null);
             journalEntryService.post(journalResponse.id(), postRequest, username);
 
-            BigDecimal unrealizedGain = bookValueInEgp.compareTo(BigDecimal.ZERO) > 0 ? bookValueInEgp : BigDecimal.ZERO;
-            BigDecimal unrealizedLoss = bookValueInEgp.compareTo(BigDecimal.ZERO) < 0 ? bookValueInEgp.abs() : BigDecimal.ZERO;
+            BigDecimal cumulativeGain = bookValueInEgp.compareTo(BigDecimal.ZERO) > 0
+                    ? bookValueInEgp : BigDecimal.ZERO;
+            BigDecimal cumulativeLoss = bookValueInEgp.compareTo(BigDecimal.ZERO) < 0
+                    ? bookValueInEgp.abs() : BigDecimal.ZERO;
 
             FxRevaluationPost post = new FxRevaluationPost(
-                    currencyCode, yearMonth, unrealizedGain, unrealizedLoss,
+                    currencyCode, yearMonth, cumulativeGain, cumulativeLoss,
                     journalResponse.id(), username);
             fxRevaluationPostRepository.save(post);
 
             journalsPosted++;
             results.add(new FxRevaluationApi.CurrencyResult(
                     currencyCode, netBalance, currentRate, bookValueInEgp,
-                    bookValueInEgp, journalResponse.id()));
+                    delta, journalResponse.id()));
 
-            log.info("FX revaluation posted for {}: net={}, rate={}, egp={}, journal={}",
-                    currencyCode, netBalance, currentRate, bookValueInEgp, journalResponse.id());
+            log.info("FX revaluation posted for {}: net={}, rate={}, egp={}, delta={}, journal={}",
+                    currencyCode, netBalance, currentRate, bookValueInEgp, delta, journalResponse.id());
         }
 
         return new FxRevaluationApi.RevaluationRunResponse(

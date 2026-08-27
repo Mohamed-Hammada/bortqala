@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -171,6 +172,138 @@ class FxRevaluationServiceTests {
         assertThat(result.journalsPosted()).isEqualTo(1);
         assertThat(result.results().get(0).unrealizedGainLoss()).isEqualByComparingTo(new BigDecimal("-450000.00"));
         verify(fxRevaluationPostRepository).save(any());
+    }
+
+    @Test
+    void ac1_rateMove_booksOnlyDeltaGain() {
+        Account usdBank = mockAccount("acc-usd", "1020", "USD Bank", Account.Type.ASSET, "USD");
+        Account egpCash = mockAccount("acc-10101", "10101", "EGP Cash", Account.Type.ASSET, "EGP");
+        Account fxGainLoss = mockAccount("acc-4200", "4200", "FX Gain/Loss", Account.Type.REVENUE, "EGP");
+        lenient().when(accountRepository.findAllByOrderByCodeAsc()).thenReturn(List.of(usdBank, egpCash, fxGainLoss));
+
+        Currency usd = mock(Currency.class);
+        when(usd.getCode()).thenReturn("USD");
+        when(usd.getExchangeRate()).thenReturn(new BigDecimal("52.00"));
+        lenient().when(currencyRepository.findAllByOrderByCodeAsc()).thenReturn(List.of(usd));
+
+        JournalEntry entry = mock(JournalEntry.class);
+        when(entry.getId()).thenReturn("je-1");
+        when(entry.getCurrency()).thenReturn("USD");
+        JournalEntryLine line = mock(JournalEntryLine.class);
+        when(line.getJournalEntryId()).thenReturn("je-1");
+        when(line.getAccountId()).thenReturn("acc-usd");
+        when(line.getDebit()).thenReturn(new BigDecimal("10000"));
+        when(line.getCredit()).thenReturn(new BigDecimal("0"));
+
+        when(journalEntryRepository.findByStatusInOrderByEntryDateDesc(any())).thenReturn(List.of(entry));
+        when(journalEntryLineRepository.findByJournalEntryIdIn(anySet())).thenReturn(List.of(line));
+        when(fxRevaluationPostRepository.existsByCurrencyCodeAndYearMonth("USD", "2026-08")).thenReturn(false);
+
+        FxRevaluationPost prior = new FxRevaluationPost("USD", "2026-07",
+                new BigDecimal("500000.00"), BigDecimal.ZERO, "je-prev", USERNAME);
+        when(fxRevaluationPostRepository.findFirstByCurrencyCodeOrderByYearMonthDesc("USD"))
+                .thenReturn(java.util.Optional.of(prior));
+
+        AccountingApi.JournalEntryResponse journalResponse =
+                mockJournalResponse("je-rev-ac1", "FX-REV-2026-08-USD");
+        when(journalEntryService.create(any(), eq(USERNAME))).thenReturn(journalResponse);
+        when(journalEntryService.post(eq("je-rev-ac1"), any(), eq(USERNAME))).thenReturn(journalResponse);
+
+        var result = service.runRevaluation(LocalDate.of(2026, 8, 31), USERNAME);
+
+        assertThat(result.currenciesProcessed()).isEqualTo(1);
+        assertThat(result.journalsPosted()).isEqualTo(1);
+        assertThat(result.results().get(0).unrealizedGainLoss())
+                .isEqualByComparingTo(new BigDecimal("20000.00"));
+        verify(journalEntryService, times(1)).create(any(), eq(USERNAME));
+        ArgumentCaptor<FxRevaluationPost> captor = ArgumentCaptor.forClass(FxRevaluationPost.class);
+        verify(fxRevaluationPostRepository).save(captor.capture());
+        assertThat(captor.getValue().getTotalUnrealizedGain()).isEqualByComparingTo(new BigDecimal("520000.00"));
+        assertThat(captor.getValue().getTotalUnrealizedLoss()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void ac2_nextMonth_booksOnlyDeltaReversal() {
+        Account usdBank = mockAccount("acc-usd", "1020", "USD Bank", Account.Type.ASSET, "USD");
+        Account egpCash = mockAccount("acc-10101", "10101", "EGP Cash", Account.Type.ASSET, "EGP");
+        Account fxGainLoss = mockAccount("acc-4200", "4200", "FX Gain/Loss", Account.Type.REVENUE, "EGP");
+        lenient().when(accountRepository.findAllByOrderByCodeAsc()).thenReturn(List.of(usdBank, egpCash, fxGainLoss));
+
+        Currency usd = mock(Currency.class);
+        when(usd.getCode()).thenReturn("USD");
+        when(usd.getExchangeRate()).thenReturn(new BigDecimal("50.00"));
+        lenient().when(currencyRepository.findAllByOrderByCodeAsc()).thenReturn(List.of(usd));
+
+        JournalEntry entry = mock(JournalEntry.class);
+        when(entry.getId()).thenReturn("je-1");
+        when(entry.getCurrency()).thenReturn("USD");
+        JournalEntryLine line = mock(JournalEntryLine.class);
+        when(line.getJournalEntryId()).thenReturn("je-1");
+        when(line.getAccountId()).thenReturn("acc-usd");
+        when(line.getDebit()).thenReturn(new BigDecimal("10000"));
+        when(line.getCredit()).thenReturn(new BigDecimal("0"));
+
+        when(journalEntryRepository.findByStatusInOrderByEntryDateDesc(any())).thenReturn(List.of(entry));
+        when(journalEntryLineRepository.findByJournalEntryIdIn(anySet())).thenReturn(List.of(line));
+        when(fxRevaluationPostRepository.existsByCurrencyCodeAndYearMonth("USD", "2026-09")).thenReturn(false);
+
+        FxRevaluationPost prior = new FxRevaluationPost("USD", "2026-08",
+                new BigDecimal("520000.00"), BigDecimal.ZERO, "je-aug", USERNAME);
+        when(fxRevaluationPostRepository.findFirstByCurrencyCodeOrderByYearMonthDesc("USD"))
+                .thenReturn(java.util.Optional.of(prior));
+
+        AccountingApi.JournalEntryResponse journalResponse =
+                mockJournalResponse("je-rev-ac2", "FX-REV-2026-09-USD");
+        when(journalEntryService.create(any(), eq(USERNAME))).thenReturn(journalResponse);
+        when(journalEntryService.post(eq("je-rev-ac2"), any(), eq(USERNAME))).thenReturn(journalResponse);
+
+        var result = service.runRevaluation(LocalDate.of(2026, 9, 30), USERNAME);
+
+        assertThat(result.journalsPosted()).isEqualTo(1);
+        assertThat(result.results().get(0).unrealizedGainLoss())
+                .isEqualByComparingTo(new BigDecimal("-20000.00"));
+        verify(journalEntryService, times(1)).create(any(), eq(USERNAME));
+        ArgumentCaptor<FxRevaluationPost> captor = ArgumentCaptor.forClass(FxRevaluationPost.class);
+        verify(fxRevaluationPostRepository).save(captor.capture());
+        assertThat(captor.getValue().getTotalUnrealizedGain()).isEqualByComparingTo(new BigDecimal("500000.00"));
+        assertThat(captor.getValue().getTotalUnrealizedLoss()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void ac2_noRateMovement_skipsWithoutJournal() {
+        Account usdBank = mockAccount("acc-usd", "1020", "USD Bank", Account.Type.ASSET, "USD");
+        Account egpCash = mockAccount("acc-10101", "10101", "EGP Cash", Account.Type.ASSET, "EGP");
+        Account fxGainLoss = mockAccount("acc-4200", "4200", "FX Gain/Loss", Account.Type.REVENUE, "EGP");
+        lenient().when(accountRepository.findAllByOrderByCodeAsc()).thenReturn(List.of(usdBank, egpCash, fxGainLoss));
+
+        Currency usd = mock(Currency.class);
+        when(usd.getCode()).thenReturn("USD");
+        when(usd.getExchangeRate()).thenReturn(new BigDecimal("52.00"));
+        lenient().when(currencyRepository.findAllByOrderByCodeAsc()).thenReturn(List.of(usd));
+
+        JournalEntry entry = mock(JournalEntry.class);
+        when(entry.getId()).thenReturn("je-1");
+        when(entry.getCurrency()).thenReturn("USD");
+        JournalEntryLine line = mock(JournalEntryLine.class);
+        when(line.getJournalEntryId()).thenReturn("je-1");
+        when(line.getAccountId()).thenReturn("acc-usd");
+        when(line.getDebit()).thenReturn(new BigDecimal("10000"));
+        when(line.getCredit()).thenReturn(new BigDecimal("0"));
+
+        when(journalEntryRepository.findByStatusInOrderByEntryDateDesc(any())).thenReturn(List.of(entry));
+        when(journalEntryLineRepository.findByJournalEntryIdIn(anySet())).thenReturn(List.of(line));
+        when(fxRevaluationPostRepository.existsByCurrencyCodeAndYearMonth("USD", "2026-09")).thenReturn(false);
+
+        FxRevaluationPost prior = new FxRevaluationPost("USD", "2026-08",
+                new BigDecimal("520000.00"), BigDecimal.ZERO, "je-aug", USERNAME);
+        when(fxRevaluationPostRepository.findFirstByCurrencyCodeOrderByYearMonthDesc("USD"))
+                .thenReturn(java.util.Optional.of(prior));
+
+        var result = service.runRevaluation(LocalDate.of(2026, 9, 30), USERNAME);
+
+        assertThat(result.journalsPosted()).isEqualTo(0);
+        assertThat(result.results().get(0).unrealizedGainLoss()).isEqualByComparingTo(BigDecimal.ZERO);
+        verify(journalEntryService, never()).create(any(), anyString());
     }
 
     @Test

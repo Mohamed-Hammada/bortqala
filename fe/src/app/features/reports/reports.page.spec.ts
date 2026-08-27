@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ReportsPage } from './reports.page';
 import { I18nService } from '../../core/i18n.service';
 import { ReportsStore } from './reports.store';
-import { GeneratedPeriod, PeriodOption } from './reports.models';
+import { GeneratedPeriod, PeriodOption, ReportPreview } from './reports.models';
 
 describe('ReportsPage REM-006 period presets', () => {
   let httpMock: HttpTestingController;
@@ -135,5 +135,45 @@ describe('ReportsPage REM-006 period presets', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(page.store.generated().map((item) => item.reportId)).toEqual(['rep-jan-25']);
     expect(page.store.generatedLoading()).toBe(false);
+  });
+
+  function renderPreview() {
+    const preview: ReportPreview = {
+      periodStart: 1786406400000,
+      periodEnd: 1787356799999,
+      payCycle: 'MONTHLY',
+      categories: [],
+      employeeCount: 2,
+      workdays: 15,
+      scheduleCoverageCount: 30,
+      existingReportId: null,
+      overlappingReportIds: [],
+    };
+    page.previewResult.set(preview);
+    fixture.detectChanges();
+  }
+
+  it('WP-48 AC-7: hijri overlay disabled produces zero DOM change (no .hijri label)', () => {
+    page.hijriEnabled.set(false);
+    renderPreview();
+
+    const range = fixture.nativeElement.querySelector('.preview-range') as HTMLElement;
+    expect(range).not.toBeNull();
+    const gregorian = range.querySelector('.ltr');
+    expect(gregorian).not.toBeNull();
+    expect(range.querySelector('.hijri')).toBeNull();
+  });
+
+  it('WP-48 AC-7: hijri overlay enabled renders a secondary Hijri label beside each Gregorian date', () => {
+    page.hijriEnabled.set(true);
+    renderPreview();
+
+    const range = fixture.nativeElement.querySelector('.preview-range') as HTMLElement;
+    expect(range).not.toBeNull();
+    const hijri = range.querySelector('.hijri');
+    expect(hijri).not.toBeNull();
+    expect(hijri!.textContent).toContain('→');
+    expect((hijri as HTMLElement).getAttribute('dir')).toBe('rtl');
+    expect(hijri!.textContent?.trim().length).toBeGreaterThan(0);
   });
 });
