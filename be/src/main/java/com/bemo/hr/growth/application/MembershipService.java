@@ -49,7 +49,7 @@ public class MembershipService {
         String appId = TenantContext.require();
         List<MemberSubscription> subs = partyId != null
                 ? subscriptionRepository.findByAppIdAndPartyId(appId, partyId)
-                : subscriptionRepository.findByAppIdAndStatusIn(List.of("ACTIVE", "GRACE"));
+                : subscriptionRepository.findByAppIdAndStatusIn(appId, List.of("ACTIVE", "GRACE"));
         return subs.stream().map(this::toSubResponse).toList();
     }
 

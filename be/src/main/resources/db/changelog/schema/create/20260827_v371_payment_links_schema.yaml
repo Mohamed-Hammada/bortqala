@@ -16,7 +16,7 @@ databaseChangeLog:
               - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
               - column: { name: kind, type: varchar(20), constraints: { nullable: false } }
               - column: { name: ref_id, type: varchar(36) }
-              - column: { name: amount, type: numeric(18,2), constraints: { nullable: false } }
+              - column: { name: amount, type: "numeric(18,2)", constraints: { nullable: false } }
               - column: { name: currency, type: varchar(3), constraints: { nullable: false }, defaultValue: "EGP" }
               - column: { name: token, type: varchar(36), constraints: { nullable: false } }
               - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "PENDING" }
@@ -69,7 +69,7 @@ databaseChangeLog:
               - column: { name: link_id, type: varchar(36), constraints: { nullable: false } }
               - column: { name: provider_txn_id, type: varchar(200), constraints: { nullable: false } }
               - column: { name: raw_payload, type: text }
-              - column: { name: amount, type: numeric(18,2), constraints: { nullable: false } }
+              - column: { name: amount, type: "numeric(18,2)", constraints: { nullable: false } }
               - column: { name: paid_at, type: timestamp, constraints: { nullable: false } }
               - column: { name: created_at, type: bigint, constraints: { nullable: false } }
         - addUniqueConstraint:

@@ -445,6 +445,8 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'compliance.provider.saved': 'تم حفظ إعدادات المزود',
     'compliance.provider.notImplemented': 'هذا المزود غير مدعوم بعد',
     'compliance.provider.confirmSwitch': 'تغيير المزود يغير طريقة إرسال الفواتير المستقبلية. هل تريد المتابعة؟',
+    'compliance.provider.environmentTest': 'بيئة اختبار',
+    'compliance.provider.environmentProduction': 'بيئة إنتاج',
   },
   'en-US': {
     'nav.settingsHint': 'System settings and preferences',
@@ -938,6 +940,8 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'compliance.provider.saved': 'Provider settings saved',
     'compliance.provider.notImplemented': 'This provider is not yet implemented',
     'compliance.provider.confirmSwitch': 'Switching providers changes how future invoices are submitted. Continue?',
+    'compliance.provider.environmentTest': 'Test environment',
+    'compliance.provider.environmentProduction': 'Production environment',
   },
 };
 

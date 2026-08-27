@@ -27,9 +27,9 @@ databaseChangeLog:
               - column: { name: eta_date, type: bigint }
               - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: 'PREPARING' }
               - column: { name: notes, type: varchar(2000) }
-              - column: { name: expected_fx_amount, type: numeric(19,2) }
+              - column: { name: expected_fx_amount, type: "numeric(19,2)" }
               - column: { name: expected_fx_currency, type: varchar(10) }
-              - column: { name: realized_fx_amount, type: numeric(19,2) }
+              - column: { name: realized_fx_amount, type: "numeric(19,2)" }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
               - column: { name: created_at, type: bigint, constraints: { nullable: false } }
               - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
@@ -75,10 +75,10 @@ databaseChangeLog:
               - column: { name: item_name, type: varchar(200), constraints: { nullable: false } }
               - column: { name: item_code, type: varchar(50) }
               - column: { name: lot_reference, type: varchar(100) }
-              - column: { name: quantity, type: numeric(15,3), constraints: { nullable: false } }
+              - column: { name: quantity, type: "numeric(15,3)", constraints: { nullable: false } }
               - column: { name: unit_of_measure, type: varchar(20) }
-              - column: { name: net_weight_kg, type: numeric(15,3) }
-              - column: { name: gross_weight_kg, type: numeric(15,3) }
+              - column: { name: net_weight_kg, type: "numeric(15,3)" }
+              - column: { name: gross_weight_kg, type: "numeric(15,3)" }
               - column: { name: packages_count, type: int }
         - addForeignKeyConstraint:
             baseTableName: export_shipment_lines
@@ -149,7 +149,7 @@ databaseChangeLog:
               - column: { name: chemical_name, type: varchar(200), constraints: { nullable: false } }
               - column: { name: active_ingredient, type: varchar(200) }
               - column: { name: registration_number, type: varchar(100) }
-              - column: { name: mrl_mg_per_kg, type: numeric(10,3) }
+              - column: { name: mrl_mg_per_kg, type: "numeric(10,3)" }
               - column: { name: max_dose_per_ha, type: varchar(100) }
               - column: { name: pre_harvest_interval_days, type: int }
               - column: { name: crop_authorized, type: varchar(500) }

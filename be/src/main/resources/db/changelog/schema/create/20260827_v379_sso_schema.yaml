@@ -20,7 +20,7 @@ databaseChangeLog:
               - column: { name: issuer, type: varchar(500) }
               - column: { name: discovery_url, type: varchar(1000) }
               - column: { name: auto_provision, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
-              - column: { name: default_role, type: varchar(50), defaultValueString: "VIEWER" }
+              - column: { name: default_role, type: varchar(50), defaultValue: "VIEWER" }
               - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
               - column: { name: created_at, type: bigint, constraints: { nullable: false } }
@@ -66,7 +66,7 @@ databaseChangeLog:
             columns:
               - column: { name: app_id }
               - column: { name: user_id }
-        - createUniqueConstraint:
+        - addUniqueConstraint:
             tableName: user_sso_identities
             constraintName: uq_user_sso_app_provider_subject
             columnNames: app_id, provider, subject

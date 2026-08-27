@@ -185,7 +185,7 @@ public class RecruitmentService {
         String empCode = "REC-" + app.getId().substring(0, 8).toUpperCase();
         Employee employee = new Employee(empCode, app.getFullName(), null,
                 request.departmentId() != null ? request.departmentId() : "DEFAULT",
-                com.bemo.hr.employee.domain.EmploymentType.FULL_TIME,
+                com.bemo.hr.employee.domain.EmploymentType.FIXED,
                 LocalDate.now(), null, true);
         Employee saved = employeeRepository.save(employee);
 

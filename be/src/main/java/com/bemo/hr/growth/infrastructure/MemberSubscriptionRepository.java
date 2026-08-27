@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscription, String> {
     List<MemberSubscription> findByAppIdAndPartyId(String appId, String partyId);
     Optional<MemberSubscription> findByAppIdAndPartyIdAndStatusIn(String appId, String partyId, List<String> statuses);
-    List<MemberSubscription> findByAppIdAndStatusIn(List<String> statuses);
+    List<MemberSubscription> findByAppIdAndStatusIn(String appId, List<String> statuses);
     List<MemberSubscription> findByAppIdAndStatusAndCurrentPeriodEndLessThanEqual(String appId, String status, long timestamp);
     long countByAppIdAndPartyIdAndStatus(String appId, String partyId, String status);
 }

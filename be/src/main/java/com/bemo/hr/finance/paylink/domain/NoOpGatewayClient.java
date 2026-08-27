@@ -2,6 +2,7 @@ package com.bemo.hr.finance.paylink.domain;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
  * Stub gateway used when hr.payments.gateway=NONE (feature off).
  * All operations throw — callers must check the gateway type before invoking.
  */
+@Component
 public class NoOpGatewayClient implements PaymentGatewayClient {
 
     @Override

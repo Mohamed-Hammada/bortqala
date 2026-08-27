@@ -27,3 +27,7 @@ v397-013-en;EINVOICING_DISABLED;en-US;E-invoicing is not configured for this ten
 v397-013-ar;EINVOICING_DISABLED;ar-EG;الفوترة الإلكترونية غير مفعّلة لهذا الكيان
 v397-014-en;EINVOICING_NOT_IMPLEMENTED;en-US;This e-invoicing operation is not yet implemented
 v397-014-ar;EINVOICING_NOT_IMPLEMENTED;ar-EG;هذه العملية غير مدعومة بعد في الفوترة الإلكترونية
+v397-015-en;compliance.provider.environmentTest;en-US;Test environment
+v397-015-ar;compliance.provider.environmentTest;ar-EG;بيئة اختبار
+v397-016-en;compliance.provider.environmentProduction;en-US;Production environment
+v397-016-ar;compliance.provider.environmentProduction;ar-EG;بيئة إنتاج

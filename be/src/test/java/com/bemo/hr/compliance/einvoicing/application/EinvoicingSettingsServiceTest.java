@@ -96,7 +96,7 @@ class EinvoicingSettingsServiceTest {
 
     @Test
     void listProvidersReturnsAllThree() {
-        when(providers.stream()).thenReturn(java.util.Stream.of(
+        when(providers.stream()).thenReturn(java.util.stream.Stream.of(
                 mockProvider(EinvoicingProviderType.EGYPT_ETA),
                 mockProvider(EinvoicingProviderType.KSA_ZATCA),
                 mockProvider(EinvoicingProviderType.NONE)));
