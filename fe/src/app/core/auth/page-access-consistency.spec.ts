@@ -79,6 +79,7 @@ describe('page access consistency', () => {
       gatedByFeature.set(contract.requiredFeature, list);
     }
     expect([...gatedByFeature.keys()].sort()).toEqual([
+      'agri.enabled',
       'finance.enabled',
       'manufacturing.enabled',
       'payroll.enabled',
@@ -87,10 +88,11 @@ describe('page access consistency', () => {
       'workforce.contractorAccounts.enabled',
     ]);
     expect(gatedByFeature.get('finance.enabled')!.sort()).toEqual([
-      'accounts', 'banks', 'budgets', 'eta-tax', 'fiscal-periods', 'fixed-assets', 'journal-entries', 'tax-currency',
+      'accounts', 'banks', 'budgets', 'eta-tax', 'fiscal-periods', 'fixed-assets', 'journal-entries', 'payment-links', 'tax-currency',
     ]);
     expect(gatedByFeature.get('payroll.enabled')).toEqual(['payroll']);
     expect(gatedByFeature.get('sales.enabled')!.sort()).toEqual(['crm', 'pos', 'sales']);
+    expect(gatedByFeature.get('agri.enabled')).toEqual(['export-shipments']);
     expect(gatedByFeature.get('manufacturing.enabled')).toEqual(['production']);
     expect(gatedByFeature.get('quality.enabled')).toEqual(['quality']);
     expect(gatedByFeature.get('workforce.contractorAccounts.enabled')!.sort()).toEqual([

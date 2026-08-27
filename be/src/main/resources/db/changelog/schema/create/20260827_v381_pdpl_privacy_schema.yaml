@@ -1,0 +1,103 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v381_pdpl_privacy_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: privacy_requests
+      changes:
+        - createTable:
+            tableName: privacy_requests
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: subject_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: subject_ref, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: kind, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: legal_note, type: text }
+              - column: { name: due_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: decided_by, type: varchar(36) }
+              - column: { name: decided_at, type: timestamp }
+              - column: { name: export_data, type: text }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: privacy_requests
+            indexName: idx_privacy_req_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: privacy_requests
+            indexName: idx_privacy_req_status
+            columns:
+              - column: { name: status }
+      rollback:
+        - dropTable:
+            tableName: privacy_requests
+
+  - changeSet:
+      id: 20260827_v381_consent_registry_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: consent_registry
+      changes:
+        - createTable:
+            tableName: consent_registry
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: subject_ref, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: subject_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: purpose_key, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: granted_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: withdrawn_at, type: timestamp }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: consent_registry
+            indexName: idx_consent_app_subject
+            columns:
+              - column: { name: app_id }
+              - column: { name: subject_ref }
+      rollback:
+        - dropTable:
+            tableName: consent_registry
+
+  - changeSet:
+      id: 20260827_v381_retention_policies_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: retention_policies
+      changes:
+        - createTable:
+            tableName: retention_policies
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: entity_key, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: months, type: int, constraints: { nullable: false } }
+              - column: { name: action, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: retention_policies
+            indexName: idx_retention_app
+            columns:
+              - column: { name: app_id }
+      rollback:
+        - dropTable:
+            tableName: retention_policies

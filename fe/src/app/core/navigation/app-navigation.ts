@@ -75,6 +75,7 @@ const PROCUREMENT_ROLES: RoleCode[] = [
   'AUDITOR',
 ];
 const SALES_ROLES: RoleCode[] = ['SALES_MANAGER'];
+const EXPORT_ROLES: RoleCode[] = ['PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'SALES_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'];
 const PRODUCTION_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER'];
 const QUALITY_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER'];
 const PAYROLL_ROLES: RoleCode[] = ['PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'];
@@ -375,12 +376,30 @@ export const NAV_ITEMS: NavItem[] = [
     roles: SALES_ROLES,
   },
   {
+    menuId: 'export-shipments',
+    labelKey: 'nav.exportShipments',
+    descriptionKey: 'nav.exportShipmentsHint',
+    path: '/trade/export-shipments',
+    icon: 'imports',
+    workspace: 'workspace.salesCommercial',
+    roles: EXPORT_ROLES,
+  },
+  {
     menuId: 'specialized-verticals',
     labelKey: 'nav.specializedVerticals',
     descriptionKey: 'nav.specializedVerticalsHint',
     path: '/verticals/specialized',
     icon: 'categories',
     workspace: 'workspace.salesCommercial',
+  },
+  {
+    menuId: 'growth',
+    labelKey: 'nav.growth',
+    descriptionKey: 'nav.growthHint',
+    path: '/growth',
+    icon: 'categories',
+    workspace: 'workspace.salesCommercial',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER', 'HR_MANAGER', 'FINANCE_MANAGER'],
   },
 
   // Manufacturing
@@ -487,6 +506,15 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: 'nav.fixedAssets',
     descriptionKey: 'nav.fixedAssetsHint',
     path: '/finance/fixed-assets',
+    icon: 'reports',
+    workspace: 'workspace.financeAccounting',
+    roles: FINANCE_ROLES,
+  },
+  {
+    menuId: 'payment-links',
+    labelKey: 'nav.paymentLinks',
+    descriptionKey: 'nav.paymentLinksHint',
+    path: '/finance/payment-links',
     icon: 'reports',
     workspace: 'workspace.financeAccounting',
     roles: FINANCE_ROLES,

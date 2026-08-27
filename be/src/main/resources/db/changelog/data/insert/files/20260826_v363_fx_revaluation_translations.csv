@@ -1,0 +1,3 @@
+id;translation_key;locale;text_value
+v363-err-001-en;FX_REVALUATION_ACCOUNT_NOT_FOUND;en-US;Required FX revaluation account not found in chart of accounts
+v363-err-001-ar;FX_REVALUATION_ACCOUNT_NOT_FOUND;ar-EG;الحساب المطلوب لإعادة تقييم العملات غير موجود في دليل الحسابات

@@ -1131,3 +1131,126 @@ databaseChangeLog:
   # WP-11: common.created + common.submit translations
   - include:
       file: db/changelog/data/insert/20260826_v357_common_translations.yaml
+  # WP-12: sales targets + commission rules schema
+  - include:
+      file: db/changelog/schema/create/20260826_v358_sales_targets.yaml
+  # WP-12: sales target translations
+  - include:
+      file: db/changelog/data/insert/20260826_v358_sales_target_translations.yaml
+  # WP-30: bank reconciliation aging translations
+  - include:
+      file: db/changelog/data/insert/20260826_v359_bank_aging_translations.yaml
+  # WP-48 T-3: hijri overlay translations
+  - include:
+      file: db/changelog/data/insert/20260826_v360_hijri_overlay_translations.yaml
+  # WP-19: single punch rule translations
+  - include:
+      file: db/changelog/data/insert/20260826_v361_single_punch_translations.yaml
+  # WP-20: employee form grouped accordion sections translations
+  - include:
+      file: db/changelog/data/insert/20260826_v362_employee_form_groups_translations.yaml
+  # WP-48 T-1: FX revaluation posts schema
+  - include:
+      file: db/changelog/schema/create/20260826_v363_fx_revaluation_posts.yaml
+  # WP-48 T-1: FX revaluation error code translations
+  - include:
+      file: db/changelog/data/insert/20260826_v363_fx_revaluation_translations.yaml
+  # WP-48 T-1: FX revaluation UI translations
+  - include:
+      file: db/changelog/data/insert/20260826_v364_fx_revaluation_ui_translations.yaml
+  # WP-16: export shipments schema
+  - include:
+      file: db/changelog/schema/create/20260826_v366_export_shipments.yaml
+  # WP-16: export shipments translations
+  - include:
+      file: db/changelog/data/insert/20260826_v367_export_translations.yaml
+  # WP-28: OCR capture schema
+  - include:
+      file: db/changelog/schema/create/20260827_v368_ocr_capture_schema.yaml
+  # WP-28: OCR capture translations
+  - include:
+      file: db/changelog/data/insert/20260827_v368_ocr_translations.yaml
+  # WP-42: Growth pack schema (loyalty, membership, referrals)
+  - include:
+      file: db/changelog/schema/create/20260827_v369_growth_schema.yaml
+  # WP-42: Growth pack translations
+  - include:
+      file: db/changelog/data/insert/20260827_v370_growth_translations.yaml
+  # WP-29: Payment links + gateway transactions schema
+  - include:
+      file: db/changelog/schema/create/20260827_v371_payment_links_schema.yaml
+  # WP-29: Payment link translations
+  - include:
+      file: db/changelog/data/insert/20260827_v372_payment_link_translations.yaml
+  # WP-31: WhatsApp outbound log schema
+  - include:
+      file: db/changelog/schema/create/20260827_v373_whatsapp_outbound_schema.yaml
+  # WP-31: WhatsApp translations
+  - include:
+      file: db/changelog/data/insert/20260827_v374_whatsapp_translations.yaml
+  # WP-39: Automation pack schema (recurring templates + dunning rules)
+  - include:
+      file: db/changelog/schema/create/20260827_v375_automation_schema.yaml
+  # WP-39: Automation pack translations
+  - include:
+      file: db/changelog/data/insert/20260827_v376_automation_translations.yaml
+  # WP-32: Scheduled report delivery schema
+  - include:
+      file: db/changelog/schema/create/20260827_v377_report_schedules_schema.yaml
+      relativeToChangelogFile: false
+  # WP-32: Scheduled report delivery translations
+  - include:
+      file: db/changelog/data/insert/20260827_v378_report_schedule_translations.yaml
+      relativeToChangelogFile: false
+  # WP-34: SSO schema (sso_configs + user_sso_identities)
+  - include:
+      file: db/changelog/schema/create/20260827_v379_sso_schema.yaml
+      relativeToChangelogFile: false
+  # WP-34: SSO translations
+  - include:
+      file: db/changelog/data/insert/20260827_v380_sso_translations.yaml
+      relativeToChangelogFile: false
+  # WP-35: PDPL Privacy toolkit schema
+  - include:
+      file: db/changelog/schema/create/20260827_v381_pdpl_privacy_schema.yaml
+      relativeToChangelogFile: false
+  # WP-35: PDPL Privacy toolkit translations
+  - include:
+      file: db/changelog/data/insert/20260827_v382_pdpl_privacy_translations.yaml
+      relativeToChangelogFile: false
+  # WP-32/34/35: missing translation keys for i18n gate
+  - include:
+      file: db/changelog/data/insert/20260827_v383_missing_keys_translations.yaml
+      relativeToChangelogFile: false
+  # WP-36/37/40: API keys, webhooks, grid views schema
+  - include:
+      file: db/changelog/schema/create/20260827_v384_api_keys_webhooks_grid_views_schema.yaml
+      relativeToChangelogFile: false
+  # WP-36/37/40: translations
+  - include:
+      file: db/changelog/data/insert/20260827_v388_wp36_37_40_translations.yaml
+      relativeToChangelogFile: false
+  # WP-45: Helpdesk categories, tickets, messages + KB articles schema
+  - include:
+      file: db/changelog/schema/create/20260827_v389_helpdesk_kb_schema.yaml
+      relativeToChangelogFile: false
+  # WP-45/46/41: Marketing campaigns, surveys, saved reports schema
+  - include:
+      file: db/changelog/schema/create/20260827_v390_marketing_report_builder_schema.yaml
+      relativeToChangelogFile: false
+  # WP-45: Helpdesk + KB translations
+  - include:
+      file: db/changelog/data/insert/20260827_v391_helpdesk_kb_translations.yaml
+      relativeToChangelogFile: false
+  # WP-45: KB articles translations
+  - include:
+      file: db/changelog/data/insert/20260827_v392_kb_translations.yaml
+      relativeToChangelogFile: false
+  # WP-46: Marketing campaigns translations
+  - include:
+      file: db/changelog/data/insert/20260827_v393_marketing_translations.yaml
+      relativeToChangelogFile: false
+  # WP-46/41: Surveys + Report Builder translations
+  - include:
+      file: db/changelog/data/insert/20260827_v394_survey_report_translations.yaml
+      relativeToChangelogFile: false

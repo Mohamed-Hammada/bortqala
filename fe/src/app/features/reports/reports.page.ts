@@ -1,16 +1,36 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { dateInputToEpoch, epochToDateInput, formatDate, formatDateTime } from '../../core/date';
 import { AuthService } from '../../core/auth/auth.service';
 import { AppSettings } from '../../core/auth/auth.models';
 import { GeneratedPeriod, PeriodOption, ReportPayCycle, ReportPreview, ReportStatus } from './reports.models';
 import { ReportsStore } from './reports.store';
 import { I18nService } from '../../core/i18n.service';
+import { NotificationService } from '../../core/notification.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { DataExchangeCenterComponent } from '../../shared/ui/data-exchange-center/data-exchange-center.component';
 import { BusinessReportsCatalogComponent } from './business-reports-catalog.component';
+
+export interface ReportSchedule {
+  id: string;
+  name: string;
+  reportKind: string;
+  params: string | null;
+  channel: string;
+  recipients: string | null;
+  cadence: string;
+  timeOfDay: string | null;
+  active: boolean;
+  lastRunAt: number | null;
+  lastStatus: string | null;
+  lastError: string | null;
+  consecutiveFailures: number;
+  version: number;
+}
 
 @Component({
   selector: 'app-reports-page',
@@ -48,6 +68,7 @@ export class ReportsPage {
       error: () => {},
     });
     this.periodForm.valueChanges.subscribe(() => this.previewResult.set(null));
+    void this.loadSchedules();
   }
 
   changeYear(value: string): void {
@@ -169,5 +190,62 @@ export class ReportsPage {
     const dd = String(now.getDate()).padStart(2, '0');
     const today = `${yyyy}-${mm}-${dd}`;
     return { start: today, end: today };
+  }
+
+  private readonly http = inject(HttpClient);
+  private readonly notification = inject(NotificationService);
+
+  readonly schedules = signal<ReportSchedule[]>([]);
+  readonly showScheduleForm = signal(false);
+  readonly savingSchedule = signal(false);
+  readonly runningSchedule = signal<string | null>(null);
+  readonly formatDateTime = formatDateTime;
+
+  readonly scheduleForm = this.formBuilder.nonNullable.group({
+    name: ['', Validators.required],
+    reportKind: ['CASHFLOW', Validators.required],
+    channel: ['EMAIL', Validators.required],
+    cadence: ['DAILY', Validators.required],
+    timeOfDay: ['08:00'],
+    recipients: [''],
+    params: ['{}'],
+  });
+
+  async loadSchedules(): Promise<void> {
+    try {
+      const list = await firstValueFrom(this.http.get<ReportSchedule[]>('/api/v1/report-schedules'));
+      this.schedules.set(list ?? []);
+    } catch { /* ignore - page still works without schedules */ }
+  }
+
+  async createSchedule(): Promise<void> {
+    if (this.scheduleForm.invalid) return;
+    this.savingSchedule.set(true);
+    try {
+      await firstValueFrom(this.http.post('/api/v1/report-schedules', this.scheduleForm.getRawValue()));
+      this.showScheduleForm.set(false);
+      this.scheduleForm.reset({ reportKind: 'CASHFLOW', channel: 'EMAIL', cadence: 'DAILY', timeOfDay: '08:00', params: '{}' });
+      this.notification.success(this.i18n.t('reports.scheduleCreated'));
+      await this.loadSchedules();
+    } catch { /* error handled by notification */ }
+    finally { this.savingSchedule.set(false); }
+  }
+
+  async runSchedule(id: string): Promise<void> {
+    this.runningSchedule.set(id);
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/report-schedules/${id}/run-now`, {}));
+      this.notification.success(this.i18n.t('reports.runStarted'));
+      await this.loadSchedules();
+    } catch { /* error handled by notification */ }
+    finally { this.runningSchedule.set(null); }
+  }
+
+  async deleteSchedule(id: string): Promise<void> {
+    try {
+      await firstValueFrom(this.http.delete(`/api/v1/report-schedules/${id}`));
+      this.notification.success(this.i18n.t('reports.scheduleDeleted'));
+      await this.loadSchedules();
+    } catch { /* error handled by notification */ }
   }
 }

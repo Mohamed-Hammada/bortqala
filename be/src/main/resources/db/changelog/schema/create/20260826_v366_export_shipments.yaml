@@ -1,0 +1,195 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v366_export_shipments_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: export_shipments
+      changes:
+        - createTable:
+            tableName: export_shipments
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: shipment_number, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: customer_party_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: customer_party_name, type: varchar(200) }
+              - column: { name: contract_ref, type: varchar(100) }
+              - column: { name: container_no, type: varchar(50) }
+              - column: { name: booking_no, type: varchar(100) }
+              - column: { name: acid_no, type: varchar(100) }
+              - column: { name: port_of_loading, type: varchar(200) }
+              - column: { name: port_of_discharge, type: varchar(200) }
+              - column: { name: etb_date, type: bigint }
+              - column: { name: eta_date, type: bigint }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: 'PREPARING' }
+              - column: { name: notes, type: varchar(2000) }
+              - column: { name: expected_fx_amount, type: numeric(19,2) }
+              - column: { name: expected_fx_currency, type: varchar(10) }
+              - column: { name: realized_fx_amount, type: numeric(19,2) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: export_shipments
+            columnNames: app_id, shipment_number
+            constraintName: uq_export_shipment_app_number
+        - createIndex:
+            tableName: export_shipments
+            indexName: idx_export_shipment_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: export_shipments
+            indexName: idx_export_shipment_status
+            columns:
+              - column: { name: status }
+        - createIndex:
+            tableName: export_shipments
+            indexName: idx_export_shipment_customer
+            columns:
+              - column: { name: customer_party_id }
+      rollback:
+        - dropTable:
+            tableName: export_shipments
+
+  - changeSet:
+      id: 20260826_v366_export_shipment_lines_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: export_shipment_lines
+      changes:
+        - createTable:
+            tableName: export_shipment_lines
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: shipment_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: line_order, type: int, constraints: { nullable: false } }
+              - column: { name: item_name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: item_code, type: varchar(50) }
+              - column: { name: lot_reference, type: varchar(100) }
+              - column: { name: quantity, type: numeric(15,3), constraints: { nullable: false } }
+              - column: { name: unit_of_measure, type: varchar(20) }
+              - column: { name: net_weight_kg, type: numeric(15,3) }
+              - column: { name: gross_weight_kg, type: numeric(15,3) }
+              - column: { name: packages_count, type: int }
+        - addForeignKeyConstraint:
+            baseTableName: export_shipment_lines
+            baseColumnNames: shipment_id
+            referencedTableName: export_shipments
+            referencedColumnNames: id
+            constraintName: fk_export_line_shipment
+        - createIndex:
+            tableName: export_shipment_lines
+            indexName: idx_export_line_shipment
+            columns:
+              - column: { name: shipment_id }
+      rollback:
+        - dropTable:
+            tableName: export_shipment_lines
+
+  - changeSet:
+      id: 20260826_v366_lot_treatment_logs_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: lot_treatment_logs
+      changes:
+        - createTable:
+            tableName: lot_treatment_logs
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: lot_reference, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: chemical, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: dose, type: varchar(100) }
+              - column: { name: treatment_date, type: date, constraints: { nullable: false } }
+              - column: { name: pre_harvest_interval_days, type: int, constraints: { nullable: false } }
+              - column: { name: treated_by, type: varchar(200) }
+              - column: { name: notes, type: varchar(2000) }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: lot_treatment_logs
+            columnNames: app_id, lot_reference, chemical, treatment_date
+            constraintName: uq_treatment_log_lot_chem_date
+        - createIndex:
+            tableName: lot_treatment_logs
+            indexName: idx_treatment_log_lot
+            columns:
+              - column: { name: lot_reference }
+      rollback:
+        - dropTable:
+            tableName: lot_treatment_logs
+
+  - changeSet:
+      id: 20260826_v366_pesticide_registers_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: pesticide_registers
+      changes:
+        - createTable:
+            tableName: pesticide_registers
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: chemical_name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: active_ingredient, type: varchar(200) }
+              - column: { name: registration_number, type: varchar(100) }
+              - column: { name: mrl_mg_per_kg, type: numeric(10,3) }
+              - column: { name: max_dose_per_ha, type: varchar(100) }
+              - column: { name: pre_harvest_interval_days, type: int }
+              - column: { name: crop_authorized, type: varchar(500) }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: 'ACTIVE' }
+              - column: { name: notes, type: varchar(2000) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: pesticide_registers
+            columnNames: app_id, chemical_name
+            constraintName: uq_pesticide_app_chemical
+        - createIndex:
+            tableName: pesticide_registers
+            indexName: idx_pesticide_app
+            columns:
+              - column: { name: app_id }
+      rollback:
+        - dropTable:
+            tableName: pesticide_registers
+
+  - changeSet:
+      id: 20260826_v366_export_allowed_menus
+      author: wolfn
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: >
+              UPDATE app_users
+              SET allowed_menus = CASE
+                WHEN allowed_menus LIKE '%export-shipments%' THEN allowed_menus
+                WHEN allowed_menus IS NULL OR allowed_menus = '' THEN 'export-shipments'
+                ELSE allowed_menus || ',export-shipments'
+              END
+      rollback:
+        - sql:
+            sql: >
+              UPDATE app_users
+              SET allowed_menus = REGEXP_REPLACE(
+                COALESCE(allowed_menus, ''),
+                '(^|,)export-shipments(,|$)',
+                ','
+              )

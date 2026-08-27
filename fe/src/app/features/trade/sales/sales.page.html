@@ -10,6 +10,10 @@
         <button class="button primary" (click)="openQuoteModal()">＋ {{ i18n.t('sales.newQuotation') }}</button>
       } @else if (activeMainTab() === 'ORDERS') {
         <button class="button primary" (click)="openNew()">＋ {{ i18n.t('sales.add') }}</button>
+      } @else if (activeMainTab() === 'TARGETS') {
+        <button class="button primary" (click)="targetDrawerOpen.set(true)">＋ {{ i18n.t('sales.createTarget') }}</button>
+      } @else if (activeMainTab() === 'COMMISSIONS') {
+        <button class="button primary" (click)="ruleDrawerOpen.set(true)">＋ {{ i18n.t('sales.createRule') }}</button>
       }
     </div>
   </header>
@@ -26,6 +30,8 @@
     <button [class.active]="activeMainTab() === 'ORDERS'" (click)="activeMainTab.set('ORDERS')">{{ i18n.t('sales.tabOrders') }}</button>
     <button [class.active]="activeMainTab() === 'QUOTATIONS'" (click)="activeMainTab.set('QUOTATIONS')">{{ i18n.t('sales.tabQuotations') }}</button>
     <button [class.active]="activeMainTab() === 'RECEIVABLES'" (click)="activeMainTab.set('RECEIVABLES')">{{ i18n.t('sales.tabReceivables') }}</button>
+    <button [class.active]="activeMainTab() === 'TARGETS'" (click)="activeMainTab.set('TARGETS'); loadTargets()">{{ i18n.t('sales.targets') }}</button>
+    <button [class.active]="activeMainTab() === 'COMMISSIONS'" (click)="activeMainTab.set('COMMISSIONS'); loadRules()">{{ i18n.t('sales.commissions') }}</button>
   </nav>
 
   <!-- Workflow Pipeline Cards -->
@@ -334,5 +340,136 @@
         <form class="return-command" [formGroup]="returnForm" (ngSubmit)="receiveReturn()"><input formControlName="deliveryId" readonly /><input formControlName="deliveryLineId" readonly /><input type="number" formControlName="quantity" [placeholder]="i18n.t('sales.returnQuantity')" /><input formControlName="reason" [placeholder]="i18n.t('sales.reason')" /><button class="button primary" [disabled]="returnForm.invalid||savingFulfillment()">{{ i18n.t('sales.return') }}</button></form>
       }
     </section>
+  }
+
+  @if (activeMainTab() === 'TARGETS') {
+    <div class="table-card">
+      <table>
+        <thead><tr><th>{{ i18n.t('sales.scope') }}</th><th>{{ i18n.t('sales.rep') }}</th><th>{{ i18n.t('sales.period') }}</th><th>{{ i18n.t('sales.metric') }}</th><th>{{ i18n.t('sales.targetValue') }}</th><th>{{ i18n.t('sales.achieved') }}</th><th>{{ i18n.t('sales.progress') }}</th><th></th></tr></thead>
+        <tbody>
+          @for (t of targets(); track t.id) {
+            <tr>
+              <td>{{ t.scope }}</td>
+              <td>{{ t.targetRefId }}</td>
+              <td class="ltr">{{ t.period }}</td>
+              <td>{{ t.metric }}</td>
+              <td class="ltr">{{ t.targetValue | number:'1.2-2' }}</td>
+              <td class="ltr">{{ t.achievedValue | number:'1.2-2' }}</td>
+              <td><div class="progress-bar"><div class="progress-fill" [style.width.%]="targetProgress(t)"></div><span>{{ targetProgress(t) }}%</span></div></td>
+              <td><button class="button danger btn-sm" (click)="deleteTarget(t.id)">✕</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="empty">{{ i18n.t('sales.noTargets') }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (activeMainTab() === 'COMMISSIONS') {
+    <div class="section-title"><h2>{{ i18n.t('sales.statement') }}</h2></div>
+    <div class="filter-row">
+      <input [placeholder]="i18n.t('sales.rep')" [value]="statementRepId()" (input)="statementRepId.set($any($event.target).value)" />
+      <input type="month" class="ltr" [value]="statementPeriod()" (input)="statementPeriod.set($any($event.target).value)" />
+      <button class="button primary" (click)="loadStatement()">{{ i18n.t('sales.statement') }}</button>
+    </div>
+    @if (commissionStatement(); as stmt) {
+      <div class="table-card">
+        <table>
+          <thead><tr><th>{{ i18n.t('sales.ruleName') }}</th><th>{{ i18n.t('sales.basis') }}</th><th>{{ i18n.t('sales.percent') }}</th><th>{{ i18n.t('sales.commission') }}</th></tr></thead>
+          <tbody>
+            @for (e of stmt.entries; track e.ruleId) {
+              <tr>
+                <td>{{ e.ruleName }}</td>
+                <td class="ltr">{{ e.basisAmount | number:'1.2-2' }}</td>
+                <td class="ltr">{{ e.percent }}%</td>
+                <td class="ltr">{{ e.commissionAmount | number:'1.2-2' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="empty">{{ i18n.t('sales.noRules') }}</td></tr>
+            }
+          </tbody>
+          <tfoot><tr><td colspan="3"><strong>{{ i18n.t('sales.totalCommission') }}</strong></td><td class="ltr"><strong>{{ stmt.totalCommission | number:'1.2-2' }}</strong></td></tr></tfoot>
+        </table>
+      </div>
+    }
+
+    <div class="section-title" style="margin-top:1.5rem"><h2>{{ i18n.t('sales.commissions') }} — {{ i18n.t('sales.tabOrders') }}</h2></div>
+    <div class="table-card">
+      <table>
+        <thead><tr><th>{{ i18n.t('sales.ruleName') }}</th><th>{{ i18n.t('sales.basis') }}</th><th>{{ i18n.t('sales.percent') }}</th><th>{{ i18n.t('sales.minAmount') }}</th><th></th></tr></thead>
+        <tbody>
+          @for (r of commissionRules(); track r.id) {
+            <tr>
+              <td>{{ r.name }}</td>
+              <td>{{ r.basis }}</td>
+              <td class="ltr">{{ r.percent }}%</td>
+              <td class="ltr">{{ r.minAmount | number:'1.2-2' }}</td>
+              <td><button class="button danger btn-sm" (click)="deleteRule(r.id)">✕</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty">{{ i18n.t('sales.noRules') }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (targetDrawerOpen()) {
+    <app-modal-dialog [title]="i18n.t('sales.createTarget')" (closed)="targetDrawerOpen.set(false)">
+      <form [formGroup]="targetForm" class="drawer-form">
+        <div class="field">
+          <label>{{ i18n.t('sales.scope') }} *</label>
+          <select formControlName="scope"><option value="REP">{{ i18n.t('sales.scopeRep') }}</option><option value="TEAM">{{ i18n.t('sales.scopeTeam') }}</option><option value="BRANCH">{{ i18n.t('sales.scopeBranch') }}</option></select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('sales.rep') }} *</label>
+          <input formControlName="targetRefId" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('sales.period') }} *</label>
+          <input type="month" class="ltr" formControlName="period" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('sales.metric') }} *</label>
+          <select formControlName="metric"><option value="REVENUE">{{ i18n.t('sales.metricRevenue') }}</option><option value="QUANTITY">{{ i18n.t('sales.metricQuantity') }}</option></select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('sales.targetValue') }} *</label>
+          <input type="number" class="ltr" formControlName="targetValue" />
+        </div>
+      </form>
+      <div modal-actions>
+        <button class="button secondary" (click)="targetDrawerOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+        <button class="button primary" (click)="saveTarget()" [disabled]="targetForm.invalid">{{ i18n.t('common.save') }}</button>
+      </div>
+    </app-modal-dialog>
+  }
+
+  @if (ruleDrawerOpen()) {
+    <app-modal-dialog [title]="i18n.t('sales.createRule')" (closed)="ruleDrawerOpen.set(false)">
+      <form [formGroup]="ruleForm" class="drawer-form">
+        <div class="field">
+          <label>{{ i18n.t('sales.ruleName') }} *</label>
+          <input formControlName="name" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('sales.basis') }} *</label>
+          <select formControlName="basis"><option value="INVOICE_TOTAL">{{ i18n.t('sales.invoiceTotal') }}</option><option value="COLLECTED">{{ i18n.t('sales.collected') }}</option></select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('sales.percent') }} *</label>
+          <input type="number" class="ltr" formControlName="percent" min="0.01" max="100" step="0.01" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('sales.minAmount') }}</label>
+          <input type="number" class="ltr" formControlName="minAmount" min="0" />
+        </div>
+      </form>
+      <div modal-actions>
+        <button class="button secondary" (click)="ruleDrawerOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+        <button class="button primary" (click)="saveRule()" [disabled]="ruleForm.invalid">{{ i18n.t('common.save') }}</button>
+      </div>
+    </app-modal-dialog>
   }
 </section>

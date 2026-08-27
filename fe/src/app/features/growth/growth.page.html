@@ -1,0 +1,173 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('growth.loyalty') }} / {{ i18n.t('growth.membership') }} / {{ i18n.t('growth.referral') }}</p>
+      <h1>{{ i18n.t('growth.wallet') }}</h1>
+    </div>
+  </header>
+
+  @if (loading()) { <div class="loading"></div> }
+  @if (error()) { <div class="alert error">{{ error() }}</div> }
+
+  <nav class="app-tabs" [attr.aria-label]="i18n.t('growth.wallet')">
+    <button class="app-tab" [class.active]="activeTab() === 'loyalty'" (click)="activeTab.set('loyalty')">{{ i18n.t('growth.loyalty') }}</button>
+    <button class="app-tab" [class.active]="activeTab() === 'membership'" (click)="activeTab.set('membership')">{{ i18n.t('growth.membership') }}</button>
+    <button class="app-tab" [class.active]="activeTab() === 'referral'" (click)="activeTab.set('referral')">{{ i18n.t('growth.referral') }}</button>
+  </nav>
+
+  @if (!loading()) {
+    <!-- ──── LOYALTY TAB ──── -->
+    @if (activeTab() === 'loyalty') {
+    <div class="table-card">
+      <h2>{{ i18n.t('growth.loyaltyRules') }}</h2>
+      @if (loyaltyRules(); as rules) {
+      <table>
+        <thead><tr><th>{{ i18n.t('growth.pointsPerHundredEgp') }}</th><th>{{ i18n.t('growth.redeemMaxPercent') }}</th><th>{{ i18n.t('growth.expiryMonths') }}</th></tr></thead>
+        <tbody><tr><td class="ltr">{{ rules.pointsPerHundredEgp }}</td><td class="ltr">{{ rules.redeemMaxPercent }}%</td><td class="ltr">{{ rules.expiryMonths }}</td></tr></tbody>
+      </table>
+      }
+
+      <h2>{{ i18n.t('growth.earnPoints') }}</h2>
+      <div class="form-row">
+        <label>{{ i18n.t('procurement.ocrSelectSupplier') }}</label>
+        <input class="input" [placeholder]="i18n.t('procurement.ocrSelectSupplier')" (change)="loadLoyaltyAccount($any($event.target).value)" />
+      </div>
+
+      @if (loyaltyAccount(); as acct) {
+      <div class="stats-row">
+        <div class="stat-card"><span class="stat-value ltr">{{ acct.pointsBalance | number:'1.0-0' }}</span><span class="stat-label">{{ i18n.t('growth.pointsBalance') }}</span></div>
+        <div class="stat-card"><span class="stat-value ltr">{{ acct.totalEarned | number:'1.0-0' }}</span><span class="stat-label">{{ i18n.t('growth.totalEarned') }}</span></div>
+        <div class="stat-card"><span class="stat-value ltr">{{ acct.totalRedeemed | number:'1.0-0' }}</span><span class="stat-label">{{ i18n.t('growth.totalRedeemed') }}</span></div>
+      </div>
+
+      <h3>{{ i18n.t('growth.earnPoints') }}</h3>
+      <div class="form-row">
+        <input type="number" class="input" [value]="earnPointsAmount()" (input)="earnPointsAmount.set(+$any($event.target).value)" min="1" />
+        <button class="button primary" (click)="earnPoints()">{{ i18n.t('growth.earnPoints') }}</button>
+      </div>
+
+      <h3>{{ i18n.t('growth.redeemPoints') }}</h3>
+      <div class="form-row">
+        <input type="number" class="input" [value]="redeemPointsAmount()" (input)="redeemPointsAmount.set(+$any($event.target).value)" min="1" />
+        <button class="button secondary" (click)="redeemPoints()">{{ i18n.t('growth.redeemPoints') }}</button>
+      </div>
+
+      <h3>{{ i18n.t('growth.ledger') }}</h3>
+      <table>
+        <thead><tr><th>{{ i18n.t('common.type') }}</th><th>{{ i18n.t('growth.pointsBalance') }}</th><th>{{ i18n.t('common.notes') }}</th><th>{{ i18n.t('common.created') }}</th></tr></thead>
+        <tbody>
+          @for (entry of loyaltyLedger(); track entry.id) {
+          <tr>
+            <td><span class="status" [class.success]="entry.type === 'EARN'" [class.warning]="entry.type === 'REDEEM'" [class.neutral]="entry.type === 'ADJUST'">{{ entry.type }}</span></td>
+            <td class="ltr">{{ entry.points | number:'1.0-0' }}</td>
+            <td>{{ entry.notes || '—' }}</td>
+            <td class="ltr">{{ date(entry.createdAt) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      }
+    </div>
+    }
+
+    <!-- ──── MEMBERSHIP TAB ──── -->
+    @if (activeTab() === 'membership') {
+    <div class="table-card">
+      <div class="header-actions">
+        <button class="button secondary" (click)="runRenewal()">{{ i18n.t('growth.renewalRun') }}</button>
+        <button class="button primary" (click)="planDrawerOpen.set(true)">＋ {{ i18n.t('growth.createPlan') }}</button>
+      </div>
+
+      <h2>{{ i18n.t('growth.membershipPlans') }}</h2>
+      <table>
+        <thead><tr><th>{{ i18n.t('growth.planName') }}</th><th>{{ i18n.t('common.total') }} (EGP)</th><th>{{ i18n.t('growth.periodDays') }}</th><th>{{ i18n.t('growth.graceDays') }}</th><th>{{ i18n.t('growth.autoRenew') }}</th><th>{{ i18n.t('common.status') }}</th></tr></thead>
+        <tbody>
+          @for (plan of membershipPlans(); track plan.id) {
+          <tr>
+            <td><strong>{{ plan.name }}</strong></td>
+            <td class="ltr">{{ plan.price | number:'1.2-2' }}</td>
+            <td class="ltr">{{ plan.periodDays }}</td>
+            <td class="ltr">{{ plan.graceDays }}</td>
+            <td>{{ plan.autoRenew ? '✓' : '—' }}</td>
+            <td><span class="status" [class.success]="plan.active">{{ plan.active ? i18n.t('common.active') : i18n.t('growth.expired') }}</span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+
+      <h2>{{ i18n.t('growth.subscriptions') }}</h2>
+      <table>
+        <thead><tr><th>{{ i18n.t('growth.referrerPoints') }}</th><th>{{ i18n.t('growth.planName') }}</th><th>{{ i18n.t('growth.nextRenewal') }}</th><th>{{ i18n.t('common.status') }}</th><th></th></tr></thead>
+        <tbody>
+          @for (sub of subscriptions(); track sub.id) {
+          <tr>
+            <td class="ltr">{{ sub.partyId }}</td>
+            <td class="ltr">{{ sub.planId }}</td>
+            <td class="ltr">{{ date(sub.currentPeriodEnd) }}</td>
+            <td><span class="status" [class.success]="sub.status === 'ACTIVE'" [class.warning]="sub.status === 'GRACE'" [class.neutral]="sub.status === 'EXPIRED' || sub.status === 'CANCELLED'">{{ sub.status }}</span></td>
+            <td>
+              @if (sub.status === 'ACTIVE' || sub.status === 'GRACE') {
+              <button class="button danger small" (click)="cancelSub(sub.id)">{{ i18n.t('growth.cancelSubscription') }}</button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <!-- ──── REFERRAL TAB ──── -->
+    @if (activeTab() === 'referral') {
+    <div class="table-card">
+      <div class="header-actions">
+        <button class="button primary" (click)="referralDrawerOpen.set(true)">＋ {{ i18n.t('growth.createReferral') }}</button>
+      </div>
+
+      <h2>{{ i18n.t('growth.referralRules') }}</h2>
+      @if (referralRules(); as rRules) {
+      <table>
+        <thead><tr><th>{{ i18n.t('growth.referrerPoints') }}</th><th>{{ i18n.t('growth.referredPoints') }}</th></tr></thead>
+        <tbody><tr><td class="ltr">{{ rRules.referrerPoints }}</td><td class="ltr">{{ rRules.referredPoints }}</td></tr></tbody>
+      </table>
+      }
+
+      <h2>{{ i18n.t('growth.topReferrers') }}</h2>
+      <table>
+        <thead><tr><th>{{ i18n.t('growth.referrerPoints') }}</th><th>{{ i18n.t('growth.referredCount') }}</th><th>{{ i18n.t('growth.rewardedCount') }}</th><th>{{ i18n.t('growth.pointsBalance') }}</th></tr></thead>
+        <tbody>
+          @for (entry of topReferrers(); track entry.partyId) {
+          <tr>
+            <td class="ltr">{{ entry.partyId }}</td>
+            <td class="ltr">{{ entry.totalReferrals }}</td>
+            <td class="ltr">{{ entry.rewardedReferrals }}</td>
+            <td class="ltr">{{ entry.totalPointsEarned | number:'1.0-0' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  }
+
+  <!-- ──── Create Plan Drawer ──── -->
+  @if (planDrawerOpen()) {
+  <app-modal-dialog (close)="closePlan()">
+    <h2>{{ i18n.t('growth.createPlan') }}</h2>
+    <div class="form-row"><label>{{ i18n.t('growth.planName') }}</label><input class="input" [value]="planName()" (input)="planName.set($any($event.target).value)" /></div>
+    <div class="form-row"><label>{{ i18n.t('common.total') }} (EGP)</label><input type="number" class="input" [value]="planPrice()" (input)="planPrice.set(+$any($event.target).value)" min="1" /></div>
+    <div class="form-row"><label>{{ i18n.t('growth.periodDays') }}</label><input type="number" class="input" [value]="planPeriodDays()" (input)="planPeriodDays.set(+$any($event.target).value)" min="1" /></div>
+    <div class="drawer-actions"><button class="button secondary" (click)="closePlan()">{{ i18n.t('common.cancel') }}</button><button class="button primary" (click)="createPlan()">{{ i18n.t('common.save') }}</button></div>
+  </app-modal-dialog>
+  }
+
+  <!-- ──── Create Referral Drawer ──── -->
+  @if (referralDrawerOpen()) {
+  <app-modal-dialog (close)="closeReferral()">
+    <h2>{{ i18n.t('growth.createReferral') }}</h2>
+    <div class="form-row"><label>{{ i18n.t('growth.referrerPoints') }}</label><input class="input" [value]="referrerPartyId()" (input)="referrerPartyId.set($any($event.target).value)" [placeholder]="i18n.t('growth.referrerPoints')" /></div>
+    <div class="form-row"><label>{{ i18n.t('growth.referredPoints') }}</label><input class="input" [value]="referredPartyId()" (input)="referredPartyId.set($any($event.target).value)" [placeholder]="i18n.t('growth.referredPoints')" /></div>
+    <div class="drawer-actions"><button class="button secondary" (click)="closeReferral()">{{ i18n.t('common.cancel') }}</button><button class="button primary" (click)="createReferral()">{{ i18n.t('common.save') }}</button></div>
+  </app-modal-dialog>
+  }
+</section>

@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v374_whatsapp_translations
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v374-%'" }
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260827_v374_whatsapp_translations.csv
+            separator: ";"
+            tableName: translations
+            encoding: UTF-8
+            columns:
+              - column:
+                  name: id
+                  type: STRING
+              - column:
+                  name: translation_key
+                  type: STRING
+              - column:
+                  name: locale
+                  type: STRING
+              - column:
+                  name: text_value
+                  type: STRING
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v374-%'" }

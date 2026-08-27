@@ -126,6 +126,36 @@ export class ProcurementPage {
     firstDueDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
   });
 
+  // ─── OCR Capture ──────────────────────────────────────────────
+  readonly ocrDialogOpen = signal(false);
+  readonly ocrUploading = signal(false);
+  readonly ocrJob = signal<{id: string; status: string; extractedPayload: string|null; errorCode: string|null}|null>(null);
+  readonly ocrError = signal<string | null>(null);
+
+  async openOcrScan(): Promise<void> {
+    this.ocrDialogOpen.set(true);
+    this.ocrJob.set(null);
+    this.ocrError.set(null);
+  }
+
+  closeOcrDialog(): void { this.ocrDialogOpen.set(false); this.ocrJob.set(null); this.ocrError.set(null); }
+
+  async onOcrFileSelected(file: File): Promise<void> {
+    if (!file) return;
+    this.ocrUploading.set(true);
+    this.ocrError.set(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const result: any = await firstValueFrom(this.http.post('/api/v1/procurement/ocr-capture', formData));
+      this.ocrJob.set({ id: result.id, status: result.status, extractedPayload: result.extractedPayload, errorCode: result.errorCode });
+    } catch (e: any) {
+      this.ocrError.set(e?.error?.detail ?? e?.message ?? this.i18n.t('procurement.ocrUploadFailed'));
+    } finally {
+      this.ocrUploading.set(false);
+    }
+  }
+
   async openPaymentPlan(invoice: SupplierInvoice): Promise<void> {
     this.planInvoice.set(invoice);
     this.planRows.set([]);

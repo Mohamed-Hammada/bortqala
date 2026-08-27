@@ -2,11 +2,14 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService, SupportedLocale } from '../../core/i18n.service';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
+
+interface SsoProbe { hasGoogle: boolean; hasMicrosoft: boolean; }
 
 @Component({
   selector: 'app-login-page',
@@ -26,6 +29,8 @@ export class LoginPage {
     this.activatedRoute.snapshot.queryParamMap.get('reason') === 'session-expired';
   readonly showPassword = signal(false);
   readonly credentialHint = signal('DEMO / admin / Admin@12345');
+  private readonly http = inject(HttpClient);
+  readonly ssoProbe = signal<SsoProbe>({ hasGoogle: false, hasMicrosoft: false });
   readonly form = new FormGroup({
     appCode: new FormControl('DEMO', { nonNullable: true, validators: [Validators.required] }),
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -36,6 +41,7 @@ export class LoginPage {
     if (this.authService.authenticated()) void this.router.navigate(['/dashboard']);
     else void this.attemptDemoLogin();
     void this.loadDesktopCredentials();
+    void this.loadSsoProbe();
   }
 
   private async attemptDemoLogin(): Promise<void> {
@@ -124,5 +130,16 @@ export class LoginPage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  async loadSsoProbe(): Promise<void> {
+    try {
+      const probe = await firstValueFrom(this.http.get<SsoProbe>('/api/v1/auth/sso/probe'));
+      this.ssoProbe.set(probe ?? { hasGoogle: false, hasMicrosoft: false });
+    } catch { /* SSO not configured, no buttons shown */ }
+  }
+
+  startSso(provider: string): void {
+    window.location.href = `/api/v1/auth/sso/${provider.toLowerCase()}/start?provider=${provider}`;
   }
 }

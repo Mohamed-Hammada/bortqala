@@ -63,6 +63,7 @@ describe('ReportsPage REM-006 period presets', () => {
       .flush(options.generated ?? []);
     httpMock.expectOne((req) => req.method === 'GET' && req.url === '/api/v1/admin/app-settings').flush({});
     httpMock.expectOne((req) => req.method === 'GET' && req.url === '/api/v1/data-exchange/catalog').flush([]);
+    httpMock.expectOne((req) => req.method === 'GET' && req.url === '/api/v1/report-schedules').flush([]);
   }
 
   it('fills the period form on preset click and does not create a report', () => {

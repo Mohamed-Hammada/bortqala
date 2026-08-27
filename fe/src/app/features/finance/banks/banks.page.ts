@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
@@ -79,6 +80,8 @@ interface Candidate { journalEntryId: string; entryNumber: string; entryDate: nu
 interface StatementLine { id: string; transactionDate: number; description: string; bankReference?: string; amount: number; status: string; matchedAmount: number; remainingAmount: number; matches: Match[]; suggestions: Candidate[] }
 interface Workbench { statement: Statement; lines: StatementLine[] }
 interface CashPosition { accounts: { bankAccountId: string; bankName: string; currencyCode: string; latestStatementBalance: number; asOfDate: number | null; unmatchedLines: number }[]; totalsByCurrency: Record<string, number> }
+interface AgingBucket { label: string; minDays: number; maxDays: number; lineCount: number; totalRemaining: number }
+interface AgingResult { bankAccountId: string; bankName: string; currencyCode: string; latestStatementBalance: number; buckets: AgingBucket[]; totalUnmatched: number }
 
 @Component({
   selector: 'app-banks-page',
@@ -92,6 +95,7 @@ export class BanksPage {
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
   readonly sampleTemplates = inject(SampleTemplateService);
+  readonly sanitizer = inject(DomSanitizer);
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -103,6 +107,7 @@ export class BanksPage {
   readonly statements = signal<Statement[]>([]);
   readonly workbench = signal<Workbench | null>(null);
   readonly cashPosition = signal<CashPosition | null>(null);
+  readonly aging = signal<AgingResult[]>([]);
   readonly importOpen = signal(false);
   readonly matchOpen = signal(false);
   readonly importFile = signal<File | null>(null);
@@ -119,6 +124,9 @@ export class BanksPage {
   readonly cashTxModalOpen = signal(false);
   readonly chequeModalOpen = signal(false);
   readonly chequeDepositModalOpen = signal(false);
+  readonly chequePrintOpen = signal(false);
+  readonly chequePrintHtml = signal<SafeHtml>('');
+  readonly chequePrintLoading = signal(false);
   readonly selectedCheque = signal<CommercialCheque | null>(null);
 
   readonly form = new FormGroup({
@@ -187,7 +195,7 @@ export class BanksPage {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const [banks, accounts, statements, cash, cashboxes, cheques, liquidity] = await Promise.all([
+      const [banks, accounts, statements, cash, cashboxes, cheques, liquidity, agingData] = await Promise.all([
         firstValueFrom(this.http.get<BankAccount[]>('/api/v1/finance/banks')),
         firstValueFrom(this.http.get<Account[]>('/api/v1/finance/accounts')),
         firstValueFrom(this.http.get<Statement[]>('/api/v1/finance/bank-reconciliation/statements')),
@@ -195,6 +203,7 @@ export class BanksPage {
         firstValueFrom(this.http.get<Cashbox[]>('/api/v1/finance/treasury/cashboxes')).catch((): Cashbox[] => []),
         firstValueFrom(this.http.get<CommercialCheque[]>('/api/v1/finance/treasury/cheques')).catch((): CommercialCheque[] => []),
         firstValueFrom(this.http.get<UnifiedLiquiditySummary>('/api/v1/finance/treasury/liquidity-summary')).catch((): UnifiedLiquiditySummary | null => null),
+        firstValueFrom(this.http.get<AgingResult[]>('/api/v1/finance/bank-reconciliation/aging')).catch((): AgingResult[] => []),
       ]);
       this.banks.set(banks);
       this.accounts.set(accounts);
@@ -203,6 +212,7 @@ export class BanksPage {
       this.cashboxes.set(cashboxes);
       this.cheques.set(cheques);
       this.liquiditySummary.set(liquidity);
+      this.aging.set(agingData);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
@@ -371,6 +381,29 @@ export class BanksPage {
       await this.load();
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async printCheque(chq: CommercialCheque) {
+    this.selectedCheque.set(chq);
+    this.chequePrintLoading.set(true);
+    this.chequePrintOpen.set(true);
+    try {
+      const html = await firstValueFrom(this.http.get(`/api/v1/finance/treasury/cheques/${chq.id}/print`, { responseType: 'text' }));
+      this.chequePrintHtml.set(this.sanitizer.bypassSecurityTrustHtml(html));
+    } catch (e) {
+      this.chequePrintHtml.set('');
+      this.error.set(apiErrorMessage(e, this.i18n));
+    } finally {
+      this.chequePrintLoading.set(false);
+    }
+  }
+
+  printChequeNow() {
+    const iframe = document.querySelector<HTMLIFrameElement>('#cheque-print-frame');
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
     }
   }
 

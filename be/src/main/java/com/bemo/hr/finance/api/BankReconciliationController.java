@@ -62,4 +62,9 @@ public class BankReconciliationController {
     public BankReconciliationApi.CashPositionResponse cashPosition() {
         return bankReconciliationService.cashPosition();
     }
+
+    @GetMapping("/aging")
+    public List<BankReconciliationApi.AgingResponse> unmatchedAging() {
+        return bankReconciliationService.unmatchedAging();
+    }
 }

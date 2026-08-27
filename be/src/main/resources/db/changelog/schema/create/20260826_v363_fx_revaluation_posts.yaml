@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v363_fx_revaluation_posts_schema
+      author: wolfn
+      validCheckSum: ANY
+      changes:
+        - createTable:
+            tableName: fx_revaluation_posts
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency_code
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: year_month
+                  type: VARCHAR(7)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_unrealized_gain
+                  type: NUMERIC(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_unrealized_loss
+                  type: NUMERIC(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: journal_entry_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: posted_by
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: posted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: fx_revaluation_posts
+            columnNames: app_id, currency_code, year_month
+            constraintName: uq_fx_revaluation_post_app_currency_month
+        - createIndex:
+            tableName: fx_revaluation_posts
+            indexName: idx_fx_revaluation_posts_app
+            columns:
+              - column:
+                  name: app_id

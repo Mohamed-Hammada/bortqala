@@ -164,91 +164,177 @@
       @if (submitAttempted() && form.invalid) {
         <div class="alert error" role="alert">{{ i18n.t('employees.validationError') }}</div>
       }
-      <div class="form-grid">
-        <div class="field">
-          <label>{{ i18n.t('employees.employeeCode') }}</label>
-          <input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
-        </div>
-        <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('employees.fullName') }}</label>
-          <input formControlName="fullName" />
-          @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
-            <small class="field-error">{{ i18n.t('employees.fullNameRequired') }}</small>
-          }
-        </div>
-        <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('employees.category') }}</label>
-          <select formControlName="categoryId">
-            @for (category of store.categories(); track category.id) {
-              <option [value]="category.id">
-                {{ category.name }} —
-                {{
-                  i18n.t(
-                    category.attendanceMode === 'MANUAL'
-                      ? 'attendance.manual'
-                      : 'attendance.biometric'
-                  )
-                }}
-              </option>
+
+      <button
+        class="button secondary btn-preview"
+        type="button"
+        (click)="previewOpen.set(!previewOpen())"
+      >
+        {{ i18n.t('employees.previewLayout') }}
+      </button>
+
+      @for (group of groups; track group.key) {
+        <details class="accordion-group" [class.expanded]="isGroupExpanded(group.key)" [class.collapsed]="!isGroupExpanded(group.key)">
+          <summary
+            class="accordion-header"
+            (click)="$event.preventDefault(); toggleGroup(group.key)"
+            [attr.aria-expanded]="isGroupExpanded(group.key)"
+          >
+            <span class="accordion-chevron">{{ isGroupExpanded(group.key) ? '▾' : '▸' }}</span>
+            <span class="accordion-title">{{ i18n.t(group.titleKey) }}</span>
+            <span class="accordion-hint">{{ i18n.t(group.hintKey) }}</span>
+            @if (submitAttempted() && requiredFieldCount(group.key) > 0 && !isGroupExpanded(group.key)) {
+              <span class="accordion-badge required-badge">{{ requiredFieldCount(group.key) }} *</span>
             }
-          </select>
-          @if (
-            form.controls.categoryId.touched && form.controls.categoryId.hasError('required')
-          ) {
-            <small class="field-error">{{ i18n.t('employees.categoryRequired') }}</small>
+          </summary>
+
+          @if (isGroupExpanded(group.key)) {
+            <div class="accordion-body">
+              @switch (group.key) {
+                @case ('identity') {
+                  <div class="form-grid">
+                    <div class="field">
+                      <label>{{ i18n.t('employees.employeeCode') }}</label>
+                      <input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
+                    </div>
+                    <div class="field">
+                      <label><span class="required">*</span> {{ i18n.t('employees.fullName') }}</label>
+                      <input formControlName="fullName" />
+                      @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
+                        <small class="field-error">{{ i18n.t('employees.fullNameRequired') }}</small>
+                      }
+                    </div>
+                  </div>
+                }
+                @case ('job') {
+                  <div class="form-grid">
+                    <div class="field">
+                      <label><span class="required">*</span> {{ i18n.t('employees.category') }}</label>
+                      <select formControlName="categoryId">
+                        @for (category of store.categories(); track category.id) {
+                          <option [value]="category.id">
+                            {{ category.name }} —
+                            {{
+                              i18n.t(
+                                category.attendanceMode === 'MANUAL'
+                                  ? 'attendance.manual'
+                                  : 'attendance.biometric'
+                              )
+                            }}
+                          </option>
+                        }
+                      </select>
+                      @if (
+                        form.controls.categoryId.touched && form.controls.categoryId.hasError('required')
+                      ) {
+                        <small class="field-error">{{ i18n.t('employees.categoryRequired') }}</small>
+                      }
+                    </div>
+                    <div class="field">
+                      <label>{{ i18n.t('employees.employmentType') }}</label>
+                      <select formControlName="employmentType">
+                        <option value="FIXED">{{ i18n.t('employment.fixed') }}</option>
+                        <option value="DAILY">{{ i18n.t('employment.daily') }}</option>
+                      </select>
+                    </div>
+                  </div>
+                }
+                @case ('salary') {
+                  @if (auth.canViewSalary()) {
+                    <div class="form-grid">
+                      <div class="field">
+                        <label>{{ i18n.t('employees.baseSalary') }}</label>
+                        <input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="group-empty">{{ i18n.t('employees.salaryHidden') }}</div>
+                  }
+                }
+                @case ('biometric') {
+                  <div class="form-grid">
+                    <div class="field span-2">
+                      <label>
+                        @if (isBiometricCategorySelected()) {
+                          <span class="required">*</span> {{ i18n.t('employees.deviceUserId') }}
+                        } @else {
+                          {{ i18n.t('employees.deviceUserIdOptional') }}
+                        }
+                      </label>
+                      <input
+                        class="ltr"
+                        formControlName="deviceUserId"
+                        [placeholder]="i18n.t('employees.deviceUserIdPlaceholder')"
+                      />
+                      @if (form.controls.deviceUserId.invalid && (form.controls.deviceUserId.touched || submitAttempted())) {
+                        <small class="field-error">{{ i18n.t('employees.deviceUserIdRequired') }}</small>
+                      } @else {
+                        <small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
+                      }
+                    </div>
+                  </div>
+                }
+                @case ('dates') {
+                  <div class="form-grid">
+                    <div class="field">
+                      <label><span class="required">*</span> {{ i18n.t('employees.activeFrom') }}</label>
+                      <input type="date" formControlName="activeFrom" />
+                      @if (
+                        form.controls.activeFrom.touched && form.controls.activeFrom.hasError('required')
+                      ) {
+                        <small class="field-error">{{ i18n.t('employees.activeFromRequired') }}</small>
+                      }
+                    </div>
+                    <div class="field">
+                      <label>{{ i18n.t('employees.activeToOptional') }}</label>
+                      <input type="date" formControlName="activeTo" />
+                    </div>
+                  </div>
+                  <label class="active-check">
+                    <input type="checkbox" formControlName="active" />
+                    {{ i18n.t('employees.activeCheck') }}
+                  </label>
+                }
+              }
+            </div>
           }
+        </details>
+      }
+    </form>
+
+    @if (previewOpen()) {
+      <div class="preview-drawer" role="dialog" [attr.aria-label]="i18n.t('employees.previewLayout')">
+        <div class="preview-drawer-header">
+          <h3>{{ i18n.t('employees.previewLayout') }}</h3>
+          <button class="button secondary btn-sm" type="button" (click)="previewOpen.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
         </div>
-        <div class="field">
-          <label>{{ i18n.t('employees.employmentType') }}</label>
-          <select formControlName="employmentType">
-            <option value="FIXED">{{ i18n.t('employment.fixed') }}</option>
-            <option value="DAILY">{{ i18n.t('employment.daily') }}</option>
-          </select>
-        </div>
-        @if (auth.canViewSalary()) {
-          <div class="field">
-            <label>{{ i18n.t('employees.baseSalary') }}</label>
-            <input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
-          </div>
-        }
-        <div class="field span-2">
-          <label>
-            @if (isBiometricCategorySelected()) {
-              <span class="required">*</span> {{ i18n.t('employees.deviceUserId') }}
-            } @else {
-              {{ i18n.t('employees.deviceUserIdOptional') }}
-            }
-          </label>
-          <input
-            class="ltr"
-            formControlName="deviceUserId"
-            [placeholder]="i18n.t('employees.deviceUserIdPlaceholder')"
-          />
-          @if (form.controls.deviceUserId.invalid && (form.controls.deviceUserId.touched || submitAttempted())) {
-            <small class="field-error">{{ i18n.t('employees.deviceUserIdRequired') }}</small>
-          } @else {
-            <small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
+        <div class="preview-drawer-body">
+          @for (group of groups; track group.key) {
+            <div class="preview-group">
+              <div class="preview-group-header">
+                <strong>{{ i18n.t(group.titleKey) }}</strong>
+                <small>{{ i18n.t(group.hintKey) }}</small>
+              </div>
+              <div class="preview-fields">
+                @for (fieldId of group.fieldIds; track fieldId) {
+                  <div class="preview-field">
+                    <span class="preview-field-label">{{ fieldLabel(fieldId) }}</span>
+                    <span class="preview-field-value">{{ (form.get(fieldId)?.value) ?? '—' }}</span>
+                  </div>
+                }
+                @if (group.fieldIds.length === 0) {
+                  <div class="preview-field">
+                    <span class="preview-field-value muted">{{ i18n.t('common.noResults') }}</span>
+                  </div>
+                }
+              </div>
+            </div>
           }
-        </div>
-        <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('employees.activeFrom') }}</label>
-          <input type="date" formControlName="activeFrom" />
-          @if (
-            form.controls.activeFrom.touched && form.controls.activeFrom.hasError('required')
-          ) {
-            <small class="field-error">{{ i18n.t('employees.activeFromRequired') }}</small>
-          }
-        </div>
-        <div class="field">
-          <label>{{ i18n.t('employees.activeToOptional') }}</label>
-          <input type="date" formControlName="activeTo" />
         </div>
       </div>
-      <label class="active-check">
-        <input type="checkbox" formControlName="active" />
-        {{ i18n.t('employees.activeCheck') }}
-      </label>
-    </form>
+    }
 
     <div modal-actions class="drawer-actions">
       <button class="button primary" type="button" (click)="submit()" [disabled]="store.loading()">

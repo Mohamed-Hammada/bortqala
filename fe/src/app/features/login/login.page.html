@@ -113,6 +113,24 @@
         {{ i18n.t(loading() ? 'login.loading' : 'login.submit') }}
       </button>
 
+      @if (ssoProbe().hasGoogle || ssoProbe().hasMicrosoft) {
+        <div class="sso-divider">
+          <span>{{ i18n.t('common.or', {}, 'أو') }}</span>
+        </div>
+        <div class="sso-buttons">
+          @if (ssoProbe().hasGoogle) {
+            <button class="button sso-btn google" type="button" (click)="startSso('GOOGLE')">
+              {{ i18n.t('sso.google') }}
+            </button>
+          }
+          @if (ssoProbe().hasMicrosoft) {
+            <button class="button sso-btn microsoft" type="button" (click)="startSso('MICROSOFT')">
+              {{ i18n.t('sso.microsoft') }}
+            </button>
+          }
+        </div>
+      }
+
     </form>
   </section>
 </main>

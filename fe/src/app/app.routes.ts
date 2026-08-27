@@ -27,6 +27,12 @@ export const routes: Routes = [
       import('./features/change-password/change-password.page').then((module) => module.ChangePasswordPage),
   },
   {
+    // WP-29: public payment page — no auth required
+    path: 'p/:token',
+    loadComponent: () =>
+      import('./features/public/pay/pay.page').then((module) => module.PublicPayPage),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () =>
@@ -228,6 +234,16 @@ export const routes: Routes = [
           import('./features/trade/sales/sales.page').then((module) => module.SalesPage),
       },
       {
+        path: 'trade/export-shipments',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'export-shipments',
+          roles: ['PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'SALES_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'],
+        },
+        loadComponent: () =>
+          import('./features/trade/export-shipments/export-shipments.page').then((module) => module.ExportShipmentsPage),
+      },
+      {
         path: 'trade/pos',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['SALES_MANAGER'], menuId: 'pos' },
@@ -330,6 +346,30 @@ export const routes: Routes = [
           import('./features/finance/fixed-assets/fixed-assets.page').then((module) => module.FixedAssetsPage),
       },
       {
+        path: 'finance/payment-links',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'payment-links',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR', 'ADMIN', 'SUPER_ADMIN'],
+        },
+        loadComponent: () =>
+          import('./features/finance/payment-links/payment-links.page').then((module) => module.PaymentLinksPage),
+      },
+      {
+        path: 'whatsapp',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN'], menuId: 'settings' },
+        loadComponent: () =>
+          import('./features/whatsapp/whatsapp.page').then((module) => module.WhatsAppPage),
+      },
+      {
+        path: 'automation',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN'], menuId: 'settings' },
+        loadComponent: () =>
+          import('./features/automation/automation.page').then((module) => module.AutomationPage),
+      },
+      {
         path: 'expenses',
         canActivate: [roleGuard, menuAccessGuard],
         data: {
@@ -422,6 +462,34 @@ export const routes: Routes = [
           import('./features/support/support.page').then((module) => module.SupportPage),
       },
       {
+        path: 'helpdesk',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'helpdesk' },
+        loadComponent: () =>
+          import('./features/helpdesk/helpdesk.page').then((module) => module.HelpdeskPage),
+      },
+      {
+        path: 'kb',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'kb' },
+        loadComponent: () =>
+          import('./features/knowledge-base/kb.page').then((module) => module.KbPage),
+      },
+      {
+        path: 'marketing',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], menuId: 'marketing' },
+        loadComponent: () =>
+          import('./features/marketing/marketing.page').then((module) => module.MarketingPage),
+      },
+      {
+        path: 'report-builder',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER', 'VIEWER'], menuId: 'report-builder' },
+        loadComponent: () =>
+          import('./features/report-builder/report-builder.page').then((module) => module.ReportBuilderPage),
+      },
+      {
         path: 'about',
         loadComponent: () =>
           import('./features/about/about.page').then((module) => module.AboutPage),
@@ -448,6 +516,13 @@ export const routes: Routes = [
         },
         loadChildren: () =>
           import('./features/workforce/workforce.routes').then((module) => module.WORKFORCE_ROUTES),
+      },
+      {
+        path: 'growth',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'growth', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER', 'HR_MANAGER', 'FINANCE_MANAGER'] },
+        loadComponent: () =>
+          import('./features/growth/growth.page').then((module) => module.GrowthPage),
       },
       {
         path: 'forbidden',

@@ -1,0 +1,133 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v390_marketing_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: campaigns
+      changes:
+        - createTable:
+            tableName: campaigns
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: channel, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: subject, type: varchar(500) }
+              - column: { name: body_ar, type: varchar(4000) }
+              - column: { name: body_en, type: varchar(4000) }
+              - column: { name: segment_snapshot, type: varchar(4000) }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "DRAFT" }
+              - column: { name: scheduled_at, type: bigint }
+              - column: { name: total_recipients, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: sent_count, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: failed_count, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: error_message, type: varchar(2000) }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: campaigns
+            indexName: idx_campaigns_app
+            columns:
+              - column: { name: app_id }
+        - createTable:
+            tableName: campaign_recipients
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: campaign_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: target_ref, type: varchar(100) }
+              - column: { name: email, type: varchar(255) }
+              - column: { name: phone, type: varchar(50) }
+              - column: { name: locale, type: varchar(10) }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "QUEUED" }
+              - column: { name: error_message, type: varchar(1000) }
+              - column: { name: sent_at, type: bigint }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+        - createIndex:
+            tableName: campaign_recipients
+            indexName: idx_campaign_rec_campaign
+            columns:
+              - column: { name: campaign_id }
+        - createTable:
+            tableName: surveys
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: title, type: varchar(300), constraints: { nullable: false } }
+              - column: { name: description, type: varchar(1000) }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: surveys
+            indexName: idx_surveys_app
+            columns:
+              - column: { name: app_id }
+        - createTable:
+            tableName: survey_questions
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: survey_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: question_text, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: question_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: options, type: varchar(2000) }
+              - column: { name: sort_order, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: required, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+        - createIndex:
+            tableName: survey_questions
+            indexName: idx_survey_q_survey
+            columns:
+              - column: { name: survey_id }
+        - createTable:
+            tableName: survey_responses
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: survey_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: question_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: respondent_token, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: answer, type: varchar(4000) }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+        - createIndex:
+            tableName: survey_responses
+            indexName: idx_survey_resp_survey
+            columns:
+              - column: { name: survey_id }
+        - addUniqueConstraint:
+            tableName: survey_responses
+            columnNames: app_id, survey_id, respondent_token
+            constraintName: uq_survey_resp_token
+        - createTable:
+            tableName: saved_reports
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: dataset_code, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: dataset_version, type: int, constraints: { nullable: false }, defaultValueNumeric: 1 }
+              - column: { name: definition, type: varchar(8000), constraints: { nullable: false } }
+              - column: { name: owner_user_id, type: varchar(100) }
+              - column: { name: shared_role, type: varchar(50) }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: saved_reports
+            indexName: idx_saved_reports_app
+            columns:
+              - column: { name: app_id }
+      rollback:
+        - dropTable: { tableName: survey_responses }
+        - dropTable: { tableName: survey_questions }
+        - dropTable: { tableName: surveys }
+        - dropTable: { tableName: campaign_recipients }
+        - dropTable: { tableName: campaigns }
+        - dropTable: { tableName: saved_reports }

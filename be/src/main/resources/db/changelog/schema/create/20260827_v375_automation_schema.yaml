@@ -1,0 +1,71 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v375_automation_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: recurring_templates
+      changes:
+        - createTable:
+            tableName: recurring_templates
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: kind, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: template_name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: payload_snapshot, type: text, constraints: { nullable: false } }
+              - column: { name: cadence, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: cadence_days, type: int }
+              - column: { name: next_run_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: last_created_ref, type: varchar(36) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: recurring_templates
+            indexName: idx_recurring_tpl_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: recurring_templates
+            indexName: idx_recurring_tpl_active
+            columns:
+              - column: { name: active }
+      rollback:
+        - dropTable:
+            tableName: recurring_templates
+
+  - changeSet:
+      id: 20260827_v375_dunning_rules_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: dunning_rules
+      changes:
+        - createTable:
+            tableName: dunning_rules
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: days_overdue, type: int, constraints: { nullable: false } }
+              - column: { name: template_key, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: channel, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: dunning_rules
+            indexName: idx_dunning_app
+            columns:
+              - column: { name: app_id }
+      rollback:
+        - dropTable:
+            tableName: dunning_rules

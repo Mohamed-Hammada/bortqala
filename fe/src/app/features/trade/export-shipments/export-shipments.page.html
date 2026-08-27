@@ -1,0 +1,314 @@
+<div class="page-header">
+  <h1>{{ i18n.t('nav.exportShipments') }}</h1>
+  <button class="button" (click)="drawerOpen.set(true); selectedShipment.set(null); shipmentForm.reset(); linesForm.set([])">
+    {{ i18n.t('export.createShipment') }}
+  </button>
+</div>
+
+<div class="tabs">
+  <button [class.active]="activeTab() === 'SHIPMENTS'" (click)="switchTab('SHIPMENTS')">{{ i18n.t('export.tabShipment') }}</button>
+  <button [class.active]="activeTab() === 'COMPLIANCE'" (click)="switchTab('COMPLIANCE')">{{ i18n.t('export.tabLots') }}</button>
+  <button [class.active]="activeTab() === 'PROCEEDS'" (click)="switchTab('PROCEEDS')">{{ i18n.t('export.tabProceeds') }}</button>
+  <button [class.active]="activeTab() === 'PESTICIDES'" (click)="switchTab('PESTICIDES')">{{ i18n.t('export.tabPesticides') }}</button>
+</div>
+
+@if (loading()) {
+  <div class="loading">{{ i18n.t('common.loading') }}</div>
+}
+
+@if (error()) {
+  <div class="alert error">{{ error() }}</div>
+}
+
+@if (activeTab() === 'SHIPMENTS') {
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('export.shipmentNumber') }}</th>
+          <th>{{ i18n.t('export.customer') }}</th>
+          <th>{{ i18n.t('export.containerNo') }}</th>
+          <th>{{ i18n.t('export.acidNo') }}</th>
+          <th>{{ i18n.t('export.status') }}</th>
+          <th>{{ i18n.t('export.daysOutstanding') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of shipments(); track s.id) {
+          <tr (click)="selectShipment(s)" [class.selected]="selectedShipment()?.id === s.id">
+            <td>{{ s.shipmentNumber }}</td>
+            <td>{{ s.customerPartyName ?? s.customerPartyId }}</td>
+            <td>{{ s.containerNo ?? '—' }}</td>
+            <td>{{ s.acidNo ?? '—' }}</td>
+            <td><span class="badge" [class]="statusClass(s.status)">{{ s.status }}</span></td>
+            <td>{{ s.daysOutstanding }}</td>
+            <td>
+              @if (nextAction(s.status); as action) {
+                <button class="button secondary small" (click)="transition(s.id, action); $event.stopPropagation()">
+                  {{ nextActionLabel(s.status) }}
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="empty">{{ i18n.t('export.noShipments') }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (activeTab() === 'COMPLIANCE') {
+  <div class="compliance-section">
+    <div class="card">
+      <h3>{{ i18n.t('export.checkCompliance') }}</h3>
+      <form [formGroup]="checkForm" class="form-row">
+        <label>{{ i18n.t('export.lotReference') }}
+          <input formControlName="lotReferences" placeholder="LOT-A, LOT-B" />
+        </label>
+        <label>{{ i18n.t('export.treatmentDate') }}
+          <input type="date" formControlName="pickupDate" />
+        </label>
+        <button class="button" type="button" (click)="checkCompliance()" [disabled]="checkRunning()">
+          {{ checkRunning() ? i18n.t('common.loading') : i18n.t('export.checkCompliance') }}
+        </button>
+      </form>
+      @if (checkResult(); as result) {
+        <div class="compliance-result">
+          @if (result.violations.length === 0) {
+            <div class="alert success">{{ i18n.t('export.noViolations') }}</div>
+          } @else {
+            <div class="alert warning">{{ result.violations.length }} {{ i18n.t('export.violationsFound') }}</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('export.lotReference') }}</th>
+                  <th>{{ i18n.t('export.chemical') }}</th>
+                  <th>{{ i18n.t('export.earliestSafePickup') }}</th>
+                  <th>{{ i18n.t('export.daysShort') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (v of result.violations; track v.lotReference + v.chemical) {
+                  <tr>
+                    <td>{{ v.lotReference }}</td>
+                    <td>{{ v.chemical }}</td>
+                    <td>{{ v.earliestSafePickup }}</td>
+                    <td>{{ v.daysShort }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="card">
+      <h3>{{ i18n.t('export.treatmentLogs') }}</h3>
+      <form [formGroup]="treatmentForm" class="form-grid">
+        <label>{{ i18n.t('export.lotReference') }}
+          <input formControlName="lotReference" />
+        </label>
+        <label>{{ i18n.t('export.chemical') }}
+          <input formControlName="chemical" />
+        </label>
+        <label>{{ i18n.t('export.dose') }}
+          <input formControlName="dose" />
+        </label>
+        <label>{{ i18n.t('export.treatmentDate') }}
+          <input type="date" formControlName="treatmentDate" />
+        </label>
+        <label>{{ i18n.t('export.phiDays') }}
+          <input type="number" formControlName="preHarvestIntervalDays" />
+        </label>
+        <label>{{ i18n.t('export.treatedBy') }}
+          <input formControlName="treatedBy" />
+        </label>
+        <div></div>
+        <button class="button" type="button" (click)="createTreatment()">{{ i18n.t('export.createTreatment') }}</button>
+      </form>
+
+      <table class="mt-4">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('export.lotReference') }}</th>
+            <th>{{ i18n.t('export.chemical') }}</th>
+            <th>{{ i18n.t('export.treatmentDate') }}</th>
+            <th>{{ i18n.t('export.phiDays') }}</th>
+            <th>{{ i18n.t('export.earliestSafePickup') }}</th>
+            <th>{{ i18n.t('export.status') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of treatmentLogs(); track t.id) {
+            <tr>
+              <td>{{ t.lotReference }}</td>
+              <td>{{ t.chemical }}</td>
+              <td>{{ formatEpoch(t.treatmentDate) }}</td>
+              <td>{{ t.preHarvestIntervalDays }}</td>
+              <td>{{ t.earliestSafePickup }}</td>
+              <td>
+                @if (t.violation) {
+                  <span class="badge danger">{{ i18n.t('export.violation') }}</span>
+                } @else {
+                  <span class="badge success">{{ i18n.t('export.compliant') }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+@if (activeTab() === 'PROCEEDS') {
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('export.customer') }}</th>
+          <th>{{ i18n.t('export.shipmentNumber') }}</th>
+          <th>{{ i18n.t('export.daysOutstanding') }}</th>
+          <th>{{ i18n.t('export.expectedFx') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of agingEntries(); track e.shipmentNumber) {
+          <tr>
+            <td>{{ e.customerPartyName ?? e.customerPartyId }}</td>
+            <td>{{ e.shipmentNumber }}</td>
+            <td>{{ e.daysOutstanding }}</td>
+            <td>{{ e.expectedFxAmount | number:'1.2-2' }} {{ e.expectedFxCurrency }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="empty">{{ i18n.t('export.noShipments') }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (activeTab() === 'PESTICIDES') {
+  <div class="pesticide-section">
+    <div class="card">
+      <h3>{{ i18n.t('export.tabPesticides') }}</h3>
+      <form [formGroup]="pesticideForm" class="form-grid">
+        <label>{{ i18n.t('export.chemicalName') }}
+          <input formControlName="chemicalName" />
+        </label>
+        <label>{{ i18n.t('export.activeIngredient') }}
+          <input formControlName="activeIngredient" />
+        </label>
+        <label>{{ i18n.t('export.registrationNumber') }}
+          <input formControlName="registrationNumber" />
+        </label>
+        <label>{{ i18n.t('export.mrlMgPerKg') }}
+          <input type="number" formControlName="mrlMgPerKg" step="0.001" />
+        </label>
+        <label>{{ i18n.t('export.maxDosePerHa') }}
+          <input formControlName="maxDosePerHa" />
+        </label>
+        <label>{{ i18n.t('export.phiDays') }}
+          <input type="number" formControlName="preHarvestIntervalDays" />
+        </label>
+        <label>{{ i18n.t('export.cropAuthorized') }}
+          <input formControlName="cropAuthorized" />
+        </label>
+        <div></div>
+        <button class="button" type="button" (click)="createPesticide()">{{ i18n.t('export.createPesticide') }}</button>
+      </form>
+
+      <table class="mt-4">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('export.chemicalName') }}</th>
+            <th>{{ i18n.t('export.activeIngredient') }}</th>
+            <th>{{ i18n.t('export.registrationNumber') }}</th>
+            <th>{{ i18n.t('export.mrlMgPerKg') }}</th>
+            <th>{{ i18n.t('export.phiDays') }}</th>
+            <th>{{ i18n.t('export.cropAuthorized') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of pesticides(); track p.id) {
+            <tr>
+              <td>{{ p.chemicalName }}</td>
+              <td>{{ p.activeIngredient ?? '—' }}</td>
+              <td>{{ p.registrationNumber ?? '—' }}</td>
+              <td>{{ p.mrlMgPerKg ?? '—' }}</td>
+              <td>{{ p.preHarvestIntervalDays ?? '—' }}</td>
+              <td>{{ p.cropAuthorized ?? '—' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty">{{ i18n.t('export.noShipments') }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+@if (drawerOpen()) {
+  <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+  <div class="drawer">
+    <div class="drawer-header">
+      <h2>{{ selectedShipment() ? i18n.t('export.shipment') : i18n.t('export.createShipment') }}</h2>
+      <button class="button secondary" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+    </div>
+
+    <form [formGroup]="shipmentForm" class="drawer-body">
+      <div class="form-grid">
+        <label>{{ i18n.t('export.customer') }} *
+          <input formControlName="customerPartyId" />
+        </label>
+        <label>{{ i18n.t('export.customerName') }}
+          <input formControlName="customerPartyName" />
+        </label>
+        <label>{{ i18n.t('export.contractRef') }}
+          <input formControlName="contractRef" />
+        </label>
+        <label>{{ i18n.t('export.containerNo') }}
+          <input formControlName="containerNo" />
+        </label>
+        <label>{{ i18n.t('export.bookingNo') }}
+          <input formControlName="bookingNo" />
+        </label>
+        <label>{{ i18n.t('export.acidNo') }}
+          <input formControlName="acidNo" />
+        </label>
+        <label>{{ i18n.t('export.portOfLoading') }}
+          <input formControlName="portOfLoading" />
+        </label>
+        <label>{{ i18n.t('export.portOfDischarge') }}
+          <input formControlName="portOfDischarge" />
+        </label>
+        <label>{{ i18n.t('export.notes') }}
+          <textarea formControlName="notes" rows="2"></textarea>
+        </label>
+      </div>
+
+      <div class="lines-section">
+        <h3>{{ i18n.t('export.lines') }} ({{ totalLinesQuantity() }})</h3>
+        <button class="button secondary small" type="button" (click)="addLine()">{{ i18n.t('export.addLine') }}</button>
+        @for (line of linesForm(); track $index) {
+          <div class="line-row">
+            <input [value]="line.itemName" (input)="updateLine($index, 'itemName', $any($event.target).value)" [placeholder]="i18n.t('export.itemName')" />
+            <input [value]="line.lotReference" (input)="updateLine($index, 'lotReference', $any($event.target).value)" [placeholder]="i18n.t('export.lotReference')" />
+            <input type="number" [value]="line.quantity" (input)="updateLine($index, 'quantity', +$any($event.target).value)" min="0.001" step="0.001" />
+            <input [value]="line.unitOfMeasure" (input)="updateLine($index, 'unitOfMeasure', $any($event.target).value)" [placeholder]="i18n.t('export.unitOfMeasure')" />
+            <button class="button danger small" type="button" (click)="removeLine($index)">{{ i18n.t('export.removeLine') }}</button>
+          </div>
+        }
+      </div>
+
+      <div class="drawer-footer">
+        <button class="button" type="button" (click)="createShipment()" [disabled]="saving() || shipmentForm.invalid">
+          {{ saving() ? i18n.t('common.loading') : i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

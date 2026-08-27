@@ -375,6 +375,11 @@
                 >
                   {{ status(row.status) }}
                 </span>
+                @if (row.status === 'SINGLE_PUNCH' && !row.decision) {
+                  <span class="status-pill neutral" style="margin-left:4px;font-size:0.7em">
+                    {{ i18n.t('review.ruleBlocking') }}
+                  </span>
+                }
                 @if (row.warning) {
                   <small class="warning-copy">{{ warningLabel(row.warning) }}</small>
                 }

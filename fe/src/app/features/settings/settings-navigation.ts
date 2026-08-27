@@ -4,7 +4,10 @@ export type SettingsTab =
   | 'shortcuts'
   | 'session'
   | 'security'
-  | 'business';
+  | 'business'
+  | 'sso'
+  | 'privacy'
+  | 'integrations';
 
 export interface SettingsSubmenuItem {
   tab: SettingsTab;
@@ -43,6 +46,24 @@ export const SETTINGS_SUBMENU_GROUPS: readonly SettingsSubmenuGroup[] = [
         fallbackAr: 'إعدادات الأعمال',
         adminOnly: true,
       },
+      {
+        tab: 'sso',
+        labelKey: 'settings.sso',
+        fallbackAr: 'تسجيل الدخول الموحد',
+        adminOnly: true,
+      },
+      {
+        tab: 'privacy',
+        labelKey: 'settings.privacy',
+        fallbackAr: 'الخصوصية (PDPL)',
+        adminOnly: true,
+      },
+      {
+        tab: 'integrations',
+        labelKey: 'settings.integrations',
+        fallbackAr: 'التكامل وواجهة برمجة التطبيقات',
+        adminOnly: true,
+      },
     ],
   },
 ] as const;
@@ -65,5 +86,8 @@ export function isSettingsTab(value: string | null): value is SettingsTab {
     || value === 'shortcuts'
     || value === 'session'
     || value === 'security'
-    || value === 'business';
+    || value === 'business'
+    || value === 'sso'
+    || value === 'privacy'
+    || value === 'integrations';
 }

@@ -237,3 +237,62 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+
+.schedule-card {
+  margin-top: 1.5rem;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.schedule-form {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line, #e0e0e0);
+  margin-bottom: 1rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  .field {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+.schedule-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.small {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.error-tooltip {
+  cursor: help;
+  color: var(--danger, #dc3545);
+  margin-left: 4px;
+}
+
+.muted {
+  opacity: 0.6;
+}
+
+.warning {
+  color: var(--warning, #ffc107);
+}

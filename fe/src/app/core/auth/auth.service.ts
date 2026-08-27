@@ -272,10 +272,11 @@ export class AuthService {
     if (menuId === 'procurement'
         && !activeFeatures.includes('procurement.enabled')
         && !activeFeatures.includes('purchasing.enabled')) return false;
+    if (menuId === 'export-shipments' && !activeFeatures.includes('agri.enabled')) return false;
     if (!activeFeatures.includes('finance.enabled')
         && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks'
           || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets'
-          || menuId === 'fixed-assets' || menuId === 'eta-tax')) return false;
+          || menuId === 'fixed-assets' || menuId === 'payment-links' || menuId === 'eta-tax')) return false;
     if (!activeFeatures.includes('workforce.contractorAccounts.enabled')
         && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
 

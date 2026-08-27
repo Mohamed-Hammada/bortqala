@@ -11,6 +11,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.shared.security.TenantFeatureService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +47,7 @@ public class AccessCatalogService {
         this.tenantFeatureService = tenantFeatureService;
     }
 
+    @Cacheable(cacheNames = "accessCatalog", key = "'default'")
     public AccessApi.AccessCatalogResponse catalog() {
         List<AccessApi.AccessRoleResponse> roles = catalog.roles().stream().map(this::toRole).toList();
         List<AccessApi.AccessPageResponse> pages = catalog.pages().stream().map(this::toPage).toList();

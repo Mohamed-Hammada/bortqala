@@ -1,0 +1,202 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v369_growth_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: loyalty_accounts
+      changes:
+        - createTable:
+            tableName: loyalty_accounts
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: party_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: points_balance, type: numeric(15,2), constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: total_earned, type: numeric(15,2), constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: total_redeemed, type: numeric(15,2), constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: total_expired, type: numeric(15,2), constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: loyalty_accounts
+            columnNames: app_id, party_id
+            constraintName: uq_loyalty_account_app_party
+        - createIndex:
+            tableName: loyalty_accounts
+            indexName: idx_loyalty_account_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: loyalty_accounts
+            indexName: idx_loyalty_account_party
+            columns:
+              - column: { name: party_id }
+      rollback:
+        - dropTable:
+            tableName: loyalty_accounts
+
+  - changeSet:
+      id: 20260827_v369_growth_ledger_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: loyalty_ledger
+      changes:
+        - createTable:
+            tableName: loyalty_ledger
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: loyalty_account_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: party_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: points, type: numeric(15,2), constraints: { nullable: false } }
+              - column: { name: running_balance, type: numeric(15,2), constraints: { nullable: false } }
+              - column: { name: reference_type, type: varchar(50) }
+              - column: { name: reference_id, type: varchar(36) }
+              - column: { name: rule_snapshot, type: varchar(500) }
+              - column: { name: notes, type: varchar(500) }
+              - column: { name: actor, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: loyalty_ledger
+            indexName: idx_loyalty_ledger_account
+            columns:
+              - column: { name: loyalty_account_id }
+        - createIndex:
+            tableName: loyalty_ledger
+            indexName: idx_loyalty_ledger_party
+            columns:
+              - column: { name: party_id }
+      rollback:
+        - dropTable:
+            tableName: loyalty_ledger
+
+  - changeSet:
+      id: 20260827_v369_growth_membership_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: membership_plans
+      changes:
+        - createTable:
+            tableName: membership_plans
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: name_en, type: varchar(200) }
+              - column: { name: price, type: numeric(15,2), constraints: { nullable: false } }
+              - column: { name: currency_code, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: period_days, type: int, constraints: { nullable: false } }
+              - column: { name: grace_days, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: auto_renew, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: loyalty_earn_rate, type: numeric(10,4) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: membership_plans
+            indexName: idx_membership_plan_app
+            columns:
+              - column: { name: app_id }
+      rollback:
+        - dropTable:
+            tableName: membership_plans
+
+  - changeSet:
+      id: 20260827_v369_growth_subscription_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: member_subscriptions
+      changes:
+        - createTable:
+            tableName: member_subscriptions
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: party_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: plan_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: start_date, type: bigint, constraints: { nullable: false } }
+              - column: { name: current_period_end, type: bigint, constraints: { nullable: false } }
+              - column: { name: next_invoice_date, type: bigint }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: cancelled_at, type: bigint }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: member_subscriptions
+            indexName: idx_subscription_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: member_subscriptions
+            indexName: idx_subscription_party
+            columns:
+              - column: { name: party_id }
+        - createIndex:
+            tableName: member_subscriptions
+            indexName: idx_subscription_status
+            columns:
+              - column: { name: status }
+      rollback:
+        - dropTable:
+            tableName: member_subscriptions
+
+  - changeSet:
+      id: 20260827_v369_growth_referral_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: referrals
+      changes:
+        - createTable:
+            tableName: referrals
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: referrer_party_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: referred_party_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: reward_points, type: numeric(15,2) }
+              - column: { name: first_purchase_reference_id, type: varchar(36) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: referrals
+            columnNames: app_id, referred_party_id
+            constraintName: uq_referral_app_referred
+        - createIndex:
+            tableName: referrals
+            indexName: idx_referral_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: referrals
+            indexName: idx_referral_referrer
+            columns:
+              - column: { name: referrer_party_id }
+      rollback:
+        - dropTable:
+            tableName: referrals

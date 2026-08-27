@@ -319,3 +319,55 @@
   background: #E8E4DA;
   color: #B8860B;
 }
+
+.sso-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: #666;
+  font-size: 0.85rem;
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #ddd;
+  }
+}
+
+.sso-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sso-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  transition: all 0.2s;
+  &:hover {
+    background: #f5f5f5;
+    border-color: #bbb;
+  }
+  &.google {
+    border-color: #4285f4;
+    color: #4285f4;
+    &:hover { background: #e8f0fe; }
+  }
+  &.microsoft {
+    border-color: #00a4ef;
+    color: #00a4ef;
+    &:hover { background: #e6f7ff; }
+  }
+}
+
+.overdue {
+  background: rgba(220, 53, 69, 0.05);
+}

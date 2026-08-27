@@ -52,6 +52,7 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
   { menuId: 'sales', route: '/trade/sales', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
   { menuId: 'pos', route: '/trade/pos', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
   { menuId: 'crm', route: '/crm', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
+  { menuId: 'export-shipments', route: '/trade/export-shipments', roles: ['ADMIN', 'SUPER_ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'SALES_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'], requiredFeature: 'agri.enabled' },
   { menuId: 'production', route: '/manufacturing/production', roles: ['ADMIN', 'SUPER_ADMIN', 'MANUFACTURING_MANAGER'], requiredFeature: 'manufacturing.enabled' },
   { menuId: 'quality', route: '/manufacturing/quality', roles: ['ADMIN', 'SUPER_ADMIN', 'MANUFACTURING_MANAGER', 'QUALITY_MANAGER'], requiredFeature: 'quality.enabled' },
   { menuId: 'payroll', route: '/payroll', roles: ['ADMIN', 'SUPER_ADMIN', 'PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'], requiredFeature: 'payroll.enabled' },
@@ -94,6 +95,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
   {
     menuId: 'fixed-assets',
     route: '/finance/fixed-assets',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+    requiredFeature: 'finance.enabled',
+  },
+  {
+    menuId: 'payment-links',
+    route: '/finance/payment-links',
     roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
     requiredFeature: 'finance.enabled',
   },
@@ -196,6 +203,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     menuId: 'specialized-verticals',
     route: '/verticals/specialized',
     roles: [],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'growth',
+    route: '/growth',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER', 'HR_MANAGER', 'FINANCE_MANAGER'],
     requiredFeature: null,
   },
 ];

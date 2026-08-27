@@ -43,6 +43,8 @@ public final class AccessCatalog {
     public static final String P_OPERATIONS_MANAGE = "operations.manage";
     public static final String P_PROCUREMENT_READ = "procurement.read";
     public static final String P_PROCUREMENT_MANAGE = "procurement.manage";
+    public static final String P_EXPORT_READ = "export.read";
+    public static final String P_EXPORT_MANAGE = "export.manage";
     public static final String P_SALES_READ = "sales.read";
     public static final String P_SALES_MANAGE = "sales.manage";
     public static final String P_MANUFACTURING_READ = "manufacturing.read";
@@ -188,6 +190,9 @@ public final class AccessCatalog {
             "ADMIN", "SUPER_ADMIN", "PROCUREMENT_MANAGER", "PROCUREMENT_USER",
             "INVENTORY_MANAGER", "FINANCE_MANAGER", "ACCOUNTANT", "TREASURY_USER", "AUDITOR");
     private static final Set<String> SALES_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "SALES_MANAGER");
+    private static final Set<String> TRADE_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "PROCUREMENT_MANAGER", "PROCUREMENT_USER",
+            "SALES_MANAGER", "FINANCE_MANAGER", "ACCOUNTANT", "AUDITOR");
     private static final Set<String> PRODUCTION_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "MANUFACTURING_MANAGER");
     private static final Set<String> QUALITY_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "MANUFACTURING_MANAGER", "QUALITY_MANAGER");
     private static final Set<String> PAYROLL_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "PAYROLL_MANAGER", "HR_MANAGER", "HR_REVIEWER");
@@ -214,6 +219,7 @@ public final class AccessCatalog {
     private static final String FEATURE_QUALITY = "quality.enabled";
     private static final String FEATURE_FINANCE = "finance.enabled";
     private static final String FEATURE_CONTRACTOR_ACCOUNTS = "workforce.contractorAccounts.enabled";
+    private static final String FEATURE_AGRI = "agri.enabled";
 
     private static final String KEY_ROLE_PREFIX = "roles.access.";
     private static final String KEY_PAGE_PREFIX = "access.pages.";
@@ -361,6 +367,9 @@ public final class AccessCatalog {
             page("SALES", "TRADE", "/trade/sales", "sales", "nav.sales", P_SALES_READ,
                     SALES_ROLES, FEATURE_SALES,
                     action("MANAGE", P_SALES_MANAGE, false)),
+            page("SALES_TARGETS", "TRADE", "/trade/sales/targets", "sales-targets", "nav.salesTargets", P_SALES_READ,
+                    SALES_ROLES, FEATURE_SALES,
+                    action("MANAGE", P_SALES_MANAGE, false)),
             page("POS", "TRADE", "/trade/pos", "pos", "pos.title", P_POS_READ,
                     SALES_ROLES, FEATURE_SALES,
                     action("OPERATE", P_POS_OPERATE, false),
@@ -369,6 +378,9 @@ public final class AccessCatalog {
                     SALES_ROLES, FEATURE_SALES,
                     action("MANAGE", P_CRM_MANAGE, false),
                     action("OMNICHANNEL", P_CRM_OMNICHANNEL, false)),
+            page("EXPORT_SHIPMENTS", "TRADE", "/trade/export-shipments", "export-shipments", "nav.exportShipments", P_EXPORT_READ,
+                    TRADE_ROLES, FEATURE_AGRI,
+                    action("MANAGE", P_EXPORT_MANAGE, false)),
             page("PRODUCTION", "MANUFACTURING", "/manufacturing/production", "production", "nav.production",
                     P_MANUFACTURING_READ, PRODUCTION_ROLES, FEATURE_MANUFACTURING,
                     action("MANAGE", P_MANUFACTURING_MANAGE, false)),

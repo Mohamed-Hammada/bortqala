@@ -1,0 +1,5 @@
+id;translation_key;locale;text_value
+v359-001-en;banks.reconciliation.aging;en-US;Unmatched Aging
+v359-001-ar;banks.reconciliation.aging;ar-EG;أعمار المبالغ غير المطابقة
+v359-002-en;banks.reconciliation.totalUnmatched;en-US;Total Unmatched
+v359-002-ar;banks.reconciliation.totalUnmatched;ar-EG;إجمالي غير مطابق

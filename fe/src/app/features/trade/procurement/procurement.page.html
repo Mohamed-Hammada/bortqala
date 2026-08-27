@@ -7,6 +7,7 @@
     </div>
     <div class="header-actions">
       <button class="button secondary" (click)="exportExcel()">⇩ Excel</button>
+      <button class="button secondary" (click)="openOcrScan()" [title]="i18n.t('procurement.ocrScanHint')">📷 {{ i18n.t('procurement.ocrScan') }}</button>
       @if (activeTab() === 'pr') {<button class="button primary" (click)="openNewPr()">＋ {{ i18n.t('procurement.prNew') }}</button>}
       @if (activeTab() === 'po') {<button class="button primary" (click)="openNewPo()">＋ {{ i18n.t('procurement.poNew') }}</button>}
       @if (activeTab() === 'grn') {<button class="button primary" (click)="openNewGrn()">＋ {{ i18n.t('procurement.grnNew') }}</button>}
@@ -709,6 +710,40 @@
       <button class="button secondary" type="button" (click)="convertingPr.set(null)">{{ i18n.t('procurement.cancel') }}</button>
       <button class="button primary" type="button" (click)="confirmConvert()" [disabled]="convertForm.invalid">{{ i18n.t('procurement.prConvert') }}</button>
     </div>
+  </app-modal-dialog>
+  }
+
+  <!-- ──── OCR Scan Dialog ──── -->
+  @if (ocrDialogOpen()) {
+  <app-modal-dialog (close)="closeOcrDialog()">
+    @if (!ocrJob()) {
+    <h2>{{ i18n.t('procurement.ocrUploadTitle') }}</h2>
+    <p>{{ i18n.t('procurement.ocrScanHint') }}</p>
+    @if (ocrUploading()) { <div class="loading"></div> }
+    @if (ocrError()) { <div class="alert error">{{ ocrError() }}</div> }
+    <div class="form-row">
+      <input type="file" #ocrFileInput accept="image/*" (change)="onOcrFileSelected($any($event.target).files[0])" style="display:none" />
+      <button class="button primary" (click)="ocrFileInput.click()" [disabled]="ocrUploading()">{{ i18n.t('procurement.ocrSelectFile') }}</button>
+    </div>
+    }
+    @if (ocrJob(); as job) {
+    <h2>{{ i18n.t('procurement.ocrReviewTitle') }}</h2>
+    <div class="form-row">
+      <label>{{ i18n.t('common.status') }}</label>
+      <span class="status" [class.success]="job.status === 'REVIEW'" [class.neutral]="job.status === 'PROCESSING'">{{ job.status }}</span>
+    </div>
+    @if (job.extractedPayload) {
+    <div class="ocr-extracted">
+      <pre style="white-space:pre-wrap;font-size:0.85rem;background:var(--surface-muted);padding:0.75rem;border-radius:6px;">{{ job.extractedPayload }}</pre>
+    </div>
+    }
+    @if (job.errorCode) {
+    <div class="alert error">{{ job.errorCode }}</div>
+    }
+    <div class="drawer-actions">
+      <button class="button secondary" (click)="closeOcrDialog()">{{ i18n.t('common.cancel') }}</button>
+    </div>
+    }
   </app-modal-dialog>
   }
 </section>

@@ -1,0 +1,48 @@
+v392-001;kb.search;ar-EG;بحث في قاعدة المعرفة
+v392-002;kb.search;en-US;Search Knowledge Base
+v392-003;kb.articles;ar-EG;المقالات
+v392-004;kb.articles;en-US;Articles
+v392-005;kb.createArticle;ar-EG;إنشاء مقال
+v392-006;kb.createArticle;en-US;Create Article
+v392-007;kb.titleAr;ar-EG;العنوان بالعربية
+v392-008;kb.titleAr;en-US;Title (Arabic)
+v392-009;kb.titleEn;ar-EG;العنوان بالإنجليزية
+v392-010;kb.titleEn;en-US;Title (English)
+v392-011;kb.bodyAr;ar-EG;المحتوى بالعربية
+v392-012;kb.bodyAr;en-US;Body (Arabic)
+v392-013;kb.bodyEn;ar-EG;المحتوى بالإنجليزية
+v392-014;kb.bodyEn;en-US;Body (English)
+v392-015;kb.tags;ar-EG;الوسوم
+v392-016;kb.tags;en-US;Tags
+v392-017;kb.published;ar-EG;منشور
+v392-018;kb.published;en-US;Published
+v392-019;kb.draft;ar-EG;مسودة
+v392-020;kb.draft;en-US;Draft
+v392-021;kb.publish;ar-EG;نشر
+v392-022;kb.publish;en-US;Publish
+v392-023;kb.views;ar-EG;المشاهدات
+v392-024;kb.views;en-US;Views
+v392-025;kb.helpful;ar-EG;مفيد
+v392-026;kb.helpful;en-US;Helpful
+v392-027;kb.notHelpful;ar-EG;غير مفيد
+v392-028;kb.notHelpful;en-US;Not Helpful
+v392-029;kb.createFromTicket;ar-EG;إنشاء من التذكرة
+v392-030;kb.createFromTicket;en-US;Create from Ticket
+v392-031;kb.articleCreated;ar-EG;تم إنشاء المقال
+v392-032;kb.articleCreated;en-US;Article created
+v392-033;kb.articlePublished;ar-EG;تم نشر المقال
+v392-034;kb.articlePublished;en-US;Article published
+v392-035;kb.noArticles;ar-EG;لا توجد مقالات بعد
+v392-036;kb.noArticles;en-US;No articles yet
+v392-037;kb.helpCenter;ar-EG;مركز المساعدة
+v392-038;kb.helpCenter;en-US;Help Center
+v392-039;kb.searchHint;ar-EG;ابحث بالعربية أو الإنجليزية أو الوسوم
+v392-040;kb.searchHint;en-US;Search by Arabic, English or tags
+v392-041;kb.author;ar-EG;الكاتب
+v392-042;kb.author;en-US;Author
+v392-043;kb.voteUp;ar-EG;مفيد
+v392-044;kb.voteUp;en-US;Helpful
+v392-045;kb.voteDown;ar-EG;غير مفيد
+v392-046;kb.voteDown;en-US;Not helpful
+v392-047;kb.voted;ar-EG;تم التصويت
+v392-048;kb.voted;en-US;Vote recorded

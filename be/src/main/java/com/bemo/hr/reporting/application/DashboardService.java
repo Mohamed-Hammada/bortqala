@@ -15,6 +15,7 @@ import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +61,7 @@ public class DashboardService {
         this.companyZone = ZoneId.of(companyZone);
     }
 
+    @Cacheable(cacheNames = "dashboard", key = "#year + '-' + #month")
     public DashboardApi.Response dashboard(int year, int month) {
         var period = YearMonth.of(year, month);
         var report = resolveAttendanceReport(period);

@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v365_cheque_layouts_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: cheque_layouts
+      changes:
+        - createTable:
+            tableName: cheque_layouts
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: bank_code, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: bank_name, type: varchar(100) }
+              - column: { name: payee_x, type: int, constraints: { nullable: false } }
+              - column: { name: payee_y, type: int, constraints: { nullable: false } }
+              - column: { name: payee_width, type: int, constraints: { nullable: false } }
+              - column: { name: date_x, type: int, constraints: { nullable: false } }
+              - column: { name: date_y, type: int, constraints: { nullable: false } }
+              - column: { name: amount_words_x, type: int, constraints: { nullable: false } }
+              - column: { name: amount_words_y, type: int, constraints: { nullable: false } }
+              - column: { name: amount_words_width, type: int, constraints: { nullable: false } }
+              - column: { name: amount_digits_x, type: int, constraints: { nullable: false } }
+              - column: { name: amount_digits_y, type: int, constraints: { nullable: false } }
+              - column: { name: amount_digits_width, type: int, constraints: { nullable: false } }
+              - column: { name: cheque_number_x, type: int, constraints: { nullable: false } }
+              - column: { name: cheque_number_y, type: int, constraints: { nullable: false } }
+              - column: { name: crossing_lines, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: cheque_layouts
+            columnNames: app_id, bank_code
+            constraintName: uq_cheque_layout_app_bank
+        - createIndex:
+            tableName: cheque_layouts
+            indexName: idx_cheque_layout_app_active
+            columns:
+              - column: { name: app_id }
+              - column: { name: active }
+      rollback:
+        - dropTable:
+            tableName: cheque_layouts

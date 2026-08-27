@@ -1,0 +1,49 @@
+id;translation_key;locale;text_value
+v376-001-en;settings.automation;en-US;Automation
+v376-001-ar;settings.automation;ar-EG;الأتمتة
+v376-002-en;settings.automationHint;en-US;Configure recurring templates and dunning rules
+v376-002-ar;settings.automationHint;ar-EG;إعداد القوالب المتكررة وقواعد التحصيل
+v376-003-en;automation.recurringTemplates;en-US;Recurring Templates
+v376-003-ar;automation.recurringTemplates;ar-EG;القوالب المتكررة
+v376-004-en;automation.createTemplate;en-US;Create Template
+v376-004-ar;automation.createTemplate;ar-EG;إنشاء قالب
+v376-005-en;automation.templateName;en-US;Template Name
+v376-005-ar;automation.templateName;ar-EG;اسم القالب
+v376-006-en;automation.kind;en-US;Document Type
+v376-006-ar;automation.kind;ar-EG;نوع المستند
+v376-007-en;automation.cadence;en-US;Cadence
+v376-007-ar;automation.cadence;ar-EG;التكرار
+v376-008-en;automation.monthly;en-US;Monthly
+v376-008-ar;automation.monthly;ar-EG;شهري
+v376-009-en;automation.weekly;en-US;Weekly
+v376-009-ar;automation.weekly;ar-EG;أسبوعي
+v376-010-en;automation.customDays;en-US;Custom Days
+v376-010-ar;automation.customDays;ar-EG;أيام مخصصة
+v376-011-en;automation.nextRun;en-US;Next Run
+v376-011-ar;automation.nextRun;ar-EG;التشغيل التالي
+v376-012-en;automation.active;en-US;Active
+v376-012-ar;automation.active;ar-EG;نشط
+v376-013-en;automation.runNow;en-US;Run Now
+v376-013-ar;automation.runNow;ar-EG;تشغيل الآن
+v376-014-en;automation.dunningRules;en-US;Dunning Rules
+v376-014-ar;automation.dunningRules;ar-EG;قواعد التحصيل
+v376-015-en;automation.createRule;en-US;Create Rule
+v376-015-ar;automation.createRule;ar-EG;إنشاء قاعدة
+v376-016-en;automation.daysOverdue;en-US;Days Overdue
+v376-016-ar;automation.daysOverdue;ar-EG;أيام التأخير
+v376-017-en;automation.channel;en-US;Channel
+v376-017-ar;automation.channel;ar-EG;القناة
+v376-018-en;automation.runDunning;en-US;Run Dunning Check
+v376-018-ar;automation.runDunning;ar-EG;تشغيل فحص التحصيل
+v376-019-en;automation.jobsHealth;en-US;Jobs Health
+v376-019-ar;automation.jobsHealth;ar-EG;حالة المهام
+v376-020-en;automation.jobsFilterFailed;en-US;Show Failed Only
+v376-020-ar;automation.jobsFilterFailed;ar-EG;عرض الفاشلة فقط
+v376-021-en;automation.retry;en-US;Retry
+v376-021-ar;automation.retry;ar-EG;إعادة المحاولة
+v376-022-en;automation.noTemplates;en-US;No recurring templates configured
+v376-022-ar;automation.noTemplates;ar-EG;لا توجد قوالب متكررة
+v376-023-en;automation.noRules;en-US;No dunning rules configured
+v376-023-ar;automation.noRules;ar-EG;لا توجد قواعد تحصيل
+v376-024-en;automation.noJobs;en-US;No jobs found
+v376-024-ar;automation.noJobs;ar-EG;لا توجد مهام

@@ -1,0 +1,136 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('helpdesk.categories') }}</p>
+      <h1>{{ i18n.t('helpdesk.tickets') }} · {{ openCount() }}</h1>
+    </div>
+    <div class="actions">
+      <button class="button secondary" (click)="showCreateCategory.set(true)">{{ i18n.t('helpdesk.createCategory') }}</button>
+      <button class="button" (click)="showCreateTicket.set(true)">{{ i18n.t('helpdesk.createTicket') }}</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  } @else {
+    <div class="tabs">
+      <button class="tab" [class.active]="!filterStatus()" (click)="filterStatus.set(''); loadAll()">{{ i18n.t('helpdesk.inbox') }} ({{ openCount() }})</button>
+      <button class="tab" [class.active]="filterStatus() === 'NEW'" (click)="filterStatus.set('NEW'); loadAll()">NEW</button>
+      <button class="tab" [class.active]="filterStatus() === 'OPEN'" (click)="filterStatus.set('OPEN'); loadAll()">OPEN</button>
+      <button class="tab" [class.active]="filterStatus() === 'WAITING_CUSTOMER'" (click)="filterStatus.set('WAITING_CUSTOMER'); loadAll()">WAITING</button>
+    </div>
+
+    @if (tickets().length === 0) {
+      <div class="empty-state">{{ i18n.t('helpdesk.noTickets') }}</div>
+    } @else {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{{ i18n.t('helpdesk.title') }}</th>
+              <th>{{ i18n.t('helpdesk.category') }}</th>
+              <th>{{ i18n.t('helpdesk.priority') }}</th>
+              <th>{{ i18n.t('helpdesk.status') }}</th>
+              <th>{{ i18n.t('helpdesk.assignee') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of tickets(); track t.id) {
+              <tr (click)="openTicket(t)" [class.breach]="isSlaBreach(t)">
+                <td>{{ t.ticketNo }}</td>
+                <td>{{ t.title }}</td>
+                <td>{{ categoryName(t.categoryId) }}</td>
+                <td><span class="status-badge" [style.color]="priorityColor(t.priority)">{{ t.priority }}</span></td>
+                <td><span class="status-badge" [style.color]="statusColor(t.status)">{{ t.status }}</span></td>
+                <td>{{ t.assigneeUserId ?? '—' }}</td>
+                <td class="actions">
+                  @if (isSlaBreach(t)) {
+                    <span class="badge danger">{{ i18n.t('helpdesk.slaBreach') }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  @if (showCreateCategory()) {
+    <div class="modal-overlay" (click)="showCreateCategory.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2>{{ i18n.t('helpdesk.createCategory') }}</h2>
+        <label>{{ i18n.t('helpdesk.nameAr') }}<input [value]="catNameAr()" (input)="catNameAr.set($any($event.target).value)"></label>
+        <label>{{ i18n.t('helpdesk.nameEn') }}<input [value]="catNameEn()" (input)="catNameEn.set($any($event.target).value)"></label>
+        <label>{{ i18n.t('helpdesk.slaFirstResponse') }}<input type="number" [value]="catSlaFirstResp()" (input)="catSlaFirstResp.set(+$any($event.target).value)"></label>
+        <label>{{ i18n.t('helpdesk.slaResolution') }}<input type="number" [value]="catSlaResolution()" (input)="catSlaResolution.set(+$any($event.target).value)"></label>
+        <div class="modal-actions">
+          <button class="button secondary" (click)="showCreateCategory.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="button" (click)="createCategory()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showCreateTicket()) {
+    <div class="modal-overlay" (click)="showCreateTicket.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2>{{ i18n.t('helpdesk.createTicket') }}</h2>
+        <label>{{ i18n.t('helpdesk.category') }}
+          <select [value]="ticketCategoryId()" (change)="ticketCategoryId.set($any($event.target).value)">
+            <option value="">—</option>
+            @for (c of categories(); track c.id) {
+              <option [value]="c.id">{{ c.nameAr }}</option>
+            }
+          </select>
+        </label>
+        <label>{{ i18n.t('helpdesk.title') }}<input [value]="ticketTitle()" (input)="ticketTitle.set($any($event.target).value)"></label>
+        <label>{{ i18n.t('helpdesk.description') }}<textarea [value]="ticketDescription()" (input)="ticketDescription.set($any($event.target).value)"></textarea></label>
+        <label>{{ i18n.t('helpdesk.priority') }}
+          <select [value]="ticketPriority()" (change)="ticketPriority.set($any($event.target).value)">
+            <option value="LOW">LOW</option><option value="NORMAL">NORMAL</option>
+            <option value="HIGH">HIGH</option><option value="URGENT">URGENT</option>
+          </select>
+        </label>
+        <div class="modal-actions">
+          <button class="button secondary" (click)="showCreateTicket.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="button" (click)="createTicket()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showTicketDetail() && selectedTicket()) {
+    <div class="modal-overlay" (click)="showTicketDetail.set(false)">
+      <div class="modal wide" (click)="$event.stopPropagation()">
+        <h2>{{ i18n.t('helpdesk.ticketNo') }} {{ selectedTicket()!.ticketNo }} — {{ selectedTicket()!.title }}</h2>
+        <p>{{ selectedTicket()!.description }}</p>
+        <div class="status-line">
+          <span class="status-badge" [style.color]="statusColor(selectedTicket()!.status)">{{ selectedTicket()!.status }}</span>
+          @if (selectedTicket()!.status !== 'CLOSED') {
+            <button class="button secondary small" (click)="transitionTo('RESOLVED')">{{ i18n.t('helpdesk.status') }} → RESOLVED</button>
+            <button class="button secondary small" (click)="transitionTo('OPEN')">{{ i18n.t('helpdesk.status') }} → OPEN</button>
+          }
+        </div>
+        <h3>{{ i18n.t('helpdesk.messages') }}</h3>
+        <div class="message-thread">
+          @for (m of messages(); track m.id) {
+            <div class="message" [class.internal]="m.internalNote">
+              <span class="author">{{ m.authorUserId }}</span>
+              @if (m.internalNote) { <span class="badge warning">{{ i18n.t('helpdesk.internalNote') }}</span> }
+              <p>{{ m.body }}</p>
+              <span class="time">{{ m.createdAtEpochMs | date:'medium' }}</span>
+            </div>
+          }
+        </div>
+        <div class="message-input">
+          <textarea [value]="newMessage()" (input)="newMessage.set($any($event.target).value)" placeholder="..."></textarea>
+          <label><input type="checkbox" [checked]="internalNote()" (change)="internalNote.set($any($event.target).checked)"> {{ i18n.t('helpdesk.internalNote') }}</label>
+          <button class="button" (click)="sendMessage()">{{ i18n.t('helpdesk.addMessage') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

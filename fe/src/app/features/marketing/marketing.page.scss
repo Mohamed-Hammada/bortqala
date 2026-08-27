@@ -1,0 +1,42 @@
+.page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.eyebrow { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; }
+.tab { padding: 0.5rem 1rem; border: none; background: none; color: var(--text); cursor: pointer; border-radius: 6px; font-size: 0.85rem; }
+.tab.active { background: var(--gold); color: #000; }
+.actions-bar { margin-bottom: 1rem; }
+.table-card { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 0.6rem 0.8rem; text-align: start; border-bottom: 1px solid var(--line); }
+th { font-weight: 600; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+.status-badge { font-weight: 600; font-size: 0.8rem; }
+.badge { padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; background: var(--warning-soft); color: var(--warning-text); }
+.badge.active { background: var(--success-soft); color: var(--success); }
+.surveys-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.survey-card { background: var(--surface-muted); border-radius: 10px; padding: 1rem; }
+.survey-card h3 { margin-bottom: 0.25rem; }
+.survey-card p { color: var(--muted); font-size: 0.85rem; }
+.builder-panel { display: flex; flex-direction: column; gap: 1.5rem; }
+.field-selector label { display: block; margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--muted); }
+.field-selector select { padding: 0.5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--input-bg); color: var(--text); }
+.fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.fields-grid h4 { font-size: 0.8rem; margin-bottom: 0.5rem; }
+.field-toggle { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; padding: 0.25rem 0; }
+.result-panel { margin-top: 1rem; }
+.result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.save-form { display: flex; gap: 0.5rem; }
+.save-form input { padding: 0.4rem 0.75rem; border: 1px solid var(--line); border-radius: 6px; background: var(--input-bg); color: var(--text); }
+.saved-reports { margin-top: 1.5rem; }
+.saved-reports h3 { margin-bottom: 0.5rem; font-size: 0.9rem; }
+.saved-report-item { padding: 0.5rem 0; border-bottom: 1px solid var(--line); font-size: 0.85rem; }
+.button { padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; background: var(--gold); color: #000; font-size: 0.85rem; }
+.button.secondary { background: var(--surface-muted); color: var(--text); }
+.button.small { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: var(--surface); border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+.modal h2 { margin-bottom: 1rem; font-size: 1.1rem; }
+.modal label { display: block; margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--muted); }
+.modal input, .modal select, .modal textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--input-bg); color: var(--text); margin-top: 0.25rem; }
+.modal textarea { min-height: 80px; resize: vertical; }
+.modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+.empty-state, .loading { text-align: center; padding: 3rem; color: var(--muted); }

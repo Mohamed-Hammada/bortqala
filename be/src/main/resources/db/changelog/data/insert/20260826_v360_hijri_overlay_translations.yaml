@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v360_hijri_overlay_translations
+      author: bemo
+      validCheckSum: ANY
+      comment: "WP-48 T-3: Hijri calendar overlay toggle translation keys"
+      changes:
+        - loadData:
+            tableName: translations
+            comment: "WP-48 T-3: hijri overlay translations"
+            file: db/changelog/data/insert/files/20260826_v360_hijri_overlay_translations.csv
+            separator: ";"
+            quotChar: '"'
+            columns:
+              - column:
+                  header: id
+                  name: id
+                  type: STRING
+              - column:
+                  header: translation_key
+                  name: translation_key
+                  type: STRING
+              - column:
+                  header: locale
+                  name: locale
+                  type: STRING
+              - column:
+                  header: text_value
+                  name: text_value
+                  type: STRING

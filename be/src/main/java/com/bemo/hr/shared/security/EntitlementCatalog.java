@@ -19,6 +19,7 @@ public class EntitlementCatalog {
             f("purchasing.enabled", "PROCUREMENT", Set.of()),
             f("inventory.advanced.enabled", "INVENTORY", Set.of("procurement.enabled"), "/api/v1/operations/valuation"),
             f("sales.enabled", "SALES", Set.of(), "/api/v1/trade/sales"),
+            f("agri.enabled", "AGRI", Set.of(), "/api/v1/trade/export-shipments"),
             f("manufacturing.enabled", "MANUFACTURING", Set.of("inventory.advanced.enabled"), "/api/v1/manufacturing"),
             f("quality.enabled", "QUALITY", Set.of(), "/api/v1/quality"),
             f("finance.enabled", "FINANCE", Set.of(), "/api/v1/finance", "/api/v1/fiscal-periods"),

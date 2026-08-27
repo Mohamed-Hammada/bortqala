@@ -30,11 +30,12 @@ import { DialogStateService } from './dialog-state.service';
 import { resolveShortcutAction } from './shortcut-guard.util';
 import { PushPermissionPromptComponent } from './push-permission-prompt.component';
 import { trapFocusWithin } from '../../shared/ui/focus-trap.util';
+import { CommandPaletteComponent } from '../../shared/ui/command-palette/command-palette.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective, PushPermissionPromptComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective, PushPermissionPromptComponent, CommandPaletteComponent],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,6 +58,7 @@ export class AppShellComponent {
   readonly collapsed = signal(false);
   readonly quickNavOpen = signal(false);
   readonly shortcutHelpOpen = signal(false);
+  readonly paletteOpen = signal(false);
   readonly selectedQuickNavIndex = signal(0);
   readonly chordWaiting = signal(false);
   readonly logoutOptionsOpen = signal(false);
@@ -304,6 +306,12 @@ export class AppShellComponent {
     const typing = target instanceof HTMLElement
       && target.matches('input, textarea, select, [contenteditable="true"], [data-shortcut-capture="true"]');
 
+    if ((event.ctrlKey || event.metaKey) && event.key === 'k' && !typing) {
+      event.preventDefault();
+      this.paletteOpen.set(!this.paletteOpen());
+      return;
+    }
+
     const action = resolveShortcutAction(event.key, event.key.toLocaleLowerCase(), {
       typing,
       ctrl: event.ctrlKey,
@@ -328,6 +336,7 @@ export class AppShellComponent {
         return;
       case 'ESCAPE_SHELL_PANEL':
         event.preventDefault();
+        if (this.paletteOpen()) { this.paletteOpen.set(false); return; }
         if (this.logoutOptionsOpen()) this.closeLogoutOptions();
         else this.closeShortcutPanels();
         return;

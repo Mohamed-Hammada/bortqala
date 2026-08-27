@@ -1,0 +1,200 @@
+<div class="integrations-settings">
+  <!-- API Keys Section -->
+  <section class="card settings-card">
+    <h2>{{ i18n.t('integrations.apiKeys') }}</h2>
+    <p class="section-hint">{{ i18n.t('integrations.apiKeysHint') }}</p>
+
+    @if (loading()) {
+      <div class="loading-state">{{ i18n.t('common.loading') }}</div>
+    } @else {
+      @if (keys().length === 0) {
+        <div class="empty-state">{{ i18n.t('integrations.noKeys') }}</div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('integrations.keyName') }}</th>
+              <th>{{ i18n.t('integrations.scopes') }}</th>
+              <th>{{ i18n.t('integrations.rateLimit') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (key of keys(); track key.id) {
+              <tr>
+                <td>{{ key.name }}</td>
+                <td><code>{{ key.scopes || '—' }}</code></td>
+                <td>{{ key.rateLimitPerMin }}</td>
+                <td>
+                  <span class="badge" [class]="key.active ? 'badge-success' : 'badge-muted'">
+                    {{ key.active ? i18n.t('integrations.active') : i18n.t('integrations.revoked') }}
+                  </span>
+                </td>
+                <td class="actions">
+                  @if (key.active) {
+                    <button class="btn btn-sm btn-ghost" (click)="revokeKey(key.id)">{{ i18n.t('integrations.revoke') }}</button>
+                  }
+                  <button class="btn btn-sm btn-danger" (click)="deleteKey(key.id)">{{ i18n.t('common.delete') }}</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <!-- Create Key Form -->
+      <div class="create-form">
+        <h3>{{ i18n.t('integrations.createKey') }}</h3>
+        <div class="form-row">
+          <input
+            type="text"
+            [placeholder]="i18n.t('integrations.keyName')"
+            [value]="newKeyName()"
+            (input)="newKeyName.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            [placeholder]="i18n.t('integrations.scopesHint')"
+            [value]="newKeyScopes()"
+            (input)="newKeyScopes.set($any($event.target).value)"
+          />
+          <input
+            type="number"
+            [placeholder]="i18n.t('integrations.rateLimit')"
+            [value]="newKeyRateLimit()"
+            (input)="newKeyRateLimit.set(+$any($event.target).value)"
+            min="1"
+            max="1000"
+          />
+          <button class="btn btn-primary" (click)="createKey()" [disabled]="creatingKey() || !newKeyName().trim()">
+            {{ i18n.t('integrations.createKey') }}
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Key Reveal Dialog -->
+  @if (showKeyReveal()) {
+    <div class="overlay" (click)="closeKeyReveal()">
+      <div class="card key-reveal-card" (click)="$event.stopPropagation()">
+        <h3>{{ i18n.t('integrations.keyCreated') }}</h3>
+        <div class="key-display">
+          <code>{{ revealedKey() }}</code>
+          <button class="btn btn-sm btn-primary" (click)="copyKey()">{{ i18n.t('integrations.copyKey') }}</button>
+        </div>
+        <button class="btn btn-secondary" (click)="closeKeyReveal()">{{ i18n.t('common.close') }}</button>
+      </div>
+    </div>
+  }
+
+  <!-- Webhooks Section -->
+  <section class="card settings-card">
+    <h2>{{ i18n.t('integrations.webhooks') }}</h2>
+    <p class="section-hint">{{ i18n.t('integrations.webhooksHint') }}</p>
+
+    @if (!loading()) {
+      @if (endpoints().length === 0) {
+        <div class="empty-state">{{ i18n.t('integrations.noWebhooks') }}</div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('integrations.webhookUrl') }}</th>
+              <th>{{ i18n.t('integrations.webhookEvents') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ep of endpoints(); track ep.id) {
+              <tr>
+                <td><code>{{ ep.url }}</code></td>
+                <td>{{ ep.events || '—' }}</td>
+                <td>
+                  <span class="badge" [class]="ep.active ? 'badge-success' : 'badge-muted'">
+                    {{ ep.active ? i18n.t('integrations.active') : i18n.t('integrations.disabled') }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <button class="btn btn-sm btn-ghost" (click)="ep.active ? toggleWebhook(ep.id, false) : toggleWebhook(ep.id, true)">
+                    {{ ep.active ? i18n.t('common.disable') : i18n.t('common.enable') }}
+                  </button>
+                  <button class="btn btn-sm btn-ghost" (click)="viewDeliveries(ep.id)">{{ i18n.t('integrations.deliveries') }}</button>
+                  <button class="btn btn-sm btn-danger" (click)="deleteWebhook(ep.id)">{{ i18n.t('common.delete') }}</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <!-- Create Webhook Form -->
+      <div class="create-form">
+        <h3>{{ i18n.t('integrations.createWebhook') }}</h3>
+        <div class="form-row">
+          <input
+            type="url"
+            [placeholder]="i18n.t('integrations.webhookUrl')"
+            [value]="newWebhookUrl()"
+            (input)="newWebhookUrl.set($any($event.target).value)"
+          />
+          <input
+            type="text"
+            [placeholder]="i18n.t('integrations.webhookEventsHint')"
+            [value]="newWebhookEvents()"
+            (input)="newWebhookEvents.set($any($event.target).value)"
+          />
+          <button class="btn btn-primary" (click)="createWebhook()" [disabled]="creatingWebhook() || !newWebhookUrl().trim()">
+            {{ i18n.t('integrations.createWebhook') }}
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Deliveries Panel -->
+  @if (selectedEndpointId()) {
+    <section class="card settings-card deliveries-panel">
+      <div class="panel-header">
+        <h3>{{ i18n.t('integrations.deliveries') }}</h3>
+        <button class="btn btn-sm btn-ghost" (click)="closeDeliveries()">{{ i18n.t('common.close') }}</button>
+      </div>
+      @if (deliveries().length === 0) {
+        <div class="empty-state">{{ i18n.t('integrations.noDeliveries') }}</div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('integrations.webhookEvents') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('integrations.httpStatus') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of deliveries(); track d.id) {
+              <tr>
+                <td>{{ d.event }}</td>
+                <td>
+                  <span class="badge" [class]="'badge-' + statusClass(d.status)">
+                    {{ d.status }}
+                  </span>
+                </td>
+                <td>{{ d.responseStatus ?? '—' }}</td>
+                <td>
+                  @if (d.status === 'FAILED' || d.status === 'DEAD') {
+                    <button class="btn btn-sm btn-ghost" (click)="redriveDelivery(d.endpointId, d.id)">
+                      {{ i18n.t('integrations.redrive') }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</div>

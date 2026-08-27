@@ -5,6 +5,7 @@ import {
   computed,
   inject,
   signal,
+  Signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
@@ -26,6 +27,23 @@ import { Router } from '@angular/router';
 import { apiErrorMessage } from '../../core/api-error';
 import { WorkforceService } from '../workforce/data-access/workforce.service';
 import { AdvancePolicy } from '../workforce/models/workforce.models';
+
+export interface FormGroupDef {
+  key: string;
+  titleKey: string;
+  hintKey: string;
+  fieldIds: string[];
+}
+
+export const FORM_GROUPS: FormGroupDef[] = [
+  { key: 'identity', titleKey: 'employees.group.identity', hintKey: 'employees.group.identityHint', fieldIds: ['employeeCode', 'fullName'] },
+  { key: 'job', titleKey: 'employees.group.job', hintKey: 'employees.group.jobHint', fieldIds: ['categoryId', 'employmentType'] },
+  { key: 'schedule', titleKey: 'employees.group.schedule', hintKey: 'employees.group.scheduleHint', fieldIds: [] },
+  { key: 'salary', titleKey: 'employees.group.salary', hintKey: 'employees.group.salaryHint', fieldIds: ['baseSalary'] },
+  { key: 'contracts', titleKey: 'employees.group.contracts', hintKey: 'employees.group.contractsHint', fieldIds: [] },
+  { key: 'biometric', titleKey: 'employees.group.biometric', hintKey: 'employees.group.biometricHint', fieldIds: ['deviceUserId'] },
+  { key: 'dates', titleKey: 'employees.group.dates', hintKey: 'employees.group.datesHint', fieldIds: ['activeFrom', 'activeTo', 'active'] },
+];
 
 @Component({
   selector: 'app-employees-page',
@@ -60,6 +78,55 @@ export class EmployeesPage {
   private closing = false;
   private biometricReturnUrl: string | null = null;
   private biometricMonth: string | null = null;
+
+  // WP-20: Form group accordion state
+  readonly groups = FORM_GROUPS;
+  readonly collapsedSignals: Record<string, Signal<boolean>> = Object.fromEntries(
+    FORM_GROUPS.map((g, i) => [g.key, signal(i >= 2)]),
+  );
+  readonly previewOpen = signal(false);
+
+  toggleGroup(key: string): void {
+    const s = this.collapsedSignals[key] as ReturnType<typeof signal<boolean>>;
+    s.set(!s());
+  }
+
+  isGroupExpanded(key: string): boolean {
+    return !(this.collapsedSignals[key] as ReturnType<typeof signal<boolean>>)();
+  }
+
+  requiredFieldCount(groupKey: string): number {
+    const fieldMap: Record<string, string> = {
+      fullName: 'required',
+      categoryId: 'required',
+      activeFrom: 'required',
+      deviceUserId: 'biometricRequired',
+    };
+    let count = 0;
+    for (const fieldId of FORM_GROUPS.find((g) => g.key === groupKey)?.fieldIds ?? []) {
+      if (fieldId === 'deviceUserId') {
+        if (this.isBiometricCategorySelected()) count++;
+      } else if (fieldMap[fieldId] === 'required') {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  fieldLabel(fieldId: string): string {
+    const map: Record<string, string> = {
+      employeeCode: 'employees.employeeCode',
+      fullName: 'employees.fullName',
+      categoryId: 'employees.category',
+      employmentType: 'employees.employmentType',
+      baseSalary: 'employees.baseSalary',
+      deviceUserId: 'employees.deviceUserId',
+      activeFrom: 'employees.activeFrom',
+      activeTo: 'employees.activeToOptional',
+      active: 'employees.activeCheck',
+    };
+    return this.i18n.t(map[fieldId] ?? fieldId);
+  }
 
   // Contracts Workbench State
   readonly contractsModalOpen = signal(false);

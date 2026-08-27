@@ -24,6 +24,9 @@
     <button class="app-tab" [class.active]="activeTab() === 'currencies'" (click)="activeTab.set('currencies')">
       {{ i18n.t('taxCurrency.tabCurrencies', { count: currencies().length }) }}
     </button>
+    <button class="app-tab" [class.active]="activeTab() === 'fx-revaluation'" (click)="activeTab.set('fx-revaluation'); loadFxHistory()">
+      {{ i18n.t('taxCurrency.fxRevaluation') }}
+    </button>
   </nav>
 
   @if (!loading()) {
@@ -214,10 +217,92 @@
     }
   }
 
+  @if (activeTab() === 'fx-revaluation') {
+    <section class="rate-hint-card">
+      <div class="rate-hint-head">
+        <div>
+          <p class="eyebrow">{{ i18n.t('taxCurrency.fxRevaluation') }}</p>
+          <h2>{{ i18n.t('taxCurrency.fxRevaluationHint') }}</h2>
+        </div>
+        @if (canRunFxRevaluation()) {
+          <button
+            type="button"
+            class="button primary"
+            [disabled]="fxRunning()"
+            (click)="runFxRevaluation()"
+          >
+            {{ fxRunning() ? i18n.t('taxCurrency.fxRevaluationRunning') : i18n.t('taxCurrency.fxRunRevaluation') }}
+          </button>
+        }
+      </div>
+    </section>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('taxCurrency.fxColCurrency') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColPeriod') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColNetBalance') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColRate') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColEgpValue') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColGain') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColLoss') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColJournal') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColPostedAt') }}</th>
+            <th>{{ i18n.t('taxCurrency.fxColPostedBy') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (fxLoading()) {
+            <tr><td colspan="10"><div class="loading"></div></td></tr>
+          } @else {
+            @for (post of fxRevaluationPosts(); track post.id) {
+              <tr>
+                <td><strong class="ltr">{{ post.currencyCode }}</strong></td>
+                <td class="ltr">{{ post.yearMonth }}</td>
+                <td class="ltr">
+                  {{ post.totalUnrealizedGain > 0 ? '+' : '' }}{{ (post.totalUnrealizedGain - post.totalUnrealizedLoss) | number:'1.2-2' }}
+                </td>
+                <td class="ltr">—</td>
+                <td class="ltr">
+                  {{ (post.totalUnrealizedGain - post.totalUnrealizedLoss) | number:'1.2-2' }}
+                </td>
+                <td class="ltr">
+                  @if (post.totalUnrealizedGain > 0) {
+                    <span class="status success">{{ fxGainDisplay(post) }}</span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td class="ltr">
+                  @if (post.totalUnrealizedLoss > 0) {
+                    <span class="status warning">{{ fxLossDisplay(post) }}</span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td><code class="ltr">{{ post.journalEntryId }}</code></td>
+                <td class="ltr">{{ post.postedAt | date:'medium' }}</td>
+                <td>{{ post.postedBy }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="10">
+                  <div class="empty-state">{{ i18n.t('taxCurrency.fxRevaluationEmpty') }}</div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
   <app-modal-dialog
     class="tax-currency-dialog"
     [isOpen]="drawerOpen()"
-    [title]="activeTab() === 'taxes' ? i18n.t('taxCurrency.newTax') : i18n.t('taxCurrency.newCurrency')"
+    [title]="activeTab() === 'taxes' ? i18n.t('taxCurrency.newTax') : activeTab() === 'currencies' ? i18n.t('taxCurrency.newCurrency') : i18n.t('taxCurrency.fxRevaluation')"
     size="wide"
     [showFooter]="false"
     [preventOutsideClose]="true"

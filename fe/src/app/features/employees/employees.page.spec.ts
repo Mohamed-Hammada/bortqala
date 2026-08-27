@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
-import { EmployeesPage } from './employees.page';
+import { EmployeesPage, FORM_GROUPS } from './employees.page';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 
 describe('EmployeesPage drawer dirty-check', () => {
@@ -235,5 +235,63 @@ describe('EmployeesPage drawer dirty-check', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(component.notification.success).toHaveBeenCalled();
+  });
+});
+
+describe('EmployeesPage WP-20 form groups', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EmployeesPage],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+  });
+
+  function createPage() {
+    const fixture = TestBed.createComponent(EmployeesPage);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+    return { component, fixture };
+  }
+
+  it('FORM_GROUPS defines 7 groups', () => {
+    expect(FORM_GROUPS.length).toBe(7);
+    expect(FORM_GROUPS.map((g) => g.key)).toEqual([
+      'identity', 'job', 'schedule', 'salary', 'contracts', 'biometric', 'dates',
+    ]);
+  });
+
+  it('first two groups are expanded by default, rest collapsed', () => {
+    const { component } = createPage();
+    expect(component.isGroupExpanded('identity')).toBe(true);
+    expect(component.isGroupExpanded('job')).toBe(true);
+    expect(component.isGroupExpanded('schedule')).toBe(false);
+    expect(component.isGroupExpanded('salary')).toBe(false);
+    expect(component.isGroupExpanded('contracts')).toBe(false);
+    expect(component.isGroupExpanded('biometric')).toBe(false);
+    expect(component.isGroupExpanded('dates')).toBe(false);
+  });
+
+  it('toggleGroup flips the collapsed state', () => {
+    const { component } = createPage();
+    expect(component.isGroupExpanded('salary')).toBe(false);
+    component.toggleGroup('salary');
+    expect(component.isGroupExpanded('salary')).toBe(true);
+    component.toggleGroup('salary');
+    expect(component.isGroupExpanded('salary')).toBe(false);
+  });
+
+  it('requiredFieldCount returns correct counts', () => {
+    const { component } = createPage();
+    expect(component.requiredFieldCount('identity')).toBe(1);
+    expect(component.requiredFieldCount('job')).toBe(1);
+    expect(component.requiredFieldCount('dates')).toBe(1);
+    expect(component.requiredFieldCount('schedule')).toBe(0);
+  });
+
+  it('previewOpen signal toggles the preview drawer', () => {
+    const { component } = createPage();
+    expect(component.previewOpen()).toBe(false);
+    component.previewOpen.set(true);
+    expect(component.previewOpen()).toBe(true);
   });
 });

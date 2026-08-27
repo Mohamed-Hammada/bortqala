@@ -1,0 +1,16 @@
+.stats-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+.stat-card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.5rem; text-align: center; flex: 1; min-width: 120px; }
+.stat-value { display: block; font-size: 1.5rem; font-weight: 700; color: var(--gold); }
+.stat-label { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+.form-row { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0; }
+.form-row label { min-width: 140px; font-size: 0.85rem; color: var(--muted); }
+.form-row .input { flex: 1; max-width: 300px; }
+.header-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-bottom: 1rem; }
+.drawer-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem; }
+h2 { margin: 1.5rem 0 0.75rem; font-size: 1.1rem; }
+h3 { margin: 1.25rem 0 0.5rem; font-size: 0.95rem; color: var(--muted); }
+.button.danger.small { font-size: 0.75rem; padding: 0.25rem 0.75rem; background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger); border-radius: 6px; cursor: pointer; }
+.status { padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.status.success { background: var(--success-soft); color: var(--success); }
+.status.warning { background: var(--warning-soft); color: var(--warning-text); }
+.status.neutral { background: var(--surface-muted); color: var(--muted); }

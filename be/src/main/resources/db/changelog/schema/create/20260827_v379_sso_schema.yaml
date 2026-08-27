@@ -1,0 +1,75 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v379_sso_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: sso_configs
+      changes:
+        - createTable:
+            tableName: sso_configs
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: provider, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: client_id, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: secret, type: varchar(1000), constraints: { nullable: false } }
+              - column: { name: issuer, type: varchar(500) }
+              - column: { name: discovery_url, type: varchar(1000) }
+              - column: { name: auto_provision, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
+              - column: { name: default_role, type: varchar(50), defaultValueString: "VIEWER" }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: sso_configs
+            indexName: idx_sso_config_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: sso_configs
+            indexName: idx_sso_config_provider
+            columns:
+              - column: { name: provider }
+      rollback:
+        - dropTable:
+            tableName: sso_configs
+
+  - changeSet:
+      id: 20260827_v379_user_sso_identities_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_sso_identities
+      changes:
+        - createTable:
+            tableName: user_sso_identities
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: provider, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: subject, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: email, type: varchar(320) }
+              - column: { name: display_name, type: varchar(500) }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: user_sso_identities
+            indexName: idx_sso_ident_app_user
+            columns:
+              - column: { name: app_id }
+              - column: { name: user_id }
+        - createUniqueConstraint:
+            tableName: user_sso_identities
+            constraintName: uq_user_sso_app_provider_subject
+            columnNames: app_id, provider, subject
+      rollback:
+        - dropTable:
+            tableName: user_sso_identities
