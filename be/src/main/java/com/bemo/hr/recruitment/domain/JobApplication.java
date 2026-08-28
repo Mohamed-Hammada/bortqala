@@ -89,6 +89,10 @@ public class JobApplication {
         this.notes = notes;
     }
 
+    public void attachCv(String cvAttachmentId) {
+        this.cvAttachmentId = cvAttachmentId;
+    }
+
     @PrePersist
     void prePersist() {
         long now = System.currentTimeMillis();

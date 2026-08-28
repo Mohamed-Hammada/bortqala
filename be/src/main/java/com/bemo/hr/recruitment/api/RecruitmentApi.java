@@ -116,4 +116,21 @@ public final class RecruitmentApi {
             long eventAt
     ) {
     }
+
+    // ---- CV ----
+
+    public record CvUploadResponse(
+            String cvAttachmentId,
+            String originalName,
+            String contentType,
+            long sizeBytes
+    ) {
+    }
+
+    public record CvDownload(
+            byte[] content,
+            String contentType,
+            String originalName
+    ) {
+    }
 }

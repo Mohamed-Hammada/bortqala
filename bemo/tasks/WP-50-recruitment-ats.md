@@ -19,5 +19,11 @@ Post a job opening, collect applicants, move them through stages, and on hire co
 ## Acceptance Criteria (QA sign-off)
 - [x] AC-1 Stage machine matrix enforced incl. REJECTED terminal unless reopen-permission flag; every move writes history row visible in timeline. — **MET** (stage transition validation + `application_stage_events` history).
 - [x] AC-2 Convert creates employee with mapped fields and marks application HIRED with link; second convert blocked. — **MET** (convert → prefilled employee-create, HIRED + employeeId link stored back).
-- [ ] AC-3 Duplicate phone/email shows non-blocking warning banner listing prior application(s). — **PARTIAL**: duplicate detection by phone/email exists; the FE non-blocking warning banner + prior-applications listing not verified.
-- [ ] AC-4 CV upload enforces REM-005 size/type trio; closed opening rejects new applications. — **NOT MET**: no CV upload at all — `cvAttachmentId` is an unannotated String in `RecruitmentApi.java:55-63`, the FE application form has NO CV control and no `<input type="file">`; `submitApplication` never sends it. (Closed-opening rejection separately present.)
+- [x] AC-3 Duplicate phone/email shows non-blocking warning banner listing prior application(s). — **MET** (debounced `checkWarnings()` + `GET /applications/duplicates` banner; spec asserts the prior-applicant row).
+- [x] AC-4 CV upload enforces REM-005 size/type trio; closed opening rejects new applications. — **MET** (`POST/GET /applications/{id}/cv`; 5MB + allowed-type validation, `RECR_CV_*` codes; FE file input + chip in the application drawer, validation trio + upload-after-create wiring; 5 FE specs + 4 BE CV tests; closed-opening rejection separately present).
+
+## Verification (2026-08-28)
+- Backend `test -PskipDockerTests --tests "com.bemo.hr.recruitment.*"` — BUILD SUCCESSFUL (9 tests: 6 original fixed + 3 new CV tests). Original suite had latent failures (UnnecessaryStubbing on `auth.getName`, false `eventRepository` verify in `createOpeningSavesSuccessfully`) — added `@MockitoSettings(LENIENT)` + corrected the verify.
+- FE `ng test` — 563 tests / 114 files, 0 failures (incl. 5 recruitment WP-50 specs).
+- `check:i18n` 5205 keys PASS; `check:hardcoded` PASS; error codes 682/682; translation catalog 15,819 PASS.
+- V406 schema + translations registered in both masters.

@@ -203,6 +203,20 @@
         <label>{{ i18n.t('recruitment.source') }}</label>
         <input type="text" formControlName="source" />
       </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.cvLabel') }}</label>
+        <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx,.csv" (change)="onCvSelected($event)" />
+        <small>{{ i18n.t('recruitment.cvHint') }}</small>
+        @if (cvError()) {
+          <small class="text-danger">{{ cvError() }}</small>
+        }
+        @if (cvFile.value) {
+          <span class="cv-chip">
+            <strong>{{ i18n.t('recruitment.cvLabel') }}</strong> {{ cvFile.value.name }}
+            <button type="button" class="button secondary cv-remove" (click)="removeCv()">{{ i18n.t('recruitment.cvRemove') }}</button>
+          </span>
+        }
+      </div>
       @if (warnings().length > 0) {
         <div class="span-2 alert warn">
           {{ i18n.t('recruitment.duplicateWarning') }}:

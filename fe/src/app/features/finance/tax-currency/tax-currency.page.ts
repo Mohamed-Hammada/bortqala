@@ -31,6 +31,7 @@ export interface FxRevaluationRunResponse {
     bookValueInEgp: number;
     unrealizedGainLoss: number;
     journalEntryId: string;
+    skippedReason?: string | null;
   }[];
 }
 
@@ -320,6 +321,10 @@ export class TaxCurrencyPage {
         this.notification.warning(this.i18n.t('taxCurrency.fxRevaluationZeroResult'));
       } else {
         this.notification.success(this.i18n.t('taxCurrency.fxRevaluationSuccess'));
+      }
+      const skipped = (result.results ?? []).filter((r) => r.skippedReason).length;
+      if (skipped > 0) {
+        this.notification.warning(this.i18n.t('taxCurrency.fxRevaluationSkippedAccount', { count: String(skipped) }));
       }
       await this.loadFxHistory();
     } catch (error) {

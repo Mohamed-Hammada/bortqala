@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260828_v403_einvoicing_backfill_egypt_tenants
+      author: wolfn
+      validCheckSum: ANY
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: einvoicing_settings
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              INSERT INTO einvoicing_settings (id, app_id, provider, environment, version, created_at, updated_at)
+              SELECT md5(a.id || ':EINVOICING'),
+                     a.id,
+                     'EGYPT_ETA',
+                     'TEST',
+                     0,
+                     (CAST(now() AS double precision) * 1000)::bigint,
+                     (CAST(now() AS double precision) * 1000)::bigint
+              FROM apps a
+              WHERE NOT EXISTS (
+                  SELECT 1
+                  FROM einvoicing_settings s
+                  WHERE s.app_id = a.id
+              )
+      rollback:
+        - sql:
+            splitStatements: false
+            sql: |
+              DELETE FROM einvoicing_settings
+              WHERE id IN (SELECT md5(app_id || ':EINVOICING') FROM einvoicing_settings)
+                AND provider = 'EGYPT_ETA'

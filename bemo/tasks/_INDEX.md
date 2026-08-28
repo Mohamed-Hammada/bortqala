@@ -1,4 +1,4 @@
-# Task Index & Assignment Matrix
+﻿# Task Index & Assignment Matrix
 > One file per work package in this folder. Every dev gets `_GLOBAL-RULES.md` + only their own WP file.
 > Every WP ends with **Acceptance Criteria** — numbered checkboxes; QA ticks them before merge.
 > **Liquibase V-numbers:** coordinator assigns concrete V### per WP before branch-out (headers show placeholders). Never pick your own number.
@@ -60,11 +60,11 @@ WP-28 OCR invoice capture · WP-29 payment gateways + public pay page · WP-30 b
 | WP-45 Helpdesk | 🟠 partial | AC-2/3/5 | AC-1 PARTIAL · AC-4 PARTIAL |
 | WP-46 Marketing | 🔸 scaffold | — | consent not wired; survey/survey_responses scaffold only |
 | WP-47 eSign/GED | 🟠 partial | AC-1/3 | AC-2 NOT MET (SHA-256 verify is dead no-op) · AC-4 NOT MET (no backfill) · AC-5 PARTIAL (filter, not search) |
-| WP-48 Finance extras | 🟢 mostly | AC-1/2/4/7/8 | AC-3 PARTIAL (accounts hardcoded not settings) · AC-5/6 PARTIAL (no seeded cheque templates; mismatch N/A) |
-| WP-50 Recruitment | 🟢 partial | AC-1/2 | AC-3 PARTIAL · AC-4 NOT MET (no CV upload/validation) |
-| WP-51 e-invoicing | 🟢 partial | AC-1/3 | AC-2 PARTIAL (DEFAULT NONE, no backfill/golden fixture) · AC-4 PARTIAL |
+| WP-48 Finance extras | ?? shipped | AC-1/2/3/4/5/7/8 | AC-6 MET half (crossing prints); mismatch N/A by design (words derived from digits) |
+| WP-50 Recruitment | ?? shipped | AC-1/2/3/4 | (all MET) |
+| WP-51 e-invoicing | ?? shipped | AC-1/2/3/4 | (all MET) |
 | WP-16 Agri-export | 🟠 partial | AC-2/3/4 | AC-1 NOT MET (no docs) · AC-5 PARTIAL |
-| WP-19 Single-punch | 🟢 shipped | AC-1/2 | AC-3 PARTIAL (chip one-sided) |
+| WP-19 Single-punch | ?? shipped | AC-1/2/3 | (all MET) |
 
 ### Phase-gated
 | File | Gate |

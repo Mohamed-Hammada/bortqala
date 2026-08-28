@@ -588,13 +588,13 @@
 > The Wave-5 WPs below were **code-committed** but the files' `[x]` boxes (where present) were NOT all QA-verified. A per-AC source audit (evidence `file:line` inside each `bemo/tasks/WP-*.md`) ran mid-cut. **Result: most are scaffolds.** The genuinely-met ACs keep `[x]`; everything else is unticked and listed below as BACKLOG until the gap is closed. `_INDEX.md` carries the full verdict table.
 
 **Verified MET (kept `[x]`)**
-- WP-19 AC-1/2 (single-punch toggle + rule behavior) — AC-3 chip PARTIAL.
+- WP-19 AC-1/2/3 (single-punch toggle + rule behavior + dual-state review chip) — all MET.
 - WP-29 AC-4 (public pay-page payload limits).
 - WP-42 AC-1 (loyalty earn/redeem ledger + rule snapshot).
 - WP-45 AC-2/3/5 (first-response rule, internal-note hiding, ticket→article sanitized prefill).
 - WP-47 AC-1/3 (sequential enforcement + step evidence/manifest export).
-- WP-48 AC-1/2/4/7/8 (FX idempotent gain post, zero-delta skip; words util 54 cases; Hijri overlay togglable FE-only) — AC-3/5/6 PARTIAL.
-- WP-50 AC-1/2 (stage machine + convert-to-employee), WP-51 AC-1/3 (ETA tests untouched refactor proof; KSA placeholder), WP-16 AC-2/3/4 (compliance window, strict transitions, proceeds aging).
+- WP-48 AC-1/2/3/4/5/6/7/8 (settings-driven FX accounts + skip-with-warning; words util 54 cases; V405 seeded NBE/CIB cheque layouts; crossing lines; Hijri overlay) — all MET.
+- WP-50 AC-1/2/3/4 (stage machine + convert-to-employee + dup-warning banner + CV upload/validation trio), WP-51 AC-1/2/3/4 (ETA tests untouched refactor proof; KSA placeholder; V403 Egypt backfill + golden selection; confirm-guarded provider switch), WP-16 AC-2/3/4 (compliance window, strict transitions, proceeds aging).
 
 **Primary gaps (unticked → new P-items when resourced)**
 - **WP-40 API keys**: CRUD-only; no `X-Api-Key` filter, no scope enforcement, no per-minute rate limit (429/Retry-After), no webhook outbox/HMAC/5-try-dead. **(P0 when integrations are sold)**.
@@ -602,8 +602,7 @@
 - **WP-32 scheduled delivery**: no `@Scheduled` driver; `runNow` never reuses the exporter (produces no bytes); no email sender at all. WP-39 dunning/jobs-health similarly unwired.
 - **WP-34 SSO**: callback issues no JWT; `auditService` injected but never called. WP-35 PDPL: no real export/erase bundle; consent not wired to sends.
 - **WP-47 GED**: no attachment-trio backfill; SHA-256 verify is a dead no-op. WP-28 OCR: `convertToGrn` creates no draft GRN; no retry. WP-42: no expiry job; renewal creates no invoices; referral never wired to sales.
-- **WP-50 AC-4**: no CV upload/validation anywhere. **WP-16 AC-1**: no COO/packing/phytosanitary doc generation at all. **WP-51 AC-2**: `provider DEFAULT 'NONE'` without an Egypt-tenant backfill.
-- **WP-48** cheque T-2: `cheque_layouts` ships empty (no seeded default EG-bank templates); ±1mm alignment unproven.
+- **WP-16 AC-1**: no COO/packing/phytosanitary doc generation at all.
 
 **Related gate-fix shipped with this sweep**: Liquibase **V402** (57 keys × ar-EG/en-US — 40 error codes + 17 UI option keys for reports/helpdesk/settings incl. `reports.scheduleKind*`, `helpdesk.status*`, `helpdesk.priority*`, `sso.role*`), `GENERAL_MANAGER` in `RoleCode.java`, v395 `kb.search` ar alignment, V365 registered in the H2 changelog, and FE hardcoded-option cleanup across reports/helpdesk/settings pages. Gates: `check:i18n` 5,198, `check:hardcoded` 0/127+275, FE tests 555/113, error-codes 677/677, auth-contract 21/21, translation catalog 15,795.
 

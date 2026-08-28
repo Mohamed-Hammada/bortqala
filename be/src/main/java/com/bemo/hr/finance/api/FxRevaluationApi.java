@@ -31,8 +31,13 @@ public class FxRevaluationApi {
             BigDecimal currentRate,
             BigDecimal bookValueInEgp,
             BigDecimal unrealizedGainLoss,
-            String journalEntryId
+            String journalEntryId,
+            String skippedReason
     ) {
+        public CurrencyResult(String currencyCode, BigDecimal netBalance, BigDecimal currentRate,
+                              BigDecimal bookValueInEgp, BigDecimal unrealizedGainLoss, String journalEntryId) {
+            this(currencyCode, netBalance, currentRate, bookValueInEgp, unrealizedGainLoss, journalEntryId, null);
+        }
     }
 
     public record HistoryResponse(

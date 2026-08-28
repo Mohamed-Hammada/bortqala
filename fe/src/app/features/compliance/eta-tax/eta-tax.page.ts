@@ -16,6 +16,7 @@ import { HttpClient } from '@angular/common/http';
 import { EinvoicingProviderInfo, EinvoicingSettings, EinvoicingProviderType, EinvoicingEnvironment } from '../einvoicing.models';
 import { EinvoicingService } from '../einvoicing.service';
 import { apiErrorMessage } from '../../../core/api-error';
+import { ConfirmDialogService } from '../../../core/confirm-dialog.service';
 
 @Component({
   selector: 'app-eta-tax-page',
@@ -31,6 +32,7 @@ export class EtaTaxPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
   private readonly einvoicingService = inject(EinvoicingService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   readonly einvoicingSettings = signal<EinvoicingSettings | null>(null);
   readonly einvoicingProviders = signal<EinvoicingProviderInfo[]>([]);
   readonly showProviderModal = signal(false);
@@ -155,6 +157,16 @@ export class EtaTaxPage implements OnInit {
   async saveProviderSettings(): Promise<void> {
     if (this.providerForm.invalid || this.savingProvider()) return;
     const value = this.providerForm.value;
+    const switching = value.provider !== (this.einvoicingSettings()?.provider ?? 'NONE');
+    if (switching) {
+      const accepted = await this.confirmDialog.confirmOptions({
+        titleKey: 'compliance.provider.settingsTitle',
+        messageKey: 'compliance.provider.confirmSwitch',
+        confirmKey: 'action.confirm',
+        cancelKey: 'action.cancel',
+      });
+      if (!accepted) return;
+    }
     this.savingProvider.set(true);
     try {
       const saved = await this.einvoicingService.saveSettings({

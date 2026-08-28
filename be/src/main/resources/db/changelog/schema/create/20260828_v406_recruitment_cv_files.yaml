@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260828_v406_recruitment_cv_files
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: recruitment_cv_files
+      changes:
+        - createTable:
+            tableName: recruitment_cv_files
+            columns:
+              - column: { name: id, type: varchar(32), constraints: { primaryKey: true, primaryKeyName: pk_recruitment_cv_files } }
+              - column: { name: app_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: original_name, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: content_type, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: size_bytes, type: bigint, constraints: { nullable: false } }
+              - column: { name: content, type: BLOB, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: recruitment_cv_files
+            indexName: idx_recruitment_cv_app
+            columns:
+              - column:
+                  name: app_id
+      rollback:
+        - dropTable:
+            tableName: recruitment_cv_files

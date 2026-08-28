@@ -73,6 +73,16 @@ export class RecruitmentService {
     return this.http.get<DuplicateWarning[]>(`${this.baseUrl}/applications/duplicates`, { params });
   }
 
+  uploadCv(id: string, file: File): Observable<{ cvAttachmentId: string }> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return this.http.post<{ cvAttachmentId: string }>(`${this.baseUrl}/applications/${id}/cv`, form);
+  }
+
+  cvDownloadUrl(id: string): string {
+    return `${this.baseUrl}/applications/${id}/cv`;
+  }
+
   listDepartments(): Observable<Department[]> {
     return this.http.get<Department[]>('/api/v1/organization/departments');
   }

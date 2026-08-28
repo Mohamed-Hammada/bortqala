@@ -1294,3 +1294,23 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260828_v402_error_and_gate_translations.yaml
       relativeToChangelogFile: false
+  # WP-51: backfill existing Egypt tenants to EGYPT_ETA (Postgres-only, skipped here)
+  - include:
+      file: db/changelog/data/update/20260828_v403_einvoicing_backfill_egypt_tenants.yaml
+      relativeToChangelogFile: false
+  # WP-48: FX revaluation skipped-account UI key
+  - include:
+      file: db/changelog/data/insert/20260828_v404_fx_revaluation_ui_keys.yaml
+      relativeToChangelogFile: false
+  # WP-48: default cheque layout seeds (Postgres-only, skipped here)
+  - include:
+      file: db/changelog/data/update/20260828_v405_seed_default_cheque_layouts.yaml
+      relativeToChangelogFile: false
+  # WP-50 AC-4: recruitment CV file storage
+  - include:
+      file: db/changelog/schema/create/20260828_v406_recruitment_cv_files.yaml
+      relativeToChangelogFile: false
+  # WP-50 AC-4: recruitment CV validation + UI translation rows
+  - include:
+      file: db/changelog/data/insert/20260828_v406_recruitment_cv_translations.yaml
+      relativeToChangelogFile: false

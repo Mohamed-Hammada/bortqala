@@ -2,9 +2,11 @@ package com.bemo.hr.recruitment.api;
 
 import com.bemo.hr.recruitment.application.RecruitmentService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -102,5 +104,33 @@ public class RecruitmentController {
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String email) {
         return ResponseEntity.ok(service.checkDuplicates(phone, email));
+    }
+
+    @PostMapping(value = "/applications/{id}/cv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','HR_MANAGER','HR_REVIEWER')")
+    public ResponseEntity<RecruitmentApi.CvUploadResponse> uploadCv(
+            @PathVariable String id, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(service.uploadCv(id, file));
+    }
+
+    @GetMapping("/applications/{id}/cv")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','HR_MANAGER','HR_REVIEWER')")
+    public ResponseEntity<byte[]> downloadCv(@PathVariable String id) {
+        return service.getCv(id)
+                .map(cv -> ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(cv.contentType()))
+                        .contentLength(cv.content().length)
+                        .header("Content-Disposition", "attachment; filename*=UTF-8''" + encodeFilename(cv.originalName()))
+                        .body(cv.content()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private static String encodeFilename(String name) {
+        try {
+            var encoder = java.net.URLEncoder.encode(name, java.nio.charset.StandardCharsets.UTF_8);
+            return encoder.replace("+", "%20");
+        } catch (Exception e) {
+            return "cv";
+        }
     }
 }

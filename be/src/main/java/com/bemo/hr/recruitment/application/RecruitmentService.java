@@ -7,12 +7,14 @@ import com.bemo.hr.recruitment.domain.*;
 import com.bemo.hr.recruitment.infrastructure.ApplicationStageEventRepository;
 import com.bemo.hr.recruitment.infrastructure.JobApplicationRepository;
 import com.bemo.hr.recruitment.infrastructure.JobOpeningRepository;
+import com.bemo.hr.recruitment.infrastructure.RecruitmentCvFileRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -24,6 +26,20 @@ public class RecruitmentService {
     private final JobApplicationRepository applicationRepository;
     private final ApplicationStageEventRepository eventRepository;
     private final EmployeeRepository employeeRepository;
+    private final RecruitmentCvFileRepository cvFileRepository;
+
+    private static final long MAX_CV_SIZE_BYTES = 5L * 1024 * 1024;
+
+    private static final Set<String> ALLOWED_CV_TYPES = Set.of(
+            "application/pdf",
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel",
+            "text/csv");
 
     // Valid stage transitions
     private static final Map<ApplicationStage, Set<ApplicationStage>> TRANSITIONS = Map.of(
@@ -38,11 +54,13 @@ public class RecruitmentService {
     public RecruitmentService(JobOpeningRepository openingRepository,
                               JobApplicationRepository applicationRepository,
                               ApplicationStageEventRepository eventRepository,
-                              EmployeeRepository employeeRepository) {
+                              EmployeeRepository employeeRepository,
+                              RecruitmentCvFileRepository cvFileRepository) {
         this.openingRepository = openingRepository;
         this.applicationRepository = applicationRepository;
         this.eventRepository = eventRepository;
         this.employeeRepository = employeeRepository;
+        this.cvFileRepository = cvFileRepository;
     }
 
     // ---- Opening CRUD ----
@@ -222,6 +240,49 @@ public class RecruitmentService {
         } catch (Exception e) {
             return "system";
         }
+    }
+
+    // ---- CV ----
+
+    @Transactional
+    public RecruitmentApi.CvUploadResponse uploadCv(String applicationId, MultipartFile file) {
+        JobApplication app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new BusinessRuleException("Application not found", "RECR_APP_NOT_FOUND", HttpStatus.NOT_FOUND));
+
+        if (file == null || file.isEmpty()) {
+            throw new BusinessRuleException("CV file is required", "RECR_CV_REQUIRED", HttpStatus.BAD_REQUEST);
+        }
+        if (file.getSize() > MAX_CV_SIZE_BYTES) {
+            throw new BusinessRuleException("CV exceeds the 5 MB limit", "RECR_CV_TOO_LARGE", HttpStatus.BAD_REQUEST);
+        }
+        if (file.getContentType() == null || !ALLOWED_CV_TYPES.contains(file.getContentType())) {
+            throw new BusinessRuleException("Unsupported CV format", "RECR_CV_UNSUPPORTED_TYPE", HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            RecruitmentCvFile cv = new RecruitmentCvFile(
+                    file.getOriginalFilename() == null ? "cv" : file.getOriginalFilename(),
+                    file.getContentType(), file.getSize(), file.getBytes());
+            RecruitmentCvFile saved = cvFileRepository.save(cv);
+            app.attachCv(saved.getId());
+            applicationRepository.save(app);
+            return new RecruitmentApi.CvUploadResponse(saved.getId(), saved.getOriginalName(),
+                    saved.getContentType(), saved.getSizeBytes());
+        } catch (java.io.IOException e) {
+            throw new BusinessRuleException("Could not read CV file", "RECR_CV_READ_ERROR", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<RecruitmentApi.CvDownload> getCv(String applicationId) {
+        JobApplication app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new BusinessRuleException("Application not found", "RECR_APP_NOT_FOUND", HttpStatus.NOT_FOUND));
+        if (app.getCvAttachmentId() == null) {
+            return Optional.empty();
+        }
+        RecruitmentCvFile cv = cvFileRepository.findByIdAndAppId(app.getCvAttachmentId(), TenantContext.require())
+                .orElseThrow(() -> new BusinessRuleException("CV not found", "RECR_CV_NOT_FOUND", HttpStatus.NOT_FOUND));
+        return Optional.of(new RecruitmentApi.CvDownload(cv.getContent(), cv.getContentType(), cv.getOriginalName()));
     }
 
     private RecruitmentApi.OpeningResponse toOpeningResponse(JobOpening o, int applicationCount) {

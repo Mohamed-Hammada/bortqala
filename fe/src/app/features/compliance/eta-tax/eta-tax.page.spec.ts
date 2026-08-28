@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
+import { ConfirmDialogService } from '../../../core/confirm-dialog.service';
 import { EtaTaxPage } from './eta-tax.page';
 
 describe('EtaTaxPage', () => {
@@ -182,6 +183,37 @@ describe('EtaTaxPage', () => {
     await Promise.resolve();
     http.expectOne('/api/v1/compliance/eta/item-mappings').flush([]);
     expect(component.showMappingModal()).toBe(false);
+  });
+
+  it('asks for confirmation when switching e-invoicing provider', async () => {
+    const confirm = TestBed.inject(ConfirmDialogService);
+    component.openProviderModal();
+    component.providerForm.patchValue({ provider: 'EGYPT_ETA', environment: 'TEST' });
+    const promise = component.saveProviderSettings();
+    expect(confirm.confirmState()).not.toBeNull();
+    expect(confirm.confirmState()!.options.messageKey).toBe('compliance.provider.confirmSwitch');
+    confirm.resolve(true);
+    await Promise.resolve();
+    const req = http.expectOne('/api/v1/einvoicing/settings');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body.provider).toBe('EGYPT_ETA');
+    req.flush({ id: 'es-1', provider: 'EGYPT_ETA', environment: 'TEST', createdAt: Date.now(), updatedAt: Date.now() });
+    await promise;
+    await Promise.resolve();
+    expect(component.einvoicingSettings()?.provider).toBe('EGYPT_ETA');
+  });
+
+  it('saves without confirmation when the provider is unchanged', async () => {
+    const confirm = TestBed.inject(ConfirmDialogService);
+    component.openProviderModal();
+    component.providerForm.patchValue({ provider: 'NONE', environment: 'TEST' });
+    const promise = component.saveProviderSettings();
+    expect(confirm.confirmState()).toBeNull();
+    const req = http.expectOne('/api/v1/einvoicing/settings');
+    expect(req.request.method).toBe('PUT');
+    req.flush({ id: 'es-1', provider: 'NONE', environment: 'TEST', createdAt: Date.now(), updatedAt: Date.now() });
+    await promise;
+    expect(component.einvoicingSettings()?.provider).toBe('NONE');
   });
 
   function flushLoad() {

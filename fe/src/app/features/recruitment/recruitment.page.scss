@@ -116,3 +116,24 @@
   gap: 8px;
   cursor: pointer;
 }
+
+.cv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--line, #333);
+  border-radius: 8px;
+  background: var(--surface-muted, #1a1a1a);
+  font-size: 0.85em;
+
+  .cv-remove {
+    padding: 2px 8px;
+    font-size: 0.8em;
+  }
+}
+
+.text-danger {
+  color: var(--danger, #e5484d);
+}

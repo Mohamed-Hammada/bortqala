@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { I18nService } from '../../core/i18n.service';
@@ -35,6 +35,8 @@ export class RecruitmentPage {
   readonly editingId = signal<string | null>(null);
   readonly appDrawerOpen = signal(false);
   readonly appEditingId = signal<string | null>(null);
+  readonly cvFile = new FormControl<File | null>(null);
+  readonly cvError = signal<string | null>(null);
   readonly stageNoteOpen = signal(false);
   readonly convertingId = signal<string | null>(null);
   readonly eventsFor = signal<JobApplication | null>(null);
@@ -90,7 +92,7 @@ export class RecruitmentPage {
   }
 
   departmentName(id: string | null): string {
-    if (!id) return '—';
+    if (!id) return 'â€”';
     return this.departments().find((department) => department.id === id)?.name ?? id;
   }
 
@@ -202,6 +204,8 @@ export class RecruitmentPage {
   openNewApplication(): void {
     this.appEditingId.set(null);
     this.warnings.set([]);
+    this.cvFile.setValue(null);
+    this.cvError.set(null);
     this.applicationForm.reset({
       openingId: this.openings().find((opening) => opening.status === 'OPEN')?.id ?? '',
       fullName: '',
@@ -246,16 +250,22 @@ export class RecruitmentPage {
   async submitApplication(): Promise<void> {
     if (this.applicationForm.invalid || this.submitting()) return;
     this.submitting.set(true);
-    const value = this.applicationForm.getRawValue();
+const value = this.applicationForm.getRawValue();
+    const cv = this.cvFile.value;
     try {
-      await firstValueFrom(this.recruitment.createApplication({
+      const created = await firstValueFrom(this.recruitment.createApplication({
         openingId: value.openingId,
         fullName: value.fullName,
         phone: value.phone || undefined,
         email: value.email || undefined,
         source: value.source || undefined,
       }));
+      if (cv) {
+        await firstValueFrom(this.recruitment.uploadCv(created.id, cv));
+      }
       this.appDrawerOpen.set(false);
+      this.cvFile.setValue(null);
+      this.cvError.set(null);
       this.notification.success(this.i18n.t('recruitment.applicationAdded'));
       await this.load();
     } catch (e) {
@@ -263,6 +273,45 @@ export class RecruitmentPage {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  onCvSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (!file) {
+      this.cvFile.setValue(null);
+      this.cvError.set(null);
+      return;
+    }
+    const allowed = [
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv',
+    ];
+    if (file.size > 5 * 1024 * 1024) {
+      this.cvError.set(this.i18n.t('recruitment.cvTooLarge'));
+      this.cvFile.setValue(null);
+      return;
+    }
+    if (!allowed.includes(file.type)) {
+      this.cvError.set(this.i18n.t('recruitment.cvUnsupportedType'));
+      this.cvFile.setValue(null);
+      return;
+    }
+    this.cvError.set(null);
+    this.cvFile.setValue(file);
+  }
+
+  removeCv(): void {
+    this.cvFile.setValue(null);
+    this.cvError.set(null);
   }
 
   stageLabel(stage: ApplicationStage): string {

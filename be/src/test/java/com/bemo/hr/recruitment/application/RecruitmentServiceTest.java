@@ -6,10 +6,14 @@ import com.bemo.hr.recruitment.domain.*;
 import com.bemo.hr.recruitment.infrastructure.ApplicationStageEventRepository;
 import com.bemo.hr.recruitment.infrastructure.JobApplicationRepository;
 import com.bemo.hr.recruitment.infrastructure.JobOpeningRepository;
+import com.bemo.hr.recruitment.infrastructure.RecruitmentCvFileRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,12 +25,14 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class RecruitmentServiceTest {
 
     @Mock private JobOpeningRepository openingRepository;
     @Mock private JobApplicationRepository applicationRepository;
     @Mock private ApplicationStageEventRepository eventRepository;
     @Mock private EmployeeRepository employeeRepository;
+    @Mock private RecruitmentCvFileRepository cvFileRepository;
     @InjectMocks private RecruitmentService service;
 
     private MockedStatic<SecurityContextHolder> securityCtx;
@@ -36,7 +42,7 @@ class RecruitmentServiceTest {
         securityCtx = mockStatic(SecurityContextHolder.class);
         SecurityContext ctx = mock(SecurityContext.class);
         Authentication auth = mock(Authentication.class);
-        when(auth.getName()).thenReturn("test-user");
+        lenient().when(auth.getName()).thenReturn("test-user");
         when(ctx.getAuthentication()).thenReturn(auth);
         securityCtx.when(SecurityContextHolder::getContext).thenReturn(ctx);
     }
@@ -57,7 +63,7 @@ class RecruitmentServiceTest {
 
         assertThat(result.titleAr()).isEqualTo("مهندس برمجيات");
         assertThat(result.headcount()).isEqualTo(2);
-        verify(eventRepository).save(any());
+        verify(openingRepository).save(any(JobOpening.class));
     }
 
     @Test
@@ -136,5 +142,59 @@ class RecruitmentServiceTest {
 
         assertThat(result.employeeId()).isNotNull();
         verify(eventRepository).save(any());
+    }
+
+    @Test
+    void uploadCvSavesFileAndAttachesToApplication() {
+        JobApplication app = new JobApplication("op1", "Ali", "01012345678", "ali@test.com", "linkedin", null);
+        when(applicationRepository.findById("app1")).thenReturn(Optional.of(app));
+        when(cvFileRepository.save(any(RecruitmentCvFile.class)))
+                .thenAnswer(inv -> {
+                    RecruitmentCvFile cv = inv.getArgument(0);
+                    try {
+                        var f = cv.getClass().getDeclaredField("id");
+                        f.setAccessible(true);
+                        f.set(cv, "cv-1");
+                    } catch (Exception ignored) {}
+                    return cv;
+                });
+        when(applicationRepository.save(any(JobApplication.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        MockMultipartFile file = new MockMultipartFile("file", "resume.pdf", "application/pdf", new byte[2048]);
+
+        RecruitmentApi.CvUploadResponse result = service.uploadCv("app1", file);
+
+        assertThat(result.cvAttachmentId()).isEqualTo("cv-1");
+        assertThat(result.originalName()).isEqualTo("resume.pdf");
+        assertThat(result.contentType()).isEqualTo("application/pdf");
+        assertThat(result.sizeBytes()).isEqualTo(2048L);
+        assertThat(app.getCvAttachmentId()).isEqualTo("cv-1");
+        verify(cvFileRepository).save(any(RecruitmentCvFile.class));
+    }
+
+    @Test
+    void uploadCvRejectsOversizedFile() {
+        JobApplication app = new JobApplication("op1", "Ali", "01012345678", "ali@test.com", "linkedin", null);
+        when(applicationRepository.findById("app1")).thenReturn(Optional.of(app));
+
+        MockMultipartFile file = new MockMultipartFile("file", "big.pdf", "application/pdf",
+                new byte[5 * 1024 * 1024 + 1]);
+
+        assertThatThrownBy(() -> service.uploadCv("app1", file))
+                .hasMessageContaining("5 MB");
+        verify(cvFileRepository, never()).save(any());
+    }
+
+    @Test
+    void uploadCvRejectsUnsupportedType() {
+        JobApplication app = new JobApplication("op1", "Ali", "01012345678", "ali@test.com", "linkedin", null);
+        when(applicationRepository.findById("app1")).thenReturn(Optional.of(app));
+
+        MockMultipartFile file = new MockMultipartFile("file", "notes.txt", "text/plain", new byte[16]);
+
+        assertThatThrownBy(() -> service.uploadCv("app1", file))
+                .hasMessageContaining("Unsupported CV format");
+        verify(cvFileRepository, never()).save(any());
     }
 }

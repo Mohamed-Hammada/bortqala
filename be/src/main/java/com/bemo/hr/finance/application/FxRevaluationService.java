@@ -13,10 +13,9 @@ import com.bemo.hr.finance.infrastructure.CurrencyRepository;
 import com.bemo.hr.finance.infrastructure.FxRevaluationPostRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
-import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +44,15 @@ public class FxRevaluationService {
     private final JournalEntryService journalEntryService;
     private final FiscalPeriodGuard fiscalPeriodGuard;
 
+    @Value("${hr.finance.fx-revaluation-gain-account-code:4200}")
+    private String fxGainAccountCode = "4200";
+
+    @Value("${hr.finance.fx-revaluation-loss-account-code:4200}")
+    private String fxLossAccountCode = "4200";
+
+    @Value("${hr.finance.fx-revaluation-holding-account-code:10101}")
+    private String fxHoldingAccountCode = "10101";
+
     public FxRevaluationService(FxRevaluationPostRepository fxRevaluationPostRepository,
                                 JournalEntryRepository journalEntryRepository,
                                 JournalEntryLineRepository journalEntryLineRepository,
@@ -69,8 +77,6 @@ public class FxRevaluationService {
         log.info("FX revaluation run for asOf={}, yearMonth={}, user={}", asOf, yearMonth, username);
 
         List<Account> allAccounts = accountRepository.findAllByOrderByCodeAsc();
-        Map<String, Account> accountMap = allAccounts.stream()
-                .collect(Collectors.toMap(Account::getId, a -> a));
 
         List<JournalEntry> postedEntries = journalEntryRepository
                 .findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED));
@@ -150,15 +156,28 @@ public class FxRevaluationService {
             String description = "Month-end FX revaluation " + currencyCode + " " + yearMonth;
             long entryDateMs = asOf.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
 
-            Account fxGainLossAccount = findAccountByCode("4200");
-            Account currencyHoldingAccount = findAccountByCode("10101");
+            String gainCode = resolveCode(fxGainAccountCode, "4200");
+            String lossCode = resolveCode(fxLossAccountCode, "4200");
+            String holdingCode = resolveCode(fxHoldingAccountCode, "10101");
+            Account fxGainAccount = findAccountByCodeOrNull(gainCode);
+            Account fxLossAccount = findAccountByCodeOrNull(lossCode);
+            Account currencyHoldingAccount = findAccountByCodeOrNull(holdingCode);
+
+            if (fxGainAccount == null || fxLossAccount == null || currencyHoldingAccount == null) {
+                log.warn("Skipping FX revaluation for {} — revaluation account config missing (gain={}, loss={}, holding={})",
+                        currencyCode, gainCode, lossCode, holdingCode);
+                results.add(new FxRevaluationApi.CurrencyResult(
+                        currencyCode, netBalance, currentRate, bookValueInEgp,
+                        delta, null, "FX_REVALUATION_ACCOUNT_NOT_FOUND"));
+                continue;
+            }
 
             BigDecimal absAmount = delta.abs();
 
             List<AccountingApi.JournalEntryLinePayload> lines = new ArrayList<>();
             if (delta.compareTo(BigDecimal.ZERO) > 0) {
                 lines.add(new AccountingApi.JournalEntryLinePayload(
-                        fxGainLossAccount.getId(), null, absAmount, null,
+                        fxGainAccount.getId(), null, absAmount, null,
                         "FX unrealized gain " + currencyCode, null, null, null));
                 lines.add(new AccountingApi.JournalEntryLinePayload(
                         currencyHoldingAccount.getId(), null, null, absAmount,
@@ -168,7 +187,7 @@ public class FxRevaluationService {
                         currencyHoldingAccount.getId(), null, absAmount, null,
                         "FX unrealized loss " + currencyCode, null, null, null));
                 lines.add(new AccountingApi.JournalEntryLinePayload(
-                        fxGainLossAccount.getId(), null, null, absAmount,
+                        fxLossAccount.getId(), null, null, absAmount,
                         "FX unrealized loss " + currencyCode, null, null, null));
             }
 
@@ -213,13 +232,15 @@ public class FxRevaluationService {
                 .toList();
     }
 
-    private Account findAccountByCode(String code) {
+    private Account findAccountByCodeOrNull(String code) {
         return accountRepository.findAllByOrderByCodeAsc().stream()
                 .filter(a -> code.equals(a.getCode()))
                 .findFirst()
-                .orElseThrow(() -> new BusinessRuleException(
-                        "Account not found: " + code,
-                        "FX_REVALUATION_ACCOUNT_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElse(null);
+    }
+
+    private String resolveCode(String configured, String fallback) {
+        return (configured == null || configured.isBlank()) ? fallback : configured.trim();
     }
 
     private FxRevaluationApi.RevaluationResponse toResponse(FxRevaluationPost p) {
