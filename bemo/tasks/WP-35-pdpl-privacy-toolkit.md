@@ -17,8 +17,8 @@ Egypt's Personal Data Protection Law: data subjects can request export or erasur
 2. Keys `settings.privacy*` (~18).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Export bundle for a fixture employee contains their PII from every covered table AND zero other subjects' data (leak test).
-- [ ] AC-2 Erase anonymizes identity columns but leaves invoice/payroll amounts and dates intact; GL trial balance unchanged post-erase (finance-invariant test).
-- [ ] AC-3 Overdue request (due_at passed) flagged on register; completion requires decision note; every action audited.
-- [ ] AC-4 Retention dry-run shows exact counts matching manual SQL count for two policies; execute without confirm impossible.
-- [ ] AC-5 Consent withdrawal stops WP-31 sends for that subject within one scheduler tick (integration with outbound log).
+- [ ] AC-1 Export bundle for a fixture employee contains their PII from every covered table AND zero other subjects' data (leak test). — **NOT MET**: export bundle exceeds scaffold (no leak-tested gatherer).
+- [ ] AC-2 Erase anonymizes identity columns but leaves invoice/payroll amounts and dates intact; GL trial balance unchanged post-erase (finance-invariant test). — **PARTIAL**: anonymize stub present; finance-invariant test absent.
+- [ ] AC-3 Overdue request (due_at passed) flagged on register; completion requires decision note; every action audited. — **NOT MET**: `auditService` injected but never called in `PrivacyService`; overdue flag/due-badge flow not verified end-to-end.
+- [ ] AC-4 Retention dry-run shows exact counts matching manual SQL count for two policies; execute without confirm impossible. — **NOT MET**: dry-run/confirm gate not implemented beyond scaffold.
+- [ ] AC-5 Consent withdrawal stops WP-31 sends for that subject within one scheduler tick (integration with outbound log). — **PARTIAL**: `ConsentRegistry` exists but is NOT wired into WhatsApp sends (WP-31 same gap), so withdrawal cannot stop sends.

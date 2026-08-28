@@ -16,7 +16,7 @@ Sell beyond Egypt (KSA is the natural next market — Daftra leads there with ZA
 2. Keys ~8 (`compliance.provider.*`).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 All pre-existing ETA tests pass WITHOUT modification after extraction (pure refactor proof — reviewer checks diff).
-- [ ] AC-2 Existing Egypt tenants post-migration behave identically end-to-end (golden submission fixture).
-- [ ] AC-3 Selecting KSA_ZATCA yields clean translated NOT_IMPLEMENTED on submit, and UI badge updates; NONE disables as before.
-- [ ] AC-4 New tenant defaults to NONE (no surprise submissions); switching providers mid-history documented + guarded by confirm dialog.
+- [x] AC-1 All pre-existing ETA tests pass WITHOUT modification after extraction (pure refactor proof — reviewer checks diff). — **MET**: commit `eced07f` touched ONLY `compliance/einvoicing/` (11 new adapters, 367 insertions) and ZERO `compliance/eta` files; `EtaComplianceServiceTests` still imports only `compliance.eta.*` and never references `EinvoicingProvider`/`EtaEinvoicingProvider`.
+- [ ] AC-2 Existing Egypt tenants post-migration behave identically end-to-end (golden submission fixture). — **PARTIAL**: v396 creates `einvoicing_settings.provider DEFAULT 'NONE'` (`20260827_v396_einvoicing_settings_schema.yaml:17`) with NO backfill of existing Egypt tenants — behavior preservation relies on defaulting, not a golden end-to-end fixture.
+- [x] AC-3 Selecting KSA_ZATCA yields clean translated NOT_IMPLEMENTED on submit, and UI badge updates; NONE disables as before. — **MET** (KSA_ZATCA placeholder adapter + provider badge; NONE short-circuits).
+- [ ] AC-4 New tenant defaults to NONE (no surprise submissions); switching providers mid-history documented + guarded by confirm dialog. — **PARTIAL**: NONE default for new tenants MET; the mid-history switching guard + FE confirm dialog not verified.

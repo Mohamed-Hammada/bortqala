@@ -16,8 +16,8 @@ Owner receives "Daily cash position" and "Weekly AR aging" as Excel/PDF on Whats
 2. Keys `reports.schedule*` (~16).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Daily schedule fires once per day per TZ change rule (fake clock test across DST-less Cairo); weekly honors weekday.
-- [ ] AC-2 Run-now returns the same bytes the manual export endpoint produces (byte-equal assertion on fixture).
-- [ ] AC-3 Email path attaches localized xlsx (headers in recipient locale preference); WhatsApp path skipped gracefully when provider NONE (status SKIPPED_CHANNEL).
-- [ ] AC-4 5 consecutive failures auto-disable + single admin notification (not 5); re-enable works.
-- [ ] AC-5 Deleted/changed report filters fail safe with clear error rather than empty file.
+- [ ] AC-1 Daily schedule fires once per day per TZ change rule (fake clock test across DST-less Cairo); weekly honors weekday. — **NOT MET**: no `@Scheduled`/`@Async` driver; only manual `runNow` (`ReportScheduleController.java:50`); `findDue()` never scheduled.
+- [ ] AC-2 Run-now returns the same bytes the manual export endpoint produces (byte-equal assertion on fixture). — **NOT MET**: `runNow`/`executeSchedule` (`ReportScheduleService.java:87-94`) does NOT reuse the exporter — produces no bytes.
+- [ ] AC-3 Email path attaches localized xlsx (headers in recipient locale preference); WhatsApp path skipped gracefully when provider NONE (status SKIPPED_CHANNEL). — **PARTIAL**: WHATSAPP → `SKIPPED_CHANNEL` MET; NO email sender exists anywhere (no JavaMailSender / `hr.mail` props).
+- [ ] AC-4 5 consecutive failures auto-disable + single admin notification (not 5); re-enable works. — **PARTIAL**: `MAX_CONSECUTIVE_FAILURES=5` + deactivate (`ReportScheduleService.java:22,79-82`) MET; single-notification + re-enable unverified.
+- [ ] AC-5 Deleted/changed report filters fail safe with clear error rather than empty file. — **PARTIAL**: not verified (no exporter byte path to fail-safe on).

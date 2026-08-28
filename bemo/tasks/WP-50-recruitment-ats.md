@@ -17,7 +17,7 @@ Post a job opening, collect applicants, move them through stages, and on hire co
 3. Keys ~22.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Stage machine matrix enforced incl. REJECTED terminal unless reopen-permission flag; every move writes history row visible in timeline.
-- [ ] AC-2 Convert creates employee with mapped fields and marks application HIRED with link; second convert blocked.
-- [ ] AC-3 Duplicate phone/email shows non-blocking warning banner listing prior application(s).
-- [ ] AC-4 CV upload enforces REM-005 size/type trio; closed opening rejects new applications.
+- [x] AC-1 Stage machine matrix enforced incl. REJECTED terminal unless reopen-permission flag; every move writes history row visible in timeline. — **MET** (stage transition validation + `application_stage_events` history).
+- [x] AC-2 Convert creates employee with mapped fields and marks application HIRED with link; second convert blocked. — **MET** (convert → prefilled employee-create, HIRED + employeeId link stored back).
+- [ ] AC-3 Duplicate phone/email shows non-blocking warning banner listing prior application(s). — **PARTIAL**: duplicate detection by phone/email exists; the FE non-blocking warning banner + prior-applications listing not verified.
+- [ ] AC-4 CV upload enforces REM-005 size/type trio; closed opening rejects new applications. — **NOT MET**: no CV upload at all — `cvAttachmentId` is an unannotated String in `RecruitmentApi.java:55-63`, the FE application form has NO CV control and no `<input type="file">`; `submitApplication` never sends it. (Closed-opening rejection separately present.)

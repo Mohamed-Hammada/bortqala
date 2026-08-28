@@ -21,8 +21,8 @@ Two linked capabilities: (1) route a document (offer, contract, consent) for seq
 3. Keys ~24.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Sequential enforcement: step-2 signer cannot sign before step-1 (API rejects out-of-order); decline by step-1 halts packet as REJECTED with reason recorded.
-- [ ] AC-2 Manifest integrity: recomputed SHA-256 of stored file equals hash captured at each signature (tamper test modifying byte fails verification view).
-- [ ] AC-3 Every step logs ip+utc timestamp+method; manifest export downloads as JSON evidence bundle.
-- [ ] AC-4 GED backfill: existing operations attachment rows appear under mapped folders after migration; none duplicated (count reconciliation).
-- [ ] AC-5 Search finds by tag and filename prefix within ≤300ms on 1k-doc fixture; cross-tenant zero leakage.
+- [x] AC-1 Sequential enforcement: step-2 signer cannot sign before step-1 (API rejects out-of-order); decline by step-1 halts packet as REJECTED with reason recorded. — **MET**: `ESignService.signStep` rejects out-of-order (`:80-88`); `packet.reject()` aborts (`:130`).
+- [ ] AC-2 Manifest integrity: recomputed SHA-256 of stored file equals hash captured at each signature (tamper test modifying byte fails verification view). — **NOT MET**: `buildManifest`/`exportManifest` exist (`:135-164`) but the SHA-256 compare in `signStep` (`:91-94`) is a dead no-op; no verify/tamper endpoint or view.
+- [x] AC-3 Every step logs ip+utc timestamp+method; manifest export downloads as JSON evidence bundle. — **MET** (step evidence fields + JSON manifest export).
+- [ ] AC-4 GED backfill: existing operations attachment rows appear under mapped folders after migration; none duplicated (count reconciliation). — **NOT MET**: v400 only creates `doc_folders`; NO backfill migration maps existing attachment trios to folders.
+- [ ] AC-5 Search finds by tag and filename prefix within ≤300ms on 1k-doc fixture; cross-tenant zero leakage. — **PARTIAL**: `searchAttachments` (`DocManagementService.java:131-150`) is tag/ID-substring filtering, not real name/content search; ≤300ms/perf + leakage tests unverified.

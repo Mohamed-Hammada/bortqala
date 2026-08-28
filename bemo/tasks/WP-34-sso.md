@@ -19,7 +19,7 @@ Tenants on Google Workspace / Microsoft 365 sign in with corporate identity inst
 2. Settings→Security: SSO config card (admin), linked-identities list per user in users page detail.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Happy path against real Google test tenant: redirect → consent → callback issues app JWT with correct roles; audit row written.
-- [ ] AC-2 State/nonce replay or mismatch rejected (`SSO_STATE_INVALID`); expired state (>5 min) rejected.
-- [ ] AC-3 Unknown email: auto_provision=false denies translated; =true creates VIEWER once (second login maps same identity, no dup users — unique constraint test).
-- [ ] AC-4 Disabling config hides button and rejects callbacks immediately; secret never returned by any GET (write-only field test).
+- [ ] AC-1 Happy path against real Google test tenant: redirect → consent → callback issues app JWT with correct roles; audit row written. — **NOT MET**: callback does not issue a JWT; `auditService` injected but never called (no `SSO_LOGIN` audit row).
+- [ ] AC-2 State/nonce replay or mismatch rejected (`SSO_STATE_INVALID`); expired state (>5 min) rejected. — **PARTIAL**: start/state storage exists; expiry window + replay-rejection tests unverified.
+- [ ] AC-3 Unknown email: auto_provision=false denies translated; =true creates VIEWER once (second login maps same identity, no dup users — unique constraint test). — **PARTIAL**: provisioning scaffold exists; unique-identity + second-login-maps-same tests unverified.
+- [ ] AC-4 Disabling config hides button and rejects callbacks immediately; secret never returned by any GET (write-only field test). — **NOT MET**: callback rejection-on-disabled + write-only-secret GET test not verified.

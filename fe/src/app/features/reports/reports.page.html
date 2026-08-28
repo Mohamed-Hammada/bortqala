@@ -266,17 +266,17 @@
             <select formControlName="reportKind">
               <option value="ATTENDANCE">{{ i18n.t('nav.attendanceReports') }}</option>
               <option value="PAYROLL">{{ i18n.t('nav.payroll') }}</option>
-              <option value="AR_AGING">AR Aging</option>
-              <option value="CASHFLOW">Cash Flow</option>
+              <option value="AR_AGING">{{ i18n.t('reports.scheduleKindArAging') }}</option>
+              <option value="CASHFLOW">{{ i18n.t('reports.scheduleKindCashFlow') }}</option>
               <option value="TRENDS">{{ i18n.t('dashboard.trends') }}</option>
-              <option value="CUSTOM">Custom</option>
+              <option value="CUSTOM">{{ i18n.t('reports.scheduleKindCustom') }}</option>
             </select>
           </div>
           <div class="field">
             <label>{{ i18n.t('reports.channel') }}</label>
             <select formControlName="channel">
-              <option value="EMAIL">Email</option>
-              <option value="WHATSAPP">WhatsApp</option>
+              <option value="EMAIL">{{ i18n.t('reports.scheduleKindEmail') }}</option>
+              <option value="WHATSAPP">{{ i18n.t('reports.scheduleKindWhatsApp') }}</option>
             </select>
           </div>
           <div class="field">

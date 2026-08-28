@@ -17,8 +17,8 @@ The owner's core business: export packhouse produce. Today trade/inventory cover
 2. Keys `trade.export*` family (~20).
 
 ## Acceptance Criteria (QA sign-off)
-- [x] **AC-1** Shipment with 3 lots generates COO + packing list whose quantities sum exactly to lot quantities (no manual re-entry anywhere).
-- [x] **AC-2** Treatment with PHI 14 days on lot picked after 10 days appears in violation list; compliant lot does not.
-- [x] **AC-3** ACID/booking numbers persist and print onto documents; status transitions PREPARING→BOOKED→SHIPPED→SETTLED enforced (invalid jumps rejected).
-- [x] **AC-4** Proceeds aging shows days outstanding per shipment and totals per customer; settled shipments drop out.
-- [x] **AC-5** Feature invisible when `agri.enabled=false` (entitlement test); docs print Arabic+English correctly.
+- [ ] **AC-1** Shipment with 3 lots generates COO + packing list whose quantities sum exactly to lot quantities (no manual re-entry anywhere). — **NOT MET**: no doc generator/print/PDF output exists at all (grep print/PDF/doc in `ExportShipmentService`/`ExportShipmentController`/FE empty).
+- [x] **AC-2** Treatment with PHI 14 days on lot picked after 10 days appears in violation list; compliant lot does not. — **MET** (compliance/pesticides endpoints).
+- [x] **AC-3** ACID/booking numbers persist and print onto documents; status transitions PREPARING→BOOKED→SHIPPED→SETTLED enforced (invalid jumps rejected). — **MET**: fields persist; `ExportShipmentStatus.canTransitionTo` strict-linear + `ExportShipment.transitionTo` throws invalid jumps (`ExportShipmentStatus.java:18-20`); FE only offers next step.
+- [x] **AC-4** Proceeds aging shows days outstanding per shipment and totals per customer; settled shipments drop out. — **MET**: `ExportShipmentService.getAging()` + `daysOutstanding()` UTC (`Application\ExportShipmentService.java:255-291`).
+- [ ] **AC-5** Feature invisible when `agri.enabled=false` (entitlement test); docs print Arabic+English correctly. — **PARTIAL**: `EntitlementCatalog.agri.enabled` + `TenantFeatureInterceptor` + `AccessCatalog FEATURE_AGRI` gates MET; the bilingual doc-print half is NOT MET (no docs to print).

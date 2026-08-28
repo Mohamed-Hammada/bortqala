@@ -16,8 +16,8 @@ Three automations that remove monthly grunt work: (1) recurring documents (stand
 2. Keys ~24.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Monthly rent template creates exactly one DRAFT invoice on its day; double-run same period dedupes via next_run_at advance (clock test).
-- [ ] AC-2 Drafts never post ledger until human confirms (invariant test on all three kinds).
-- [ ] AC-3 Party at 35 days overdue receives 30-bucket reminder once; at 61 gets 60-template; opted-out party logged skipped.
-- [ ] AC-4 Failed export visible in jobs page with original error text; retry succeeds and flips status; retry of non-retryable kind blocked server-side.
-- [ ] AC-5 All three runners are tenant-scoped — cross-tenant leakage test on every loop.
+- [ ] AC-1 Monthly rent template creates exactly one DRAFT invoice on its day; double-run same period dedupes via next_run_at advance (clock test). — **PARTIAL**: templates/runner scaffold + draft-only constraint exist; dedupe-by-next_run_at + clock test unverified.
+- [ ] AC-2 Drafts never post ledger until human confirms (invariant test on all three kinds). — **PARTIAL**: draft-only by construction; per-kind invariant test absent.
+- [ ] AC-3 Party at 35 days overdue receives 30-bucket reminder once; at 61 gets 60-template; opted-out party logged skipped. — **NOT MET**: dunning ladder not wired (needs WP-31 sender which is NoOp).
+- [ ] AC-4 Failed export visible in jobs page with original error text; retry succeeds and flips status; retry of non-retryable kind blocked server-side. — **NOT MET**: jobs health registry/retry endpoint not verified beyond scaffold.
+- [ ] AC-5 All three runners are tenant-scoped — cross-tenant leakage test on every loop. — **PARTIAL**: runners tenant-scoped by `@TenantId` discipline; no cross-tenant leakage tests.

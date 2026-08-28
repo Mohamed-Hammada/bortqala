@@ -17,8 +17,8 @@ Internal IT/support (or customer-facing support teams) need tickets with SLA tim
 3. Keys ~26.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 URGENT ticket SLA stamps use priority multiplier correctly (category base × matrix fixture); breach flags flip via cron within window and revert never.
-- [ ] AC-2 First response timestamp set by FIRST non-internal agent message only (internal notes don't count — rule test).
-- [ ] AC-3 Customer-visible thread hides internal notes strictly (permission+filter test both layers).
-- [ ] AC-4 Arabic search hits Arabic-body articles ranking exact-title matches first; publishing requires BOTH locale bodies (validation test).
-- [ ] AC-5 "Create article from ticket" prefills body with sanitized thread (no internal notes leaked — string scan test).
+- [ ] AC-1 URGENT ticket SLA stamps use priority multiplier correctly (category base × matrix fixture); breach flags flip via cron within window and revert never. — **PARTIAL**: SLA due-timestamp stamps + multiplier exist; breach cron + "revert never" unverified.
+- [x] AC-2 First response timestamp set by FIRST non-internal agent message only (internal notes don't count — rule test). — **MET** (non-internal first-response rule test).
+- [x] AC-3 Customer-visible thread hides internal notes strictly (permission+filter test both layers). — **MET** (internal-note filter + permission tests).
+- [ ] AC-4 Arabic search hits Arabic-body articles ranking exact-title matches first; publishing requires BOTH locale bodies (validation test). — **PARTIAL**: `kb.search` ILIKE/ranked + bilingual-publish validation exist (v392/v395 fixed kb.search ar); ranking-order test unverified.
+- [x] AC-5 "Create article from ticket" prefills body with sanitized thread (no internal notes leaked — string scan test). — **MET** (sanitized prefill + string-scan test).

@@ -901,4 +901,7 @@ databaseChangeLog:
   # WP-47: eSign + Document Management translations
   - include:
       file: db/changelog/data/insert/20260828_v401_doc_esign_translations.yaml
+  # QA gate: availability error codes + scheduled-report/helpdesk/SSO UI keys
+  - include:
+      file: db/changelog/data/insert/20260828_v402_error_and_gate_translations.yaml
 

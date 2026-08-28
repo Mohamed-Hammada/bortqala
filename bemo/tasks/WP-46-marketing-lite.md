@@ -17,8 +17,8 @@ Scoped v1 of a marketing suite: send announcement campaigns (email via SMTP, SMS
 2. Keys ~24.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Audience preview counts match resolver SQL for 3-segment fixture; recipients without consent appear in "excluded" list with reason, never sent (worker assertion).
-- [ ] AC-2 Throttled send of 250 recipients respects N/min config (fake clock batch test) and records per-recipient status.
-- [ ] AC-3 Recipient with Arabic preference receives Arabic body variant (locale selection test); English gets English.
-- [ ] AC-4 Survey: one response per anonymous token (unique guard), results percentages sum 100 ± rounding note; TEXT answers exported CSV safely quoted.
-- [ ] AC-5 Failed provider call marks campaign FAILED with actionable error; resume continues from last queued recipient (no dup sends).
+- [ ] AC-1 Audience preview counts match resolver SQL for 3-segment fixture; recipients without consent appear in "excluded" list with reason, never sent (worker assertion). — **NOT MET**: consent registry not wired into campaign sends (same gap as WP-31/WP-35); excluded-list+reason path absent.
+- [ ] AC-2 Throttled send of 250 recipients respects N/min config (fake clock batch test) and records per-recipient status. — **PARTIAL**: `campaign_recipients` per-recipient status exists; throttle-by-config + fake-clock batch test unverified.
+- [ ] AC-3 Recipient with Arabic preference receives Arabic body variant (locale selection test); English gets English. — **NOT MET**: per-recipient locale selection path not verified (sender is NoOp-style).
+- [ ] AC-4 Survey: one response per anonymous token (unique guard), results percentages sum 100 ± rounding note; TEXT answers exported CSV safely quoted. — **PARTIAL**: survey/survey_responses scaffold exists; token-unique guard/Csv-safe-export tests unverified.
+- [ ] AC-5 Failed provider call marks campaign FAILED with actionable error; resume continues from last queued recipient (no dup sends). — **PARTIAL**: FAILED-state + error recorded; resume/continue-from-last unverified.

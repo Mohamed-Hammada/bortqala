@@ -15,9 +15,9 @@
   } @else {
     <div class="tabs">
       <button class="tab" [class.active]="!filterStatus()" (click)="filterStatus.set(''); loadAll()">{{ i18n.t('helpdesk.inbox') }} ({{ openCount() }})</button>
-      <button class="tab" [class.active]="filterStatus() === 'NEW'" (click)="filterStatus.set('NEW'); loadAll()">NEW</button>
-      <button class="tab" [class.active]="filterStatus() === 'OPEN'" (click)="filterStatus.set('OPEN'); loadAll()">OPEN</button>
-      <button class="tab" [class.active]="filterStatus() === 'WAITING_CUSTOMER'" (click)="filterStatus.set('WAITING_CUSTOMER'); loadAll()">WAITING</button>
+      <button class="tab" [class.active]="filterStatus() === 'NEW'" (click)="filterStatus.set('NEW'); loadAll()">{{ i18n.t('helpdesk.statusNew') }}</button>
+      <button class="tab" [class.active]="filterStatus() === 'OPEN'" (click)="filterStatus.set('OPEN'); loadAll()">{{ i18n.t('helpdesk.statusOpen') }}</button>
+      <button class="tab" [class.active]="filterStatus() === 'WAITING_CUSTOMER'" (click)="filterStatus.set('WAITING_CUSTOMER'); loadAll()">{{ i18n.t('helpdesk.statusWaiting') }}</button>
     </div>
 
     @if (tickets().length === 0) {
@@ -90,8 +90,8 @@
         <label>{{ i18n.t('helpdesk.description') }}<textarea [value]="ticketDescription()" (input)="ticketDescription.set($any($event.target).value)"></textarea></label>
         <label>{{ i18n.t('helpdesk.priority') }}
           <select [value]="ticketPriority()" (change)="ticketPriority.set($any($event.target).value)">
-            <option value="LOW">LOW</option><option value="NORMAL">NORMAL</option>
-            <option value="HIGH">HIGH</option><option value="URGENT">URGENT</option>
+            <option value="LOW">{{ i18n.t('helpdesk.priorityLow') }}</option><option value="NORMAL">{{ i18n.t('helpdesk.priorityNormal') }}</option>
+            <option value="HIGH">{{ i18n.t('helpdesk.priorityHigh') }}</option><option value="URGENT">{{ i18n.t('helpdesk.priorityUrgent') }}</option>
           </select>
         </label>
         <div class="modal-actions">
@@ -110,8 +110,8 @@
         <div class="status-line">
           <span class="status-badge" [style.color]="statusColor(selectedTicket()!.status)">{{ selectedTicket()!.status }}</span>
           @if (selectedTicket()!.status !== 'CLOSED') {
-            <button class="button secondary small" (click)="transitionTo('RESOLVED')">{{ i18n.t('helpdesk.status') }} → RESOLVED</button>
-            <button class="button secondary small" (click)="transitionTo('OPEN')">{{ i18n.t('helpdesk.status') }} → OPEN</button>
+            <button class="button secondary small" (click)="transitionTo('RESOLVED')">{{ i18n.t('helpdesk.status') }} → {{ i18n.t('helpdesk.statusResolved') }}</button>
+            <button class="button secondary small" (click)="transitionTo('OPEN')">{{ i18n.t('helpdesk.status') }} → {{ i18n.t('helpdesk.statusOpen') }}</button>
           }
         </div>
         <h3>{{ i18n.t('helpdesk.messages') }}</h3>

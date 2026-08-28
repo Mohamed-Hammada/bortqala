@@ -15,6 +15,6 @@ Original ask: "user-defined categories where ≥1 fingerprint/day = attended." B
 4. Keys: `categories.singlePunchCounts`, `categories.singlePunchCountsHint`, `review.ruleAutoAttended`, `review.ruleBlocking` + CSV.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Toggle persists per category and survives reload (API round-trip test).
-- [ ] AC-2 With rule ON, a 1-punch day no longer appears as blocking exception for that category; with OFF it does (integration fixture both ways).
-- [ ] AC-3 Rule-state chip renders correctly on review rows in both locales; gates green.
+- [x] AC-1 Toggle persists per category and survives reload (API round-trip test). — **MET** (`singlePunchCounts` read/write exposed; category API round-trip tests).
+- [x] AC-2 With rule ON, a 1-punch day no longer appears as blocking exception for that category; with OFF it does (integration fixture both ways). — **MET** (ONE_PUNCH bulk-accept + `AttendanceExceptionService.singlePunchScore`; both-state fixture tests).
+- [ ] AC-3 Rule-state chip renders correctly on review rows in both locales; gates green. — **PARTIAL**: `report-review.page.html:378-382` renders only the `review.ruleBlocking` chip on undecided SINGLE_PUNCH rows; `review.ruleAutoAttended` is defined in i18n but never rendered (no dual-state chip).

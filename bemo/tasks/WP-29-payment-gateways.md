@@ -21,8 +21,8 @@ Collect receivables faster: generate a payment link (Fawry/Paymob/InstaPay) for 
 3. Keys `finance.paylink*` (~16).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Link created for 5,000 invoice → webhook PAID posts exactly one receipt + one ledger credit; replayed webhook (same txn id) is a no-op.
-- [ ] AC-2 Tampered webhook signature → 401 `WEBHOOK_SIGNATURE_INVALID`, zero state change (security test).
-- [ ] AC-3 Expired link page shows expired state and rejects webhook payment as late (provider-refund note logged).
-- [ ] AC-4 Public page leaks nothing beyond {companyName, description, amount} (payload snapshot test).
-- [ ] AC-5 Gateway NONE hides all actions; secrets never in repo (grep gate); poller catches a webhook-simulated miss within configured interval exactly once.
+- [ ] AC-1 Link created for 5,000 invoice → webhook PAID posts exactly one receipt + one ledger credit; replayed webhook (same txn id) is a no-op. — **PARTIAL**: link create+PAID flow implemented; provider adapter is `NoOpGatewayClient` — no live webhook path; idempotent-replay unverified.
+- [ ] AC-2 Tampered webhook signature → 401 `WEBHOOK_SIGNATURE_INVALID`, zero state change (security test). — **NOT MET**: `WEBHOOK_SIGNATURE_INVALID` code absent; no HMAC verification.
+- [ ] AC-3 Expired link page shows expired state and rejects webhook payment as late (provider-refund note logged). — **PARTIAL**: expiration flag exists; late-reject + refund-note path unverified.
+- [x] AC-4 Public page leaks nothing beyond {companyName, description, amount} (payload snapshot test). — **MET** (public `/p/{token}` minimal payload + snapshot test).
+- [ ] AC-5 Gateway NONE hides all actions; secrets never in repo (grep gate); poller catches a webhook-simulated miss within configured interval exactly once. — **PARTIAL**: NONE-off + env-only secrets hold; poller fallback job NOT MET.

@@ -24,7 +24,7 @@
 | WP-07 | Loans deduction policy switcher ✅ **DONE** (reuses `workforce_advance_policies` V58 — no new table; entity canonicalizes AUTO_IN_PAYROLL→AUTO / MANUAL_BUTTON→MANUAL / MID_MONTH_SPLIT; resolver `resolveDeductionPolicy` w/ EMPLOYEE→CATEGORY→GLOBAL→defaults(AUTO,MONTHLY) precedence + `GET /api/v1/workforce/advances/resolved-policy`; payroll gate skips auto-collection under MANUAL (`isManualDeductionPolicy`) + ADVANCE_DEDUCTION explanation row records skip reason JSON; idempotent manual apply `POST .../apply-deduction` per (employee,period) via ledger notes suffix, collects overdue installments capped by balance, ADVANCE_MANUAL_NOT_DUE/ADVANCE_NOTHING_DUE/ADVANCE_POLICY_INVALID/ADVANCE_POLICY_EXISTS codes en/ar (V350); FE settings business-tab policy card (global+category drafts, Save-All/dirty/cancel) + employees toolbar action gated on MANUAL w/ affected-count confirm loop — 816 BE / 487 FE green 2026-08-24) | 🟠 | Backend D | closed |
 | WP-08 | Peak clock-in analytics ✅ **DONE** (BE 3/3 · FE 453/453 · V342 · H2 ✓) | 🟠 | Backend D + FE | shipped |
 | WP-10 | Vertical role templates (users page) | 🟠 | Full-stack F | 3–4d |
-| WP-19 | Single-punch rule surface ✅ ALREADY SHIPPED (category checkbox + ONE_PUNCH bulk accept) | 🟠 | — | closed |
+| WP-19 | Single-punch rule surface ✅ **QA 2026-08-28** (AC-1/2 MET: `singlePunchCounts` read/write + ONE_PUNCH bulk accept; AC-3 PARTIAL: only `review.ruleBlocking` chip renders, `review.ruleAutoAttended` never used) | 🟠 | — | closed |
 | WP-20 | Employee form groups + preview ✅ **DONE 2026-08-27** (FE-only: `FORM_GROUPS` 7-group accordion single-source driving both form + preview; AC-2 auto-expand on invalid submit; AC-3 preview 1:1 salary-gated parity; V362 + `employees.group.invalidFields`; 553 FE / 5,182 i18n green 2026-08-27) | 🟠 | Full-stack F² | 2d |
 
 ### Wave 3 — product expansion
@@ -33,7 +33,7 @@
 | WP-11 | Employee expense claims | 🟡 | Full-stack F | 4d |
 | WP-12 | Sales targets & commissions engine | 🟡 | Backend D | 4d |
 | WP-15 | Medical clinic MVP slice | 🟢 | Squad H+E | ~3wk |
-| WP-16 | Agri-export documentation pack | 🟢 | Full-stack B | ~2wk |
+| WP-16 | Agri-export documentation pack 🟠 **QA 2026-08-28** (AC-2/3/4 MET — compliance window, strict transitions, aging; AC-1 doc generators NOT MET — no print/PDF at all; AC-5 PARTIAL — gate MET, bilingual print missing) | 🟢 | Full-stack B | ~2wk |
 | WP-17 | Manpower-supply client billing | 🟢 | Backend D | ~8d |
 | WP-18 | Tech-debt bundle (GraalVM/CSV-gen/cache) | 🟢 | Any filler | 1d ea |
 
@@ -42,6 +42,29 @@ WP-21 EMR depth · WP-22 appointments/rosters · WP-23 pharmacy+narcotics · WP-
 
 ### Wave 5 — market & platform packs (any order)
 WP-28 OCR invoice capture · WP-29 payment gateways + public pay page · WP-30 bank reconciliation · WP-31 WhatsApp outbound templates · WP-32 scheduled report delivery · WP-33 security pack (2FA/policy/IP/devices) · WP-34 SSO · WP-35 PDPL privacy toolkit · WP-36 command palette + saved views · WP-37 bulk edit + help · WP-38 onboarding wizard · WP-39 automation pack · WP-40 API/webhooks/keys · WP-41 report builder · WP-42 growth pack (loyalty/memberships/referrals) · WP-43 rentals/work-orders/bookings · WP-44 fleet & maintenance · WP-45 helpdesk+KB · WP-46 marketing lite · WP-47 eSign + GED · WP-48 finance extras trio · WP-49 ESS mobile surfaces · WP-50 recruitment ATS · WP-51 multi-country e-invoicing abstraction
+
+### Wave 5 — QA verdicts (committed scaffolds, swept 2026-08-28)
+> Per-AC evidence and `[ ]`/`[x]` corrections are recorded inside each `WP-*.md`. MET = shipped & verified; PARTIAL = scaffold/untested; gaps left open as future work.
+
+| WP | Status | MET ACs | Open / PARTIAL (tracked in file) |
+|---|---|---|---|
+| WP-28 OCR | 🔸 scaffold | — | AC-1 PARTIAL · AC-2/3 NOT MET (NoneExtractor stub, `convertToGrn` makes no draft GRN) · AC-4/5 PARTIAL |
+| WP-29 Pay gateways | 🔸 scaffold | AC-4 | AC-1/3/5 PARTIAL · AC-2 NOT MET (`WEBHOOK_SIGNATURE_INVALID` absent; NoOpGatewayClient) |
+| WP-31 WhatsApp | 🔸 scaffold | — | consent NOT wired (NO_CONSENT never invoked), NoOp sender, dedupe key lacks period → AC-1..5 mostly PARTIAL/NOT MET |
+| WP-32 Sched delivery | 🔸 scaffold | — | no `@Scheduled` driver, run-now produces no bytes, no email sender; AC-4 auto-disable PARTIAL only |
+| WP-34 SSO | 🔸 scaffold | — | callback issues no JWT; `auditService` injected never called → all 4 ACs NOT MET/PARTIAL |
+| WP-35 PDPL | 🔸 scaffold | — | no export bundle/leak test, anonymize stub, consent not wired to WP-31 |
+| WP-39 Automation | 🔸 scaffold | — | draft-only constraint holds; dunning/jobs-health not wired |
+| WP-40 API/keys | 🔸 scaffold | — | CRUD-only keys (no `X-Api-Key` filter/scopes/rate-limit), no webhook worker/HMAC; AC-4 PARTIAL (hash-only + deliveries viewer) |
+| WP-42 Growth | 🟠 partial | AC-1 | AC-2 PARTIAL (no expiry job) · AC-3/4/5 NOT MET (renewal makes no invoices; referral never wired to sales; no recompute) |
+| WP-45 Helpdesk | 🟠 partial | AC-2/3/5 | AC-1 PARTIAL · AC-4 PARTIAL |
+| WP-46 Marketing | 🔸 scaffold | — | consent not wired; survey/survey_responses scaffold only |
+| WP-47 eSign/GED | 🟠 partial | AC-1/3 | AC-2 NOT MET (SHA-256 verify is dead no-op) · AC-4 NOT MET (no backfill) · AC-5 PARTIAL (filter, not search) |
+| WP-48 Finance extras | 🟢 mostly | AC-1/2/4/7/8 | AC-3 PARTIAL (accounts hardcoded not settings) · AC-5/6 PARTIAL (no seeded cheque templates; mismatch N/A) |
+| WP-50 Recruitment | 🟢 partial | AC-1/2 | AC-3 PARTIAL · AC-4 NOT MET (no CV upload/validation) |
+| WP-51 e-invoicing | 🟢 partial | AC-1/3 | AC-2 PARTIAL (DEFAULT NONE, no backfill/golden fixture) · AC-4 PARTIAL |
+| WP-16 Agri-export | 🟠 partial | AC-2/3/4 | AC-1 NOT MET (no docs) · AC-5 PARTIAL |
+| WP-19 Single-punch | 🟢 shipped | AC-1/2 | AC-3 PARTIAL (chip one-sided) |
 
 ### Phase-gated
 | File | Gate |
