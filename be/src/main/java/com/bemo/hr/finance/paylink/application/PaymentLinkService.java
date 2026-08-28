@@ -12,9 +12,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.List;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +36,9 @@ public class PaymentLinkService {
 
     @Value("${hr.payments.link-ttl-hours:48}")
     private long linkTtlHours;
+
+    @Value("${hr.payments.webhook-secret:}")
+    private String webhookSecret;
 
     public boolean isGatewayEnabled() {
         return !"NONE".equalsIgnoreCase(gatewayType);
@@ -86,6 +95,7 @@ public class PaymentLinkService {
             throw new BusinessRuleException("Link is not in PENDING status.",
                     "PAYLINK_INVALID_STATE", HttpStatus.CONFLICT);
         }
+        verifySignature(payload);
         PaymentGatewayClient.WebhookResult result = gatewayClient.verifyWebhook(
                 payload.providerTxnId(), payload.signature());
         // Idempotent: skip if this provider txn was already processed
@@ -110,6 +120,36 @@ public class PaymentLinkService {
         for (PaymentLink link : expired) {
             link.expire();
             linkRepo.save(link);
+        }
+    }
+
+    /**
+     * HMAC-SHA256 signature verification over the canonical webhook payload (the provider
+     * transaction id). Only enforced when {@code hr.payments.webhook-secret} is configured;
+     * a tampered/missing signature is rejected with 401 {@code WEBHOOK_SIGNATURE_INVALID}
+     * before any state change (WP-29 AC-2).
+     */
+    private void verifySignature(PaylinkApi.WebhookPayload payload) {
+        if (webhookSecret == null || webhookSecret.isBlank()) return;
+        if (payload.signature() == null || payload.signature().isBlank()) {
+            throw new BusinessRuleException("Webhook signature is missing.",
+                    "WEBHOOK_SIGNATURE_INVALID", HttpStatus.UNAUTHORIZED);
+        }
+        String expected = hmacSha256(webhookSecret, payload.providerTxnId());
+        if (!MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8),
+                payload.signature().getBytes(StandardCharsets.UTF_8))) {
+            throw new BusinessRuleException("Webhook signature is invalid.",
+                    "WEBHOOK_SIGNATURE_INVALID", HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    private String hmacSha256(String secret, String data) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            return HexFormat.of().formatHex(mac.doFinal(data.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException("HMAC-SHA256 is unavailable.", e);
         }
     }
 

@@ -48,6 +48,10 @@ public class SecurityAuthorizationEvaluator {
             return false;
         }
 
+        if (apiKeyScopeMatches(auth, permissionKey)) {
+            return true;
+        }
+
         if (isAdmin(auth)) {
             return true;
         }
@@ -68,6 +72,10 @@ public class SecurityAuthorizationEvaluator {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             return false;
+        }
+
+        if (apiKeyScopeMatchesAny(auth, permissionKeys)) {
+            return true;
         }
 
         if (isAdmin(auth)) {
@@ -95,6 +103,10 @@ public class SecurityAuthorizationEvaluator {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             return false;
+        }
+
+        if (apiKeyScopeMatchesAll(auth, permissionKeys)) {
+            return true;
         }
 
         if (isAdmin(auth)) {
@@ -176,6 +188,50 @@ public class SecurityAuthorizationEvaluator {
             }
         }
         return false;
+    }
+
+    private static boolean apiKeyScopeMatches(Authentication auth, String permissionKey) {
+        if (!(auth instanceof com.bemo.hr.shared.security.ApiKeyAuthentication apiKeyAuth)) {
+            return false;
+        }
+        if (apiKeyAuth.getAuthorities().stream().anyMatch(ga -> "SCOPE_*".equals(ga.getAuthority()))) {
+            return true;
+        }
+        String expected = "SCOPE_" + permissionKey.strip();
+        return apiKeyAuth.getAuthorities().stream()
+                .anyMatch(ga -> expected.equals(ga.getAuthority()));
+    }
+
+    private static boolean apiKeyScopeMatchesAny(Authentication auth, String[] permissionKeys) {
+        if (!(auth instanceof com.bemo.hr.shared.security.ApiKeyAuthentication apiKeyAuth)) {
+            return false;
+        }
+        if (apiKeyAuth.getAuthorities().stream().anyMatch(ga -> "SCOPE_*".equals(ga.getAuthority()))) {
+            return true;
+        }
+        Set<String> granted = apiKeyAuth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(a -> a.startsWith("SCOPE_") ? a.substring("SCOPE_".length()) : a)
+                .collect(java.util.stream.Collectors.toSet());
+        return Arrays.stream(permissionKeys)
+                .filter(k -> k != null && !k.isBlank())
+                .anyMatch(granted::contains);
+    }
+
+    private static boolean apiKeyScopeMatchesAll(Authentication auth, String[] permissionKeys) {
+        if (!(auth instanceof com.bemo.hr.shared.security.ApiKeyAuthentication apiKeyAuth)) {
+            return false;
+        }
+        if (apiKeyAuth.getAuthorities().stream().anyMatch(ga -> "SCOPE_*".equals(ga.getAuthority()))) {
+            return true;
+        }
+        Set<String> granted = apiKeyAuth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(a -> a.startsWith("SCOPE_") ? a.substring("SCOPE_".length()) : a)
+                .collect(java.util.stream.Collectors.toSet());
+        return Arrays.stream(permissionKeys)
+                .filter(k -> k != null && !k.isBlank())
+                .allMatch(granted::contains);
     }
 
     private UserEffectivePermissionsResponse getEffective(String username) {

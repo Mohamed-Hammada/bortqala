@@ -8,6 +8,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -42,6 +43,11 @@ class ApiKeyServiceTests {
         assertEquals("invoices:read", result.scopes());
         assertEquals(60, result.rateLimitPerMin());
         assertTrue(result.active());
+
+        ArgumentCaptor<ApiKey> captor = ArgumentCaptor.forClass(ApiKey.class);
+        verify(apiKeyRepo).save(captor.capture());
+        assertEquals(ApiKeyService.sha256(result.fullKey()), captor.getValue().getKeyHash());
+        assertEquals("app-1", com.bemo.hr.platform.infrastructure.ApiKeyAuthenticationFilter.parseAppId(result.fullKey()));
     }
 
     @Test

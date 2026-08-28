@@ -22,6 +22,7 @@ public class ReportScheduleService {
     private static final int MAX_CONSECUTIVE_FAILURES = 5;
 
     private final ReportScheduleRepository reportScheduleRepository;
+    private final ReportScheduleExecutor scheduleExecutor;
 
     public ReportSchedule create(ReportScheduleApi.CreateRequest request) {
         String appId = TenantContext.require();
@@ -69,28 +70,16 @@ public class ReportScheduleService {
     public ReportSchedule runNow(String id) {
         ReportSchedule schedule = findByIdOrThrow(id);
         try {
-            executeSchedule(schedule);
-            if (schedule.getLastStatus() == null || !"SKIPPED_CHANNEL".equals(schedule.getLastStatus())) {
-                schedule.markSuccess();
-            }
+            scheduleExecutor.execute(schedule);
         } catch (Exception e) {
             log.error("Schedule {} run failed: {}", id, e.getMessage());
             schedule.markFailed(e.getMessage());
-            if (schedule.getConsecutiveFailures() >= MAX_CONSECUTIVE_FAILURES) {
-                schedule.deactivate();
-                log.warn("Schedule {} auto-disabled after {} consecutive failures", id, MAX_CONSECUTIVE_FAILURES);
-            }
+        }
+        if (schedule.getConsecutiveFailures() >= MAX_CONSECUTIVE_FAILURES) {
+            schedule.deactivate();
+            log.warn("Schedule {} auto-disabled after {} consecutive failures", id, MAX_CONSECUTIVE_FAILURES);
         }
         return reportScheduleRepository.save(schedule);
-    }
-
-    void executeSchedule(ReportSchedule schedule) {
-        if (schedule.getChannel() == ReportSchedule.Channel.WHATSAPP) {
-            schedule.markSkippedChannel();
-            log.info("WhatsApp channel not available for schedule {}, marking SKIPPED", schedule.getId());
-            return;
-        }
-        log.info("Executing scheduled report {} ({}) via {}", schedule.getId(), schedule.getName(), schedule.getChannel());
     }
 
     @Transactional(readOnly = true)

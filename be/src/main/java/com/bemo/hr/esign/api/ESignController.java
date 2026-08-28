@@ -62,4 +62,10 @@ public class ESignController {
     public ResponseEntity<ESignApi.ManifestExport> exportManifest(@PathVariable String id) {
         return ResponseEntity.ok(service.exportManifest(id));
     }
+
+    @GetMapping("/packets/{id}/integrity")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','HR_MANAGER','HR_REVIEWER')")
+    public ResponseEntity<ESignApi.IntegrityReport> verifyIntegrity(@PathVariable String id) {
+        return ResponseEntity.ok(service.verifyIntegrity(id));
+    }
 }

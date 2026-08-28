@@ -5,7 +5,10 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.trade.procurement.api.OcrCaptureApi;
+import com.bemo.hr.trade.procurement.domain.GoodsReceipt;
+import com.bemo.hr.trade.procurement.domain.GoodsReceiptLine;
 import com.bemo.hr.trade.procurement.domain.OcrCaptureJob;
+import com.bemo.hr.trade.procurement.infrastructure.GoodsReceiptRepository;
 import com.bemo.hr.trade.procurement.infrastructure.OcrCaptureJobRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,8 +16,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,16 +34,22 @@ public class OcrCaptureService {
     private final OcrCaptureJobRepository jobRepository;
     private final InvoiceExtractor extractor;
     private final BusinessPartyRepository partyRepository;
+    private final GoodsReceiptRepository goodsReceiptRepository;
+    private final ObjectMapper objectMapper;
 
     @Value("${hr.ocr.max-image-bytes:5242880}")
     private long maxImageBytes;
 
     public OcrCaptureService(OcrCaptureJobRepository jobRepository,
                              InvoiceExtractor extractor,
-                             BusinessPartyRepository partyRepository) {
+                             BusinessPartyRepository partyRepository,
+                             GoodsReceiptRepository goodsReceiptRepository,
+                             ObjectMapper objectMapper) {
         this.jobRepository = jobRepository;
         this.extractor = extractor;
         this.partyRepository = partyRepository;
+        this.goodsReceiptRepository = goodsReceiptRepository;
+        this.objectMapper = objectMapper;
     }
 
     public OcrCaptureApi.OcrProviderStatus providerStatus() {
@@ -108,11 +121,86 @@ public class OcrCaptureService {
         if (!partyRepository.existsById(payload.partyId())) {
             throw new BusinessRuleException("Selected supplier not found.", "OCR_SUPPLIER_NOT_FOUND", HttpStatus.NOT_FOUND);
         }
+
+        List<GoodsReceiptLine> lines = extractLines(job.getExtractedPayload());
+        String grnNumber = uniqueGrnNumber("OCR-" + shortId(jobId));
+        GoodsReceipt draft = GoodsReceipt.draftFromOcr(
+                grnNumber, LocalDate.now(), payload.partyId(),
+                payload.warehouseId(), "Created from OCR supplier-invoice capture.", lines);
+        GoodsReceipt saved = goodsReceiptRepository.save(draft);
+
+        job.setDraftGrnId(saved.getId());
         job.setStatus("CONVERTED");
         jobRepository.save(job);
-        return Map.of("jobId", jobId, "partyId", payload.partyId(), "warehouseId",
-                payload.warehouseId() != null ? payload.warehouseId() : "default",
-                "message", "OCR capture converted to draft GRN. Use the procurement page to review and confirm.");
+
+        return Map.of(
+                "jobId", jobId,
+                "grnId", saved.getId(),
+                "grnNumber", grnNumber,
+                "lineCount", lines.size(),
+                "partyId", payload.partyId(),
+                "warehouseId", payload.warehouseId() != null ? payload.warehouseId() : "default",
+                "message", "Draft GRN created. Review and confirm it in the procurement page — stock and ledgers are untouched until then.");
+    }
+
+    private List<GoodsReceiptLine> extractLines(String extractedPayload) {
+        List<GoodsReceiptLine> lines = new ArrayList<>();
+        if (extractedPayload == null || extractedPayload.isBlank()) {
+            return lines;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(extractedPayload);
+            JsonNode nodes = root.path("lines");
+            if (nodes.isArray()) {
+                for (JsonNode node : nodes) {
+                    String name = node.path("name").asText("").strip();
+                    if (name.isBlank()) {
+                        continue;
+                    }
+                    BigDecimal qty = asDecimal(node.path("qty"));
+                    BigDecimal unitPrice = asDecimal(node.path("unitPrice"));
+                    lines.add(new GoodsReceiptLine(
+                            null, null, name, null,
+                            qty, BigDecimal.ZERO, BigDecimal.ZERO, qty,
+                            "EA", unitPrice, null, null,
+                            "Awaiting review from OCR capture."));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not parse extracted payload for job: {}", e.getMessage());
+        }
+        return lines;
+    }
+
+    private static BigDecimal asDecimal(JsonNode node) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            if (node.isNumber()) {
+                return node.decimalValue();
+            }
+            String raw = node.asText().strip();
+            if (raw.isBlank()) {
+                return BigDecimal.ZERO;
+            }
+            return new BigDecimal(raw.replace(",", ""));
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private String uniqueGrnNumber(String base) {
+        String candidate = base;
+        int i = 1;
+        while (goodsReceiptRepository.existsByGrnNumberIgnoreCase(candidate)) {
+            candidate = base + "-" + (++i);
+        }
+        return candidate;
+    }
+
+    private static String shortId(String jobId) {
+        return jobId != null && jobId.length() >= 8 ? jobId.substring(0, 8) : "JOB";
     }
 
     private OcrCaptureApi.OcrJobResponse toResponse(OcrCaptureJob job) {

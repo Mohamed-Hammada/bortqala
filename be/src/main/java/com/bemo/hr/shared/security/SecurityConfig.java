@@ -42,6 +42,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                             com.bemo.hr.shared.observability.RequestAuditFilter requestAuditFilter,
+                                            com.bemo.hr.platform.infrastructure.ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
                                             CorsConfigurationSource corsConfigurationSource,
                                             AppUserRepository appUserRepository,
                                             ObjectMapper objectMapper) throws Exception {
@@ -85,6 +86,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().permitAll())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(appUserRepository))))
+                .addFilterBefore(apiKeyAuthenticationFilter, BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(requestAuditFilter, BearerTokenAuthenticationFilter.class)
                 .build();
     }
@@ -172,7 +174,7 @@ public class SecurityConfig {
         var configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Device-Id", "X-Correlation-Id", "Cache-Control"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Device-Id", "X-Correlation-Id", "X-Api-Key", "Cache-Control"));
         configuration.setExposedHeaders(List.of("Content-Disposition", "X-Correlation-Id", "X-Server-Correlation-Id"));
         configuration.setAllowCredentials(true);
         var source = new UrlBasedCorsConfigurationSource();

@@ -2,6 +2,7 @@ package com.bemo.hr.whatsapp.application;
 
 import com.bemo.hr.whatsapp.api.WhatsAppApi;
 import com.bemo.hr.whatsapp.domain.*;
+import com.bemo.hr.compliance.privacy.domain.ConsentRegistryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,9 +18,13 @@ public class WhatsAppService {
 
     private final WhatsAppOutboundLogRepository logRepo;
     private final WhatsAppSender sender;
+    private final ConsentRegistryRepository consentRegistryRepository;
 
     @Value("${hr.whatsapp.provider:NONE}")
     private String provider;
+
+    @Value("${hr.whatsapp.consent.purpose:whatsapp_marketing}")
+    private String consentPurpose;
 
     @Value("${hr.whatsapp.template.payslip:payslip_v1}")
     private String payslipTemplate;
@@ -77,13 +82,27 @@ public class WhatsAppService {
     @Transactional
     public void enqueuePayrollPayslip(String appId, String employeeId, String phone,
                                        String employeeName, String amount) {
+        enqueuePayrollPayslip(appId, employeeId, phone, employeeName, amount, null);
+    }
+
+    @Transactional
+    public void enqueuePayrollPayslip(String appId, String employeeId, String phone,
+                                       String employeeName, String amount, String period) {
         if (!isConfigured()) return;
-        String dedupeKey = "PAYSLIP:" + employeeId + ":" + appId;
+        String dedupeKey = (period == null || period.isBlank())
+                ? "PAYSLIP:" + employeeId + ":" + appId
+                : "PAYSLIP:" + employeeId + ":" + appId + ":" + period;
         if (logRepo.findByAppIdAndDedupeKey(appId, dedupeKey).isPresent()) return;
+        String params = "{\"name\":\"" + employeeName + "\",\"amount\":\"" + amount + "\"}";
+        if (!hasConsent(appId, employeeId)) {
+            WhatsAppOutboundLog skipped = new WhatsAppOutboundLog(appId, "EMPLOYEE", employeeId,
+                    phone, payslipTemplate, params, dedupeKey);
+            skipped.markNoConsent();
+            logRepo.save(skipped);
+            return;
+        }
         WhatsAppOutboundLog log = new WhatsAppOutboundLog(appId, "EMPLOYEE", employeeId,
-                phone, payslipTemplate,
-                "{\"name\":\"" + employeeName + "\",\"amount\":\"" + amount + "\"}",
-                dedupeKey);
+                phone, payslipTemplate, params, dedupeKey);
         logRepo.save(log);
         try {
             String msgId = sender.sendTemplate(phone, payslipTemplate, "ar", employeeName, amount);
@@ -92,6 +111,11 @@ public class WhatsAppService {
             log.markFailed(e.getMessage());
         }
         logRepo.save(log);
+    }
+
+    private boolean hasConsent(String appId, String subjectRef) {
+        return consentRegistryRepository.findByAppIdAndSubjectRefAndWithdrawnAtIsNull(appId, subjectRef).stream()
+                .anyMatch(consent -> consentPurpose.equals(consent.getPurposeKey()));
     }
 
     @Transactional

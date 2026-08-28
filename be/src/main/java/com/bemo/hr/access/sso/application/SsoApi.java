@@ -2,6 +2,8 @@ package com.bemo.hr.access.sso.application;
 
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.List;
+
 public interface SsoApi {
 
     record CreateConfigRequest(
@@ -46,7 +48,15 @@ public interface SsoApi {
 
     record StartResponse(String authorizationUrl, String stateToken) {}
 
-    record CallbackResult(String userId, boolean newlyProvisioned) {}
+    record CallbackResult(
+            String userId,
+            boolean newlyProvisioned,
+            String accessToken,
+            String refreshToken,
+            long expiresInSeconds,
+            String username,
+            List<String> roles
+    ) {}
 
     record IdentityResponse(String id, String provider, String email, String displayName) {}
 

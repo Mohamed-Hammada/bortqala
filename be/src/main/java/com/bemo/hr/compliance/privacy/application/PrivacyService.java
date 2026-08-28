@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +41,11 @@ public class PrivacyService {
                 request.subjectRef(),
                 PrivacyRequest.Kind.valueOf(request.kind())
         );
-        return privacyRequestRepository.save(pr);
+        PrivacyRequest saved = privacyRequestRepository.save(pr);
+        auditService.record("PRIVACY_CREATE_REQUEST", "PRIVACY_REQUEST", saved.getId(),
+                currentActor(), "{\"kind\":\"" + request.kind() + "\",\"subjectType\":\""
+                        + request.subjectType() + "\",\"subjectRef\":\"" + request.subjectRef() + "\"}", null);
+        return saved;
     }
 
     public PrivacyRequest decideRequest(String id, PrivacyApi.DecideRequest request, String actor) {
@@ -55,7 +61,10 @@ public class PrivacyService {
         } else {
             throw new BusinessRuleException("Invalid decision", "PRIVACY_INVALID_DECISION", HttpStatus.BAD_REQUEST);
         }
-        return privacyRequestRepository.save(pr);
+        PrivacyRequest saved = privacyRequestRepository.save(pr);
+        auditService.record("PRIVACY_DECIDE_REQUEST", "PRIVACY_REQUEST", saved.getId(), actor,
+                "{\"decision\":\"" + request.decision() + "\"}", null);
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -71,16 +80,42 @@ public class PrivacyService {
     public String exportSubjectData(String subjectType, String subjectRef) {
         String appId = TenantContext.require();
         StringBuilder json = new StringBuilder();
-        json.append("{\"subjectType\":\"").append(subjectType).append("\",\"subjectRef\":\"").append(subjectRef).append("\",\"pii\":{");
+        json.append("{\"subjectType\":\"").append(escape(subjectType))
+                .append("\",\"subjectRef\":\"").append(escape(subjectRef)).append("\",\"pii\":{");
 
-        var employee = employeeRepository.findByEmployeeCodeIgnoreCase(subjectRef);
-        if (employee.isPresent()) {
-            var e = employee.get();
-            json.append("\"employee\":{\"fullName\":\"").append(escape(e.getFullName()))
-                .append("\",\"employeeCode\":\"").append(escape(e.getEmployeeCode())).append("\"}");
+        boolean wroteField = false;
+        if ("EMPLOYEE".equals(subjectType)) {
+            var employee = employeeRepository.findByEmployeeCodeIgnoreCase(subjectRef);
+            if (employee.isPresent()) {
+                var e = employee.get();
+                json.append("\"employee\":{\"employeeCode\":\"").append(escape(e.getEmployeeCode()))
+                        .append("\",\"fullName\":\"").append(escape(e.getFullName()))
+                        .append("\",\"deviceUserId\":\"").append(escape(e.getDeviceUserId()))
+                        .append("\",\"categoryId\":\"").append(escape(e.getCategoryId())).append("\"}");
+                wroteField = true;
+            }
+        } else if ("PARTY".equals(subjectType)) {
+            var party = businessPartyRepository.findByCodeIgnoreCase(subjectRef);
+            if (party.isPresent()) {
+                var p = party.get();
+                json.append("\"party\":{\"code\":\"").append(escape(p.getCode()))
+                        .append("\",\"name\":\"").append(escape(p.getName()))
+                        .append("\",\"nameEn\":\"").append(escape(p.getNameEn()))
+                        .append("\",\"phone\":\"").append(escape(p.getPhone()))
+                        .append("\",\"email\":\"").append(escape(p.getEmail()))
+                        .append("\",\"address\":\"").append(escape(p.getAddress()))
+                        .append("\",\"taxId\":\"").append(escape(p.getTaxId())).append("\"}");
+                wroteField = true;
+            }
+        }
+        if (!wroteField) {
+            json.append("\"none\":true");
         }
 
-        json.append("},\"exportedAt\":\"").append(java.time.Instant.now()).append("\"}");
+        json.append("},\"attachments\":[],\"dataController\":\"Bemo ERP\"")
+                .append(",\"exportedAt\":\"").append(Instant.now()).append("\"}");
+        auditService.record("PRIVACY_EXPORT", "PRIVACY_REQUEST", subjectRef, currentActor(),
+                "{\"subjectType\":\"" + subjectType + "\",\"subjectRef\":\"" + subjectRef + "\"}", null);
         return json.toString();
     }
 
@@ -119,7 +154,10 @@ public class PrivacyService {
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Active consent not found", "PRIVACY_CONSENT_NOT_FOUND"));
         consent.withdraw();
-        return consentRegistryRepository.save(consent);
+        ConsentRegistry saved = consentRegistryRepository.save(consent);
+        auditService.record("PRIVACY_WITHDRAW_CONSENT", "CONSENT_REGISTRY", saved.getId(), currentActor(),
+                "{\"subjectRef\":\"" + request.subjectRef() + "\",\"purposeKey\":\"" + request.purposeKey() + "\"}", null);
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -152,9 +190,28 @@ public class PrivacyService {
         List<RetentionPolicy> policies = retentionPolicyRepository.findByAppIdAndActiveTrue(appId);
         List<PrivacyApi.DryRunResult> results = new ArrayList<>();
         for (RetentionPolicy policy : policies) {
-            results.add(new PrivacyApi.DryRunResult(policy.getEntityKey(), 0, policy.getAction().name()));
+            long count = 0;
+            if ("EMPLOYEE".equals(policy.getEntityKey())) {
+                count = employeeRepository.countByAppIdAndCreatedAtBefore(appId, cutoff(policy));
+            } else if ("PARTY".equals(policy.getEntityKey())) {
+                count = businessPartyRepository.countByAppIdAndCreatedAtBefore(appId, cutoff(policy));
+            }
+            results.add(new PrivacyApi.DryRunResult(policy.getEntityKey(), count, policy.getAction().name()));
         }
         return results;
+    }
+
+    private Instant cutoff(RetentionPolicy policy) {
+        return Instant.now().minus(Duration.ofDays(30L * policy.getMonths()));
+    }
+
+    private String currentActor() {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()
+                && !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+            return auth.getName();
+        }
+        return "system";
     }
 
     private PrivacyRequest findByIdOrThrow(String id) {

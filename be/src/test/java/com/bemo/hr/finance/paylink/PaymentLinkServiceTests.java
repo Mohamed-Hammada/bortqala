@@ -81,6 +81,51 @@ class PaymentLinkServiceTests {
     }
 
     @Test
+    void handleWebhook_tamperedSignature_rejectedBeforeAnyStateChange() {
+        ReflectionTestUtils.setField(service, "webhookSecret", "topsecret");
+        PaymentLink link = new PaymentLink("app-1", PaymentLink.Kind.INVOICE, "ref-1",
+                BigDecimal.valueOf(100), "desc", "Bemo", Instant.now().plusSeconds(86400));
+        when(linkRepo.findByToken("tok")).thenReturn(Optional.of(link));
+
+        var payload = new PaylinkApi.WebhookPayload("txn-1", "wrong-signature");
+        var ex = assertThrows(BusinessRuleException.class, () -> service.handleWebhook("tok", payload));
+
+        assertEquals("WEBHOOK_SIGNATURE_INVALID", ex.getCode());
+        assertEquals(PaymentLink.Status.PENDING, link.getStatus());
+        verify(txnRepo, never()).save(any());
+        verify(linkRepo, never()).save(any());
+        verify(gatewayClient, never()).verifyWebhook(any(), any());
+    }
+
+    @Test
+    void handleWebhook_validSignatureAndSecret_processesWebhook() throws Exception {
+        ReflectionTestUtils.setField(service, "webhookSecret", "topsecret");
+        PaymentLink link = new PaymentLink("app-1", PaymentLink.Kind.INVOICE, "ref-1",
+                BigDecimal.valueOf(100), "desc", "Bemo", Instant.now().plusSeconds(86400));
+        when(linkRepo.findByToken("tok")).thenReturn(Optional.of(link));
+        when(txnRepo.findByAppIdAndProviderTxnId("app-1", "txn-42")).thenReturn(Optional.empty());
+        when(txnRepo.save(any(GatewayTransaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(linkRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(notificationRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = new PaymentGatewayClient.WebhookResult("txn-42", BigDecimal.valueOf(100), "{}");
+        when(gatewayClient.verifyWebhook("txn-42", signatureOf("txn-42"))).thenReturn(result);
+
+        service.handleWebhook("tok", new PaylinkApi.WebhookPayload("txn-42", signatureOf("txn-42")));
+
+        assertEquals(PaymentLink.Status.PAID, link.getStatus());
+        verify(txnRepo).save(any(GatewayTransaction.class));
+        verify(notificationRepo).save(any());
+    }
+
+    private String signatureOf(String canonicalBody) throws Exception {
+        javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+        mac.init(new javax.crypto.spec.SecretKeySpec(
+                "topsecret".getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
+        return java.util.HexFormat.of().formatHex(mac.doFinal(canonicalBody.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+    }
+
+    @Test
     void handleWebhook_idempotent_duplicateTxn_noop() {
         PaymentLink link = new PaymentLink("app-1", PaymentLink.Kind.INVOICE, "ref-1",
                 BigDecimal.valueOf(100), "desc", "Bemo", Instant.now().plusSeconds(86400));

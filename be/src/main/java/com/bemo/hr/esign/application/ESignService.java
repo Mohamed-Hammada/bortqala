@@ -10,9 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -87,13 +84,19 @@ public class ESignService {
                     });
         }
 
-        // AC-2: Verify content hash
-        String reHash = computeSha256(request.contentSha256());
-        if (!reHash.equals(request.contentSha256())) {
-            // Accept as-is — the client provides the hash they want recorded
+        // AC-2: Verify content hash — the document hash a signer attests must equal the one registered
+        // with the packet. If a byte in the stored document changed after packet creation the recomputed
+        // SHA-256 would differ, so the signature must be rejected here.
+        if (isWellFormedSha256(packet.getContentHash())) {
+            String presented = request.contentSha256() != null ? request.contentSha256().strip() : null;
+            if (!packet.getContentHash().equalsIgnoreCase(presented)) {
+                throw new BusinessRuleException(
+                        "Presented content hash does not match the packet's registered document hash",
+                        "SIGN_CONTENT_MISMATCH", HttpStatus.CONFLICT);
+            }
         }
 
-        step.sign(request.contentSha256(), request.method(), request.ipAddress());
+        step.sign(packet.getContentHash(), request.method(), request.ipAddress());
         stepRepository.save(step);
 
         // Check if all steps signed → complete packet
@@ -143,6 +146,43 @@ public class ESignService {
                 System.currentTimeMillis());
     }
 
+    @Transactional(readOnly = true)
+    public ESignApi.IntegrityReport verifyIntegrity(String packetId) {
+        SignaturePacket packet = packetRepository.findById(packetId)
+                .orElseThrow(() -> new BusinessRuleException("Signature packet not found", "SIGN_PACKET_NOT_FOUND", HttpStatus.NOT_FOUND));
+        List<SignatureStep> steps = stepRepository.findByPacketIdOrderByStepOrderAsc(packetId);
+        boolean expectedWellFormed = isWellFormedSha256(packet.getContentHash());
+        List<ESignApi.StepVerification> verifications = steps.stream()
+                .map(s -> {
+                    boolean signed = s.getStatus() == StepStatus.SIGNED;
+                    boolean match = expectedWellFormed && signed
+                            && packet.getContentHash().equalsIgnoreCase(s.getContentSha256());
+                    return new ESignApi.StepVerification(
+                            s.getStepOrder(), s.getSignerName(), signed,
+                            s.getContentSha256(), packet.getContentHash(), match);
+                })
+                .toList();
+        boolean verified = expectedWellFormed
+                && verifications.stream().anyMatch(ESignApi.StepVerification::signed)
+                && verifications.stream().allMatch(v -> !v.signed() || v.match());
+        return new ESignApi.IntegrityReport(
+                packet.getId(), packet.getDocumentName(), packet.getContentHash(),
+                expectedWellFormed, verified, verifications);
+    }
+
+    public static boolean isWellFormedSha256(String value) {
+        if (value == null || value.length() != 64 || !value.strip().equals(value)) {
+            return false;
+        }
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private String buildManifest(SignaturePacket packet, List<SignatureStep> steps) {
         StringBuilder sb = new StringBuilder("{");
         sb.append("\"packetId\":\"").append(packet.getId()).append("\",");
@@ -156,7 +196,9 @@ public class ESignService {
             sb.append("\"order\":").append(s.getStepOrder()).append(",");
             sb.append("\"signer\":\"").append(escapeJson(s.getSignerName())).append("\",");
             sb.append("\"signedAt\":").append(s.getSignedAt() != null ? s.getSignedAt() : "null").append(",");
-            sb.append("\"method\":\"").append(s.getMethod() != null ? s.getMethod() : "null").append("\"");
+            sb.append("\"method\":\"").append(s.getMethod() != null ? s.getMethod() : "null").append("\",");
+            sb.append("\"ipAddress\":\"").append(escapeJson(s.getIpAddress())).append("\",");
+            sb.append("\"contentSha256\":\"").append(s.getContentSha256() != null ? s.getContentSha256() : "").append("\"");
             sb.append("}");
         }
         sb.append("]}");
@@ -165,16 +207,6 @@ public class ESignService {
 
     private String escapeJson(String s) {
         return s != null ? s.replace("\"", "\\\"").replace("\n", "\\n") : "";
-    }
-
-    private String computeSha256(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
-            return input;
-        }
     }
 
     private ESignApi.PacketResponse toPacketResponse(SignaturePacket p) {

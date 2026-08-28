@@ -919,4 +919,7 @@ databaseChangeLog:
   # WP-50 AC-4: recruitment CV validation + UI translation rows
   - include:
       file: db/changelog/data/insert/20260828_v406_recruitment_cv_translations.yaml
+  # WP-34 AC-3 + WP-29 AC-2: SSO inactive-user + webhook signature error codes
+  - include:
+      file: db/changelog/data/insert/20260828_v407_sso_webhook_error_translations.yaml
 

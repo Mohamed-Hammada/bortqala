@@ -79,4 +79,24 @@ public final class ESignApi {
             long exportedAt
     ) {
     }
+
+    public record StepVerification(
+            int stepOrder,
+            String signerName,
+            boolean signed,
+            String recordedSha256,
+            String expectedSha256,
+            boolean match
+    ) {
+    }
+
+    public record IntegrityReport(
+            String packetId,
+            String documentName,
+            String contentHash,
+            boolean hashRegistered,
+            boolean verified,
+            List<StepVerification> steps
+    ) {
+    }
 }

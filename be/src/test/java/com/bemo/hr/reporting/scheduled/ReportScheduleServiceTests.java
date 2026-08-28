@@ -1,6 +1,7 @@
 package com.bemo.hr.reporting.scheduled;
 
 import com.bemo.hr.reporting.scheduled.application.ReportScheduleApi;
+import com.bemo.hr.reporting.scheduled.application.ReportScheduleExecutor;
 import com.bemo.hr.reporting.scheduled.application.ReportScheduleService;
 import com.bemo.hr.reporting.scheduled.domain.ReportSchedule;
 import com.bemo.hr.reporting.scheduled.domain.ReportScheduleRepository;
@@ -25,6 +26,9 @@ class ReportScheduleServiceTests {
 
     @Mock
     private ReportScheduleRepository reportScheduleRepository;
+
+    @Mock
+    private ReportScheduleExecutor scheduleExecutor;
 
     @InjectMocks
     private ReportScheduleService reportScheduleService;
@@ -95,6 +99,10 @@ class ReportScheduleServiceTests {
                 "{}", ReportSchedule.Channel.WHATSAPP, "a@b.com", ReportSchedule.Cadence.DAILY, "08:00");
         when(reportScheduleRepository.findById(schedule.getId())).thenReturn(Optional.of(schedule));
         when(reportScheduleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        doAnswer(inv -> {
+            inv.getArgument(0, ReportSchedule.class).markSkippedChannel();
+            return null;
+        }).when(scheduleExecutor).execute(schedule);
 
         var result = reportScheduleService.runNow(schedule.getId());
 
@@ -108,6 +116,10 @@ class ReportScheduleServiceTests {
                 "{}", ReportSchedule.Channel.EMAIL, "a@b.com", ReportSchedule.Cadence.DAILY, "08:00");
         when(reportScheduleRepository.findById(schedule.getId())).thenReturn(Optional.of(schedule));
         when(reportScheduleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        doAnswer(inv -> {
+            inv.getArgument(0, ReportSchedule.class).markSuccess();
+            return null;
+        }).when(scheduleExecutor).execute(schedule);
 
         var result = reportScheduleService.runNow(schedule.getId());
 
@@ -122,12 +134,46 @@ class ReportScheduleServiceTests {
                 "{}", ReportSchedule.Channel.EMAIL, "a@b.com", ReportSchedule.Cadence.DAILY, "08:00");
         when(reportScheduleRepository.findById(schedule.getId())).thenReturn(Optional.of(schedule));
         when(reportScheduleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        doAnswer(inv -> {
+            inv.getArgument(0, ReportSchedule.class).markSuccess();
+            return null;
+        }).when(scheduleExecutor).execute(schedule);
 
         var result = reportScheduleService.runNow(schedule.getId());
 
         assertTrue(result.isActive());
         assertEquals("SUCCESS", result.getLastStatus());
         assertEquals(0, result.getConsecutiveFailures());
+    }
+
+    @Test
+    void runNow_failingExecutor_marksFailed() {
+        var schedule = new ReportSchedule(TEST_APP_ID, "Flaky", ReportSchedule.ReportKind.CUSTOM,
+                "{}", ReportSchedule.Channel.EMAIL, "a@b.com", ReportSchedule.Cadence.DAILY, "08:00");
+        when(reportScheduleRepository.findById(schedule.getId())).thenReturn(Optional.of(schedule));
+        when(reportScheduleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        doThrow(new RuntimeException("boom")).when(scheduleExecutor).execute(schedule);
+
+        var result = reportScheduleService.runNow(schedule.getId());
+
+        assertEquals("FAILED", result.getLastStatus());
+        assertEquals("boom", result.getLastError());
+        assertEquals(1, result.getConsecutiveFailures());
+    }
+
+    @Test
+    void runNow_autoDeactivatesAfterMaxFailures() {
+        var schedule = new ReportSchedule(TEST_APP_ID, "Doomed", ReportSchedule.ReportKind.CUSTOM,
+                "{}", ReportSchedule.Channel.EMAIL, "a@b.com", ReportSchedule.Cadence.DAILY, "08:00");
+        for (int i = 0; i < 4; i++) schedule.markFailed("x");
+        when(reportScheduleRepository.findById(schedule.getId())).thenReturn(Optional.of(schedule));
+        when(reportScheduleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        doThrow(new RuntimeException("boom")).when(scheduleExecutor).execute(schedule);
+
+        var result = reportScheduleService.runNow(schedule.getId());
+
+        assertFalse(result.isActive());
+        assertEquals(5, result.getConsecutiveFailures());
     }
 
     @Test

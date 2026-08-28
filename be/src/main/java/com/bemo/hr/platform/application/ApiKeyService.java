@@ -30,7 +30,7 @@ public class ApiKeyService {
         if (count >= MAX_KEYS) {
             throw new BusinessRuleException("Maximum API keys limit reached", "APIKEY_LIMIT_REACHED", HttpStatus.CONFLICT);
         }
-        String fullKey = generateFullKey();
+        String fullKey = generateFullKey(appId);
         String hash = sha256(fullKey);
         String scopes = request.scopes() != null ? request.scopes() : "";
         int rateLimit = request.rateLimitPerMin() > 0 ? request.rateLimitPerMin() : 120;
@@ -80,10 +80,10 @@ public class ApiKeyService {
         );
     }
 
-    private static String generateFullKey() {
-        byte[] random = new byte[32];
+    private static String generateFullKey(String appId) {
+        byte[] random = new byte[16];
         new java.security.SecureRandom().nextBytes(random);
-        return "bk_" + HexFormat.of().formatHex(random);
+        return "bk_" + appId + "_" + HexFormat.of().formatHex(random);
     }
 
     public static String sha256(String input) {

@@ -2,11 +2,17 @@ package com.bemo.hr.access.sso;
 
 import com.bemo.hr.access.sso.application.SsoApi;
 import com.bemo.hr.access.sso.application.SsoService;
+import com.bemo.hr.access.sso.application.SsoSessionIssuer;
 import com.bemo.hr.access.sso.domain.SsoConfig;
 import com.bemo.hr.access.sso.domain.SsoConfigRepository;
 import com.bemo.hr.access.sso.domain.UserSsoIdentity;
 import com.bemo.hr.access.sso.domain.UserSsoIdentityRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.AppUser;
+import com.bemo.hr.shared.security.AppUserRepository;
+import com.bemo.hr.shared.security.Role;
+import com.bemo.hr.shared.security.RoleCode;
+import com.bemo.hr.shared.security.RoleRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,13 +21,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,6 +39,10 @@ class SsoServiceTests {
     @Mock private SsoConfigRepository ssoConfigRepository;
     @Mock private UserSsoIdentityRepository userSsoIdentityRepository;
     @Mock private com.bemo.hr.audit.application.AuditService auditService;
+    @Mock private AppUserRepository appUserRepository;
+    @Mock private RoleRepository roleRepository;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private SsoSessionIssuer ssoSessionIssuer;
 
     @InjectMocks
     private SsoService ssoService;
@@ -114,21 +127,97 @@ class SsoServiceTests {
     void handleCallback_validState_newUser_provisions() {
         String stateToken = createValidStateToken();
         when(userSsoIdentityRepository.findByAppIdAndProviderAndSubject(
-                org.mockito.ArgumentMatchers.eq(TEST_APP_ID),
-                org.mockito.ArgumentMatchers.eq("GOOGLE"),
-                org.mockito.ArgumentMatchers.anyString()))
+                eq(TEST_APP_ID), eq("GOOGLE"), anyString()))
                 .thenReturn(Optional.empty());
-        when(userSsoIdentityRepository.save(org.mockito.ArgumentMatchers.any(UserSsoIdentity.class)))
+        when(userSsoIdentityRepository.save(any(UserSsoIdentity.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
         var config = new SsoConfig(TEST_APP_ID, SsoConfig.Provider.GOOGLE, "c", "s",
                 "issuer", null, true, "VIEWER");
         when(ssoConfigRepository.findByAppIdAndProviderAndActiveTrue(TEST_APP_ID, "GOOGLE"))
                 .thenReturn(Optional.of(config));
+        when(roleRepository.findAllById(any())).thenReturn(List.of(new Role(RoleCode.VIEWER, "Viewer")));
+        when(passwordEncoder.encode(any())).thenReturn("hash");
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ssoSessionIssuer.issue(any(AppUser.class), eq(true), any(Instant.class)))
+                .thenReturn(new SsoApi.CallbackResult("uid-1", true, "access", "refresh", 900, "u", List.of("VIEWER")));
 
         var result = ssoService.handleCallback(stateToken, "GOOGLE", "authcode123");
 
         assertTrue(result.newlyProvisioned());
         assertNotNull(result.userId());
+        assertNotNull(result.accessToken());
+        verify(auditService).record(eq("SSO_PROVISION"), eq("SSO"), any(), any(), any(), isNull());
+    }
+
+    @Test
+    void handleCallback_existingIdentity_issuesSessionAndAuditsLogin() {
+        String stateToken = createValidStateToken();
+        var identity = new UserSsoIdentity(TEST_APP_ID, "uid-1", "GOOGLE", "subj", "e@x", "Name");
+        when(userSsoIdentityRepository.findByAppIdAndProviderAndSubject(eq(TEST_APP_ID), eq("GOOGLE"), anyString()))
+                .thenReturn(Optional.of(identity));
+        var user = new AppUser(TEST_APP_ID, "email", "Name", "hash",
+                Set.of(new Role(RoleCode.VIEWER, "Viewer")), Set.of("dashboard"), true, true);
+        when(appUserRepository.findById("uid-1")).thenReturn(Optional.of(user));
+        var config = new SsoConfig(TEST_APP_ID, SsoConfig.Provider.GOOGLE, "c", "s",
+                "issuer", null, false, "VIEWER");
+        when(ssoConfigRepository.findByAppIdAndProviderAndActiveTrue(TEST_APP_ID, "GOOGLE"))
+                .thenReturn(Optional.of(config));
+        when(ssoSessionIssuer.issue(any(AppUser.class), eq(false), any(Instant.class)))
+                .thenReturn(new SsoApi.CallbackResult("uid-1", false, "access-token", "refresh-token", 900, "email", List.of("VIEWER")));
+
+        var result = ssoService.handleCallback(stateToken, "GOOGLE", "code");
+
+        assertFalse(result.newlyProvisioned());
+        assertEquals("access-token", result.accessToken());
+        assertEquals("refresh-token", result.refreshToken());
+        assertEquals(List.of("VIEWER"), result.roles());
+        verify(userSsoIdentityRepository, never()).save(any());
+        verify(auditService).record(eq("SSO_LOGIN"), eq("SSO"), any(), eq("email"), any(), isNull());
+    }
+
+    @Test
+    void handleCallback_inactiveUser_throws() {
+        String stateToken = createValidStateToken();
+        var identity = new UserSsoIdentity(TEST_APP_ID, "uid-1", "GOOGLE", "subj", "e@x", "Name");
+        when(userSsoIdentityRepository.findByAppIdAndProviderAndSubject(eq(TEST_APP_ID), eq("GOOGLE"), anyString()))
+                .thenReturn(Optional.of(identity));
+        var user = new AppUser(TEST_APP_ID, "email", "Name", "hash",
+                Set.of(new Role(RoleCode.VIEWER, "Viewer")), Set.of("dashboard"), true, true);
+        user.update("email", "Name", "hash", false, user.getRoles(), Set.of("dashboard"), true, true);
+        when(appUserRepository.findById("uid-1")).thenReturn(Optional.of(user));
+        var config = new SsoConfig(TEST_APP_ID, SsoConfig.Provider.GOOGLE, "c", "s",
+                "issuer", null, false, "VIEWER");
+        when(ssoConfigRepository.findByAppIdAndProviderAndActiveTrue(TEST_APP_ID, "GOOGLE"))
+                .thenReturn(Optional.of(config));
+
+        var ex = assertThrows(BusinessRuleException.class,
+                () -> ssoService.handleCallback(stateToken, "GOOGLE", "code"));
+
+        assertEquals("SSO_USER_INACTIVE", ex.getCode());
+    }
+
+    @Test
+    void handleCallback_stateCarriesAppId_resolvesTenantWithoutContext() {
+        TenantContext.clear();
+        String stateToken = createValidStateTokenForApp("TENANT-2");
+        var config = new SsoConfig("TENANT-2", SsoConfig.Provider.MICROSOFT, "c", "s",
+                "issuer", null, true, "VIEWER");
+        when(ssoConfigRepository.findByAppIdAndProviderAndActiveTrue("TENANT-2", "MICROSOFT"))
+                .thenReturn(Optional.of(config));
+        when(userSsoIdentityRepository.findByAppIdAndProviderAndSubject(eq("TENANT-2"), eq("MICROSOFT"), anyString()))
+                .thenReturn(Optional.empty());
+        when(userSsoIdentityRepository.save(any(UserSsoIdentity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(roleRepository.findAllById(any())).thenReturn(List.of(new Role(RoleCode.VIEWER, "Viewer")));
+        when(passwordEncoder.encode(any())).thenReturn("hash");
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ssoSessionIssuer.issue(any(AppUser.class), eq(true), any(Instant.class)))
+                .thenReturn(new SsoApi.CallbackResult("uid", true, "at", "rt", 900, "e@x", List.of("VIEWER")));
+
+        var result = ssoService.handleCallback(stateToken, "MICROSOFT", "code");
+
+        assertTrue(result.newlyProvisioned());
+        verify(ssoConfigRepository).findByAppIdAndProviderAndActiveTrue("TENANT-2", "MICROSOFT");
     }
 
     @Test
@@ -154,9 +243,7 @@ class SsoServiceTests {
         when(ssoConfigRepository.findByAppIdAndProviderAndActiveTrue(TEST_APP_ID, "GOOGLE"))
                 .thenReturn(Optional.of(config));
         when(userSsoIdentityRepository.findByAppIdAndProviderAndSubject(
-                org.mockito.ArgumentMatchers.eq(TEST_APP_ID),
-                org.mockito.ArgumentMatchers.eq("GOOGLE"),
-                org.mockito.ArgumentMatchers.anyString()))
+                eq(TEST_APP_ID), eq("GOOGLE"), anyString()))
                 .thenReturn(Optional.empty());
 
         var ex = assertThrows(BusinessRuleException.class,
@@ -188,10 +275,18 @@ class SsoServiceTests {
         assertFalse(response.autoProvision());
         assertEquals("ADMIN", response.defaultRole());
         assertFalse(response.active());
+        var exposedFields = java.util.Arrays.stream(SsoApi.ConfigResponse.class.getDeclaredFields())
+                .map(java.lang.reflect.Field::getName).toList();
+        assertFalse(exposedFields.contains("clientSecret"), "Secret must never be serialized by GET responses");
+        assertFalse(exposedFields.contains("secret"), "Secret must never be serialized by GET responses");
     }
 
     private String createValidStateToken() {
+        return createValidStateTokenForApp(TEST_APP_ID);
+    }
+
+    private String createValidStateTokenForApp(String appId) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(
-                ("state:nonce:" + System.currentTimeMillis()).getBytes());
+                ("state:nonce:" + System.currentTimeMillis() + ":" + appId).getBytes());
     }
 }

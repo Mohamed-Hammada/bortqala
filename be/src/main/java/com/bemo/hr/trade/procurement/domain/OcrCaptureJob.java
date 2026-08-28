@@ -30,6 +30,8 @@ public class OcrCaptureJob {
     private String confidenceSummary;
     @Column(name = "error_code", length = 100)
     private String errorCode;
+    @Column(name = "draft_grn_id", length = 36)
+    private String draftGrnId;
     @Column(name = "created_at", nullable = false)
     private long createdAt;
     @Version
@@ -64,6 +66,7 @@ public class OcrCaptureJob {
     public String getExtractedPayload() { return extractedPayload; }
     public String getConfidenceSummary() { return confidenceSummary; }
     public String getErrorCode() { return errorCode; }
+    public String getDraftGrnId() { return draftGrnId; }
     public long getCreatedAt() { return createdAt; }
     public long getVersion() { return version; }
 
@@ -71,4 +74,5 @@ public class OcrCaptureJob {
     public void setExtractedPayload(String extractedPayload) { this.extractedPayload = extractedPayload; }
     public void setConfidenceSummary(String confidenceSummary) { this.confidenceSummary = confidenceSummary; }
     public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
+    public void setDraftGrnId(String draftGrnId) { this.draftGrnId = draftGrnId; }
 }

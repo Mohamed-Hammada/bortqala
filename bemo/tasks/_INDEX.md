@@ -49,11 +49,11 @@ WP-28 OCR invoice capture · WP-29 payment gateways + public pay page · WP-30 b
 | WP | Status | MET ACs | Open / PARTIAL (tracked in file) |
 |---|---|---|---|
 | WP-28 OCR | 🔸 scaffold | — | AC-1 PARTIAL · AC-2/3 NOT MET (NoneExtractor stub, `convertToGrn` makes no draft GRN) · AC-4/5 PARTIAL |
-| WP-29 Pay gateways | 🔸 scaffold | AC-4 | AC-1/3/5 PARTIAL · AC-2 NOT MET (`WEBHOOK_SIGNATURE_INVALID` absent; NoOpGatewayClient) |
-| WP-31 WhatsApp | 🔸 scaffold | — | consent NOT wired (NO_CONSENT never invoked), NoOp sender, dedupe key lacks period → AC-1..5 mostly PARTIAL/NOT MET |
+| WP-29 Pay gateways | 🟠 partial | AC-2/4 | AC-1/3/5 PARTIAL (NoOp gateway adapter; webhook HMAC `WEBHOOK_SIGNATURE_INVALID` + tampered/valid tests shipped) |
+| WP-31 WhatsApp | 🟠 partial | AC-3/5 | AC-5 dedupe includes period; consent wired (`hasConsent`→`NO_CONSENT`, never sends) · AC-1/2/4 PARTIAL (NoOp sender) |
 | WP-32 Sched delivery | 🔸 scaffold | — | no `@Scheduled` driver, run-now produces no bytes, no email sender; AC-4 auto-disable PARTIAL only |
-| WP-34 SSO | 🔸 scaffold | — | callback issues no JWT; `auditService` injected never called → all 4 ACs NOT MET/PARTIAL |
-| WP-35 PDPL | 🔸 scaffold | — | no export bundle/leak test, anonymize stub, consent not wired to WP-31 |
+| WP-34 SSO | 🟠 partial | AC-2/3/4 (+AC-1 backend) | real JWT+refresh session pipeline (`SsoSessionIssuer`), `SSO_LOGIN`/`SSO_PROVISION` audits, tenant-from-state; AC-1 live redemption needs real tenant creds (external) |
+| WP-35 PDPL | 🟠 partial | AC-1/5 | leak-tested PII export bundle + `PRIVACY_*` audits + consent-wiring to WhatsApp · AC-2/3/4 PARTIAL (erase finance-invariant test, completion-note, dry-run confirm gate) |
 | WP-39 Automation | 🔸 scaffold | — | draft-only constraint holds; dunning/jobs-health not wired |
 | WP-40 API/keys | 🔸 scaffold | — | CRUD-only keys (no `X-Api-Key` filter/scopes/rate-limit), no webhook worker/HMAC; AC-4 PARTIAL (hash-only + deliveries viewer) |
 | WP-42 Growth | 🟠 partial | AC-1 | AC-2 PARTIAL (no expiry job) · AC-3/4/5 NOT MET (renewal makes no invoices; referral never wired to sales; no recompute) |
