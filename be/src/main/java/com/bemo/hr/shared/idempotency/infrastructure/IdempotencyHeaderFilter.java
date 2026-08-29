@@ -33,6 +33,7 @@ public class IdempotencyHeaderFilter extends OncePerRequestFilter {
     public static final String ALT_IDEMPOTENCY_HEADER = "X-Idempotency-Key";
     public static final String REPLAYED_HEADER = "X-Idempotency-Replayed";
     private static final Duration DEFAULT_LEASE = Duration.ofSeconds(60);
+    private static final int CACHE_BUFFER_SIZE = 1024 * 1024;
 
     private final IdempotencyKeyRepository idempotencyKeyRepository;
 
@@ -55,7 +56,7 @@ public class IdempotencyHeaderFilter extends OncePerRequestFilter {
         }
 
         String idempotencyKey = rawKey.trim();
-        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, 1024 * 1024);
+        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, CACHE_BUFFER_SIZE);
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
         // Pre-read request body if cached
