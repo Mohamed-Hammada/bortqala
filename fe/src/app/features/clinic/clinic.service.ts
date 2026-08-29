@@ -90,6 +90,14 @@ import {
   RecordToothConditionPayload,
   SaveExamTemplatePayload,
   SubmitExamAnswerPayload,
+  PatientFamilyLink,
+  LinkFamilyMemberPayload,
+  PediatricDoseCalculationRequest,
+  PediatricDoseCalculationResponse,
+  TelemedicineSession,
+  ScheduleTelemedicineSessionPayload,
+  MedicalLicenseRecord,
+  RegisterMedicalLicensePayload,
 } from './clinic.models';
 
 export interface PageResponse<T> {
@@ -571,5 +579,35 @@ export class ClinicService {
 
   getExamAnswers(visitId: string): Observable<ExamAnswer[]> {
     return this.http.get<ExamAnswer[]>(`${this.baseUrl}/exam-templates/answers/visit/${visitId}`);
+  }
+
+  // ─── Medical Depth (Family Links, Telemedicine, Pediatric Dose, Licenses) ─
+
+  linkFamilyMember(patientId: string, payload: LinkFamilyMemberPayload): Observable<PatientFamilyLink> {
+    return this.http.post<PatientFamilyLink>(`${this.baseUrl}/depth/patients/${patientId}/family`, payload);
+  }
+
+  getFamilyLinks(patientId: string): Observable<PatientFamilyLink[]> {
+    return this.http.get<PatientFamilyLink[]>(`${this.baseUrl}/depth/patients/${patientId}/family`);
+  }
+
+  calculatePediatricDose(payload: PediatricDoseCalculationRequest): Observable<PediatricDoseCalculationResponse> {
+    return this.http.post<PediatricDoseCalculationResponse>(`${this.baseUrl}/depth/calculator/pediatric-dose`, payload);
+  }
+
+  scheduleTelemedicineSession(payload: ScheduleTelemedicineSessionPayload): Observable<TelemedicineSession> {
+    return this.http.post<TelemedicineSession>(`${this.baseUrl}/depth/telemedicine/schedule`, payload);
+  }
+
+  getTelemedicineSessions(patientId: string): Observable<TelemedicineSession[]> {
+    return this.http.get<TelemedicineSession[]>(`${this.baseUrl}/depth/telemedicine/patient/${patientId}`);
+  }
+
+  registerLicense(payload: RegisterMedicalLicensePayload): Observable<MedicalLicenseRecord> {
+    return this.http.post<MedicalLicenseRecord>(`${this.baseUrl}/depth/licenses`, payload);
+  }
+
+  getAllLicenses(): Observable<MedicalLicenseRecord[]> {
+    return this.http.get<MedicalLicenseRecord[]>(`${this.baseUrl}/depth/licenses`);
   }
 }

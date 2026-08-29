@@ -185,4 +185,43 @@ class OcrCaptureServiceTests {
                 .isInstanceOf(BusinessRuleException.class)
                 .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("OCR_SUPPLIER_NOT_FOUND"));
     }
+
+    @Test
+    void uploadWithMockExtractor_extractsPayloadAndConfidenceSummary() {
+        InvoiceExtractor mockExtractor = mock(InvoiceExtractor.class, withSettings().withoutAnnotations());
+        when(mockExtractor.isConfigured()).thenReturn(true);
+        when(mockExtractor.extract(any(), any())).thenReturn("{\"supplierName\":\"Acme Supplies\",\"invoiceNo\":\"INV-992\",\"lines\":[{\"name\":\"Item A\",\"qty\":\"10\",\"unitPrice\":\"100\"}]}");
+        when(mockExtractor.confidenceSummary()).thenReturn("{\"supplierName\":0.95,\"invoiceNo\":0.90,\"overall\":0.92}");
+
+        when(jobRepository.save(any(OcrCaptureJob.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var svc = new OcrCaptureService(jobRepository, mockExtractor, partyRepository,
+                goodsReceiptRepository, new ObjectMapper());
+
+        MockMultipartFile file = new MockMultipartFile("file", "invoice.png", "image/png", new byte[]{1, 2, 3, 4});
+        var res = svc.upload(file, "test-user");
+
+        assertThat(res.status()).isEqualTo("REVIEW");
+        assertThat(res.extractedPayload()).contains("Acme Supplies");
+        assertThat(res.extractedPayload()).contains("INV-992");
+        assertThat(res.confidenceSummary()).contains("0.95");
+    }
+
+    @Test
+    void uploadWithFailingExtractor_setsFailedAndErrorCode() {
+        InvoiceExtractor mockExtractor = mock(InvoiceExtractor.class, withSettings().withoutAnnotations());
+        when(mockExtractor.isConfigured()).thenReturn(true);
+        when(mockExtractor.extract(any(), any())).thenThrow(new RuntimeException("Vision API connection timeout"));
+
+        when(jobRepository.save(any(OcrCaptureJob.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var svc = new OcrCaptureService(jobRepository, mockExtractor, partyRepository,
+                goodsReceiptRepository, new ObjectMapper());
+
+        MockMultipartFile file = new MockMultipartFile("file", "invoice.png", "image/png", new byte[]{1, 2, 3, 4});
+        var res = svc.upload(file, "test-user");
+
+        assertThat(res.status()).isEqualTo("FAILED");
+        assertThat(res.errorCode()).isEqualTo("OCR_PROVIDER_FAILED");
+    }
 }

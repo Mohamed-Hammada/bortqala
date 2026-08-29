@@ -180,3 +180,72 @@ export interface AssignPartyRoleRequest {
   roleType: ProjectPartyRoleType;
   notes?: string | null;
 }
+
+// Site Custody Register Models
+export interface SiteCustodyResponse {
+  id: string;
+  projectId: string;
+  custodyCode: string;
+  custodianEmployeeId?: string | null;
+  custodianName: string;
+  custodyType: 'CASH' | 'MATERIAL' | 'EQUIPMENT';
+  initialAmount: number;
+  remainingBalance: number;
+  status: 'ACTIVE' | 'SETTLED' | 'CLOSED';
+  issuedAt: number;
+  settledAt?: number | null;
+  notes?: string | null;
+  version: number;
+  createdAt: number;
+  updatedAt: number;
+  expenses: SiteCustodyExpenseResponse[];
+  returns: SiteCustodyReturnResponse[];
+}
+
+export interface IssueCustodyRequest {
+  custodyCode: string;
+  custodianEmployeeId?: string | null;
+  custodianName: string;
+  custodyType: 'CASH' | 'MATERIAL' | 'EQUIPMENT';
+  initialAmount: number;
+  notes?: string | null;
+}
+
+export interface SiteCustodyExpenseResponse {
+  id: string;
+  custodyId: string;
+  expenseDate: number;
+  amount: number;
+  category: string;
+  description: string;
+  receiptNumber?: string | null;
+  recordedBy?: string | null;
+  status: 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface RecordCustodyExpenseRequest {
+  expenseDate: number;
+  amount: number;
+  category: string;
+  description: string;
+  receiptNumber?: string | null;
+  recordedBy?: string | null;
+}
+
+export interface SiteCustodyReturnResponse {
+  id: string;
+  custodyId: string;
+  returnDate: number;
+  amountReturned: number;
+  receivedBy?: string | null;
+  notes?: string | null;
+  createdAt: number;
+}
+
+export interface SettleCustodyRequest {
+  amountReturned: number;
+  receivedBy?: string | null;
+  notes?: string | null;
+}

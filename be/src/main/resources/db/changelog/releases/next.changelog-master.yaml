@@ -1012,4 +1012,14 @@ databaseChangeLog:
   # WP-27: Dental & Specialty Charting translations
   - include:
       file: db/changelog/data/insert/20260829_v429_dental_translations.yaml
+  # Site Custody Register: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260829_v430_site_custody_schema.yaml
+  - include:
+      file: db/changelog/data/insert/20260829_v431_site_custody_translations.yaml
+  # Medical Vertical Depth: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260829_v432_medical_depth_schema.yaml
+  - include:
+      file: db/changelog/data/insert/20260829_v433_medical_depth_translations.yaml
 

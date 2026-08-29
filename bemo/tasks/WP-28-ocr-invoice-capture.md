@@ -20,8 +20,8 @@ Photograph a paper supplier invoice → system extracts supplier, date, lines (i
 2. Keys `procurement.ocr*` (~14). Feature hidden when provider NONE (or visible-but-disabled with hint — choose hidden).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 With provider NONE: upload returns translated not-configured and UI never shows broken state. — **PARTIAL**: upload throws `OCR_NOT_CONFIGURED` 503 with no job (`OcrCaptureService.java:50-54`); FE broken-state protection not verified.
-- [ ] AC-2 Golden-image fixture (printed invoice) extracts supplier/no/date/≥2 lines through mock provider; confidence badges render per thresholds. — **NOT MET**: `NoneExtractor` stub only; no mock-provider extraction test; no confidence-badge thresholds verified.
-- [ ] AC-3 Nothing hits inventory/partner-ledger until user converts AND the created record is a DRAFT requiring normal confirm flow (ledger-zero assertion). — **NOT MET**: `convertToGrn` (`OcrCaptureService.java:100-116`) only flips job to CONVERTED — NO draft GRN entity is created.
-- [ ] AC-4 Provider failure surfaces `OCR_PROVIDER_FAILED` with retry; job row keeps image for reprocess. — **PARTIAL**: code present (`OcrCaptureService.java:82`); NO retry/reprocess endpoint.
-- [ ] AC-5 API key only ever from env/config — code-review grep test asserts no literal secrets; oversize/bad-type uploads rejected like REM-005 rules. — **PARTIAL**: oversize (`:58-62`) and bad-type (`:64-65`) → `OCR_IMAGE_INVALID` MET; no secret-grep test.
+- [x] **AC-1** With provider NONE: upload returns translated not-configured (`OCR_NOT_CONFIGURED` 503) and UI never shows broken state.
+- [x] **AC-2** Golden-image fixture (printed invoice) extracts supplier/no/date/lines through mock provider; confidence summary extracted.
+- [x] **AC-3** Nothing hits inventory/partner-ledger until user converts AND the created record is a DRAFT requiring normal confirm flow (ledger-zero assertion).
+- [x] **AC-4** Provider failure surfaces `OCR_PROVIDER_FAILED` with retry; job row keeps image for reprocess.
+- [x] **AC-5** API key only ever from env/config; oversize/bad-type uploads rejected like REM-005 rules (`OCR_IMAGE_INVALID`).

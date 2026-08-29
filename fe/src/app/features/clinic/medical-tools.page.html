@@ -1,0 +1,234 @@
+<div class="medical-tools-container">
+  <!-- Header Bar -->
+  <div class="page-header">
+    <div>
+      <h2>{{ i18n.t('clinic.telemedicine') }} / {{ i18n.t('clinic.pediatricDoseCalculator') }}</h2>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" *ngIf="activeTab() === 'telemedicine'" (click)="openTelemedModal()">
+        + {{ i18n.t('clinic.scheduleTelemedicine') }}
+      </button>
+      <button class="btn btn-primary" *ngIf="activeTab() === 'licenses'" (click)="openLicenseModal()">
+        + {{ i18n.t('common.add') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tab-bar">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'calculator'"
+      (click)="activeTab.set('calculator')"
+    >
+      🧮 {{ i18n.t('clinic.pediatricDoseCalculator') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'telemedicine'"
+      (click)="activeTab.set('telemedicine')"
+    >
+      📹 {{ i18n.t('clinic.telemedicine') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'licenses'"
+      (click)="activeTab.set('licenses')"
+    >
+      📜 {{ i18n.t('clinic.licenseRegistry') }}
+    </button>
+  </div>
+
+  <!-- Tab 1: Pediatric Dose Calculator -->
+  <div class="tab-pane card" *ngIf="activeTab() === 'calculator'">
+    <div class="calculator-grid">
+      <div class="calc-form">
+        <h4>{{ i18n.t('clinic.pediatricDoseCalculator') }}</h4>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.weightKg') }}</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="calcInput.weightKg"
+            (ngModelChange)="calculateDose()"
+          />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.doseMgPerKg') }}</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="calcInput.doseMgPerKgPerDay"
+            (ngModelChange)="calculateDose()"
+          />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.frequencyPerDay') }}</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="calcInput.frequencyPerDay"
+            (ngModelChange)="calculateDose()"
+          />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.drugConcentration') }}</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="calcInput.drugConcentrationMgPerMl"
+            (ngModelChange)="calculateDose()"
+          />
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div class="calc-results" *ngIf="calcResult()">
+        <h4>{{ i18n.t('clinic.calculatedDose') }}</h4>
+        <div class="metric-card">
+          <span class="label">{{ i18n.t('clinic.dailyDose') }}</span>
+          <span class="val font-mono">{{ calcResult()!.dailyDoseMg | number:'1.2-2' }} {{ i18n.t('clinic.mg') }}</span>
+        </div>
+        <div class="metric-card highlight">
+          <span class="label">{{ i18n.t('clinic.singleDose') }}</span>
+          <span class="val font-mono">{{ calcResult()!.singleDoseMg | number:'1.2-2' }} {{ i18n.t('clinic.mg') }}</span>
+          <span class="sub-val" *ngIf="calcResult()!.singleDoseMl">
+            ({{ calcResult()!.singleDoseMl | number:'1.2-2' }} {{ i18n.t('clinic.ml') }})
+          </span>
+        </div>
+        <div class="instruction-box">
+          <p>{{ calcResult()!.administrationInstructions }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Telemedicine Sessions -->
+  <div class="tab-pane" *ngIf="activeTab() === 'telemedicine'">
+    <div class="sessions-list" *ngIf="sessions().length > 0; else noSessions">
+      <div class="session-card card" *ngFor="let s of sessions()">
+        <div class="session-header">
+          <div>
+            <span class="doctor font-bold">{{ s.doctorName }}</span>
+            <span class="date text-muted font-mono"> — {{ s.scheduledTime | date:'yyyy-MM-dd HH:mm' }}</span>
+          </div>
+          <span class="badge badge-info">{{ s.status }}</span>
+        </div>
+        <div class="session-link-row">
+          <span class="link-label">{{ i18n.t('clinic.meetingLink') }}:</span>
+          <a [href]="s.meetingLink" target="_blank" class="link font-mono">{{ s.meetingLink }}</a>
+        </div>
+        <div class="session-actions">
+          <button class="btn btn-sm btn-success" (click)="startVideo(s)">
+            📹 {{ i18n.t('clinic.startVideo') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <ng-template #noSessions>
+      <div class="empty-state card">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- Tab 3: License Registry -->
+  <div class="tab-pane card" *ngIf="activeTab() === 'licenses'">
+    <table class="data-table" *ngIf="licenses().length > 0; else noLicenses">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('common.name') }}</th>
+          <th>{{ i18n.t('common.type') }}</th>
+          <th>{{ i18n.t('clinic.licenseNumber') }}</th>
+          <th>{{ i18n.t('clinic.issuingAuthority') }}</th>
+          <th>{{ i18n.t('clinic.licenseExpiry') }}</th>
+          <th>{{ i18n.t('common.status') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lic of licenses()">
+          <td class="font-bold">{{ lic.practitionerName }}</td>
+          <td><span class="badge badge-neutral">{{ lic.licenseType }}</span></td>
+          <td class="font-mono">{{ lic.licenseNumber }}</td>
+          <td>{{ lic.issuingAuthority }}</td>
+          <td class="font-mono">{{ lic.expiryDate | date:'yyyy-MM-dd' }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-success]="lic.status === 'VALID'"
+              [class.badge-warning]="lic.status === 'EXPIRING_SOON'"
+              [class.badge-danger]="lic.status === 'EXPIRED'"
+            >
+              {{ lic.status === 'VALID' ? i18n.t('clinic.licenseValid') : (lic.status === 'EXPIRING_SOON' ? i18n.t('clinic.licenseExpiringSoon') : i18n.t('clinic.licenseExpired')) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noLicenses>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- Telemedicine Modal -->
+  <div class="modal-overlay" *ngIf="showTelemedModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>{{ i18n.t('clinic.scheduleTelemedicine') }}</h4>
+        <button class="btn-close" (click)="showTelemedModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitTelemed()">
+        <div class="form-group">
+          <label>{{ i18n.t('common.patient') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="telemedForm.patientId" name="patientId" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.doctor') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="telemedForm.doctorName" name="doctorName" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.roomName') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="telemedForm.roomName" name="roomName" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showTelemedModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving() || !telemedForm.patientId">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- License Modal -->
+  <div class="modal-overlay" *ngIf="showLicenseModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>{{ i18n.t('clinic.licenseRegistry') }}</h4>
+        <button class="btn-close" (click)="showLicenseModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitLicense()">
+        <div class="form-group">
+          <label>{{ i18n.t('common.name') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="licenseForm.practitionerName" name="pracName" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.licenseNumber') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="licenseForm.licenseNumber" name="licNum" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.issuingAuthority') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="licenseForm.issuingAuthority" name="auth" required />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showLicenseModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving() || !licenseForm.practitionerName">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

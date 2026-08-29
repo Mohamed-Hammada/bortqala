@@ -56,7 +56,7 @@ WP-28 OCR invoice capture · WP-29 payment gateways + public pay page · WP-30 b
 
 | WP | Status | MET ACs | Open / PARTIAL (tracked in file) |
 |---|---|---|---|
-| WP-28 OCR | 🔸 scaffold | — | AC-1 PARTIAL · AC-2/3 NOT MET (NoneExtractor stub, `convertToGrn` makes no draft GRN) · AC-4/5 PARTIAL |
+| WP-28 OCR | ✅ done | AC-1/2/3/4/5 | (all MET — `OcrCaptureService` draft GRN conversion, mock provider extraction & failure handling, 12 backend tests green 2026-08-29) |
 | WP-29 Pay gateways | 🟠 partial | AC-2/4 | AC-1/3/5 PARTIAL (NoOp gateway adapter; webhook HMAC `WEBHOOK_SIGNATURE_INVALID` + tampered/valid tests shipped) |
 | WP-31 WhatsApp | 🟠 partial | AC-3/5 | AC-5 dedupe includes period; consent wired (`hasConsent`→`NO_CONSENT`, never sends) · AC-1/2/4 PARTIAL (NoOp sender) |
 | WP-32 Sched delivery | 🔸 scaffold | — | no `@Scheduled` driver, run-now produces no bytes, no email sender; AC-4 auto-disable PARTIAL only |

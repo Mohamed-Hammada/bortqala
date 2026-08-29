@@ -51,4 +51,9 @@ export const CLINIC_ROUTES: Routes = [
     loadComponent: () =>
       import('./dental-charting.page').then((m) => m.DentalChartingPageComponent),
   },
+  {
+    path: 'tools',
+    loadComponent: () =>
+      import('./medical-tools.page').then((m) => m.MedicalToolsPageComponent),
+  },
 ];

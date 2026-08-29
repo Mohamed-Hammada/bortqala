@@ -1002,4 +1002,82 @@ public final class MedicalClinicApi {
             long recordedAt,
             String recordedBy
     ) {}
+
+    // Medical Vertical Depth DTOs
+    public record PatientFamilyLinkDto(
+            String id,
+            String patientId,
+            String guardianPatientId,
+            String relationshipType,
+            boolean isPrimaryPayer,
+            String notes,
+            long createdAt
+    ) {}
+
+    public record LinkFamilyMemberRequest(
+            @NotBlank String guardianPatientId,
+            @NotBlank String relationshipType,
+            boolean isPrimaryPayer,
+            String notes
+    ) {}
+
+    public record PediatricDoseCalculationRequest(
+            @NotNull BigDecimal weightKg,
+            @NotNull BigDecimal doseMgPerKgPerDay,
+            @NotNull Integer frequencyPerDay,
+            BigDecimal drugConcentrationMgPerMl
+    ) {}
+
+    public record PediatricDoseCalculationResponse(
+            BigDecimal weightKg,
+            BigDecimal dailyDoseMg,
+            BigDecimal singleDoseMg,
+            BigDecimal singleDoseMl,
+            Integer frequencyPerDay,
+            String administrationInstructions
+    ) {}
+
+    public record TelemedicineSessionDto(
+            String id,
+            String patientId,
+            String doctorId,
+            String doctorName,
+            long scheduledTime,
+            String meetingLink,
+            String roomToken,
+            String status,
+            String clinicalNotes,
+            long createdAt
+    ) {}
+
+    public record ScheduleTelemedicineSessionRequest(
+            @NotBlank String patientId,
+            @NotBlank String doctorId,
+            @NotBlank String doctorName,
+            long scheduledTime,
+            String roomName
+    ) {}
+
+    public record MedicalLicenseRecordDto(
+            String id,
+            String practitionerId,
+            String practitionerName,
+            String licenseType,
+            String licenseNumber,
+            String issuingAuthority,
+            long issueDate,
+            long expiryDate,
+            String status,
+            long createdAt
+    ) {}
+
+    public record RegisterMedicalLicenseRequest(
+            @NotBlank String practitionerId,
+            @NotBlank String practitionerName,
+            @NotBlank String licenseType,
+            @NotBlank String licenseNumber,
+            @NotBlank String issuingAuthority,
+            long issueDate,
+            long expiryDate
+    ) {}
 }

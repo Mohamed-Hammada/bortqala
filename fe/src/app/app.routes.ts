@@ -625,6 +625,13 @@ export const routes: Routes = [
           import('./features/clinic/dental-charting.page').then((m) => m.DentalChartingPageComponent),
       },
       {
+        path: 'clinic/tools',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'medical-tools' },
+        loadComponent: () =>
+          import('./features/clinic/medical-tools.page').then((m) => m.MedicalToolsPageComponent),
+      },
+      {
         path: 'forbidden',
         loadComponent: () =>
           import('./features/errors/forbidden.page').then((module) => module.ForbiddenPage),

@@ -16,6 +16,12 @@ import {
   UpdateCostCodeRequest,
   ProjectPartyRoleResponse,
   AssignPartyRoleRequest,
+  SiteCustodyResponse,
+  IssueCustodyRequest,
+  SiteCustodyExpenseResponse,
+  RecordCustodyExpenseRequest,
+  SiteCustodyReturnResponse,
+  SettleCustodyRequest,
 } from '../models/project.models';
 
 @Injectable({
@@ -226,5 +232,31 @@ export class ProjectService {
         this.projectRoles.update((list) => list.filter((r) => r.id !== roleId));
       })
     );
+  }
+
+  // ─── Site Custody Register ────────────────────────────────────────
+
+  loadProjectCustodies(projectId: string): Observable<SiteCustodyResponse[]> {
+    return this.http.get<SiteCustodyResponse[]>(`${this.baseUrl}/${projectId}/custodies`);
+  }
+
+  issueCustody(projectId: string, req: IssueCustodyRequest): Observable<SiteCustodyResponse> {
+    return this.http.post<SiteCustodyResponse>(`${this.baseUrl}/${projectId}/custodies`, req);
+  }
+
+  recordCustodyExpense(custodyId: string, req: RecordCustodyExpenseRequest): Observable<SiteCustodyExpenseResponse> {
+    return this.http.post<SiteCustodyExpenseResponse>(`${this.baseUrl}/custodies/${custodyId}/expenses`, req);
+  }
+
+  approveCustodyExpense(expenseId: string): Observable<SiteCustodyExpenseResponse> {
+    return this.http.post<SiteCustodyExpenseResponse>(`${this.baseUrl}/custodies/expenses/${expenseId}/approve`, {});
+  }
+
+  rejectCustodyExpense(expenseId: string): Observable<SiteCustodyExpenseResponse> {
+    return this.http.post<SiteCustodyExpenseResponse>(`${this.baseUrl}/custodies/expenses/${expenseId}/reject`, {});
+  }
+
+  settleCustody(custodyId: string, req: SettleCustodyRequest): Observable<SiteCustodyResponse> {
+    return this.http.post<SiteCustodyResponse>(`${this.baseUrl}/custodies/${custodyId}/settle`, req);
   }
 }

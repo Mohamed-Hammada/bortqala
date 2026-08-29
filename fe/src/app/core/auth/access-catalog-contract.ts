@@ -313,6 +313,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: [],
     requiredFeature: 'medical.enabled',
   },
+  {
+    menuId: 'medical-tools',
+    route: '/clinic/tools',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
 ];
 
 

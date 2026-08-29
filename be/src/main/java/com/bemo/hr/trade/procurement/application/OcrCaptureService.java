@@ -38,7 +38,7 @@ public class OcrCaptureService {
     private final ObjectMapper objectMapper;
 
     @Value("${hr.ocr.max-image-bytes:5242880}")
-    private long maxImageBytes;
+    private long maxImageBytes = 5242880L;
 
     public OcrCaptureService(OcrCaptureJobRepository jobRepository,
                              InvoiceExtractor extractor,

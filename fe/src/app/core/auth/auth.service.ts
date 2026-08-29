@@ -279,7 +279,7 @@ export class AuthService {
           || menuId === 'fixed-assets' || menuId === 'payment-links' || menuId === 'eta-tax')) return false;
     if (!activeFeatures.includes('workforce.contractorAccounts.enabled')
         && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements' || menuId === 'workforce-client-billing')) return false;
-    if ((menuId === 'clinic-patients' || menuId === 'clinic-queue' || menuId === 'clinic-commissions' || menuId === 'clinic-appointments' || menuId === 'clinic-pharmacy' || menuId === 'clinic-lab' || menuId === 'clinic-insurance' || menuId === 'hospital-ops' || menuId === 'dental-charting')
+    if ((menuId === 'clinic-patients' || menuId === 'clinic-queue' || menuId === 'clinic-commissions' || menuId === 'clinic-appointments' || menuId === 'clinic-pharmacy' || menuId === 'clinic-lab' || menuId === 'clinic-insurance' || menuId === 'hospital-ops' || menuId === 'dental-charting' || menuId === 'medical-tools')
         && !activeFeatures.includes('medical.enabled')) return false;
 
     // ADMIN bypasses per-user menu assignment only after feature availability checks.

@@ -89,7 +89,7 @@ describe('page access consistency', () => {
       'workforce.contractorAccounts.enabled',
     ]);
     expect(gatedByFeature.get('medical.enabled')!.sort()).toEqual([
-      'clinic-appointments', 'clinic-commissions', 'clinic-insurance', 'clinic-lab', 'clinic-patients', 'clinic-pharmacy', 'clinic-queue', 'dental-charting', 'hospital-ops',
+      'clinic-appointments', 'clinic-commissions', 'clinic-insurance', 'clinic-lab', 'clinic-patients', 'clinic-pharmacy', 'clinic-queue', 'dental-charting', 'hospital-ops', 'medical-tools',
     ]);
     expect(gatedByFeature.get('finance.enabled')!.sort()).toEqual([
       'accounts', 'banks', 'budgets', 'eta-tax', 'fiscal-periods', 'fixed-assets', 'journal-entries', 'payment-links', 'tax-currency',

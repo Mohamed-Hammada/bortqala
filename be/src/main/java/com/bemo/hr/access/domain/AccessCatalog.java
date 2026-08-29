@@ -555,7 +555,10 @@ public final class AccessCatalog {
                     action("MANAGE", P_CLINIC_HOSPITAL_MANAGE, false)),
             page("CLINIC_DENTAL", "MEDICAL", "/clinic/dental", "dental-charting",
                     "nav.dentalCharting", P_CLINIC_DENTAL_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
-                    action("MANAGE", P_CLINIC_DENTAL_MANAGE, false)));
+                    action("MANAGE", P_CLINIC_DENTAL_MANAGE, false)),
+            page("CLINIC_TOOLS", "MEDICAL", "/clinic/tools", "medical-tools",
+                    "nav.medicalTools", P_CLINIC_PATIENTS_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_PATIENTS_MANAGE, false)));
     // ------------------------------------------------------------------
     // Segregation-of-duties rules.
     // ------------------------------------------------------------------

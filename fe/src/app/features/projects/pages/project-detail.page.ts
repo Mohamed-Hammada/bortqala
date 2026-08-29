@@ -15,6 +15,7 @@ import { ProjectScheduleGanttComponent } from '../ui/project-schedule-gantt.comp
 import { TendersListComponent } from '../ui/tenders-list.component';
 import { ClaimsListComponent } from '../ui/claims-list.component';
 import { ProjectCostControlComponent } from '../ui/project-cost-control.component';
+import { SiteCustodyListComponent } from '../ui/site-custody-list.component';
 import { ProjectService } from '../data-access/project.service';
 import {
   CostCodeCategory,
@@ -47,6 +48,7 @@ import {
     TendersListComponent,
     ClaimsListComponent,
     ProjectCostControlComponent,
+    SiteCustodyListComponent,
   ],
   templateUrl: './project-detail.page.html',
   styleUrl: './project-detail.page.scss',
@@ -63,7 +65,7 @@ export class ProjectDetailPage implements OnInit {
   readonly projectId = signal<string>('');
   readonly loading = signal(true);
   readonly submitting = signal(false);
-  readonly activeTab = signal<'wbs' | 'overview' | 'costCodes' | 'roles' | 'dpr' | 'schedule' | 'tenders' | 'claims' | 'costControl'>('wbs');
+  readonly activeTab = signal<'wbs' | 'overview' | 'costCodes' | 'roles' | 'dpr' | 'schedule' | 'tenders' | 'claims' | 'costControl' | 'custodies'>('wbs');
 
   // Edit Project Modal
   readonly editProjectOpen = signal(false);

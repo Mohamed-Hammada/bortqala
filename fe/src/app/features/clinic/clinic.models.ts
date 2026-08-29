@@ -970,3 +970,81 @@ export interface ExamAnswer {
   recordedAt: number;
   recordedBy?: string | null;
 }
+
+// Medical Vertical Depth Models
+export interface PatientFamilyLink {
+  id: string;
+  patientId: string;
+  guardianPatientId: string;
+  relationshipType: 'PARENT' | 'SPOUSE' | 'SIBLING' | 'CHILD' | 'GUARDIAN';
+  isPrimaryPayer: boolean;
+  notes?: string | null;
+  createdAt: number;
+}
+
+export interface LinkFamilyMemberPayload {
+  guardianPatientId: string;
+  relationshipType: string;
+  isPrimaryPayer: boolean;
+  notes?: string | null;
+}
+
+export interface PediatricDoseCalculationRequest {
+  weightKg: number;
+  doseMgPerKgPerDay: number;
+  frequencyPerDay: number;
+  drugConcentrationMgPerMl?: number | null;
+}
+
+export interface PediatricDoseCalculationResponse {
+  weightKg: number;
+  dailyDoseMg: number;
+  singleDoseMg: number;
+  singleDoseMl?: number | null;
+  frequencyPerDay: number;
+  administrationInstructions: string;
+}
+
+export interface TelemedicineSession {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  doctorName: string;
+  scheduledTime: number;
+  meetingLink: string;
+  roomToken?: string | null;
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  clinicalNotes?: string | null;
+  createdAt: number;
+}
+
+export interface ScheduleTelemedicineSessionPayload {
+  patientId: string;
+  doctorId: string;
+  doctorName: string;
+  scheduledTime: number;
+  roomName?: string | null;
+}
+
+export interface MedicalLicenseRecord {
+  id: string;
+  practitionerId: string;
+  practitionerName: string;
+  licenseType: string;
+  licenseNumber: string;
+  issuingAuthority: string;
+  issueDate: number;
+  expiryDate: number;
+  status: 'VALID' | 'EXPIRED' | 'EXPIRING_SOON';
+  createdAt: number;
+}
+
+export interface RegisterMedicalLicensePayload {
+  practitionerId: string;
+  practitionerName: string;
+  licenseType: string;
+  licenseNumber: string;
+  issuingAuthority: string;
+  issueDate: number;
+  expiryDate: number;
+}

@@ -680,6 +680,14 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'categories',
     workspace: 'workspace.medical',
   },
+  {
+    menuId: 'medical-tools',
+    labelKey: 'nav.medicalTools',
+    descriptionKey: 'nav.medicalToolsHint',
+    path: '/clinic/tools',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
 
   // Administration
   {

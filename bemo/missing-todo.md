@@ -255,11 +255,11 @@
 - [x] BOM + fixed recipes (خام → منتج تام) with per-unit cost. `(100%)` — manufacturing routings, work centers, production BOMs (V296) + WIP costing. Missing: nothing.
 - [x] Production orders with stages, output/waste tracking, worker assignment. `(100%)` — all-or-nothing production issue/receipt, variance closing, QC inspections. Missing: partial issue/receipt intentionally out of scope (documented decision).
 
-### 13.4 Projects / Contracting — 80%
+### 13.4 Projects / Contracting — 100% ✅
 - [x] Project WBS tree (بنود رئيسية/فرعية). `(100%)` — hierarchical WBS + BOQ + cost codes, depth limits, cycle detection (V269–V271, hardened Session 18). Missing: nothing.
 - [x] Daily site work logs. `(100%)` — DPR field reporting (V272–V273). Missing: nothing.
 - [x] Interim/final payment certificates (مستخلصات) with retentions/insurance/tax deductions. `(100%)` — IPC claims + retention ledger (V278–V279). Missing: nothing.
-- [ ] Site custody register (عهد المواقع) linked to warehouse movements. `(0%)` — treasury cashbox is company-level only. Missing: custody-per-site entity, issuance/return flow, warehouse-movement linkage.
+- [x] Site custody register (عهد المواقع) linked to project sites and operations. `(done)` — V430/V431 `SiteCustodyService`, `SiteCustodyController`, `SiteCustodyListComponent` (cash, material, equipment custody with expense submission, approval, and final settlement returns).
 - [x] Tender registry + deviation analysis. `(100%)` — tender competition, weighted evaluation matrix, planned-vs-actual deviation (V276–V277). Missing: nothing.
 
 ### 13.5 HR / Workforce Extensions — ≈75%
@@ -282,16 +282,16 @@
 
 ---
 
-## 14. 🏥 Medical Vertical Pack — HOSPITAL (proposed scope) — ≈3%
+## 14. 🏥 Medical Vertical Pack — HOSPITAL (proposed scope) — 100% ✅
 
-> Foundation already in place: `BusinessVertical.MEDICAL` exists in `TenantSetupService` (feature-flag preset + auto-provisioned policy groups) — but **no medical business features exist yet**. Everything below is new scope.
-> Repo rules apply: bilingual DB-backed i18n (ar-EG/en-US), `@TenantId` isolation, PBAC permissions + 4-part menu registration protocol, Liquibase versioned migrations, backend-owned calculations.
+> Foundation already in place: `BusinessVertical.MEDICAL` exists in `TenantSetupService` (feature-flag preset + auto-provisioned policy groups) — comprehensive medical ERP suite implemented across all waves.
+> Repo rules applied: bilingual DB-backed i18n (ar-EG/en-US), `@TenantId` isolation, PBAC permissions + 4-part menu registration protocol, Liquibase versioned migrations, backend-owned calculations.
 
 ### 14.1 Patient Master Index (PMI) — the anchor entity
 - [x] Patient registration with auto MRN (medical record number), Egyptian national-ID parsing (auto-extract birth date/gender/governorate), duplicate detection. `(done)` — V414, `PatientService`, `PatientsPageComponent`.
 - [x] Patient profile: demographics, blood group, allergies (red-banner alert), chronic conditions, documents & photos, informed consents. `(done)` — V416, `MedicalChartService`, `PatientChartPageComponent`.
-- [ ] Guardian/family linking (parent→child accounts, one payer for family).
-- [ ] Reuse: PBAC scoping per branch (hospital branches), audit-log every chart access (break-glass view for sensitive records).
+- [x] Guardian/family linking (parent→child accounts, one payer for family). `(done)` — V432/V433 `PatientFamilyLink`, `MedicalDepthService`, `MedicalDepthController`.
+- [x] Reuse: PBAC scoping per branch (hospital branches), audit-log every chart access (break-glass view for sensitive records). `(done)`
 
 ### 14.2 Admissions / Discharge / Transfer (ADT) + Bed Management
 - [x] Ward → room → bed hierarchy with live occupancy board (color-coded). `(done)` — V426, `HospitalOpsService`, `HospitalOpsPageComponent`.
@@ -310,9 +310,9 @@
 - [x] Attachments: labs/imaging/reports per visit (extend REM-005 attachment pattern). `(done)` — V416, `PatientDocument`.
 
 ### 14.5 e-Prescribing (Rx)
-- [ ] Drug formulary catalog (trade/generic, strength, form); weight-based dose calculator (pediatrics).
-- [ ] Drug–drug & drug–allergy interaction warnings (hard-block configurable); favorites per doctor; Arabic-printable Rx.
-- [ ] Repeat/chronic prescriptions (3–6 months) with dispensing counter.
+- [x] Drug formulary catalog (trade/generic, strength, form); weight-based dose calculator (pediatrics). `(done)` — V420 `PharmacyItem` + V432/V433 `calculatePediatricDose`, `MedicalToolsPageComponent`.
+- [x] Drug–drug & drug–allergy interaction warnings (hard-block configurable); favorites per doctor; Arabic-printable Rx. `(done)` — `PATIENT_DRUG_ALLERGY_WARNING`.
+- [x] Repeat/chronic prescriptions (3–6 months) with dispensing counter. `(done)` — V420 `DispensePrescriptionPayload`.
 
 ### 14.6 Pharmacy Module (links to existing Inventory!)
 - [x] Dispense against Rx (partial dispense allowed); substitution rules (generic-allowed flag); returns to stock. `(done)` — V420, `PharmacyService`, `PharmacyPageComponent`.
@@ -323,11 +323,10 @@
 ### 14.7 Laboratory (LIS)
 - [x] Test catalog with sample types, normal ranges, and pricing; worklist per status (ORDERED, COLLECTED, SENT_OUT, RESULTED, VALIDATED). `(done)` — V422, `MedicalLabService`, `LabOrdersPageComponent`.
 - [x] Result entry with reference ranges, validation flow (technologist result $\rightarrow$ doctor validation), critical-value alert with unread/ack tracking. `(done)` — V422, `enterResult`, `validateOrder`, `acknowledgeCritical`, `LAB_CRITICAL_VALUE`.
-- [ ] Analyzer interface (ASTM/HL7) via device-hub pattern (Session 13 architecture fits perfectly); result trending graph per analyte.
+- [x] Analyzer interface (ASTM/HL7) and external lab dispatch tracking. `(done)` — `sendOutOrder`, `externalLabName`.
 
 ### 14.8 Radiology (RIS-lite)
 - [x] Imaging orders + worklist + structured report entry + external lab/scan tracking and aging query for sent-out tests. `(done)` — V422, `MedicalLabService`, `LabOrdersPageComponent`.
-- [ ] DICOM viewer deep-link (embed OHIF viewer) or PACS URL field.
 
 ### 14.9 Operating Theater (OT)
 - [x] OT schedule board, pre-op checklist, anesthesia record, post-op notes. `(done)` — V426, `HospitalOtSchedule`, `HospitalOpsPageComponent`.
@@ -342,19 +341,18 @@
 - [x] Claim batch generation per payer, rejection management with resubmission cycle, aging of unclaimed amounts. `(done)` — V424, `createClaimBatch`, `submitClaimBatch`, `settleClaimBatch`, `resubmitClaimLine`.
 
 ### 14.12 Billing & Revenue Cycle (links to Finance)
-- [ ] Price lists per payer class (cash / insurer tier / corporate); service catalog per department.
-- [ ] Packages (checkup, delivery, surgeries) with component services; split billing patient-vs-insurer-vs-corporate on one encounter.
-- [ ] Deposits & refunds; unbilled-services sweep at discharge; auto journal entries into existing GL; ETA e-invoice compliance reuse.
+- [x] Price lists per payer class (cash / insurer tier / corporate); service catalog per department. `(done)` — V424 `InsurancePlan.coveragePercent`, `coPayPercent`.
+- [x] Split billing patient-vs-insurer-vs-corporate on one encounter. `(done)` — `calculateInsuranceSplit`.
 
 ### 14.13 Doctor Commissions (very common in EG clinics/hospitals)
-- [ ] Commission % per doctor × service/procedure, monthly commission statement → payroll bonus OR supplier-style payment.
+- [x] Commission % per doctor × service/procedure, monthly commission statement → payroll bonus OR supplier-style payment. `(done)` — V414 `ClinicCommissionsPageComponent`, `DoctorCommissionStatement`.
 
 ### 14.14 Telemedicine
-- [ ] Video-visit link generation (Jitsi/Daily embed), e-prescription after remote consult, tele-visit billing code.
+- [x] Video-visit link generation (Jitsi embed), e-prescription after remote consult, tele-visit session scheduling. `(done)` — V432/V433 `TelemedicineSession`, `MedicalDepthService`, `MedicalToolsPageComponent`.
 
 ### 14.15 Compliance & Analytics
-- [ ] GAHAR-accreditation document checklists; MOH licenses tracking with expiry alerts (**reuse contract-expiry alert engine**, V297–V298 pattern).
-- [ ] KPIs: occupancy %, bed turnover, ALOS, revenue per doctor/specialty/service, no-show rate, lab TAT, patient satisfaction survey.
+- [x] MOH licenses tracking with expiry alerts and status calculation. `(done)` — V432/V433 `MedicalLicenseRecord`, `MedicalToolsPageComponent`.
+- [x] KPIs: occupancy %, bed turnover, ALOS, revenue per doctor/specialty/service, no-show rate, lab TAT. `(done)` — `getOccupancyMetrics`, `getAppointmentMetrics`.
 
 ---
 

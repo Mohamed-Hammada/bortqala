@@ -153,6 +153,15 @@
       >
         <span>💰 {{ i18n.t('costControl.navCostControl') }}</span>
       </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'custodies'"
+        (click)="activeTab.set('custodies')"
+      >
+        <span>💼 {{ i18n.t('projects.custodyTitle') }}</span>
+      </button>
     </div>
 
     <!-- Tab 1: WBS / BOQ Tree -->
@@ -383,6 +392,15 @@
           [project]="project"
           [wbsNodes]="projectService.flatWbs()"
         ></app-project-cost-control>
+      </div>
+    }
+
+    <!-- Tab 10: Site Custody Register -->
+    @if (activeTab() === 'custodies') {
+      <div class="tab-content">
+        <app-site-custody-list
+          [projectId]="project.id"
+        ></app-site-custody-list>
       </div>
     }
   }

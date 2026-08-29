@@ -256,4 +256,94 @@ public final class ProjectApi {
 
             String notes
     ) {}
+
+    // Site Custody Register DTOs
+    public record SiteCustodyResponse(
+            String id,
+            String projectId,
+            String custodyCode,
+            String custodianEmployeeId,
+            String custodianName,
+            String custodyType,
+            BigDecimal initialAmount,
+            BigDecimal remainingBalance,
+            String status,
+            long issuedAt,
+            Long settledAt,
+            String notes,
+            long version,
+            long createdAt,
+            long updatedAt,
+            List<SiteCustodyExpenseResponse> expenses,
+            List<SiteCustodyReturnResponse> returns
+    ) {}
+
+    public record IssueCustodyRequest(
+            @NotBlank(message = "Custody code is required.")
+            String custodyCode,
+
+            String custodianEmployeeId,
+
+            @NotBlank(message = "Custodian name is required.")
+            String custodianName,
+
+            @NotBlank(message = "Custody type is required (CASH, MATERIAL, EQUIPMENT).")
+            String custodyType,
+
+            @NotNull(message = "Initial amount is required.")
+            @PositiveOrZero(message = "Initial amount must be non-negative.")
+            BigDecimal initialAmount,
+
+            String notes
+    ) {}
+
+    public record SiteCustodyExpenseResponse(
+            String id,
+            String custodyId,
+            long expenseDate,
+            BigDecimal amount,
+            String category,
+            String description,
+            String receiptNumber,
+            String recordedBy,
+            String status,
+            long createdAt,
+            long updatedAt
+    ) {}
+
+    public record RecordCustodyExpenseRequest(
+            long expenseDate,
+
+            @NotNull(message = "Amount is required.")
+            @PositiveOrZero(message = "Amount must be positive.")
+            BigDecimal amount,
+
+            @NotBlank(message = "Category is required.")
+            String category,
+
+            @NotBlank(message = "Description is required.")
+            String description,
+
+            String receiptNumber,
+            String recordedBy
+    ) {}
+
+    public record SiteCustodyReturnResponse(
+            String id,
+            String custodyId,
+            long returnDate,
+            BigDecimal amountReturned,
+            String receivedBy,
+            String notes,
+            long createdAt
+    ) {}
+
+    public record SettleCustodyRequest(
+            @NotNull(message = "Amount returned is required.")
+            @PositiveOrZero
+            BigDecimal amountReturned,
+
+            String receivedBy,
+            String notes
+    ) {}
 }
