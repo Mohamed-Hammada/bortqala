@@ -107,4 +107,21 @@ public final class EtaComplianceApi {
             long createdAt
     ) {
     }
+
+    public record CreateAdjustmentNoteRequest(
+            @NotBlank String originalInvoiceId,
+            @NotBlank String documentType, // CREDIT_NOTE or DEBIT_NOTE
+            @NotBlank String parentEtaUuid,
+            @NotBlank String reason,
+            BigDecimal amount
+    ) {
+    }
+
+    public record ReconciliationResponse(
+            int reconciledCount,
+            int validCount,
+            int invalidCount,
+            String message
+    ) {
+    }
 }

@@ -753,6 +753,18 @@ export const NAV_ITEMS: NavItem[] = [
     workspace: 'workspace.administration',
     allowAsLandingPage: false,
   },
+  {
+    menuId: 'migration',
+    labelKey: 'migration.title',
+    descriptionKey: 'migration.subtitle',
+    path: '/migration',
+    icon: 'imports',
+    workspace: 'workspace.administration',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    permissionMenuId: 'settings',
+    allowAsLandingPage: false,
+    showInPermissionEditor: false,
+  },
   // Platform Administration is intentionally separated from tenant/user Settings.
   {
     menuId: 'platform-admin',

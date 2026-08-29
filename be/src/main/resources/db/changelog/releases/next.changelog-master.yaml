@@ -1022,4 +1022,9 @@ databaseChangeLog:
       file: db/changelog/schema/create/20260829_v432_medical_depth_schema.yaml
   - include:
       file: db/changelog/data/insert/20260829_v433_medical_depth_translations.yaml
+  # Data Migration Center: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260829_v434_data_migration_schema.yaml
+  - include:
+      file: db/changelog/data/insert/20260829_v435_data_migration_translations.yaml
 

@@ -139,8 +139,13 @@ export class CommandPaletteComponent implements OnInit, OnDestroy {
   private iconForType(type: string): string {
     switch (type) {
       case 'employee': return '👤';
+      case 'customer': return '🤝';
+      case 'supplier': return '🏭';
       case 'invoice': return '📄';
-      case 'party': return '🏢';
+      case 'purchase_order': return '📑';
+      case 'project': return '🏗';
+      case 'journal': return '⚖️';
+      case 'payment': return '💳';
       case 'product': return '📦';
       default: return '🔍';
     }

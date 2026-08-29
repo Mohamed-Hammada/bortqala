@@ -150,6 +150,15 @@ export const routes: Routes = [
           import('./features/smart-import/smart-import.page').then((module) => module.SmartImportPage),
       },
       {
+        path: 'migration',
+        canActivate: [roleGuard],
+        data: {
+          roles: ['SUPER_ADMIN', 'ADMIN'],
+        },
+        loadComponent: () =>
+          import('./features/migration/data-migration.component').then((module) => module.DataMigrationComponent),
+      },
+      {
         path: 'parties',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'parties' },

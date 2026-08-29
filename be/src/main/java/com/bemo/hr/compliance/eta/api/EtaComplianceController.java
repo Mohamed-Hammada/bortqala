@@ -70,6 +70,25 @@ public class EtaComplianceController {
         return ResponseEntity.ok(complianceService.cancelDocument(id, request.reason()));
     }
 
+    @PostMapping("/submissions/adjustment-notes")
+    @PreAuthorize("@auth.hasPermission('etaTax.manage')")
+    public ResponseEntity<EtaComplianceApi.SubmissionResponse> createAdjustmentNote(
+            @Valid @RequestBody EtaComplianceApi.CreateAdjustmentNoteRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(complianceService.createAdjustmentNote(request));
+    }
+
+    @PostMapping("/submissions/{id}/retry")
+    @PreAuthorize("@auth.hasPermission('etaTax.manage')")
+    public ResponseEntity<EtaComplianceApi.SubmissionResponse> retrySubmission(@PathVariable String id) {
+        return ResponseEntity.ok(complianceService.retrySubmission(id));
+    }
+
+    @PostMapping("/submissions/reconcile")
+    @PreAuthorize("@auth.hasPermission('etaTax.manage')")
+    public ResponseEntity<EtaComplianceApi.ReconciliationResponse> reconcileSubmissions() {
+        return ResponseEntity.ok(complianceService.reconcileSubmissions());
+    }
+
     @GetMapping("/item-mappings")
     @PreAuthorize("@auth.hasPermission('etaTax.read')")
     public ResponseEntity<List<EtaComplianceApi.ItemMappingResponse>> listItemMappings() {

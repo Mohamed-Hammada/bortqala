@@ -145,4 +145,38 @@ class EtaComplianceServiceTests {
         List<EtaComplianceApi.ItemMappingResponse> list = service.listItemMappings();
         assertThat(list).hasSize(1);
     }
+
+    @Test
+    void createsCreditNoteReferencingParentEtaUuid() {
+        CustomerInvoice invoice = new CustomerInvoice("INV-2026-001", "CUST-01", null, LocalDate.of(2026, 8, 19), LocalDate.of(2026, 9, 19), "EGP", new BigDecimal("570.00"));
+        when(customerInvoiceRepository.findById("inv-1")).thenReturn(Optional.of(invoice));
+        when(submissionRepository.save(any(EtaInvoiceSubmission.class))).thenAnswer(i -> i.getArgument(0));
+
+        EtaComplianceApi.CreateAdjustmentNoteRequest request = new EtaComplianceApi.CreateAdjustmentNoteRequest(
+                "inv-1", "CREDIT_NOTE", "ETA-998877", "Returned defective goods", new BigDecimal("570.00")
+        );
+
+        EtaComplianceApi.SubmissionResponse response = service.createAdjustmentNote(request);
+        assertThat(response.internalId()).isEqualTo("CN-INV-2026-001");
+        assertThat(response.documentType()).isEqualTo(EtaDocumentType.CREDIT_NOTE);
+        assertThat(response.totalAmount()).isEqualByComparingTo("570.00");
+    }
+
+    @Test
+    void reconcilesPendingSubmissionsWithEta() {
+        EtaInvoiceSubmission pendingSubmission = new EtaInvoiceSubmission(
+                "inv-1", "INV-2026-001", EtaDocumentType.INVOICE, 1700000000000L,
+                new BigDecimal("1000.00"), BigDecimal.ZERO, new BigDecimal("1000.00"),
+                new BigDecimal("140.00"), new BigDecimal("1140.00"), "hash123"
+        );
+        pendingSubmission.markSubmitted("sub-uuid-1", "eta-uuid-1");
+
+        when(submissionRepository.findByStatusOrderByDateTimeIssuedDesc(EtaSubmissionStatus.SUBMITTED))
+                .thenReturn(List.of(pendingSubmission));
+
+        EtaComplianceApi.ReconciliationResponse response = service.reconcileSubmissions();
+        assertThat(response.reconciledCount()).isEqualTo(1);
+        assertThat(response.validCount()).isEqualTo(1);
+        assertThat(pendingSubmission.getStatus()).isEqualTo(EtaSubmissionStatus.VALID);
+    }
 }

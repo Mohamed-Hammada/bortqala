@@ -1,0 +1,127 @@
+<div class="migration-container">
+  <div class="header-card">
+    <div class="header-titles">
+      <h2>{{ i18n.t('migration.title') }}</h2>
+      <p class="subtitle">{{ i18n.t('migration.subtitle') }}</p>
+    </div>
+  </div>
+
+  <div class="wizard-grid">
+    <!-- Step 1: Template & Upload -->
+    <div class="step-card">
+      <div class="card-header">
+        <span class="step-badge">1</span>
+        <h3>{{ i18n.t('migration.selectEntity') }}</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>{{ i18n.t('migration.selectEntity') }}</label>
+          <select [ngModel]="selectedEntityType()" (ngModelChange)="selectedEntityType.set($event)" class="form-control">
+            @for (entity of entityTypes; track entity.key) {
+              <option [value]="entity.key">
+                {{ i18n.locale() === 'ar-EG' ? entity.labelAr : entity.labelEn }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="btn btn-secondary" (click)="downloadTemplate()">
+            📥 {{ i18n.t('migration.downloadTemplate') }}
+          </button>
+          <button type="button" class="btn btn-primary" (click)="simulateUpload()" [disabled]="loading()">
+            🚀 {{ i18n.t('migration.uploadTitle') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Verification & GL Reconciliation -->
+    <div class="step-card">
+      <div class="card-header">
+        <span class="step-badge">2</span>
+        <h3>{{ i18n.t('migration.subledgerVsGl') }}</h3>
+      </div>
+      <div class="card-body">
+        @if (currentBatch(); as batch) {
+          <div class="batch-preview">
+            <div class="metric-pill">
+              <span class="label">{{ i18n.t('migration.batchId') }}:</span>
+              <span class="value font-mono">{{ batch.id.substring(0, 8) }}</span>
+            </div>
+            <div class="metric-pill">
+              <span class="label">{{ i18n.t('migration.status') }}:</span>
+              <span class="badge">{{ batch.status }}</span>
+            </div>
+            <div class="metric-pill">
+              <span class="label">{{ i18n.t('migration.records') }}:</span>
+              <span class="value">{{ batch.totalRecords }}</span>
+            </div>
+          </div>
+
+          <div class="workflow-actions">
+            <button type="button" class="btn btn-outline" (click)="executeValidation()" [disabled]="loading()">
+              🔍 {{ i18n.t('migration.validateButton') }}
+            </button>
+            <button type="button" class="btn btn-outline" (click)="executeDryRun()" [disabled]="loading()">
+              ⚖️ {{ i18n.t('migration.dryRunButton') }}
+            </button>
+            <button type="button" class="btn btn-success" (click)="executeCommit()" [disabled]="loading()">
+              ✅ {{ i18n.t('migration.commitButton') }}
+            </button>
+          </div>
+        } @else {
+          <p class="placeholder-text">{{ i18n.t('migration.dropzoneHint') }}</p>
+        }
+
+        @if (dryRunResult(); as dry) {
+          <div class="reconciliation-box success">
+            <h4>✨ {{ i18n.t('migration.reconciliationPassed') }}</h4>
+            <p><strong>{{ i18n.t('migration.glAccount') }}:</strong> {{ dry.glAccountCode }}</p>
+            <p><strong>{{ i18n.t('migration.totalSubledgerAmount') }}:</strong> {{ dry.totalCalculatedAmount | number:'1.2-2' }}</p>
+            <p><strong>{{ i18n.t('migration.reconciledGlOpening') }}:</strong> {{ dry.glAccountBalance | number:'1.2-2' }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Historical Batches & Rollbacks -->
+  <div class="history-card">
+    <h3>{{ i18n.t('migration.historyTitle') }}</h3>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('migration.entityType') }}</th>
+            <th>{{ i18n.t('migration.fileName') }}</th>
+            <th>{{ i18n.t('migration.records') }}</th>
+            <th>{{ i18n.t('migration.amountEgp') }}</th>
+            <th>{{ i18n.t('migration.status') }}</th>
+            <th>{{ i18n.t('migration.glMatch') }}</th>
+            <th>{{ i18n.t('migration.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of batches(); track b.id) {
+            <tr>
+              <td><strong>{{ b.entityType }}</strong></td>
+              <td>{{ b.fileName }}</td>
+              <td>{{ b.totalRecords }}</td>
+              <td>{{ b.totalAmount | number:'1.2-2' }}</td>
+              <td><span class="status-tag" [class.success]="b.status === 'COMMITTED'" [class.rolled-back]="b.status === 'ROLLED_BACK'">{{ b.status }}</span></td>
+              <td><span class="match-tag" [class.matched]="b.glBalanceMatch">{{ b.glBalanceMatch ? i18n.t('migration.balanced') : i18n.t('migration.variance') }}</span></td>
+              <td>
+                @if (b.status === 'COMMITTED') {
+                  <button type="button" class="btn-rollback" (click)="executeRollback(b.id)" [disabled]="loading()">
+                    ↩ {{ i18n.t('migration.rollbackButton') }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
