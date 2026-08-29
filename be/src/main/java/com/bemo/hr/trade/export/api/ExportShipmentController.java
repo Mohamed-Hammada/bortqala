@@ -1,15 +1,22 @@
 package com.bemo.hr.trade.export.api;
 
+import com.bemo.hr.shared.i18n.TranslationService;
+import com.bemo.hr.shared.security.AuthService;
+import com.bemo.hr.trade.export.application.ExportShipmentDocService;
 import com.bemo.hr.trade.export.application.ExportShipmentService;
 import jakarta.validation.Valid;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -18,9 +25,18 @@ import java.util.List;
 public class ExportShipmentController {
 
     private final ExportShipmentService service;
+    private final ExportShipmentDocService docService;
+    private final AuthService authService;
+    private final TranslationService translationService;
 
-    public ExportShipmentController(ExportShipmentService service) {
+    public ExportShipmentController(ExportShipmentService service,
+                                    ExportShipmentDocService docService,
+                                    AuthService authService,
+                                    TranslationService translationService) {
         this.service = service;
+        this.docService = docService;
+        this.authService = authService;
+        this.translationService = translationService;
     }
 
     // ─── Shipments ──────────────────────────────────────────────────
@@ -120,5 +136,28 @@ public class ExportShipmentController {
     @GetMapping("/aging")
     public ExportShipmentApi.AgingResponse getAging() {
         return service.getAging();
+    }
+
+    // ─── Printable Documents ─────────────────────────────────────────
+
+    @GetMapping("/{id}/docs/{type}.xlsx")
+    @Transactional(readOnly = true)
+    public ResponseEntity<byte[]> document(@PathVariable String id,
+                                           @PathVariable String type,
+                                           Authentication authentication) {
+        var preference = authService.currentPreferences(authentication.getName());
+        ExportShipmentDocService.DocType docType = ExportShipmentDocService.DocType.fromRoute(type);
+        byte[] body = docService.render(id, docType, preference.locale());
+
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        String fileKey = "export.file." + docType.routeSegment();
+        String base = preference.locale().startsWith("ar")
+                ? translationService.translateOrDefault(fileKey, preference.locale(), docType.routeSegment())
+                : docType.routeSegment();
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename(base + "-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm")) + ".xlsx",
+                        StandardCharsets.UTF_8).build());
+        return ResponseEntity.ok().headers(headers).body(body);
     }
 }

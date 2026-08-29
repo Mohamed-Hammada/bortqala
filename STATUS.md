@@ -52,13 +52,19 @@ This document tracks the end-to-end implementation and verification status of al
 
 ## Verification & CI Gate Summary
 
-- **Backend Tests:** 100% clean execution — **1157 tests / 232 suites / 0 failures / 1 skipped** (`BUILD SUCCESSFUL`, `-PskipDockerTests`).
-- **Frontend Unit Tests:** **568 / 568 passed** across 114 test suites (100% green, Node 24).
-- **i18n Catalog Validation:** **5,214 literal keys verified** (`ar-EG` & `en-US`); **15,853 translation rows / 0 defects** (`check-translation-catalog`).
+- **Backend Tests:** 100% clean execution — **1165 tests / 233 suites / 0 failures / 1 skipped** (`BUILD SUCCESSFUL`, `-PskipDockerTests`).
+- **Frontend Unit Tests:** **571 / 571 passed** across 114 test suites (100% green, Node 24).
+- **i18n Catalog Validation:** **5,221 literal keys verified** (`ar-EG` & `en-US`); **15,867 translation rows / 0 defects** (`check-translation-catalog`).
 - **Hardcoded Strings Scanner:** **0 violations** across 127 HTML templates and 275 TypeScript source files.
 - **Error-Code→Translation Gate:** **686 / 686** exception codes covered (0 missing).
 - **Production Build (`ng build`):** Production bundle compiled cleanly.
-- **Test-count floors:** BE ≥1157/≥232 (`be/tools/check-test-count.py`), FE ≥568/≥114 (`fe/tools/check-test-count.mjs`).
+- **Test-count floors:** BE ≥1165/≥233 (`be/tools/check-test-count.py`), FE ≥571/≥114 (`fe/tools/check-test-count.mjs`).
+
+### Session 26 (2026-08-29) — WP-16 Agri-Export Documentation Pack (AC-1..AC-5 all MET)
+- **WP-16 doc generators closed (AC-1 + AC-5)**: new `ExportShipmentDocService` renders COO / packing list / phytosanitary xlsx from persisted `ExportShipmentLine` quantities — no re-entry, totals summed (2250 for the 1000/500/750 test lot); bilingual ar-EG (RTL, Arabic headers) + en-US (LTR, English headers) sheets from the DB translation catalog; treatments table (lotReference/chemical/dose/treatmentDate/phiDays/earliestSafePickup) via `ComplianceRegister` for phyto. Endpoints `GET /api/v1/trade/export-shipments/{id}/docs/{coo|packing-list|phytosanitary}.xlsx` with localized Content-Disposition filenames. **Liquibase V411** `20260829_v411_export_doc_translations.{yaml,csv}` (7 keys × 2 locales, ids v411-001..007; trailing-`;` bug fixed), registered in `next` + `test-h2`.
+- **FE DOCS tab**: export-shipments page tab (`export.tabDocs`) with COO/packing-list/phytosanitary download buttons for the selected shipment (blob-download pattern from `sales.page`), `export.selectShipmentFirst` warning. New SCSS `.doc-buttons`/`.muted`/`.docs-section`.
+- **Specs**: BE `ExportShipmentDocServiceTests` 8 (lot exactness, total rows, RTL vs LTR, treatments per lot, not-found, docType route parse); FE +3 (tab buttons, no-shipment warn, blob download).
+- **Evidence**: BE **1165/233/0** (BUILD SUCCESSFUL; V411 clean on H2); FE **571/114/0**; error-codes **686/686**; catalog **15,867 rows PASS**; `check:i18n` **5,221 keys**; `check:hardcoded` **0** (127 HTML + 275 TS); `ng build` green; floors raised (BE 1165/233, FE 571/114); WP-16 AC-1..AC-5 ticked in `bemo/tasks/WP-16-agri-export-pack.md`; `_INDEX.md` + `PROJECT_MAP.md` + `missing-todo.md` updated.
 
 ### Session 25 (2026-08-29) — WP-12 AC-5 Commission Export + Send-to-Payroll; full-suite greening
 - **WP-12 AC-5 shipped**: `SalesCommissionPayout` entity + repo (unique `app_id, rep_id, period`); localized `GET /api/v1/sales/targets/commissions/export.xlsx` (ar/en filename + bilingual columns, 4 cols incl. rule/basisAmount/percent/commission); idempotent `POST /api/v1/sales/targets/commissions/send-to-payroll` (replay `alreadySent=true`, never double-saves); FE export/send buttons + sent-at badge + disabled-once + `payrollSent` metadata. Liquibase **V409** (`sales_commission_payouts`, registered both masters, `TIMESTAMP` + quoted `decimal(15,2)`), **V410** (translations, registered both masters).

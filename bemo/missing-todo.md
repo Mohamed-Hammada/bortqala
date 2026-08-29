@@ -593,8 +593,8 @@
 - WP-42 AC-1 (loyalty earn/redeem ledger + rule snapshot).
 - WP-45 AC-2/3/5 (first-response rule, internal-note hiding, ticket→article sanitized prefill).
 - WP-47 AC-1/3 (sequential enforcement + step evidence/manifest export).
-- WP-48 AC-1/2/3/4/5/6/7/8 (settings-driven FX accounts + skip-with-warning; words util 54 cases; V405 seeded NBE/CIB cheque layouts; crossing lines; Hijri overlay) — all MET.
-- WP-50 AC-1/2/3/4 (stage machine + convert-to-employee + dup-warning banner + CV upload/validation trio), WP-51 AC-1/2/3/4 (ETA tests untouched refactor proof; KSA placeholder; V403 Egypt backfill + golden selection; confirm-guarded provider switch), WP-16 AC-2/3/4 (compliance window, strict transitions, proceeds aging).
+- WP-48 AC-1/2/3/4/5/6/7/8 (settings-driven FX accounts + skip-with-warning; words util 54 cases; V405 seeded NBE/CIB cheque layouts; crossing lines; Hijri overlay — both DOM tests) — all MET, QA-logged 2026-08-29.
+- WP-50 AC-1/2/3/4 (stage machine + convert-to-employee + dup-warning banner + CV upload/validation trio), WP-51 AC-1/2/3/4 (ETA tests untouched refactor proof; KSA placeholder; V403 Egypt backfill + golden selection; confirm-guarded provider switch), WP-16 AC-1..AC-5 (compliance window, strict transitions, proceeds aging, doc generators — COO/packing/phytosanitary xlsx from shipment lines no re-entry, bilingual ar/en print + FE DOCS tab, all now MET).
 - Batch-1 (this wiki): **WP-29 AC-2** (HMAC `WEBHOOK_SIGNATURE_INVALID` 401 before any state change + tampered/valid tests), **WP-31 AC-3/AC-5** (consent gate via `ConsentRegistry` → `NO_CONSENT` log/never sends; period-scoped dedupe `PAYSLIP:{emp}:{app}:{period}`), **WP-34 AC-2/3/4 + AC-1-backend** (`SsoSessionIssuer` real JWT+refresh pipeline, `SSO_LOGIN`/`SSO_PROVISION` audits, tenant-from-state, write-only secret), **WP-35 AC-1/AC-5** (leak-tested PII export bundle, consent withdrawal wired into WhatsApp, `PRIVACY_*` audits).
 
 **Primary gaps (unticked → new P-items when resourced)**
@@ -604,7 +604,6 @@
 - **WP-34 SSO**: backend session pipeline + audits shipped (AC-2/3/4, AC-1-backend); AC-1 live redemption still needs a real Google/Microsoft test tenant (external creds).
 - **WP-35 PDPL**: real leak-tested export bundle + audits + consent-wiring shipped (AC-1/5); remaining: AC-2 finance-invariant erase test, AC-3 completion-requires-note + end-to-end overdue flow, AC-4 execute-without-confirm gate.
 - **WP-47 GED**: no attachment-trio backfill; SHA-256 verify is a dead no-op. WP-28 OCR: `convertToGrn` creates no draft GRN; no retry. WP-42: no expiry job; renewal creates no invoices; referral never wired to sales.
-- **WP-16 AC-1**: no COO/packing/phytosanitary doc generation at all.
 
 **Related gate-fix shipped with this sweep**: Liquibase **V402** (57 keys × ar-EG/en-US — 40 error codes + 17 UI option keys for reports/helpdesk/settings incl. `reports.scheduleKind*`, `helpdesk.status*`, `helpdesk.priority*`, `sso.role*`), `GENERAL_MANAGER` in `RoleCode.java`, v395 `kb.search` ar alignment, V365 registered in the H2 changelog, and FE hardcoded-option cleanup across reports/helpdesk/settings pages. Gates: `check:i18n` 5,198, `check:hardcoded` 0/127+275, FE tests 555/113, error-codes 677/677, auth-contract 21/21, translation catalog 15,795.
 

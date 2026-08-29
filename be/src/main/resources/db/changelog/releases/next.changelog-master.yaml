@@ -931,4 +931,16 @@ databaseChangeLog:
   # WP-12 AC-5: commission statement export + send-to-payroll translations
   - include:
       file: db/changelog/data/insert/20260828_v410_sales_commission_payout_translations.yaml
+  # WP-16 AC-1/AC-5: printable export documents (COO / packing list / phyto sheet) translations
+  - include:
+      file: db/changelog/data/insert/20260829_v411_export_doc_translations.yaml
+  # WP-17: manpower client billing schema (periods, effective-dated rates, draft lines)
+  - include:
+      file: db/changelog/schema/create/20260829_v412_manpower_client_billing_schema.yaml
+  # WP-17: grant the workforce client-billing menu to existing users (menu protocol part 3)
+  - include:
+      file: db/changelog/data/update/20260829_v412_client_billing_menu_allowed_menus.yaml
+  # WP-17: client billing error codes, UI keys, margin export sheet translations
+  - include:
+      file: db/changelog/data/insert/20260829_v413_manpower_client_billing_translations.yaml
 

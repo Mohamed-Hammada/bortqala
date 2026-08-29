@@ -33,8 +33,8 @@
 | WP-11 | Employee expense claims | 🟡 | Full-stack F | 4d |
 | WP-12 | Sales targets & commissions engine ✅ **DONE 2026-08-29** (AC-1..AC-5 all MET: localized `GET /api/v1/sales/targets/commissions/export.xlsx` ar/en workbook via `translateService`; idempotent `POST …/commissions/send-to-payroll` guarded by `sales_commission_payouts` unique app_id/rep_id/period (V409/V410) — replay `alreadySent=true`, UI disabled; whole suite greened this session incl. fixes to committed WIP tests: scheduler spec path rewrite, `ReportScheduleExecutorTests` ×2, `EinvoicingSettingsServiceTest`, V409 decimal-quote + v406 BLOB→bytea H2 fixes, `SIGN_CONTENT_MISMATCH` translation — 1157 BE / 568 FE green 2026-08-29) | 🟡 | Backend D | closed |
 | WP-15 | Medical clinic MVP slice | 🟢 | Squad H+E | ~3wk |
-| WP-16 | Agri-export documentation pack 🟠 **QA 2026-08-28** (AC-2/3/4 MET — compliance window, strict transitions, aging; AC-1 doc generators NOT MET — no print/PDF at all; AC-5 PARTIAL — gate MET, bilingual print missing) | 🟢 | Full-stack B | ~2wk |
-| WP-17 | Manpower-supply client billing | 🟢 | Backend D | ~8d |
+| WP-16 | Agri-export documentation pack ✅ **DONE 2026-08-29** (AC-1..AC-5 all MET: `ExportShipmentDocService` renders COO / packing list / phytosanitary xlsx straight from persisted `ExportShipmentLine` quantities — no re-entry, totals summed (2250 for 1000/500/750 test lot); bilingual ar-EG RTL + en-US LTR sheets from the DB catalog; endpoints `/{id}/docs/{coo|packing-list|phytosanitary}.xlsx`; FE DOCS tab + download buttons; V411 translations; 8 BE doc tests + 3 FE doc specs — 1165 BE / 571 FE green 2026-08-29) | 🟢 | Full-stack B | ~2wk |
+| WP-17 | Manpower-supply client billing ✅ **DONE 2026-08-29** (AC-1..AC-5 all MET: `ClientBillingService` collects attendance-APPROVED days from APPROVED/LOCKED settlement windows × effective client rate → draft lines w/ MISSING_RATE reasons; mid-month rate splits by effective date; confirm ‹= one `CustomerInvoice` w/ period→INVOICED + regenerate blocked; margin = billed − settled `grossWage` (440−360=80 exact) + xlsx export; entities V412 + 124-row V413 translations; endpoint perms reuse `settlements.read/prepare/finalize` (documented deviation); FE `/workforce/client-billing` page + rates CRUD + 4-part menu protocol — 1174 BE / 578 FE green 2026-08-29) | 🟢 | Backend D | ~8d |
 | WP-18 | Tech-debt bundle (GraalVM/CSV-gen/cache) | 🟢 | Any filler | 1d ea |
 
 ### Wave 4 — medical depth (after WP-15 ships)
@@ -60,10 +60,11 @@ WP-28 OCR invoice capture · WP-29 payment gateways + public pay page · WP-30 b
 | WP-45 Helpdesk | 🟠 partial | AC-2/3/5 | AC-1 PARTIAL · AC-4 PARTIAL |
 | WP-46 Marketing | 🔸 scaffold | — | consent not wired; survey/survey_responses scaffold only |
 | WP-47 eSign/GED | 🟠 partial | AC-1/3 | AC-2 NOT MET (SHA-256 verify is dead no-op) · AC-4 NOT MET (no backfill) · AC-5 PARTIAL (filter, not search) |
-| WP-48 Finance extras | ?? shipped | AC-1/2/3/4/5/7/8 | AC-6 MET half (crossing prints); mismatch N/A by design (words derived from digits) |
+| WP-48 Finance extras | ✅ done | AC-1/2/3/4/5/6/7/8 | (all MET — QA-verified 2026-08-29: FX reval idempotent by currency/month 10 tests; NBE/CIB cheque layouts + 54-case Arabic words util; Hijri overlay both DOM tests; AC-6 mismatch N/A by design) |
 | WP-50 Recruitment | ?? shipped | AC-1/2/3/4 | (all MET) |
 | WP-51 e-invoicing | ?? shipped | AC-1/2/3/4 | (all MET) |
-| WP-16 Agri-export | 🟠 partial | AC-2/3/4 | AC-1 NOT MET (no docs) · AC-5 PARTIAL |
+| WP-16 Agri-export | ✅ done | AC-1/2/3/4/5 | (all MET — doc generators + bilingual print shipped 2026-08-29) |
+| WP-17 Client billing | ✅ done | AC-1/2/3/4/5 | (all MET — attendance-approved × effective rate to one invoice; margin = billed − wage cost; xlsx export) |
 | WP-19 Single-punch | ?? shipped | AC-1/2/3 | (all MET) |
 
 ### Phase-gated

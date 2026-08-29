@@ -311,6 +311,15 @@ export const NAV_ITEMS: NavItem[] = [
     roles: WORKFORCE_ACCOUNT_ROLES,
   },
   {
+    menuId: 'workforce-client-billing',
+    labelKey: 'workforce.clientBilling.title',
+    descriptionKey: 'nav.workforceHint',
+    path: '/workforce/client-billing',
+    icon: 'imports',
+    workspace: 'workspace.contractorWorkforce',
+    roles: WORKFORCE_BASE_ROLES,
+  },
+  {
     menuId: 'workforce-reports',
     labelKey: 'workforce.reports.title',
     descriptionKey: 'nav.workforceHint',

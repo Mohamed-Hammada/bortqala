@@ -112,7 +112,7 @@ export class ExportShipmentsPage {
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
-  readonly activeTab = signal<'SHIPMENTS' | 'COMPLIANCE' | 'PROCEEDS' | 'PESTICIDES'>('SHIPMENTS');
+  readonly activeTab = signal<'SHIPMENTS' | 'COMPLIANCE' | 'PROCEEDS' | 'PESTICIDES' | 'DOCS'>('SHIPMENTS');
   readonly shipments = signal<ExportShipment[]>([]);
   readonly selectedShipment = signal<ExportShipment | null>(null);
   readonly drawerOpen = signal(false);
@@ -330,10 +330,30 @@ export class ExportShipmentsPage {
     }
   }
 
-  switchTab(tab: 'SHIPMENTS' | 'COMPLIANCE' | 'PROCEEDS' | 'PESTICIDES') {
+  switchTab(tab: 'SHIPMENTS' | 'COMPLIANCE' | 'PROCEEDS' | 'PESTICIDES' | 'DOCS') {
     this.activeTab.set(tab);
     if (tab === 'PESTICIDES') this.loadPesticides();
     if (tab === 'PROCEEDS') this.loadAging();
+  }
+
+  async downloadDoc(type: 'coo' | 'packing-list' | 'phytosanitary') {
+    const ship = this.selectedShipment();
+    if (!ship) {
+      this.notification.error(this.i18n.t('export.selectShipmentFirst'));
+      return;
+    }
+    try {
+      const blob = await firstValueFrom(this.http.get(
+        `/api/v1/trade/export-shipments/${ship.id}/docs/${type}.xlsx`,
+        { responseType: 'blob' }));
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${ship.shipmentNumber}-${type}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (e: unknown) {
+      this.notification.error(apiErrorMessage(e));
+    }
   }
 
   statusLabel(status: string): string {

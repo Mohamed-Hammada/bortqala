@@ -468,3 +468,89 @@ export interface CreateWorkforceDisputePayload {
   reason: string;
 }
 
+export type ClientBillingLineStatus = 'BILLABLE' | 'MISSING_RATE';
+
+export interface ClientBillingRate {
+  id: string;
+  clientPartyId: string;
+  workerCategoryId: string;
+  categoryName?: string;
+  dayRate: number;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  version: number;
+}
+
+export interface CreateClientBillingRatePayload {
+  clientPartyId: string;
+  workerCategoryId: string;
+  dayRate: number;
+  effectiveFrom: string;
+  effectiveTo?: string;
+}
+
+export interface ClientBillingPeriodModel {
+  id: string;
+  clientPartyId: string;
+  period: string;
+  status: 'DRAFT' | 'OPEN' | 'INVOICED';
+  invoiceId?: string | null;
+  invoiceNumber?: string | null;
+  totalAmount: number;
+}
+
+export interface ClientBillingLine {
+  id: string;
+  workerId: string;
+  workerCode: string;
+  fullName: string;
+  categoryId: string;
+  categoryName: string;
+  approvedDays: number;
+  dayRate: number;
+  amount: number;
+  wageCost: number;
+  varianceAmount: number;
+  lineStatus: ClientBillingLineStatus;
+  reason?: string | null;
+}
+
+export interface ClientBillingReview {
+  period: ClientBillingPeriodModel;
+  lines: ClientBillingLine[];
+  totalApprovedDays: number;
+  totalBilledAmount: number;
+  totalWageCost: number;
+}
+
+export interface ClientBillingMarginRow {
+  workerId: string;
+  workerCode: string;
+  fullName: string;
+  categoryName: string;
+  approvedDays: number;
+  dayRate: number;
+  billedAmount: number;
+  wageCost: number;
+  marginAmount: number;
+}
+
+export interface ClientBillingMargin {
+  clientPartyId: string;
+  period: string;
+  totalBilled: number;
+  totalWageCost: number;
+  totalMargin: number;
+  rows: ClientBillingMarginRow[];
+}
+
+export interface ClientBillingConfirm {
+  id: string;
+  clientPartyId: string;
+  period: string;
+  status: 'INVOICED';
+  invoiceId: string;
+  invoiceNumber: string;
+  totalAmount: number;
+}
+

@@ -91,4 +91,40 @@ describe('ExportShipmentsPage', () => {
 
     expect(component.totalLinesQuantity()).toBe(150);
   });
+
+  it('should switch to DOCS tab and show buttons when a shipment is selected', () => {
+    component.selectedShipment.set({
+      id: 'sh-1', shipmentNumber: 'EXP-001', customerPartyId: 'p1', customerPartyName: 'Acme',
+      status: 'BOOKED', daysOutstanding: 2, lines: [], createdAt: 0, updatedAt: 0,
+    });
+    component.switchTab('DOCS');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const buttons = compiled.querySelectorAll('.doc-buttons .button');
+    expect(buttons.length).toBe(3);
+  });
+
+  it('should warn when downloading a document without a selected shipment', async () => {
+    component.selectedShipment.set(null);
+    await component.downloadDoc('coo');
+    const notif = TestBed.inject(NotificationService);
+    expect(notif.error).toHaveBeenCalled();
+  });
+
+  it('should download document blob for a selected shipment', async () => {
+    component.selectedShipment.set({
+      id: 'sh-1', shipmentNumber: 'EXP-001', customerPartyId: 'p1', customerPartyName: 'Acme',
+      status: 'BOOKED', daysOutstanding: 2, lines: [], createdAt: 0, updatedAt: 0,
+    });
+    const blob = new Blob(['pk'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const download = component.downloadDoc('coo');
+
+    const req = httpMock.expectOne('/api/v1/trade/export-shipments/sh-1/docs/coo.xlsx');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(blob);
+
+    await download;
+    expect(httpMock.match(() => true)).toEqual([]);
+  });
 });

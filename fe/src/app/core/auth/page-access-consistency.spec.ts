@@ -96,7 +96,7 @@ describe('page access consistency', () => {
     expect(gatedByFeature.get('manufacturing.enabled')).toEqual(['production']);
     expect(gatedByFeature.get('quality.enabled')).toEqual(['quality']);
     expect(gatedByFeature.get('workforce.contractorAccounts.enabled')!.sort()).toEqual([
-      'workforce-accounts', 'workforce-settlements',
+      'workforce-accounts', 'workforce-client-billing', 'workforce-settlements',
     ]);
   });
 });

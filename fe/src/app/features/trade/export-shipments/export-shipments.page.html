@@ -10,6 +10,7 @@
   <button [class.active]="activeTab() === 'COMPLIANCE'" (click)="switchTab('COMPLIANCE')">{{ i18n.t('export.tabLots') }}</button>
   <button [class.active]="activeTab() === 'PROCEEDS'" (click)="switchTab('PROCEEDS')">{{ i18n.t('export.tabProceeds') }}</button>
   <button [class.active]="activeTab() === 'PESTICIDES'" (click)="switchTab('PESTICIDES')">{{ i18n.t('export.tabPesticides') }}</button>
+  <button [class.active]="activeTab() === 'DOCS'" (click)="switchTab('DOCS')">{{ i18n.t('export.tabDocs') }}</button>
 </div>
 
 @if (loading()) {
@@ -248,6 +249,25 @@
         </tbody>
       </table>
     </div>
+  </div>
+}
+
+@if (activeTab() === 'DOCS') {
+  <div class="docs-section">
+    @if (selectedShipment(); as ship) {
+      <div class="card">
+        <h3>{{ i18n.t('export.docs') }}</h3>
+        <p class="muted">{{ ship.shipmentNumber }} — {{ ship.customerPartyName ?? ship.customerPartyId }}</p>
+        <div class="doc-buttons">
+          <button class="button" (click)="downloadDoc('coo')">{{ i18n.t('export.coo') }}</button>
+          <button class="button" (click)="downloadDoc('packing-list')">{{ i18n.t('export.packingList') }}</button>
+          <button class="button" (click)="downloadDoc('phytosanitary')">{{ i18n.t('export.phyto') }}</button>
+        </div>
+        <p class="muted">{{ i18n.t('export.printDoc') }}</p>
+      </div>
+    } @else {
+      <div class="alert warning">{{ i18n.t('export.selectShipmentFirst') }}</div>
+    }
   </div>
 }
 

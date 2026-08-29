@@ -31,6 +31,11 @@ import {
   CreateLaborDispatchPayload,
   CreateWorkerAssignmentPayload,
   CreateWorkforceDisputePayload,
+  ClientBillingRate,
+  CreateClientBillingRatePayload,
+  ClientBillingReview,
+  ClientBillingMargin,
+  ClientBillingConfirm,
 } from '../models/workforce.models';
 
 @Injectable({ providedIn: 'root' })
@@ -366,5 +371,55 @@ export class WorkforceService {
       `/api/v1/workforce/settlements/projects/${projectId}/labor-cost-report`,
       { params }
     );
+  }
+
+  // Client billing (manpower billing for client parties)
+  clients = signal<{ id: string; code: string; name: string; partyType: string; active: boolean }[]>([]);
+  clientRates = signal<ClientBillingRate[]>([]);
+
+  loadClients(): Observable<{ id: string; code: string; name: string; partyType: string; active: boolean }[]> {
+    return this.http.get<{ id: string; code: string; name: string; partyType: string; active: boolean }[]>('/api/v1/parties').pipe(
+      tap(res => this.clients.set(res.filter(c => c.partyType !== 'SUPPLIER' && c.active)))
+    );
+  }
+
+  loadClientRates(clientPartyId?: string): Observable<ClientBillingRate[]> {
+    const params: Record<string, string> = {};
+    if (clientPartyId) params['clientPartyId'] = clientPartyId;
+    return this.http.get<ClientBillingRate[]>('/api/v1/workforce/client-billing/rates', { params }).pipe(
+      tap(res => this.clientRates.set(res))
+    );
+  }
+
+  addClientRate(payload: CreateClientBillingRatePayload): Observable<ClientBillingRate> {
+    return this.http.post<ClientBillingRate>('/api/v1/workforce/client-billing/rates', payload).pipe(
+      tap(() => this.loadClientRates(payload.clientPartyId).subscribe())
+    );
+  }
+
+  deleteClientRate(id: string, clientPartyId?: string): Observable<void> {
+    return this.http.delete<void>(`/api/v1/workforce/client-billing/rates/${id}`).pipe(
+      tap(() => this.loadClientRates(clientPartyId).subscribe())
+    );
+  }
+
+  generateClientBilling(clientPartyId: string, period: string): Observable<ClientBillingReview> {
+    return this.http.post<ClientBillingReview>('/api/v1/workforce/client-billing/generate', { clientPartyId, period });
+  }
+
+  reviewClientBilling(clientPartyId: string, period: string): Observable<ClientBillingReview> {
+    return this.http.get<ClientBillingReview>(`/api/v1/workforce/client-billing/${clientPartyId}/${period}`);
+  }
+
+  confirmClientBilling(clientPartyId: string, period: string): Observable<ClientBillingConfirm> {
+    return this.http.post<ClientBillingConfirm>(`/api/v1/workforce/client-billing/${clientPartyId}/${period}/confirm`, {});
+  }
+
+  getClientBillingMargin(clientPartyId: string, period: string): Observable<ClientBillingMargin> {
+    return this.http.get<ClientBillingMargin>(`/api/v1/workforce/client-billing/${clientPartyId}/${period}/margin`);
+  }
+
+  exportClientBillingMargin(clientPartyId: string, period: string): Observable<Blob> {
+    return this.http.get(`/api/v1/workforce/client-billing/${clientPartyId}/${period}/margin/export.xlsx`, { responseType: 'blob' });
   }
 }

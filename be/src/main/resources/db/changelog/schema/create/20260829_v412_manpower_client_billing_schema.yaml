@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829_v412_manpower_client_billing_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: client_billing_periods
+      changes:
+        - createTable:
+            tableName: client_billing_periods
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, primaryKeyName: pk_client_billing_periods } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: client_party_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: period, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: invoice_id, type: varchar(36) }
+              - column: { name: invoice_number, type: varchar(50) }
+              - column: { name: total_amount, type: "decimal(15,2)" }
+              - column: { name: created_by, type: varchar(60), constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: client_billing_periods
+            constraintName: uq_client_billing_client_period
+            columnNames: app_id, client_party_id, period
+        - createIndex:
+            tableName: client_billing_periods
+            indexName: idx_client_billing_period_client
+            columns:
+              - column:
+                  name: client_party_id
+        - createTable:
+            tableName: client_worker_rates
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, primaryKeyName: pk_client_worker_rates } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: client_party_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: worker_category_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: day_rate, type: "decimal(12,2)", constraints: { nullable: false } }
+              - column: { name: effective_from, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: effective_to, type: varchar(10) }
+              - column: { name: created_by, type: varchar(60), constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createIndex:
+            tableName: client_worker_rates
+            indexName: idx_client_worker_rates_client
+            columns:
+              - column:
+                  name: client_party_id
+        - createIndex:
+            tableName: client_worker_rates
+            indexName: idx_client_worker_rates_category
+            columns:
+              - column:
+                  name: worker_category_id
+        - createTable:
+            tableName: client_billing_draft_lines
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, primaryKeyName: pk_client_billing_draft_lines } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: billing_period_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: worker_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: worker_code, type: varchar(50) }
+              - column: { name: full_name, type: varchar(160) }
+              - column: { name: category_id, type: varchar(36) }
+              - column: { name: category_name, type: varchar(160) }
+              - column: { name: approved_days, type: "decimal(8,2)", constraints: { nullable: false } }
+              - column: { name: day_rate, type: "decimal(12,2)" }
+              - column: { name: amount, type: "decimal(15,2)" }
+              - column: { name: wage_cost, type: "decimal(15,2)" }
+              - column: { name: variance_amount, type: "decimal(15,2)" }
+              - column: { name: line_status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: reason, type: varchar(500) }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createIndex:
+            tableName: client_billing_draft_lines
+            indexName: idx_client_billing_lines_period
+            columns:
+              - column:
+                  name: billing_period_id
+      rollback:
+        - dropTable:
+            tableName: client_billing_draft_lines
+        - dropTable:
+            tableName: client_worker_rates
+        - dropTable:
+            tableName: client_billing_periods

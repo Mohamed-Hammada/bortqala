@@ -278,7 +278,7 @@ export class AuthService {
           || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets'
           || menuId === 'fixed-assets' || menuId === 'payment-links' || menuId === 'eta-tax')) return false;
     if (!activeFeatures.includes('workforce.contractorAccounts.enabled')
-        && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
+        && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements' || menuId === 'workforce-client-billing')) return false;
 
     // ADMIN bypasses per-user menu assignment only after feature availability checks.
     if (user.roles.includes('ADMIN')) return true;

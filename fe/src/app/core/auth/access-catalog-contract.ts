@@ -176,6 +176,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     requiredFeature: 'workforce.contractorAccounts.enabled',
   },
   {
+    menuId: 'workforce-client-billing',
+    route: '/workforce/client-billing',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE'],
+    requiredFeature: 'workforce.contractorAccounts.enabled',
+  },
+  {
     menuId: 'workforce-reports',
     route: '/workforce/reports-import',
     roles: ['ADMIN', 'SUPER_ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER'],
