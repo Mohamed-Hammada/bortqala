@@ -1,0 +1,324 @@
+<div class="lab-orders-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('clinic.labTitle') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('clinic.labSubtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" *ngIf="activeTab() === 'CATALOG'" (click)="openAddTestModal()">
+        + {{ i18n.t('common.add') }}
+      </button>
+      <button class="btn btn-primary" (click)="openCreateOrderModal()">
+        + {{ i18n.t('clinic.orderAction') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'WORKLIST'"
+      (click)="setTab('WORKLIST')"
+    >
+      📋 {{ i18n.t('clinic.tabLabOrders') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'CATALOG'"
+      (click)="setTab('CATALOG')"
+    >
+      🔬 {{ i18n.t('clinic.tabTestCatalog') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'AGING'"
+      (click)="setTab('AGING')"
+    >
+      ⏱️ {{ i18n.t('clinic.agingSentOut') }}
+    </button>
+  </div>
+
+  <!-- TAB 1: WORKLIST -->
+  <div class="tab-content card" *ngIf="activeTab() === 'WORKLIST'">
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <select
+        class="form-control status-filter"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event); loadOrders()"
+      >
+        <option value="">{{ i18n.t('common.all') }}</option>
+        <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+
+    <table class="data-table" *ngIf="orders().length > 0; else noOrders">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('clinic.testCode') }}</th>
+          <th>{{ i18n.t('clinic.testName') }}</th>
+          <th>{{ i18n.t('clinic.mrn') }}</th>
+          <th>{{ i18n.t('clinic.fullName') }}</th>
+          <th>{{ i18n.t('clinic.doctor') }}</th>
+          <th>{{ i18n.t('common.status') }}</th>
+          <th>{{ i18n.t('clinic.resultValue') }}</th>
+          <th>{{ i18n.t('clinic.resultFlag') }}</th>
+          <th>{{ i18n.t('common.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of orders()">
+          <td class="font-bold">{{ o.testCode }}</td>
+          <td>
+            <span class="badge" [class.badge-primary]="o.category === 'LAB'" [class.badge-neutral]="o.category === 'IMAGING'">
+              {{ o.category }}
+            </span>
+            {{ o.testName }}
+          </td>
+          <td><span class="badge badge-info">{{ o.patientMrn }}</span></td>
+          <td>{{ o.patientName }}</td>
+          <td>{{ o.doctorName }}</td>
+          <td>
+            <span class="badge" [ngClass]="{
+              'badge-warning': o.status === 'ORDERED',
+              'badge-info': o.status === 'COLLECTED' || o.status === 'SENT_OUT',
+              'badge-primary': o.status === 'RESULTED',
+              'badge-success': o.status === 'VALIDATED',
+              'badge-danger': o.status === 'CANCELLED'
+            }">
+              {{ o.status }}
+            </span>
+          </td>
+          <td>
+            <span class="font-bold">{{ o.resultValueText || '—' }}</span>
+          </td>
+          <td>
+            <span *ngIf="o.resultFlag" class="badge" [ngClass]="{
+              'badge-success': o.resultFlag === 'NORMAL',
+              'badge-warning': o.resultFlag === 'LOW' || o.resultFlag === 'HIGH',
+              'badge-danger': o.resultFlag === 'CRITICAL'
+            }">
+              {{ o.resultFlag }}
+            </span>
+            <button
+              *ngIf="o.resultFlag === 'CRITICAL' && !o.isCriticalAcknowledged"
+              class="btn btn-xs btn-danger ml-1"
+              (click)="ackCritical(o)"
+            >
+              ⚠️ {{ i18n.t('clinic.ackCritical') }}
+            </button>
+          </td>
+          <td class="action-cell">
+            <button *ngIf="o.status === 'ORDERED'" class="btn btn-xs btn-secondary" (click)="collect(o)">
+              {{ i18n.t('clinic.collectAction') }}
+            </button>
+            <button *ngIf="o.status === 'ORDERED' || o.status === 'COLLECTED'" class="btn btn-xs btn-outline" (click)="sendOut(o)">
+              {{ i18n.t('clinic.sendOutAction') }}
+            </button>
+            <button *ngIf="o.status === 'COLLECTED' || o.status === 'SENT_OUT' || o.status === 'RESULTED'" class="btn btn-xs btn-primary" (click)="openEnterResult(o)">
+              {{ i18n.t('clinic.enterResultAction') }}
+            </button>
+            <button *ngIf="o.status === 'RESULTED'" class="btn btn-xs btn-success" (click)="validate(o)">
+              {{ i18n.t('clinic.validateAction') }}
+            </button>
+            <button *ngIf="o.status === 'ORDERED'" class="btn btn-xs btn-danger" (click)="cancel(o)">
+              {{ i18n.t('clinic.cancelOrderAction') }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noOrders>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- TAB 2: CATALOG -->
+  <div class="tab-content card" *ngIf="activeTab() === 'CATALOG'">
+    <table class="data-table" *ngIf="labTests().length > 0; else noTests">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('clinic.testCode') }}</th>
+          <th>{{ i18n.t('clinic.tradeName') }}</th>
+          <th>{{ i18n.t('clinic.sampleType') }}</th>
+          <th>{{ i18n.t('clinic.normalRange') }}</th>
+          <th>{{ i18n.t('common.amount') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of labTests()">
+          <td class="font-bold">{{ t.code }}</td>
+          <td>
+            <span class="badge" [class.badge-primary]="t.category === 'LAB'" [class.badge-neutral]="t.category === 'IMAGING'">
+              {{ t.category }}
+            </span>
+            {{ t.name }}
+          </td>
+          <td>{{ t.sampleType || '—' }}</td>
+          <td>{{ t.normalRangeText || '—' }}</td>
+          <td class="font-bold">{{ t.price }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noTests>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- TAB 3: AGING SENT OUT ORDERS -->
+  <div class="tab-content card" *ngIf="activeTab() === 'AGING'">
+    <table class="data-table" *ngIf="agingOrders().length > 0; else noAging">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('clinic.testCode') }}</th>
+          <th>{{ i18n.t('clinic.testName') }}</th>
+          <th>{{ i18n.t('clinic.fullName') }}</th>
+          <th>{{ i18n.t('clinic.externalLab') }}</th>
+          <th>{{ i18n.t('clinic.orderedAt') }}</th>
+          <th>{{ i18n.t('common.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of agingOrders()">
+          <td class="font-bold">{{ a.testCode }}</td>
+          <td>{{ a.testName }}</td>
+          <td>{{ a.patientName }}</td>
+          <td><span class="badge badge-warning">{{ a.externalLabName || '—' }}</span></td>
+          <td>{{ a.sentOutAt | date:'yyyy-MM-dd' }}</td>
+          <td>
+            <button class="btn btn-xs btn-primary" (click)="openEnterResult(a)">
+              {{ i18n.t('clinic.enterResultAction') }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noAging>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- Add Test Modal -->
+  <div class="modal-overlay" *ngIf="showTestModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.tabTestCatalog') }}</h3>
+        <button class="btn-close" (click)="showTestModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveTestItem()">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.testCode') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="testForm.code" name="code" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.category') }}</label>
+            <select class="form-control" [(ngModel)]="testForm.category" name="category">
+              <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.testName') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="testForm.name" name="name" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.sampleType') }}</label>
+            <input type="text" class="form-control" [(ngModel)]="testForm.sampleType" name="sampleType" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.amount') }}</label>
+            <input type="number" class="form-control" [(ngModel)]="testForm.price" name="price" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.normalRange') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="testForm.normalRangeText" name="normalRangeText" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showTestModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!testForm.name || !testForm.code || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Lab Order Modal -->
+  <div class="modal-overlay" *ngIf="showOrderModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.orderAction') }}</h3>
+        <button class="btn-close" (click)="showOrderModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitCreateOrder()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.mrn') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="orderForm.patientId" name="patientId" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.doctor') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="orderForm.doctorEmployeeId" name="doctorEmployeeId" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.tabTestCatalog') }} *</label>
+          <select class="form-control" [(ngModel)]="orderForm.testId" name="testId" required>
+            <option *ngFor="let t of labTests()" [value]="t.id">{{ t.code }} - {{ t.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.externalLab') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="orderForm.externalLabName" name="externalLabName" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showOrderModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!orderForm.patientId || !orderForm.testId || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Enter Lab Result Modal -->
+  <div class="modal-overlay" *ngIf="showResultModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.enterResultAction') }}</h3>
+        <button class="btn-close" (click)="showResultModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveResult()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.resultValue') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="resultForm.resultValueText" name="resultValueText" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.resultFlag') }}</label>
+          <select class="form-control" [(ngModel)]="resultForm.resultFlag" name="resultFlag">
+            <option *ngFor="let f of resultFlags" [value]="f">{{ f }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <textarea class="form-control" [(ngModel)]="resultForm.resultNotes" name="resultNotes" rows="3"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showResultModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!resultForm.resultValueText || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

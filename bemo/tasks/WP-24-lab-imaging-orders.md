@@ -18,8 +18,8 @@ Clinics send labs/imaging OUT. Need: order tests, track collection/result, attac
 3. Keys `clinic.lab*` (~16).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Status machine enforced (validate only after result; cancel only ORDERED) — parameterized matrix green.
-- [ ] AC-2 CRITICAL result fires notification to correct doctor; badge persists until that doctor acknowledges (ack endpoint idempotent).
-- [ ] AC-3 Unvalidated results invisible in patient chart but visible in worklist (permission+status filter test).
-- [ ] AC-4 Result attachments enforce size/type rules like REM-005; download preserves original filename.
-- [ ] AC-5 External lab appears on order printout; aging list "sent out >3 days" works off sent_out timestamp.
+- [x] AC-1 Status machine enforced (validate only after result; cancel only ORDERED) — parameterized matrix green.
+- [x] AC-2 CRITICAL result fires notification to correct doctor; badge persists until that doctor acknowledges (ack endpoint idempotent).
+- [x] AC-3 Unvalidated results invisible in patient chart but visible in worklist (permission+status filter test).
+- [x] AC-4 Result attachments enforce size/type rules like REM-005; download preserves original filename.
+- [x] AC-5 External lab appears on order printout; aging list "sent out >3 days" works off sent_out timestamp.

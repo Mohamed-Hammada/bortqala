@@ -22,6 +22,7 @@ export type WorkspaceGroup =
   | 'workspace.financeAccounting'
   | 'workspace.documents'
   | 'workspace.esign'
+  | 'workspace.medical'
   | 'workspace.administration'
   | 'workspace.platformAdministration';
 
@@ -62,6 +63,7 @@ export const WORKSPACE_ORDER: readonly WorkspaceGroup[] = [
   'workspace.financeAccounting',
   'workspace.documents',
   'workspace.esign',
+  'workspace.medical',
   'workspace.administration',
   'workspace.platformAdministration',
 ];
@@ -603,6 +605,80 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'reports',
     workspace: 'workspace.financeAccounting',
     roles: FINANCE_ROLES,
+  },
+
+  // Medical & Clinics
+  {
+    menuId: 'clinic-patients',
+    labelKey: 'nav.clinicPatients',
+    descriptionKey: 'nav.clinicPatientsHint',
+    path: '/clinic/patients',
+    icon: 'users',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-queue',
+    labelKey: 'nav.clinicQueue',
+    descriptionKey: 'nav.clinicQueueHint',
+    path: '/clinic/queue',
+    icon: 'dashboard',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-commissions',
+    labelKey: 'nav.clinicCommissions',
+    descriptionKey: 'nav.clinicCommissionsHint',
+    path: '/clinic/commissions',
+    icon: 'reports',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-appointments',
+    labelKey: 'nav.clinicAppointments',
+    descriptionKey: 'nav.clinicAppointmentsHint',
+    path: '/clinic/appointments',
+    icon: 'dashboard',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-pharmacy',
+    labelKey: 'nav.clinicPharmacy',
+    descriptionKey: 'nav.clinicPharmacyHint',
+    path: '/clinic/pharmacy',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-lab',
+    labelKey: 'nav.clinicLab',
+    descriptionKey: 'nav.clinicLabHint',
+    path: '/clinic/lab',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-insurance',
+    labelKey: 'nav.clinicInsurance',
+    descriptionKey: 'nav.clinicInsuranceHint',
+    path: '/clinic/insurance',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'hospital-ops',
+    labelKey: 'nav.hospitalOps',
+    descriptionKey: 'nav.hospitalOpsHint',
+    path: '/clinic/hospital',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'dental-charting',
+    labelKey: 'nav.dentalCharting',
+    descriptionKey: 'nav.dentalChartingHint',
+    path: '/clinic/dental',
+    icon: 'categories',
+    workspace: 'workspace.medical',
   },
 
   // Administration

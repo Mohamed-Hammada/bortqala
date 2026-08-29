@@ -1,0 +1,515 @@
+<div class="patient-chart-page" *ngIf="chart() as data">
+  <!-- Top Action Bar & Navigation -->
+  <div class="chart-header-bar">
+    <div class="header-left">
+      <a routerLink="/clinic/patients" class="back-link">
+        ← {{ i18n.t('clinic.patientsTitle') }}
+      </a>
+      <h2>{{ data.patient.fullName }}</h2>
+      <span class="mrn-badge">{{ data.patient.mrn }}</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="openVitalsModal()">
+        + {{ i18n.t('clinic.recordVitals') }}
+      </button>
+      <button class="btn btn-secondary" (click)="openAllergyModal()">
+        + {{ i18n.t('clinic.addAllergy') }}
+      </button>
+      <button class="btn btn-secondary" (click)="openConditionModal()">
+        + {{ i18n.t('clinic.addCondition') }}
+      </button>
+      <button class="btn btn-secondary" (click)="openConsentModal()">
+        + {{ i18n.t('clinic.signConsent') }}
+      </button>
+      <a routerLink="/clinic/queue" class="btn btn-primary">
+        {{ i18n.t('clinic.queueTitle') }}
+      </a>
+    </div>
+  </div>
+
+  <!-- Demographics Card -->
+  <div class="demographics-card">
+    <div class="demographics-grid">
+      <div class="demo-item">
+        <span class="demo-label">{{ i18n.t('clinic.phone') }}:</span>
+        <span class="demo-value">{{ data.patient.phone }}</span>
+      </div>
+      <div class="demo-item">
+        <span class="demo-label">{{ i18n.t('clinic.nationalId') }}:</span>
+        <span class="demo-value">{{ data.patient.nationalId || '—' }}</span>
+      </div>
+      <div class="demo-item">
+        <span class="demo-label">{{ i18n.t('clinic.birthDate') }}:</span>
+        <span class="demo-value">{{ data.patient.birthDate || '—' }}</span>
+      </div>
+      <div class="demo-item">
+        <span class="demo-label">{{ i18n.t('clinic.gender') }}:</span>
+        <span class="demo-value">
+          {{ data.patient.gender === 'MALE' ? i18n.t('clinic.male') : (data.patient.gender === 'FEMALE' ? i18n.t('clinic.female') : '—') }}
+        </span>
+      </div>
+      <div class="demo-item">
+        <span class="demo-label">{{ i18n.t('clinic.bloodGroup') }}:</span>
+        <span class="demo-value blood-badge">{{ data.patient.bloodGroup || '—' }}</span>
+      </div>
+      <div class="demo-item">
+        <span class="demo-label">{{ i18n.t('clinic.emergencyContact') }}:</span>
+        <span class="demo-value">{{ data.patient.emergencyContactName || '—' }} ({{ data.patient.emergencyContactPhone || '—' }})</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Severe Allergy Banner Alert -->
+  <div class="allergy-alert-banner" *ngIf="data.hasSevereAllergies || data.allergies.length > 0" [class.severe-danger]="data.hasSevereAllergies">
+    <div class="banner-icon">⚠️</div>
+    <div class="banner-content">
+      <strong *ngIf="data.hasSevereAllergies">{{ i18n.t('clinic.severeAllergyAlert') }}</strong>
+      <strong *ngIf="!data.hasSevereAllergies">{{ i18n.t('clinic.chartTabAllergies') }}:</strong>
+      <div class="allergy-chips">
+        <span *ngFor="let a of data.allergies" class="allergy-chip" [class.chip-severe]="a.severity === 'SEVERE'" [class.chip-moderate]="a.severity === 'MODERATE'">
+          {{ a.substance }} ({{ a.severity }})
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="chart-tabs">
+    <button class="tab-btn" [class.active]="activeTab() === 'history'" (click)="setTab('history')">
+      {{ i18n.t('clinic.chartTabHistory') }} ({{ data.recentVisits.length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'vitals'" (click)="setTab('vitals')">
+      {{ i18n.t('clinic.chartTabVitals') }} ({{ data.vitalsHistory.length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'allergies'" (click)="setTab('allergies')">
+      {{ i18n.t('clinic.chartTabAllergies') }} ({{ data.allergies.length + data.conditions.length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'documents'" (click)="setTab('documents')">
+      {{ i18n.t('clinic.chartTabDocuments') }} ({{ data.documents.length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'consents'" (click)="setTab('consents')">
+      {{ i18n.t('clinic.chartTabConsents') }} ({{ data.consents.length }})
+    </button>
+  </div>
+
+  <!-- Tab 1: History -->
+  <div class="tab-pane" *ngIf="activeTab() === 'history'">
+    <div class="history-list" *ngIf="data.recentVisits.length > 0; else emptyHistory">
+      <div class="visit-card" *ngFor="let v of data.recentVisits">
+        <div class="visit-header">
+          <div class="visit-meta">
+            <span class="visit-date">{{ v.visitDate }}</span>
+            <span class="doctor-badge">{{ v.doctorName }}</span>
+            <span class="status-badge" [class.status-done]="v.status === 'DONE'">{{ v.status }}</span>
+          </div>
+          <div class="visit-finance">
+            <span>{{ i18n.t('clinic.feeCharged') }}: <strong>{{ v.feeCharged }} {{ i18n.t('common.currencyEgp') }}</strong></span>
+            <span>{{ i18n.t('clinic.patientShare') }}: <strong>{{ v.patientShare }} {{ i18n.t('common.currencyEgp') }}</strong></span>
+          </div>
+        </div>
+        <div class="visit-body">
+          <p *ngIf="v.chiefComplaint"><strong>{{ i18n.t('clinic.chiefComplaint') }}:</strong> {{ v.chiefComplaint }}</p>
+          <p *ngIf="v.diagnosisIcd || v.diagnosisNotes">
+            <strong>{{ i18n.t('clinic.diagnosis') }}:</strong>
+            <span *ngIf="v.diagnosisIcd">[{{ v.diagnosisIcd }}] </span>
+            {{ v.diagnosisNotes }}
+          </p>
+          <!-- Prescriptions in this visit -->
+          <div class="rx-mini-list" *ngIf="v.prescriptionLines && v.prescriptionLines.length > 0">
+            <strong>{{ i18n.t('clinic.prescriptions') }}:</strong>
+            <ul>
+              <li *ngFor="let rx of v.prescriptionLines">
+                <strong>{{ rx.drugName }}</strong> — {{ rx.dose }} | {{ rx.frequency }} | {{ rx.duration }}
+                <span *ngIf="rx.instructions" class="rx-inst">({{ rx.instructions }})</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ng-template #emptyHistory>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- Tab 2: Vitals Trend & BMI -->
+  <div class="tab-pane" *ngIf="activeTab() === 'vitals'">
+    <div class="vitals-trend-grid" *ngIf="data.vitalsHistory.length > 0; else emptyVitals">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('common.date') }}</th>
+            <th>{{ i18n.t('clinic.vitalsSystolic') }} / {{ i18n.t('clinic.vitalsDiastolic') }}</th>
+            <th>{{ i18n.t('clinic.vitalsPulse') }}</th>
+            <th>{{ i18n.t('clinic.vitalsTemp') }}</th>
+            <th>{{ i18n.t('clinic.vitalsSpo2') }}</th>
+            <th>{{ i18n.t('clinic.vitalsWeight') }}</th>
+            <th>{{ i18n.t('clinic.vitalsHeight') }}</th>
+            <th>{{ i18n.t('clinic.vitalsBmi') }}</th>
+            <th>{{ i18n.t('common.notes') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let vit of data.vitalsHistory">
+            <td>{{ vit.recordedAt | date:'yyyy-MM-dd HH:mm' }}</td>
+            <td>
+              <span class="bp-pill" [class.bp-high]="(vit.systolicBp || 0) > 140 || (vit.diastolicBp || 0) > 90">
+                {{ vit.systolicBp || '—' }} / {{ vit.diastolicBp || '—' }}
+              </span>
+            </td>
+            <td>{{ vit.pulse || '—' }}</td>
+            <td>{{ vit.tempC ?? '—' }}</td>
+            <td>{{ vit.spo2 ?? '—' }}</td>
+            <td>{{ vit.weightKg ?? '—' }}</td>
+            <td>{{ vit.heightCm ?? '—' }}</td>
+            <td>
+              <span class="bmi-badge" [class.bmi-high]="(vit.bmi || 0) >= 30" [class.bmi-over]="(vit.bmi || 0) >= 25 && (vit.bmi || 0) < 30">
+                {{ vit.bmi || '—' }}
+              </span>
+            </td>
+            <td>{{ vit.notes || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #emptyVitals>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- Tab 3: Allergies & Chronic Conditions -->
+  <div class="tab-pane" *ngIf="activeTab() === 'allergies'">
+    <div class="split-section">
+      <!-- Allergies Sub-Panel -->
+      <div class="sub-panel">
+        <div class="panel-header">
+          <h3>{{ i18n.t('clinic.chartTabAllergies') }}</h3>
+          <button class="btn btn-sm btn-primary" (click)="openAllergyModal()">+ {{ i18n.t('clinic.addAllergy') }}</button>
+        </div>
+        <div class="allergies-table" *ngIf="data.allergies.length > 0; else noAllergies">
+          <div class="allergy-row" *ngFor="let a of data.allergies">
+            <div class="allergy-main">
+              <span class="substance-name">{{ a.substance }}</span>
+              <span class="severity-pill" [class.sev-severe]="a.severity === 'SEVERE'" [class.sev-mod]="a.severity === 'MODERATE'">
+                {{ a.severity }}
+              </span>
+            </div>
+            <p *ngIf="a.reactionNotes" class="reaction-text">{{ a.reactionNotes }}</p>
+            <button class="btn-delete" (click)="deleteAllergy(a)">✕</button>
+          </div>
+        </div>
+        <ng-template #noAllergies>
+          <p class="text-muted">{{ i18n.t('clinic.noKnownAllergies') }}</p>
+        </ng-template>
+      </div>
+
+      <!-- Conditions Sub-Panel -->
+      <div class="sub-panel">
+        <div class="panel-header">
+          <h3>{{ i18n.t('clinic.condition') }}</h3>
+          <button class="btn btn-sm btn-primary" (click)="openConditionModal()">+ {{ i18n.t('clinic.addCondition') }}</button>
+        </div>
+        <div class="conditions-table" *ngIf="data.conditions.length > 0; else noConditions">
+          <div class="condition-row" *ngFor="let c of data.conditions">
+            <div class="cond-main">
+              <span class="cond-label">{{ c.label }}</span>
+              <span *ngIf="c.icdCode" class="icd-tag">[{{ c.icdCode }}]</span>
+              <span *ngIf="c.chronic" class="chronic-tag">{{ i18n.t('clinic.chronic') }}</span>
+              <span class="status-tag">{{ c.status }}</span>
+            </div>
+            <p *ngIf="c.notes" class="cond-notes">{{ c.notes }}</p>
+            <button class="btn-delete" (click)="deleteCondition(c)">✕</button>
+          </div>
+        </div>
+        <ng-template #noConditions>
+          <p class="text-muted">{{ i18n.t('common.noResults') }}</p>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 4: Documents & Labs -->
+  <div class="tab-pane" *ngIf="activeTab() === 'documents'">
+    <div class="panel-header">
+      <h3>{{ i18n.t('clinic.chartTabDocuments') }}</h3>
+      <button class="btn btn-sm btn-primary" (click)="openDocModal()">+ {{ i18n.t('clinic.uploadDoc') }}</button>
+    </div>
+    <div class="docs-grid" *ngIf="data.documents.length > 0; else noDocs">
+      <div class="doc-card" *ngFor="let d of data.documents">
+        <div class="doc-icon">📄</div>
+        <div class="doc-details">
+          <h4>{{ d.fileName }}</h4>
+          <span class="doc-kind-badge">{{ d.documentKind }}</span>
+          <span class="doc-date">{{ d.uploadedAt | date:'yyyy-MM-dd' }}</span>
+          <p *ngIf="d.notes" class="doc-notes">{{ d.notes }}</p>
+        </div>
+        <button class="btn-delete" (click)="deleteDocument(d)">✕</button>
+      </div>
+    </div>
+    <ng-template #noDocs>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+
+    <!-- Validated Lab & Imaging Reports Section -->
+    <div class="panel-header mt-4" *ngIf="validatedLabOrders().length > 0">
+      <h3>{{ i18n.t('clinic.tabLabOrders') }} ({{ i18n.t('clinic.validated') }})</h3>
+    </div>
+    <table class="data-table" *ngIf="validatedLabOrders().length > 0">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('common.date') }}</th>
+          <th>{{ i18n.t('clinic.testCode') }}</th>
+          <th>{{ i18n.t('clinic.testName') }}</th>
+          <th>{{ i18n.t('clinic.resultValue') }}</th>
+          <th>{{ i18n.t('clinic.resultFlag') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lo of validatedLabOrders()">
+          <td>{{ lo.validatedAt | date:'yyyy-MM-dd' }}</td>
+          <td class="font-bold">{{ lo.testCode }}</td>
+          <td>{{ lo.testName }}</td>
+          <td class="font-bold">{{ lo.resultValueText }}</td>
+          <td>
+            <span class="badge" [class.badge-danger]="lo.resultFlag === 'CRITICAL'" [class.badge-success]="lo.resultFlag === 'NORMAL'">
+              {{ lo.resultFlag }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tab 5: Consents -->
+  <div class="tab-pane" *ngIf="activeTab() === 'consents'">
+    <div class="panel-header">
+      <h3>{{ i18n.t('clinic.chartTabConsents') }}</h3>
+      <button class="btn btn-sm btn-primary" (click)="openConsentModal()">+ {{ i18n.t('clinic.signConsent') }}</button>
+    </div>
+    <div class="consents-list" *ngIf="data.consents.length > 0; else noConsents">
+      <div class="consent-card" *ngFor="let c of data.consents">
+        <div class="consent-header">
+          <h4>{{ c.title }}</h4>
+          <span class="consent-date">{{ c.signedAt | date:'yyyy-MM-dd HH:mm' }}</span>
+        </div>
+        <p class="consent-body">{{ c.bodyText }}</p>
+        <div class="consent-footer">
+          <span class="signer-info">
+            {{ i18n.t('clinic.signedByName') }}: <strong>{{ c.signedByName }}</strong> ({{ c.signedByRelation }})
+          </span>
+          <button class="btn btn-sm btn-secondary" (click)="printConsent(c)">
+            🖨 {{ i18n.t('clinic.printConsent') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <ng-template #noConsents>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- Modals -->
+  <!-- Vitals Modal -->
+  <div class="modal-overlay" *ngIf="showVitalsModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.recordVitals') }}</h3>
+        <button class="btn-close" (click)="showVitalsModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveVitals()">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.vitalsSystolic') }}</label>
+            <input type="number" [(ngModel)]="vitalsForm.systolicBp" name="systolicBp" min="60" max="260" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.vitalsDiastolic') }}</label>
+            <input type="number" [(ngModel)]="vitalsForm.diastolicBp" name="diastolicBp" min="40" max="160" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.vitalsPulse') }}</label>
+            <input type="number" [(ngModel)]="vitalsForm.pulse" name="pulse" min="30" max="220" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.vitalsTemp') }}</label>
+            <input type="number" step="0.1" [(ngModel)]="vitalsForm.tempC" name="tempC" min="34" max="43" />
+          </div>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.vitalsSpo2') }}</label>
+            <input type="number" [(ngModel)]="vitalsForm.spo2" name="spo2" min="50" max="100" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.vitalsWeight') }}</label>
+            <input type="number" step="0.1" [(ngModel)]="vitalsForm.weightKg" name="weightKg" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.vitalsHeight') }}</label>
+            <input type="number" step="0.5" [(ngModel)]="vitalsForm.heightCm" name="heightCm" />
+          </div>
+        </div>
+        <div class="bmi-computed-preview" *ngIf="computedBmi() as bmi">
+          <strong>{{ i18n.t('clinic.vitalsBmi') }}:</strong> {{ bmi }}
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <textarea [(ngModel)]="vitalsForm.notes" name="notes" rows="2"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showVitalsModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Allergy Modal -->
+  <div class="modal-overlay" *ngIf="showAllergyModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.addAllergy') }}</h3>
+        <button class="btn-close" (click)="showAllergyModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveAllergy()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.substance') }} *</label>
+          <input type="text" [(ngModel)]="allergyForm.substance" name="substance" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.severity') }}</label>
+          <select [(ngModel)]="allergyForm.severity" name="severity">
+            <option value="MILD">{{ i18n.t('clinic.severityMild') }}</option>
+            <option value="MODERATE">{{ i18n.t('clinic.severityModerate') }}</option>
+            <option value="SEVERE">{{ i18n.t('clinic.severitySevere') }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.reactionNotes') }}</label>
+          <input type="text" [(ngModel)]="allergyForm.reactionNotes" name="reactionNotes" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showAllergyModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Condition Modal -->
+  <div class="modal-overlay" *ngIf="showConditionModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.addCondition') }}</h3>
+        <button class="btn-close" (click)="showConditionModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveCondition()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.condition') }} *</label>
+          <input type="text" [(ngModel)]="conditionForm.label" name="label" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.diagnosis') }} (ICD-10)</label>
+            <input type="text" [(ngModel)]="conditionForm.icdCode" name="icdCode" />
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="conditionForm.chronic" name="chronic" />
+              {{ i18n.t('clinic.chronic') }}
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <textarea [(ngModel)]="conditionForm.notes" name="notes" rows="2"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showConditionModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Doc Modal -->
+  <div class="modal-overlay" *ngIf="showDocModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.uploadDoc') }}</h3>
+        <button class="btn-close" (click)="showDocModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveDocument()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.docKind') }}</label>
+          <select [(ngModel)]="docForm.documentKind" name="documentKind">
+            <option value="REPORT">{{ i18n.t('clinic.docReport') }}</option>
+            <option value="LAB">{{ i18n.t('clinic.docLab') }}</option>
+            <option value="IMAGING">{{ i18n.t('clinic.docImaging') }}</option>
+            <option value="CONSENT">{{ i18n.t('clinic.docConsent') }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.name') }} *</label>
+          <input type="text" [(ngModel)]="docForm.fileName" name="fileName" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <input type="text" [(ngModel)]="docForm.notes" name="notes" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showDocModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Consent Modal -->
+  <div class="modal-overlay" *ngIf="showConsentModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.signConsent') }}</h3>
+        <button class="btn-close" (click)="showConsentModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveConsent()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.consentTemplate') }}</label>
+          <select [(ngModel)]="consentForm.templateKey" name="templateKey" (change)="onConsentTemplateChange()">
+            <option value="GENERAL_TREATMENT">{{ i18n.t('clinic.consentGeneral') }}</option>
+            <option value="PROCEDURE_CONSENT">{{ i18n.t('clinic.consentProcedure') }}</option>
+            <option value="TELEHEALTH_CONSENT">{{ i18n.t('clinic.consentTelehealth') }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.title') }} *</label>
+          <input type="text" [(ngModel)]="consentForm.title" name="title" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }} ({{ i18n.t('clinic.chartTabConsents') }})</label>
+          <textarea [(ngModel)]="consentForm.bodyText" name="bodyText" rows="4" required></textarea>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.signedByName') }} *</label>
+            <input type="text" [(ngModel)]="consentForm.signedByName" name="signedByName" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.signedByRelation') }}</label>
+            <select [(ngModel)]="consentForm.signedByRelation" name="signedByRelation">
+              <option value="SELF">{{ i18n.t('clinic.relationSelf') }}</option>
+              <option value="GUARDIAN">{{ i18n.t('clinic.relationGuardian') }}</option>
+              <option value="NEXT_OF_KIN">{{ i18n.t('clinic.relationNextOfKin') }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showConsentModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

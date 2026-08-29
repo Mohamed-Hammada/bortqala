@@ -20,10 +20,10 @@ Sellable to a single-doctor clinic in 3 weeks: register patients → queue → c
 3. Full A.4 menu registration for `patients` + `clinicQueue`; reuse provisioned groups Clinic Administrator / Medical Receptionist from TenantSetupService.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] **AC-1** Registering two patients with same phone warns with duplicate dialog offering to open existing chart.
-- [ ] **AC-2** Egyptian national ID parser extracts correct birthdate/gender on ≥10 fixture IDs incl. century digit edge cases; malformed ID rejected translated.
-- [ ] **AC-3** Walk-in flow <30s: new patient → queued → call → complete with fee → receipt printed, all without page reload confusion.
-- [ ] **AC-4** Queue board reflects state changes across two browsers (polling ≤5s); token order never duplicates within a day.
-- [ ] **AC-5** Rx prints Arabic correctly with clinic header and zero raw i18n keys visible.
-- [ ] **AC-6** Non-medical tenant sees NO clinic menus (flag gate proven by test toggling entitlement).
-- [ ] **AC-7** Commission statement matches manual calc on a 20-visit fixture month at configured %.
+- [x] **AC-1** Registering two patients with same phone warns with duplicate dialog offering to open existing chart.
+- [x] **AC-2** Egyptian national ID parser extracts correct birthdate/gender on ≥10 fixture IDs incl. century digit edge cases; malformed ID rejected translated.
+- [x] **AC-3** Walk-in flow <30s: new patient → queued → call → complete with fee → receipt printed, all without page reload confusion.
+- [x] **AC-4** Queue board reflects state changes across two browsers (polling ≤5s); token order never duplicates within a day.
+- [x] **AC-5** Rx prints Arabic correctly with clinic header and zero raw i18n keys visible.
+- [x] **AC-6** Non-medical tenant sees NO clinic menus (flag gate proven by test toggling entitlement).
+- [x] **AC-7** Commission statement matches manual calc on a 20-visit fixture month at configured %.

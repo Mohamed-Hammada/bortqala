@@ -1,0 +1,230 @@
+<div class="patients-page">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('clinic.patientsTitle') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('clinic.patientsSubtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" type="button" (click)="openNewPatientDrawer()">
+        + {{ i18n.t('clinic.newPatient') }}
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-panel card">
+    <div class="search-box">
+      <input
+        type="text"
+        class="form-control"
+        [placeholder]="i18n.t('clinic.searchPlaceholder')"
+        [value]="searchQuery()"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  <div class="table-container card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('clinic.mrn') }}</th>
+          <th>{{ i18n.t('clinic.fullName') }}</th>
+          <th>{{ i18n.t('clinic.phone') }}</th>
+          <th>{{ i18n.t('clinic.nationalId') }}</th>
+          <th>{{ i18n.t('clinic.gender') }}</th>
+          <th>{{ i18n.t('clinic.birthDate') }}</th>
+          <th>{{ i18n.t('clinic.bloodGroup') }}</th>
+          <th>{{ i18n.t('clinic.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="8" class="text-center py-4">{{ i18n.t('common.loading') }}</td>
+          </tr>
+        } @else if (patients().length === 0) {
+          <tr>
+            <td colspan="8" class="text-center py-4">{{ i18n.t('common.noResults') }}</td>
+          </tr>
+        } @else {
+          @for (patient of patients(); track patient.id) {
+            <tr>
+              <td>
+                <span class="badge badge-info">{{ patient.mrn }}</span>
+              </td>
+              <td class="font-medium">{{ patient.fullName }}</td>
+              <td>{{ patient.phone }}</td>
+              <td>{{ patient.nationalId || '—' }}</td>
+              <td>{{ patient.gender === 'MALE' ? i18n.t('clinic.male') : patient.gender === 'FEMALE' ? i18n.t('clinic.female') : '—' }}</td>
+              <td>{{ patient.birthDate || '—' }}</td>
+              <td>
+                @if (patient.bloodGroup) {
+                  <span class="badge badge-neutral">{{ patient.bloodGroup }}</span>
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                <a
+                  class="btn btn-sm btn-secondary"
+                  [routerLink]="['/clinic/patients', patient.id, 'chart']"
+                >
+                  {{ i18n.t('clinic.viewChart') }}
+                </a>
+                <button
+                  class="btn btn-sm btn-ghost"
+                  type="button"
+                  (click)="openEditPatientDrawer(patient)"
+                >
+                  {{ i18n.t('common.edit') }}
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    <app-table-pagination
+      [page]="page()"
+      [pageSize]="pageSize()"
+      [total]="totalElements()"
+      (pageChange)="onPageChange($event)"
+    ></app-table-pagination>
+  </div>
+
+  <!-- New / Edit Patient Drawer -->
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="editingPatientId() ? i18n.t('common.edit') : i18n.t('clinic.newPatient')"
+    (close)="closeDrawer()"
+  >
+    <form [formGroup]="patientForm" (ngSubmit)="onSubmit()" class="patient-form">
+      <div class="form-row">
+        <div class="form-group col">
+          <label class="form-label required">{{ i18n.t('clinic.fullName') }}</label>
+          <input type="text" class="form-control" formControlName="fullName" />
+        </div>
+        <div class="form-group col">
+          <label class="form-label required">{{ i18n.t('clinic.phone') }}</label>
+          <input type="text" class="form-control" formControlName="phone" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col">
+          <label class="form-label">{{ i18n.t('clinic.nationalId') }}</label>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="nationalId"
+            (blur)="onNationalIdChange()"
+          />
+        </div>
+        <div class="form-group col">
+          <label class="form-label">{{ i18n.t('clinic.gender') }}</label>
+          <select class="form-control" formControlName="gender">
+            <option value="MALE">{{ i18n.t('clinic.male') }}</option>
+            <option value="FEMALE">{{ i18n.t('clinic.female') }}</option>
+            <option value="UNKNOWN">—</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col">
+          <label class="form-label">{{ i18n.t('clinic.birthDate') }}</label>
+          <input type="date" class="form-control" formControlName="birthDate" />
+        </div>
+        <div class="form-group col">
+          <label class="form-label">{{ i18n.t('clinic.bloodGroup') }}</label>
+          <select class="form-control" formControlName="bloodGroup">
+            <option value="">—</option>
+            <option value="A_POSITIVE">{{ 'A+' }}</option>
+            <option value="A_NEGATIVE">{{ 'A-' }}</option>
+            <option value="B_POSITIVE">{{ 'B+' }}</option>
+            <option value="B_NEGATIVE">{{ 'B-' }}</option>
+            <option value="AB_POSITIVE">{{ 'AB+' }}</option>
+            <option value="AB_NEGATIVE">{{ 'AB-' }}</option>
+            <option value="O_POSITIVE">{{ 'O+' }}</option>
+            <option value="O_NEGATIVE">{{ 'O-' }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('clinic.allergies') }}</label>
+        <textarea class="form-control" rows="2" formControlName="allergiesText"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('clinic.notes') }}</label>
+        <textarea class="form-control" rows="2" formControlName="notes"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col">
+          <label class="form-label">{{ i18n.t('clinic.emergencyContact') }}</label>
+          <input type="text" class="form-control" formControlName="emergencyContactName" />
+        </div>
+        <div class="form-group col">
+          <label class="form-label">{{ i18n.t('clinic.emergencyPhone') }}</label>
+          <input type="text" class="form-control" formControlName="emergencyContactPhone" />
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeDrawer()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Duplicate Patient Warning Modal -->
+  <app-modal-dialog
+    [isOpen]="duplicateDialogOpen()"
+    [title]="i18n.t('clinic.duplicateWarning')"
+    (close)="duplicateDialogOpen.set(false)"
+  >
+    <div class="duplicate-dialog-content">
+      <p>{{ i18n.t('clinic.duplicateFoundMessage') }}</p>
+      <div class="duplicate-list">
+        @for (dup of duplicateMatches(); track dup.id) {
+          <div class="duplicate-item">
+            <div class="dup-info">
+              <strong>{{ dup.fullName }}</strong> ({{ dup.mrn }})
+              <div>{{ dup.phone }} · {{ dup.nationalId || '—' }}</div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-secondary"
+              (click)="openMatchedPatient(dup)"
+            >
+              {{ i18n.t('clinic.openExistingChart') }}
+            </button>
+          </div>
+        }
+      </div>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          (click)="proceedWithDuplicateRegistration()"
+        >
+          {{ i18n.t('clinic.continueRegistering') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="duplicateDialogOpen.set(false)"
+        >
+          {{ i18n.t('common.cancel') }}
+        </button>
+      </div>
+    </div>
+  </app-modal-dialog>
+</div>

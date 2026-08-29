@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829-v427-001
+      author: bemo-medical
+      changes:
+        - loadData:
+            tableName: app_translations
+            file: db/changelog/data/insert/files/20260829_v427_hospital_translations.csv
+            relativeToChangelogFile: false
+            columns:
+              - column:
+                  name: id
+                  type: STRING
+              - column:
+                  name: key
+                  type: STRING
+              - column:
+                  name: locale
+                  type: STRING
+              - column:
+                  name: value
+                  type: STRING

@@ -18,8 +18,8 @@ Egyptian reality: patients covered by HIO (هئة التأمين الصحي) or 
 3. Keys `clinic.insurance*` (~22).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Split math: 1000 fee, 80% coverage, 50 copay → insurer 750 / patient 250 exactly (property-based test over coverage 0..100 × copay set).
-- [ ] AC-2 Expired policy at visit time blocks insurance path (falls back to cash with warning) — validity date fixture.
-- [ ] AC-3 Pre-auth REQUIRED mode blocks finalizing visit without APPROVED code; warn mode allows with badge.
-- [ ] AC-4 Claim batch totals = Σ insurer shares of member visits in period; partial rejection leaves remainder reconcilable (paid + rejected + outstanding = claimed).
-- [ ] AC-5 Resubmitted corrective line links original rejection reason (audit trail visible in UI).
+- [x] AC-1 Split math: 1000 fee, 80% coverage, 50 copay → insurer 750 / patient 250 exactly (property-based test over coverage 0..100 × copay set).
+- [x] AC-2 Expired policy at visit time blocks insurance path (falls back to cash with warning) — validity date fixture.
+- [x] AC-3 Pre-auth REQUIRED mode blocks finalizing visit without APPROVED code; warn mode allows with badge.
+- [x] AC-4 Claim batch totals = Σ insurer shares of member visits in period; partial rejection leaves remainder reconcilable (paid + rejected + outstanding = claimed).
+- [x] AC-5 Resubmitted corrective line links original rejection reason (audit trail visible in UI).

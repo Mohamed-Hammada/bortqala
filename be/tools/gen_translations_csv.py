@@ -22,16 +22,21 @@ import yaml
 def find_max_numeric_id(csv_path: str) -> int:
     """Scan an existing CSV for the highest numeric sequence number in translation IDs.
 
-    IDs follow the pattern vNNN-NNN where NNN is numeric. Returns the max found,
+    IDs follow the pattern vNNN-NNN where NNN is numeric. Handles ids written
+    bare (repo convention) or quoted (CSV QUOTE_ALL). Returns the max found,
     or 0 if the file doesn't exist or has no matching IDs.
     """
     max_num = 0
     if not os.path.exists(csv_path):
         return max_num
     with open(csv_path, 'r', encoding='utf-8') as f:
+        next(f, None)  # skip header
         for line in f:
-            # Match v{digits}-{digits} at start of ID field
-            m = re.match(r'^v(\d+)-(\d+)', line.strip())
+            line = line.strip()
+            if not line:
+                continue
+            # Match v{digits}-{digits} at start of ID field, bare or quoted
+            m = re.match(r'^"?v(\d+)-(\d+)"?', line)
             if m:
                 num = int(m.group(2))
                 if num > max_num:

@@ -1,0 +1,93 @@
+<div class="clinic-commissions-page">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('clinic.commissionsTitle') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('clinic.commissionsSubtitle') }}</p>
+    </div>
+  </div>
+
+  <div class="filter-panel card">
+    <form [formGroup]="filterForm" (ngSubmit)="generateStatement()" class="filter-form">
+      <div class="filter-row">
+        <div class="form-group col">
+          <label class="form-label required">{{ i18n.t('clinic.doctorSelect') }}</label>
+          <input type="text" class="form-control" formControlName="doctorId" />
+        </div>
+        <div class="form-group col">
+          <label class="form-label required">{{ i18n.t('clinic.periodSelect') }}</label>
+          <div class="period-inputs">
+            <input type="number" class="form-control" formControlName="month" placeholder="MM" min="1" max="12" />
+            <input type="number" class="form-control" formControlName="year" placeholder="YYYY" />
+          </div>
+        </div>
+        <div class="form-group col">
+          <label class="form-label required">{{ i18n.t('clinic.commissionRate') }} (%)</label>
+          <input type="number" class="form-control" formControlName="rate" min="0" max="100" />
+        </div>
+        <div class="filter-actions col">
+          <button type="submit" class="btn btn-primary" [disabled]="loading()">
+            {{ i18n.t('clinic.calculateCommission') }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  @if (statement(); as stmt) {
+    <!-- KPI Summary Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card card">
+        <div class="kpi-label">{{ i18n.t('clinic.doctor') }}</div>
+        <div class="kpi-value">{{ stmt.doctorName }}</div>
+      </div>
+      <div class="kpi-card card">
+        <div class="kpi-label">{{ i18n.t('clinic.visitsCount') }}</div>
+        <div class="kpi-value">{{ stmt.completedVisitsCount }}</div>
+      </div>
+      <div class="kpi-card card">
+        <div class="kpi-label">{{ i18n.t('clinic.totalRevenue') }}</div>
+        <div class="kpi-value">{{ stmt.totalRevenue }} {{ i18n.t('common.currencyEgp') }}</div>
+      </div>
+      <div class="kpi-card card primary">
+        <div class="kpi-label">{{ i18n.t('clinic.commissionAmount') }} ({{ stmt.commissionRatePercent }}%)</div>
+        <div class="kpi-value text-primary font-bold">{{ stmt.commissionAmount }} {{ i18n.t('common.currencyEgp') }}</div>
+      </div>
+    </div>
+
+    <!-- Visits Table -->
+    <div class="table-container card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('clinic.tokenNumber') }}</th>
+            <th>{{ i18n.t('clinic.date') }}</th>
+            <th>{{ i18n.t('clinic.fullName') }}</th>
+            <th>{{ i18n.t('clinic.mrn') }}</th>
+            <th>{{ i18n.t('clinic.diagnosis') }}</th>
+            <th>{{ i18n.t('clinic.feeCharged') }}</th>
+            <th>{{ i18n.t('clinic.paymentMethod') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (stmt.visits.length === 0) {
+            <tr>
+              <td colspan="7" class="text-center py-4">{{ i18n.t('common.noResults') }}</td>
+            </tr>
+          } @else {
+            @for (v of stmt.visits; track v.id) {
+              <tr>
+                <td>#{{ v.token }}</td>
+                <td>{{ v.visitDate }}</td>
+                <td class="font-medium">{{ v.patientName }}</td>
+                <td>{{ v.patientMrn }}</td>
+                <td>{{ v.diagnosisIcd || '—' }}</td>
+                <td class="font-bold">{{ v.feeCharged }} {{ i18n.t('common.currencyEgp') }}</td>
+                <td>{{ v.paymentMethod || 'CASH' }}</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

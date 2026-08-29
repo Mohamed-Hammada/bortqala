@@ -555,6 +555,76 @@ export const routes: Routes = [
           import('./features/esign/esign.page').then((module) => module.ESignPage),
       },
       {
+        path: 'clinic/patients',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-patients' },
+        loadComponent: () =>
+          import('./features/clinic/patients.page').then((m) => m.PatientsPageComponent),
+      },
+      {
+        path: 'clinic/patients/:id/chart',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-patients' },
+        loadComponent: () =>
+          import('./features/clinic/patient-chart.page').then((m) => m.PatientChartPageComponent),
+      },
+      {
+        path: 'clinic/queue',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-queue' },
+        loadComponent: () =>
+          import('./features/clinic/clinic-queue.page').then((m) => m.ClinicQueuePageComponent),
+      },
+      {
+        path: 'clinic/commissions',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-commissions' },
+        loadComponent: () =>
+          import('./features/clinic/clinic-commissions.page').then((m) => m.ClinicCommissionsPageComponent),
+      },
+      {
+        path: 'clinic/appointments',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-appointments' },
+        loadComponent: () =>
+          import('./features/clinic/appointments.page').then((m) => m.AppointmentsPageComponent),
+      },
+      {
+        path: 'clinic/pharmacy',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-pharmacy' },
+        loadComponent: () =>
+          import('./features/clinic/pharmacy.page').then((m) => m.PharmacyPageComponent),
+      },
+      {
+        path: 'clinic/lab',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-lab' },
+        loadComponent: () =>
+          import('./features/clinic/lab-orders.page').then((m) => m.LabOrdersPageComponent),
+      },
+      {
+        path: 'clinic/insurance',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-insurance' },
+        loadComponent: () =>
+          import('./features/clinic/insurance.page').then((m) => m.InsurancePageComponent),
+      },
+      {
+        path: 'clinic/hospital',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'hospital-ops' },
+        loadComponent: () =>
+          import('./features/clinic/hospital-ops.page').then((m) => m.HospitalOpsPageComponent),
+      },
+      {
+        path: 'clinic/dental',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'dental-charting' },
+        loadComponent: () =>
+          import('./features/clinic/dental-charting.page').then((m) => m.DentalChartingPageComponent),
+      },
+      {
         path: 'forbidden',
         loadComponent: () =>
           import('./features/errors/forbidden.page').then((module) => module.ForbiddenPage),

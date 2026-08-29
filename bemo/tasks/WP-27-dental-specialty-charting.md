@@ -18,7 +18,7 @@ Dental clinics need an odontogram (32-tooth chart) with per-tooth treatment plan
 4. Keys `clinic.dental*` / `clinic.exam*` (~18).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 FDI numbering validated 11–48 (invalid rejected translated); chart state renders latest-per-tooth correctly after mixed history.
-- [ ] AC-2 Marking plan item DONE posts exactly one charge line; double-mark idempotent.
-- [ ] AC-3 Template admin can build a 5-field form that renders and saves answers round-trip intact (JSON diff test).
-- [ ] AC-4 Odontogram keyboard-accessible (tab per tooth, Enter opens dialog) and screen-reader labels announce tooth number + state.
+- [x] AC-1 FDI numbering validated 11–48 (invalid rejected translated); chart state renders latest-per-tooth correctly after mixed history.
+- [x] AC-2 Marking plan item DONE posts exactly one charge line; double-mark idempotent.
+- [x] AC-3 Template admin can build a 5-field form that renders and saves answers round-trip intact (JSON diff test).
+- [x] AC-4 Odontogram keyboard-accessible (tab per tooth, Enter opens dialog) and screen-reader labels announce tooth number + state.

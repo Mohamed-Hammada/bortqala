@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829-v424-007
+      author: bemo-medical
+      changes:
+        - update:
+            tableName: app_users
+            columns:
+              - column:
+                  name: allowed_menus
+                  valueComputed: "CASE WHEN allowed_menus IS NULL OR allowed_menus = '' THEN 'clinic-insurance' WHEN allowed_menus NOT LIKE '%clinic-insurance%' THEN CONCAT(allowed_menus, ',clinic-insurance') ELSE allowed_menus END"

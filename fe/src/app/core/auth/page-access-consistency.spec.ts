@@ -82,10 +82,14 @@ describe('page access consistency', () => {
       'agri.enabled',
       'finance.enabled',
       'manufacturing.enabled',
+      'medical.enabled',
       'payroll.enabled',
       'quality.enabled',
       'sales.enabled',
       'workforce.contractorAccounts.enabled',
+    ]);
+    expect(gatedByFeature.get('medical.enabled')!.sort()).toEqual([
+      'clinic-appointments', 'clinic-commissions', 'clinic-insurance', 'clinic-lab', 'clinic-patients', 'clinic-pharmacy', 'clinic-queue', 'dental-charting', 'hospital-ops',
     ]);
     expect(gatedByFeature.get('finance.enabled')!.sort()).toEqual([
       'accounts', 'banks', 'budgets', 'eta-tax', 'fiscal-periods', 'fixed-assets', 'journal-entries', 'payment-links', 'tax-currency',

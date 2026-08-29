@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829_v419_01
+      author: squad-medical
+      changes:
+        - loadData:
+            tableName: app_translations
+            file: db/changelog/data/insert/files/20260829_v419_appointments_translations.csv
+            separator: ';'
+            columns:
+              - column:
+                  name: id
+                  type: STRING
+              - column:
+                  name: message_key
+                  type: STRING
+              - column:
+                  name: locale
+                  type: STRING
+              - column:
+                  name: message_value
+                  type: STRING
+              - column:
+                  name: description
+                  type: STRING

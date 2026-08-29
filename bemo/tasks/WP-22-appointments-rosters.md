@@ -19,8 +19,8 @@ Replace walk-in-only flow with booked appointments: doctor slot templates, booki
 3. Keys `clinic.appt*` (~20).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Slots match roster exactly; booked/leave slots absent; crossing DST-less zone math verified by fixture.
-- [ ] AC-2 Double-booking same doctor+time rejected translated even under race (unique constraint test).
-- [ ] AC-3 Check-in creates linked visit appearing on queue board with source=appointment.
-- [ ] AC-4 Reminder cron marks reminder_sent_at once; re-run same night doesn't duplicate (idempotency test).
-- [ ] AC-5 No-show rate appears on dashboard for selected month matching manual count.
+- [x] AC-1 Slots match roster exactly; booked/leave slots absent; crossing DST-less zone math verified by fixture.
+- [x] AC-2 Double-booking same doctor+time rejected translated even under race (unique constraint test).
+- [x] AC-3 Check-in creates linked visit appearing on queue board with source=appointment.
+- [x] AC-4 Reminder cron marks reminder_sent_at once; re-run same night doesn't duplicate (idempotency test).
+- [x] AC-5 No-show rate appears on dashboard for selected month matching manual count.

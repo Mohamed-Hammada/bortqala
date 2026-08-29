@@ -1,0 +1,301 @@
+<div class="appointments-page">
+  <!-- Top Bar & Metrics -->
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('clinic.appointmentsTitle') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('clinic.appointmentsSubtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="openRosterDrawer()">
+        📅 {{ i18n.t('clinic.rosterSettings') }}
+      </button>
+      <button class="btn btn-secondary" (click)="sendTomorrowReminders()">
+        🔔 {{ i18n.t('clinic.sendReminders') }}
+      </button>
+      <button class="btn btn-primary" (click)="openBookModal()">
+        + {{ i18n.t('clinic.bookAppointment') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="metrics-grid" *ngIf="metrics() as m">
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('clinic.totalAppts') }}</span>
+      <span class="kpi-value">{{ m.totalAppointments }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('clinic.completedAppts') }}</span>
+      <span class="kpi-value text-success">{{ m.completedCount }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('clinic.statusNoShow') }}</span>
+      <span class="kpi-value text-danger">{{ m.noShowCount }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('clinic.noShowRate') }}</span>
+      <span class="kpi-value">{{ m.noShowRatePercent }}%</span>
+    </div>
+  </div>
+
+  <!-- Control & Filter Bar -->
+  <div class="filter-panel card">
+    <div class="filter-group">
+      <label>{{ i18n.t('common.date') }}</label>
+      <input
+        type="date"
+        class="form-control"
+        [value]="selectedDate()"
+        (change)="onDateChange($any($event.target).value)"
+      />
+    </div>
+    <div class="filter-group">
+      <label>{{ i18n.t('clinic.doctor') }}</label>
+      <select
+        class="form-control"
+        [value]="selectedDoctorId()"
+        (change)="onDoctorChange($any($event.target).value)"
+      >
+        <option *ngFor="let doc of doctors()" [value]="doc.id">{{ doc.name }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Main Content Grid: Left Slots & Right Agenda -->
+  <div class="main-grid">
+    <!-- Available Slots Panel -->
+    <div class="slots-panel card">
+      <div class="panel-header">
+        <h3>{{ i18n.t('clinic.slotsAvailable') }}</h3>
+      </div>
+      <div class="slots-grid" *ngIf="availableSlots().length > 0; else noSlots">
+        <div
+          *ngFor="let s of availableSlots()"
+          class="slot-card"
+          [class.slot-booked]="!s.available"
+          [class.slot-free]="s.available"
+          (click)="s.available && openBookModal(s)"
+        >
+          <span class="slot-time">{{ s.startTime }}</span>
+          <span class="slot-status">
+            {{ s.available ? i18n.t('common.available') : i18n.t('clinic.statusBooked') }}
+          </span>
+        </div>
+      </div>
+      <ng-template #noSlots>
+        <div class="empty-state">{{ i18n.t('clinic.noSlotsAvailable') }}</div>
+      </ng-template>
+    </div>
+
+    <!-- Today's Appointment Agenda Table -->
+    <div class="agenda-panel card">
+      <div class="panel-header">
+        <h3>{{ i18n.t('clinic.todayAgenda') }}</h3>
+      </div>
+      <table class="data-table" *ngIf="appointments().length > 0; else noAppts">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('clinic.startTime') }}</th>
+            <th>{{ i18n.t('clinic.mrn') }}</th>
+            <th>{{ i18n.t('clinic.fullName') }}</th>
+            <th>{{ i18n.t('clinic.phone') }}</th>
+            <th>{{ i18n.t('clinic.apptSource') }}</th>
+            <th>{{ i18n.t('common.status') }}</th>
+            <th>{{ i18n.t('clinic.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of appointments()">
+            <td class="font-bold">{{ a.startTime }}</td>
+            <td><span class="badge badge-info">{{ a.patientMrn }}</span></td>
+            <td>{{ a.patientName }}</td>
+            <td>{{ a.patientPhone }}</td>
+            <td><span class="badge badge-neutral">{{ a.source }}</span></td>
+            <td>
+              <span
+                class="status-pill"
+                [class.pill-booked]="a.status === 'BOOKED'"
+                [class.pill-confirmed]="a.status === 'CONFIRMED'"
+                [class.pill-checkedin]="a.status === 'CHECKED_IN'"
+                [class.pill-noshow]="a.status === 'NO_SHOW'"
+                [class.pill-cancelled]="a.status === 'CANCELLED'"
+              >
+                {{ a.status }}
+              </span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button
+                  *ngIf="a.status === 'BOOKED'"
+                  class="btn btn-xs btn-secondary"
+                  (click)="confirmAppointment(a)"
+                >
+                  {{ i18n.t('clinic.confirmAppt') }}
+                </button>
+                <button
+                  *ngIf="a.status === 'BOOKED' || a.status === 'CONFIRMED'"
+                  class="btn btn-xs btn-primary"
+                  (click)="checkInAppointment(a)"
+                >
+                  {{ i18n.t('clinic.checkInAppt') }}
+                </button>
+                <button
+                  *ngIf="a.status === 'BOOKED' || a.status === 'CONFIRMED'"
+                  class="btn btn-xs btn-ghost text-danger"
+                  (click)="markNoShow(a)"
+                >
+                  {{ i18n.t('clinic.markNoShow') }}
+                </button>
+                <button
+                  *ngIf="a.status !== 'CANCELLED' && a.status !== 'CHECKED_IN' && a.status !== 'DONE'"
+                  class="btn btn-xs btn-ghost"
+                  (click)="cancelAppointment(a)"
+                >
+                  {{ i18n.t('clinic.cancelAppt') }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ng-template #noAppts>
+        <div class="empty-state">{{ i18n.t('clinic.noApptsToday') }}</div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Book Appointment Modal -->
+  <div class="modal-overlay" *ngIf="showBookModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.bookAppointment') }}</h3>
+        <button class="btn-close" (click)="showBookModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveBooking()">
+        <!-- Search Patient -->
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.patient') }} *</label>
+          <div class="patient-search-row">
+            <input
+              type="text"
+              class="form-control"
+              [placeholder]="i18n.t('clinic.searchPlaceholder')"
+              [ngModel]="patientSearchQuery()"
+              (ngModelChange)="patientSearchQuery.set($event)"
+              name="patientSearch"
+            />
+            <button type="button" class="btn btn-secondary" (click)="searchPatients()">
+              {{ i18n.t('common.search') }}
+            </button>
+          </div>
+          <!-- Search Results Dropdown -->
+          <div class="searched-list" *ngIf="searchedPatients().length > 0">
+            <div
+              *ngFor="let p of searchedPatients()"
+              class="searched-item"
+              (click)="selectPatient(p)"
+            >
+              <strong>{{ p.fullName }}</strong> ({{ p.mrn }}) - {{ p.phone }}
+            </div>
+          </div>
+          <div class="selected-patient-box" *ngIf="selectedPatient() as sp">
+            ✓ <strong>{{ sp.fullName }}</strong> ({{ sp.mrn }})
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('common.date') }} *</label>
+            <input type="date" class="form-control" [(ngModel)]="bookingForm.visitDate" name="visitDate" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.startTime') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="bookingForm.startTime" name="startTime" required />
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.slotMinutes') }}</label>
+            <input type="number" class="form-control" [(ngModel)]="bookingForm.durationMinutes" name="durationMinutes" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.apptSource') }}</label>
+            <select class="form-control" [(ngModel)]="bookingForm.source" name="source">
+              <option value="PHONE">{{ i18n.t('clinic.sourcePhone') }}</option>
+              <option value="WALKIN">{{ i18n.t('clinic.sourceWalkin') }}</option>
+              <option value="ONLINE">{{ i18n.t('clinic.sourceOnline') }}</option>
+              <option value="WHATSAPP">{{ i18n.t('clinic.sourceWhatsapp') }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="bookingForm.reason" name="reason" />
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showBookModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!bookingForm.patientId || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Doctor Roster Settings Drawer -->
+  <div class="modal-overlay" *ngIf="showRosterDrawer()">
+    <div class="modal-card roster-drawer-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.rosterSettings') }}</h3>
+        <button class="btn-close" (click)="showRosterDrawer.set(false)">✕</button>
+      </div>
+
+      <!-- Add Roster Form -->
+      <form (ngSubmit)="saveRoster()" class="roster-form">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.weekday') }}</label>
+            <select class="form-control" [(ngModel)]="rosterForm.weekday" name="weekday">
+              <option *ngFor="let w of weekdays" [value]="w.value">{{ w.label }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.slotMinutes') }}</label>
+            <input type="number" class="form-control" [(ngModel)]="rosterForm.slotMinutes" name="slotMinutes" min="10" max="60" />
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.startTime') }}</label>
+            <input type="text" class="form-control" [(ngModel)]="rosterForm.startTime" name="startTime" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.endTime') }}</label>
+            <input type="text" class="form-control" [(ngModel)]="rosterForm.endTime" name="endTime" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" [disabled]="saving()">
+          + {{ i18n.t('common.save') }}
+        </button>
+      </form>
+
+      <!-- Existing Rosters List -->
+      <div class="rosters-list">
+        <h4>{{ i18n.t('clinic.rosterSettings') }}</h4>
+        <div *ngFor="let r of rosters()" class="roster-item">
+          <div>
+            <strong>{{ weekdays[r.weekday].label }}</strong>: {{ r.startTime }} — {{ r.endTime }}
+          </div>
+          <button class="btn-delete" (click)="deleteRoster(r)">✕</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,439 @@
+<div class="insurance-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('clinic.insuranceTitle') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('clinic.insuranceSubtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" *ngIf="activeTab() === 'PAYERS'" (click)="openAddPayerModal()">
+        + {{ i18n.t('clinic.addPayer') }}
+      </button>
+      <button class="btn btn-secondary" *ngIf="activeTab() === 'PAYERS'" (click)="openAddPlanModal()">
+        + {{ i18n.t('clinic.addPlan') }}
+      </button>
+      <button class="btn btn-primary" *ngIf="activeTab() === 'PRE_AUTH'" (click)="openAddPreAuthModal()">
+        + {{ i18n.t('clinic.addPreAuth') }}
+      </button>
+      <button class="btn btn-primary" *ngIf="activeTab() === 'CLAIMS'" (click)="openCreateBatchModal()">
+        + {{ i18n.t('clinic.createClaimBatch') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'PAYERS'"
+      (click)="setTab('PAYERS')"
+    >
+      🏢 {{ i18n.t('clinic.tabPayers') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'PRE_AUTH'"
+      (click)="setTab('PRE_AUTH')"
+    >
+      📜 {{ i18n.t('clinic.tabPreAuth') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'CLAIMS'"
+      (click)="setTab('CLAIMS')"
+    >
+      📊 {{ i18n.t('clinic.tabClaims') }}
+    </button>
+  </div>
+
+  <!-- TAB 1: PAYERS & PLANS -->
+  <div class="tab-content" *ngIf="activeTab() === 'PAYERS'">
+    <div class="payers-layout">
+      <!-- Payers List -->
+      <div class="card payers-card">
+        <h3>{{ i18n.t('clinic.tabPayers') }}</h3>
+        <div class="payers-list" *ngIf="payers().length > 0; else noPayers">
+          <div
+            class="payer-item"
+            *ngFor="let p of payers()"
+            [class.selected]="p.id === selectedPayerId()"
+            (click)="selectedPayerId.set(p.id); loadPlans()"
+          >
+            <div class="payer-header">
+              <span class="font-bold">{{ p.name }}</span>
+              <span class="badge badge-primary">{{ p.type }}</span>
+            </div>
+            <div class="payer-contact">
+              <span>{{ p.contactPhone || '—' }}</span>
+              <span>{{ p.contactEmail || '—' }}</span>
+            </div>
+          </div>
+        </div>
+        <ng-template #noPayers>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+
+      <!-- Plans for Selected Payer -->
+      <div class="card plans-card">
+        <div class="card-header">
+          <h3>{{ i18n.t('clinic.planName') }}</h3>
+        </div>
+        <table class="data-table" *ngIf="plans().length > 0; else noPlans">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('clinic.planName') }}</th>
+              <th>{{ i18n.t('clinic.coveragePercent') }}</th>
+              <th>{{ i18n.t('clinic.copayFlat') }}</th>
+              <th>{{ i18n.t('clinic.annualLimit') }}</th>
+              <th>{{ i18n.t('clinic.exclusions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pl of plans()">
+              <td class="font-bold">{{ pl.name }}</td>
+              <td><span class="badge badge-success">{{ pl.coveragePercent }}%</span></td>
+              <td>{{ pl.copayFlat }}</td>
+              <td>{{ pl.annualLimit || '—' }}</td>
+              <td>{{ pl.exclusionsText || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noPlans>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: PRE-AUTHORIZATIONS -->
+  <div class="tab-content card" *ngIf="activeTab() === 'PRE_AUTH'">
+    <table class="data-table" *ngIf="preAuthorizations().length > 0; else noPreAuth">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('clinic.approvalCode') }}</th>
+          <th>{{ i18n.t('clinic.payerName') }}</th>
+          <th>{{ i18n.t('clinic.mrn') }}</th>
+          <th>{{ i18n.t('clinic.fullName') }}</th>
+          <th>{{ i18n.t('clinic.requestedAmount') }}</th>
+          <th>{{ i18n.t('clinic.approvedAmount') }}</th>
+          <th>{{ i18n.t('common.status') }}</th>
+          <th>{{ i18n.t('common.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of preAuthorizations()">
+          <td class="font-bold">{{ a.approvalCode }}</td>
+          <td>{{ a.payerName }}</td>
+          <td><span class="badge badge-info">{{ a.patientMrn }}</span></td>
+          <td>{{ a.patientName }}</td>
+          <td>{{ a.requestedAmount }}</td>
+          <td class="font-bold">{{ a.approvedAmount != null ? a.approvedAmount : '—' }}</td>
+          <td>
+            <span class="badge" [ngClass]="{
+              'badge-warning': a.status === 'REQUESTED',
+              'badge-success': a.status === 'APPROVED',
+              'badge-danger': a.status === 'REJECTED' || a.status === 'EXPIRED'
+            }">
+              {{ a.status }}
+            </span>
+          </td>
+          <td class="action-cell">
+            <button *ngIf="a.status === 'REQUESTED'" class="btn btn-xs btn-success" (click)="approvePreAuth(a)">
+              {{ i18n.t('clinic.validateAction') }}
+            </button>
+            <button *ngIf="a.status === 'REQUESTED'" class="btn btn-xs btn-danger" (click)="rejectPreAuth(a)">
+              {{ i18n.t('clinic.cancelOrderAction') }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noPreAuth>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- TAB 3: CLAIMS & BATCHES -->
+  <div class="tab-content" *ngIf="activeTab() === 'CLAIMS'">
+    <div class="claims-layout">
+      <!-- Batches List -->
+      <div class="card batches-card">
+        <h3>{{ i18n.t('clinic.tabClaims') }}</h3>
+        <table class="data-table" *ngIf="claimBatches().length > 0; else noBatches">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('clinic.batchNumber') }}</th>
+              <th>{{ i18n.t('clinic.period') }}</th>
+              <th>{{ i18n.t('clinic.totalClaimed') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let b of claimBatches()"
+              [class.active-row]="b.id === selectedBatch()?.id"
+              (click)="viewBatch(b)"
+            >
+              <td class="font-bold">{{ b.batchNumber }}</td>
+              <td>{{ b.period }}</td>
+              <td class="font-bold">{{ b.totalClaimedAmount }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-neutral': b.status === 'DRAFT',
+                  'badge-info': b.status === 'SUBMITTED',
+                  'badge-warning': b.status === 'PARTIALLY_PAID',
+                  'badge-success': b.status === 'PAID',
+                  'badge-danger': b.status === 'REJECTED'
+                }">
+                  {{ b.status }}
+                </span>
+              </td>
+              <td class="action-cell">
+                <button *ngIf="b.status === 'DRAFT'" class="btn btn-xs btn-primary" (click)="submitBatch(b); $event.stopPropagation()">
+                  {{ i18n.t('clinic.submitBatch') }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noBatches>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+
+      <!-- Batch Detail Lines -->
+      <div class="card batch-detail-card" *ngIf="selectedBatch()">
+        <div class="card-header">
+          <h3>{{ selectedBatch()!.batchNumber }} ({{ selectedBatch()!.payerName }})</h3>
+          <span class="badge badge-primary">{{ selectedBatch()!.status }}</span>
+        </div>
+        <table class="data-table" *ngIf="selectedBatch()!.lines.length > 0; else noLines">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('clinic.mrn') }}</th>
+              <th>{{ i18n.t('clinic.fullName') }}</th>
+              <th>{{ i18n.t('common.amount') }}</th>
+              <th>{{ i18n.t('clinic.insurerShare') }}</th>
+              <th>{{ i18n.t('clinic.patientShare') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of selectedBatch()!.lines">
+              <td><span class="badge badge-info">{{ l.patientMrn }}</span></td>
+              <td>{{ l.patientName }}</td>
+              <td>{{ l.totalFee }}</td>
+              <td class="font-bold text-success">{{ l.insurerShare }}</td>
+              <td>{{ l.patientShare }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-warning': l.status === 'PENDING',
+                  'badge-success': l.status === 'APPROVED',
+                  'badge-danger': l.status === 'REJECTED'
+                }">
+                  {{ l.status }}
+                </span>
+                <span *ngIf="l.rejectionReason" class="text-xs text-danger block">{{ l.rejectionReason }}</span>
+              </td>
+              <td class="action-cell">
+                <button
+                  *ngIf="selectedBatch()!.status === 'SUBMITTED' && l.status === 'PENDING'"
+                  class="btn btn-xs btn-success"
+                  (click)="approveLine(selectedBatch()!, l)"
+                >
+                  ✓
+                </button>
+                <button
+                  *ngIf="selectedBatch()!.status === 'SUBMITTED' && l.status === 'PENDING'"
+                  class="btn btn-xs btn-danger"
+                  (click)="rejectLine(selectedBatch()!, l)"
+                >
+                  ✕
+                </button>
+                <button
+                  *ngIf="l.status === 'REJECTED'"
+                  class="btn btn-xs btn-primary"
+                  (click)="resubmitLine(l)"
+                >
+                  🔄 {{ i18n.t('clinic.resubmitLine') }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noLines>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Payer Modal -->
+  <div class="modal-overlay" *ngIf="showPayerModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.addPayer') }}</h3>
+        <button class="btn-close" (click)="showPayerModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="savePayer()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.payerName') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="payerForm.name" name="name" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.payerType') }}</label>
+          <select class="form-control" [(ngModel)]="payerForm.type" name="type">
+            <option *ngFor="let pt of payerTypes" [value]="pt">{{ pt }}</option>
+          </select>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.phone') }}</label>
+            <input type="text" class="form-control" [(ngModel)]="payerForm.contactPhone" name="phone" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.email') }}</label>
+            <input type="email" class="form-control" [(ngModel)]="payerForm.contactEmail" name="email" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showPayerModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!payerForm.name || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Plan Modal -->
+  <div class="modal-overlay" *ngIf="showPlanModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.addPlan') }}</h3>
+        <button class="btn-close" (click)="showPlanModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="savePlan()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.payerName') }} *</label>
+          <select class="form-control" [(ngModel)]="planForm.payerId" name="payerId" required>
+            <option *ngFor="let p of payers()" [value]="p.id">{{ p.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.planName') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="planForm.name" name="name" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.coveragePercent') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="planForm.coveragePercent" name="coveragePercent" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.copayFlat') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="planForm.copayFlat" name="copayFlat" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.annualLimit') }}</label>
+          <input type="number" class="form-control" [(ngModel)]="planForm.annualLimit" name="annualLimit" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.exclusions') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="planForm.exclusionsText" name="exclusionsText" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showPlanModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!planForm.name || !planForm.payerId || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Pre-Auth Modal -->
+  <div class="modal-overlay" *ngIf="showPreAuthModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.addPreAuth') }}</h3>
+        <button class="btn-close" (click)="showPreAuthModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitPreAuth()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.payerName') }} *</label>
+          <select class="form-control" [(ngModel)]="preAuthForm.payerId" name="payerId" required>
+            <option *ngFor="let p of payers()" [value]="p.id">{{ p.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.mrn') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="preAuthForm.patientId" name="patientId" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.procedure') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="preAuthForm.procedureText" name="procedureText" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.approvalCode') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="preAuthForm.approvalCode" name="approvalCode" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.requestedAmount') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="preAuthForm.requestedAmount" name="requestedAmount" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showPreAuthModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!preAuthForm.patientId || !preAuthForm.procedureText || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Claim Batch Modal -->
+  <div class="modal-overlay" *ngIf="showCreateBatchModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.createClaimBatch') }}</h3>
+        <button class="btn-close" (click)="showCreateBatchModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitCreateBatch()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.payerName') }} *</label>
+          <select class="form-control" [(ngModel)]="createBatchForm.payerId" name="payerId" required>
+            <option *ngFor="let p of payers()" [value]="p.id">{{ p.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.period') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="createBatchForm.period" name="period" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <textarea class="form-control" [(ngModel)]="createBatchForm.notes" name="notes" rows="2"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showCreateBatchModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!createBatchForm.payerId || !createBatchForm.period || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -259,6 +259,60 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
     requiredFeature: null,
   },
+  {
+    menuId: 'clinic-patients',
+    route: '/clinic/patients',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
+  {
+    menuId: 'clinic-queue',
+    route: '/clinic/queue',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
+  {
+    menuId: 'clinic-commissions',
+    route: '/clinic/commissions',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
+  {
+    menuId: 'clinic-appointments',
+    route: '/clinic/appointments',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
+  {
+    menuId: 'clinic-pharmacy',
+    route: '/clinic/pharmacy',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
+  {
+    menuId: 'clinic-lab',
+    route: '/clinic/lab',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
+  {
+    menuId: 'clinic-insurance',
+    route: '/clinic/insurance',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
+  {
+    menuId: 'hospital-ops',
+    route: '/clinic/hospital',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
+  {
+    menuId: 'dental-charting',
+    route: '/clinic/dental',
+    roles: [],
+    requiredFeature: 'medical.enabled',
+  },
 ];
 
 

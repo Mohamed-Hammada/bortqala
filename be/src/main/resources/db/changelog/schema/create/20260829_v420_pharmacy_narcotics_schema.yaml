@@ -1,0 +1,283 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829_v420_01
+      author: squad-medical
+      changes:
+        - createTable:
+            tableName: pharmacy_items
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: trade_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: generic_name
+                  type: VARCHAR(255)
+              - column:
+                  name: dosage_form
+                  type: VARCHAR(64)
+                  defaultValue: TABLET
+                  constraints:
+                    nullable: false
+              - column:
+                  name: strength_text
+                  type: VARCHAR(128)
+              - column:
+                  name: is_controlled
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: control_schedule
+                  type: VARCHAR(32)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_pharmacy_items_tenant_item
+            tableName: pharmacy_items
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: item_id
+
+  - changeSet:
+      id: 20260829_v420_02
+      author: squad-medical
+      changes:
+        - createTable:
+            tableName: pharmacy_dispense_records
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prescription_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: patient_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prescriber_doctor_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dispenser_user_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: second_signer_id
+                  type: VARCHAR(64)
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: DISPENSED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_controlled
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: VARCHAR(500)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829_v420_03
+      author: squad-medical
+      changes:
+        - createTable:
+            tableName: pharmacy_dispense_lines
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dispense_record_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prescription_line_id
+                  type: VARCHAR(64)
+              - column:
+                  name: pharmacy_item_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: batch_number
+                  type: VARCHAR(64)
+              - column:
+                  name: expiry_date
+                  type: VARCHAR(16)
+              - column:
+                  name: quantity_dispensed
+                  type: DECIMAL(12, 3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829_v420_04
+      author: squad-medical
+      changes:
+        - createTable:
+            tableName: narcotics_register
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dispense_record_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pharmacy_item_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: trade_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: patient_mrn
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: patient_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prescriber_doctor_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dispenser_user_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: second_signer_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: batch_number
+                  type: VARCHAR(64)
+              - column:
+                  name: quantity
+                  type: DECIMAL(12, 3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: VARCHAR(500)
+              - column:
+                  name: signed_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_narcotics_register_tenant_time
+            tableName: narcotics_register
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: signed_at

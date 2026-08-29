@@ -1346,3 +1346,95 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260829_v413_manpower_client_billing_translations.yaml
       relativeToChangelogFile: false
+  # WP-15: Medical clinic schema (patients, MRN sequence, visits, prescriptions)
+  - include:
+      file: db/changelog/schema/create/20260829_v414_medical_clinic_schema.yaml
+      relativeToChangelogFile: false
+  # WP-15: Grant medical clinic menus to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v414_medical_clinic_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-15: Medical clinic translations (error codes, UI keys, rx print)
+  - include:
+      file: db/changelog/data/insert/20260829_v415_medical_clinic_translations.yaml
+      relativeToChangelogFile: false
+  # WP-21: Medical EMR depth schema (allergies, conditions, vitals, documents, consents)
+  - include:
+      file: db/changelog/schema/create/20260829_v416_medical_emr_depth_schema.yaml
+      relativeToChangelogFile: false
+  # WP-21: Medical EMR depth translations (chart, vitals, allergies, consents)
+  - include:
+      file: db/changelog/data/insert/20260829_v417_medical_emr_depth_translations.yaml
+      relativeToChangelogFile: false
+  # WP-22: Medical appointments schema (doctor rosters, appointments)
+  - include:
+      file: db/changelog/schema/create/20260829_v418_medical_appointments_schema.yaml
+      relativeToChangelogFile: false
+  # WP-22: Grant clinic-appointments menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v418_appointments_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-22: Medical appointments translations
+  - include:
+      file: db/changelog/data/insert/20260829_v419_appointments_translations.yaml
+      relativeToChangelogFile: false
+  # WP-23: Pharmacy and narcotics schema
+  - include:
+      file: db/changelog/schema/create/20260829_v420_pharmacy_narcotics_schema.yaml
+      relativeToChangelogFile: false
+  # WP-23: Grant clinic-pharmacy menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v420_pharmacy_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-23: Pharmacy and narcotics translations
+  - include:
+      file: db/changelog/data/insert/20260829_v421_pharmacy_translations.yaml
+      relativeToChangelogFile: false
+  # WP-24: Medical lab and imaging orders schema
+  - include:
+      file: db/changelog/schema/create/20260829_v422_medical_lab_imaging_schema.yaml
+      relativeToChangelogFile: false
+  # WP-24: Grant clinic-lab menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v422_lab_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-24: Medical lab and imaging translations
+  - include:
+      file: db/changelog/data/insert/20260829_v423_lab_translations.yaml
+      relativeToChangelogFile: false
+  # WP-25: Medical insurance and claims schema
+  - include:
+      file: db/changelog/schema/create/20260829_v424_medical_insurance_claims_schema.yaml
+      relativeToChangelogFile: false
+  # WP-25: Grant clinic-insurance menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v424_insurance_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-25: Medical insurance translations
+  - include:
+      file: db/changelog/data/insert/20260829_v425_insurance_translations.yaml
+      relativeToChangelogFile: false
+  # WP-26: Hospital ops schema (wards, rooms, beds, admissions, OT, nursing)
+  - include:
+      file: db/changelog/schema/create/20260829_v426_hospital_ops_schema.yaml
+      relativeToChangelogFile: false
+  # WP-26: Grant hospital-ops menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v426_hospital_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-26: Hospital ops translations
+  - include:
+      file: db/changelog/data/insert/20260829_v427_hospital_translations.yaml
+      relativeToChangelogFile: false
+  # WP-27: Dental & Specialty Charting schema
+  - include:
+      file: db/changelog/schema/create/20260829_v428_dental_specialty_schema.yaml
+      relativeToChangelogFile: false
+  # WP-27: Grant dental-charting menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v428_dental_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-27: Dental & Specialty Charting translations
+  - include:
+      file: db/changelog/data/insert/20260829_v429_dental_translations.yaml
+      relativeToChangelogFile: false

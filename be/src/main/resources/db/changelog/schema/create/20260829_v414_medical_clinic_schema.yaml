@@ -1,0 +1,122 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829_v414_medical_clinic_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: medical_patients
+      changes:
+        - createTable:
+            tableName: medical_patients
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, primaryKeyName: pk_medical_patients } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: mrn, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: national_id, type: varchar(14) }
+              - column: { name: full_name, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: phone, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: gender, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: birth_date, type: varchar(10) }
+              - column: { name: blood_group, type: varchar(10) }
+              - column: { name: allergies_text, type: varchar(1000) }
+              - column: { name: notes, type: varchar(1000) }
+              - column: { name: emergency_contact_name, type: varchar(160) }
+              - column: { name: emergency_contact_phone, type: varchar(30) }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: medical_patients
+            constraintName: uq_medical_patients_mrn
+            columnNames: app_id, mrn
+        - createIndex:
+            tableName: medical_patients
+            indexName: idx_medical_patients_phone
+            columns:
+              - column: { name: app_id }
+              - column: { name: phone }
+        - createIndex:
+            tableName: medical_patients
+            indexName: idx_medical_patients_national_id
+            columns:
+              - column: { name: app_id }
+              - column: { name: national_id }
+        - createTable:
+            tableName: patient_mrn_sequences
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, primaryKeyName: pk_patient_mrn_sequences } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: current_sequence, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: patient_mrn_sequences
+            constraintName: uq_patient_mrn_seq_app
+            columnNames: app_id
+        - createTable:
+            tableName: clinic_visits
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, primaryKeyName: pk_clinic_visits } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: patient_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: doctor_employee_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: visit_date, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: visit_time, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: token, type: integer, constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: chief_complaint, type: varchar(500) }
+              - column: { name: diagnosis_icd, type: varchar(50) }
+              - column: { name: diagnosis_notes, type: varchar(1000) }
+              - column: { name: fee_charged, type: "decimal(12,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: insurance_covered, type: "decimal(12,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: patient_share, type: "decimal(12,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: payment_method, type: varchar(20) }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: clinic_visits
+            constraintName: uq_clinic_visits_doc_date_tok
+            columnNames: app_id, doctor_employee_id, visit_date, token
+        - createIndex:
+            tableName: clinic_visits
+            indexName: idx_clinic_visits_patient
+            columns:
+              - column: { name: app_id }
+              - column: { name: patient_id }
+        - createIndex:
+            tableName: clinic_visits
+            indexName: idx_clinic_visits_date_status
+            columns:
+              - column: { name: app_id }
+              - column: { name: visit_date }
+              - column: { name: status }
+        - createTable:
+            tableName: clinic_prescriptions
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, primaryKeyName: pk_clinic_prescriptions } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: visit_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: drug_name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: dose, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: frequency, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: duration, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: instructions, type: varchar(500) }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+        - createIndex:
+            tableName: clinic_prescriptions
+            indexName: idx_clinic_prescriptions_visit
+            columns:
+              - column: { name: app_id }
+              - column: { name: visit_id }
+      rollback:
+        - dropTable:
+            tableName: clinic_prescriptions
+        - dropTable:
+            tableName: clinic_visits
+        - dropTable:
+            tableName: patient_mrn_sequences
+        - dropTable:
+            tableName: medical_patients

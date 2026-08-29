@@ -20,9 +20,9 @@ Hospital inpatient core: admit/discharge/transfer with a live bed board, operati
 4. Keys `clinic.adt* / ot* / nursing*` (~30).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Two nurses admitting to the LAST free bed concurrently: exactly one succeeds (conditional-update test), loser gets translated "bed just occupied".
-- [ ] AC-2 Transfer closes prior bed (FREE again) and occupies target atomically; bed-stay evidence chain complete for billing.
-- [ ] AC-3 Discharge blocked until summary length met; ALOS calc matches manual fixture across 10 admissions incl. same-day discharge.
-- [ ] AC-4 MAR generation creates one row per scheduled dose from active Rx; GIVEN consumes stock via dispense path (ties WP-23); REFUSED/HELD leave stock untouched.
-- [ ] AC-5 Implant charge during OT posts to patient bill and decrements inventory once (idempotent confirm).
-- [ ] AC-6 Occupancy board reflects every state change ≤5s across two browsers; all states distinguishable without color (icon/text test).
+- [x] AC-1 Two nurses admitting to the LAST free bed concurrently: exactly one succeeds (conditional-update test), loser gets translated "bed just occupied".
+- [x] AC-2 Transfer closes prior bed (FREE again) and occupies target atomically; bed-stay evidence chain complete for billing.
+- [x] AC-3 Discharge blocked until summary length met; ALOS calc matches manual fixture across 10 admissions incl. same-day discharge.
+- [x] AC-4 MAR generation creates one row per scheduled dose from active Rx; GIVEN consumes stock via dispense path (ties WP-23); REFUSED/HELD leave stock untouched.
+- [x] AC-5 Implant charge during OT posts to patient bill and decrements inventory once (idempotent confirm).
+- [x] AC-6 Occupancy board reflects every state change ≤5s across two browsers; all states distinguishable without color (icon/text test).

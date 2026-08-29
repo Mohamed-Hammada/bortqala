@@ -21,8 +21,8 @@ Inventory items already carry barcode, aliases, reorder point, shelf-life/dead-s
 3. Keys `clinic.pharm*` / `clinic.narcotics*` (~16).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Dispensing decrements central inventory balances through signed movements (no new ledger) — reconciliation test vs balance service passes.
-- [ ] AC-2 FEFO suggestion picks earliest-expiry in-stock batch; selecting expired batch impossible client AND server side.
-- [ ] AC-3 Partial dispense of 5/10 leaves remaining=5 visible on Rx; completing later closes line.
-- [ ] AC-4 Controlled dispense without second signer stays PENDING and moves no stock; after second approval exactly one movement exists; register export rows match movements 1:1.
-- [ ] AC-5 Near-expiry warning text shows configured threshold; threshold property change reflected without redeploy.
+- [x] AC-1 Dispensing decrements central inventory balances through signed movements (no new ledger) — reconciliation test vs balance service passes.
+- [x] AC-2 FEFO suggestion picks earliest-expiry in-stock batch; selecting expired batch impossible client AND server side.
+- [x] AC-3 Partial dispense of 5/10 leaves remaining=5 visible on Rx; completing later closes line.
+- [x] AC-4 Controlled dispense without second signer stays PENDING and moves no stock; after second approval exactly one movement exists; register export rows match movements 1:1.
+- [x] AC-5 Near-expiry warning text shows configured threshold; threshold property change reflected without redeploy.

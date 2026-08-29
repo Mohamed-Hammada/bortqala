@@ -71,6 +71,52 @@ class TestGenTranslationsCsv(unittest.TestCase):
         finally:
             os.unlink(path)
 
+    def test_find_max_numeric_id_quoted_fields(self):
+        # QUOTE_ALL CSVs write the id quoted; scanner must still read the sequence
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            f.write('id;translation_key;locale;text_value\n')
+            f.write('"v355-001-en";"foo";"en-US";"Foo"\n')
+            f.write('"v356-009-ar";"bar";"ar-EG";"بار"\n')
+            path = f.name
+        try:
+            self.assertEqual(find_max_numeric_id(path), 9)
+        finally:
+            os.unlink(path)
+
+    def test_find_max_numeric_id_skips_header_and_blank_lines(self):
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            f.write('id;translation_key;locale;text_value\n')
+            f.write('\n')
+            f.write('v357-004-en;foo;en-US;Foo\n')
+            path = f.name
+        try:
+            self.assertEqual(find_max_numeric_id(path), 4)
+        finally:
+            os.unlink(path)
+
+    def test_continues_sequence_after_real_changeset(self):
+        # Proof against a real repo changeset: next emitted id follows the max.
+        here = os.path.dirname(os.path.abspath(__file__))
+        real_csv = os.path.join(
+            here, '..', 'src', 'main', 'resources', 'db', 'changelog',
+            'data', 'insert', 'files', '20260829_v413_manpower_client_billing_translations.csv')
+        if not os.path.exists(real_csv):
+            self.skipTest('V413 CSV not present in this checkout')
+        max_existing = find_max_numeric_id(real_csv)
+        generated = generate_csv({'k': {'ar': 'أ', 'en': 'A'}}, version=414, start_seq=max_existing + 1)
+        first_row = list(csv.reader(io.StringIO(generated), delimiter=';', quotechar='"'))[1]
+        self.assertEqual(first_row[0], f'v414-{max_existing + 1:03d}-en')
+        # And the continuation id does not collide with any existing id in the file
+        self.assertNotIn(first_row[0], scan_existing_ids(real_csv))
+
+    def test_generated_output_has_zero_pk_collisions(self):
+        data = {f'key.{i}': {'ar': 'أ', 'en': 'A'} for i in range(50)}
+        generated = generate_csv(data, version=414, start_seq=1)
+        rows = list(csv.reader(io.StringIO(generated), delimiter=';', quotechar='"'))[1:]
+        ids = [r[0] for r in rows]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(len(rows), 100)  # 50 keys × 2 locales
+
 
 if __name__ == '__main__':
     unittest.main()

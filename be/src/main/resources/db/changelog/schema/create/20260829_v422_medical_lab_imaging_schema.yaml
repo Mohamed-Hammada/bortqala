@@ -1,0 +1,200 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829_v422_01
+      author: squad-medical
+      changes:
+        - createTable:
+            tableName: lab_tests_catalog
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category
+                  type: VARCHAR(32)
+                  defaultValue: LAB
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sample_type
+                  type: VARCHAR(64)
+              - column:
+                  name: normal_range_text
+                  type: VARCHAR(255)
+              - column:
+                  name: price
+                  type: DECIMAL(12, 2)
+                  defaultValueNumeric: 0.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_lab_tests_tenant_code
+            tableName: lab_tests_catalog
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: code
+
+  - changeSet:
+      id: 20260829_v422_02
+      author: squad-medical
+      changes:
+        - createTable:
+            tableName: lab_orders
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: patient_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: visit_id
+                  type: VARCHAR(64)
+              - column:
+                  name: doctor_employee_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: test_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category
+                  type: VARCHAR(32)
+                  defaultValue: LAB
+                  constraints:
+                    nullable: false
+              - column:
+                  name: test_code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: test_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: ORDERED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ordered_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: collected_at
+                  type: BIGINT
+              - column:
+                  name: sent_out_at
+                  type: BIGINT
+              - column:
+                  name: resulted_at
+                  type: BIGINT
+              - column:
+                  name: validated_at
+                  type: BIGINT
+              - column:
+                  name: result_value_text
+                  type: VARCHAR(500)
+              - column:
+                  name: result_flag
+                  type: VARCHAR(32)
+                  defaultValue: NORMAL
+              - column:
+                  name: result_notes
+                  type: VARCHAR(1000)
+              - column:
+                  name: external_lab_party_id
+                  type: VARCHAR(64)
+              - column:
+                  name: external_lab_name
+                  type: VARCHAR(255)
+              - column:
+                  name: attachment_id
+                  type: VARCHAR(64)
+              - column:
+                  name: attachment_filename
+                  type: VARCHAR(255)
+              - column:
+                  name: is_critical_acknowledged
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: critical_acknowledged_at
+                  type: BIGINT
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_lab_orders_tenant_patient
+            tableName: lab_orders
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: patient_id
+        - createIndex:
+            indexName: idx_lab_orders_tenant_status
+            tableName: lab_orders
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: status

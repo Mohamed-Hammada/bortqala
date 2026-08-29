@@ -131,6 +131,25 @@ public final class AccessCatalog {
     public static final String P_ESIGN_MANAGE = "esign.manage";
     public static final String P_EINVOICING_READ = "einvoicing.read";
     public static final String P_EINVOICING_MANAGE = "einvoicing.manage";
+    public static final String P_CLINIC_PATIENTS_READ = "clinic.patients.read";
+    public static final String P_CLINIC_PATIENTS_MANAGE = "clinic.patients.manage";
+    public static final String P_CLINIC_QUEUE_READ = "clinic.queue.read";
+    public static final String P_CLINIC_QUEUE_MANAGE = "clinic.queue.manage";
+    public static final String P_CLINIC_COMMISSIONS_READ = "clinic.commissions.read";
+    public static final String P_CLINIC_APPOINTMENTS_READ = "clinic.appointments.read";
+    public static final String P_CLINIC_APPOINTMENTS_MANAGE = "clinic.appointments.manage";
+    public static final String P_CLINIC_PHARMACY_READ = "clinic.pharmacy.read";
+    public static final String P_CLINIC_PHARMACY_MANAGE = "clinic.pharmacy.manage";
+    public static final String P_CLINIC_NARCOTICS_READ = "clinic.narcotics.read";
+    public static final String P_CLINIC_NARCOTICS_APPROVE = "clinic.narcotics.approve";
+    public static final String P_CLINIC_LAB_READ = "clinic.lab.read";
+    public static final String P_CLINIC_LAB_MANAGE = "clinic.lab.manage";
+    public static final String P_CLINIC_INSURANCE_READ = "clinic.insurance.read";
+    public static final String P_CLINIC_INSURANCE_MANAGE = "clinic.insurance.manage";
+    public static final String P_CLINIC_HOSPITAL_READ = "clinic.hospital.read";
+    public static final String P_CLINIC_HOSPITAL_MANAGE = "clinic.hospital.manage";
+    public static final String P_CLINIC_DENTAL_READ = "clinic.dental.read";
+    public static final String P_CLINIC_DENTAL_MANAGE = "clinic.dental.manage";
 
     /**
      * Every permission a super user can act on.
@@ -169,7 +188,15 @@ public final class AccessCatalog {
             P_RECRUITMENT_READ, P_RECRUITMENT_MANAGE,
             P_DOCUMENTS_READ, P_DOCUMENTS_MANAGE,
             P_ESIGN_READ, P_ESIGN_MANAGE,
-            P_EINVOICING_READ, P_EINVOICING_MANAGE);
+            P_EINVOICING_READ, P_EINVOICING_MANAGE,
+            P_CLINIC_PATIENTS_READ, P_CLINIC_PATIENTS_MANAGE,
+            P_CLINIC_QUEUE_READ, P_CLINIC_QUEUE_MANAGE,
+            P_CLINIC_COMMISSIONS_READ,
+            P_CLINIC_APPOINTMENTS_READ, P_CLINIC_APPOINTMENTS_MANAGE,
+            P_CLINIC_PHARMACY_READ, P_CLINIC_PHARMACY_MANAGE,
+            P_CLINIC_NARCOTICS_READ, P_CLINIC_NARCOTICS_APPROVE,
+            P_CLINIC_LAB_READ, P_CLINIC_LAB_MANAGE,
+            P_CLINIC_INSURANCE_READ, P_CLINIC_INSURANCE_MANAGE);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
@@ -232,6 +259,7 @@ public final class AccessCatalog {
     private static final String FEATURE_FINANCE = "finance.enabled";
     private static final String FEATURE_CONTRACTOR_ACCOUNTS = "workforce.contractorAccounts.enabled";
     private static final String FEATURE_AGRI = "agri.enabled";
+    private static final String FEATURE_MEDICAL = "medical.enabled";
 
     private static final String KEY_ROLE_PREFIX = "roles.access.";
     private static final String KEY_PAGE_PREFIX = "access.pages.";
@@ -501,7 +529,33 @@ public final class AccessCatalog {
                     "nav.notificationsSend", P_USERS_READ, ADMIN_ONLY, null),
             page("SPECIALIZED_VERTICALS", "VERTICALS", "/verticals/specialized", "specialized-verticals",
                     "nav.specializedVerticals", P_VERTICALS_READ, NO_ROLE_GUARD, null,
-                    action("MANAGE", P_VERTICALS_MANAGE, false)));
+                    action("MANAGE", P_VERTICALS_MANAGE, false)),
+            page("CLINIC_PATIENTS", "MEDICAL", "/clinic/patients", "clinic-patients",
+                    "nav.clinicPatients", P_CLINIC_PATIENTS_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_PATIENTS_MANAGE, false)),
+            page("CLINIC_QUEUE", "MEDICAL", "/clinic/queue", "clinic-queue",
+                    "nav.clinicQueue", P_CLINIC_QUEUE_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_QUEUE_MANAGE, false)),
+            page("CLINIC_COMMISSIONS", "MEDICAL", "/clinic/commissions", "clinic-commissions",
+                    "nav.clinicCommissions", P_CLINIC_COMMISSIONS_READ, NO_ROLE_GUARD, FEATURE_MEDICAL),
+            page("CLINIC_APPOINTMENTS", "MEDICAL", "/clinic/appointments", "clinic-appointments",
+                    "nav.clinicAppointments", P_CLINIC_APPOINTMENTS_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_APPOINTMENTS_MANAGE, false)),
+            page("CLINIC_PHARMACY", "MEDICAL", "/clinic/pharmacy", "clinic-pharmacy",
+                    "nav.clinicPharmacy", P_CLINIC_PHARMACY_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_PHARMACY_MANAGE, false)),
+            page("CLINIC_LAB", "MEDICAL", "/clinic/lab", "clinic-lab",
+                    "nav.clinicLab", P_CLINIC_LAB_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_LAB_MANAGE, false)),
+            page("CLINIC_INSURANCE", "MEDICAL", "/clinic/insurance", "clinic-insurance",
+                    "nav.clinicInsurance", P_CLINIC_INSURANCE_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_INSURANCE_MANAGE, false)),
+            page("CLINIC_HOSPITAL", "MEDICAL", "/clinic/hospital", "hospital-ops",
+                    "nav.hospitalOps", P_CLINIC_HOSPITAL_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_HOSPITAL_MANAGE, false)),
+            page("CLINIC_DENTAL", "MEDICAL", "/clinic/dental", "dental-charting",
+                    "nav.dentalCharting", P_CLINIC_DENTAL_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_DENTAL_MANAGE, false)));
     // ------------------------------------------------------------------
     // Segregation-of-duties rules.
     // ------------------------------------------------------------------

@@ -17,8 +17,8 @@ Turn the clinic MVP visit record into a real patient chart: structured allergies
 3. Keys `clinic.chart*` (~18).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Chart loads in one request ≤300ms on 50-visit fixture; allergy banner always visible on every tab.
-- [ ] AC-2 Vitals save validates physiological ranges server-side (BP 60–260 etc.) with translated errors; BMI matches manual calc to 1 decimal.
-- [ ] AC-3 Prescribing to a SEVERE-allergy patient shows warning naming the substance; proceed requires confirm click (audited).
-- [ ] AC-4 Consent print includes patient name, template body, signature line + timestamp; stored as document row.
-- [ ] AC-5 Tenant isolation on all new tables proven by cross-app test.
+- [x] AC-1 Chart loads in one request ≤300ms on 50-visit fixture; allergy banner always visible on every tab.
+- [x] AC-2 Vitals save validates physiological ranges server-side (BP 60–260 etc.) with translated errors; BMI matches manual calc to 1 decimal.
+- [x] AC-3 Prescribing to a SEVERE-allergy patient shows warning naming the substance; proceed requires confirm click (audited).
+- [x] AC-4 Consent print includes patient name, template body, signature line + timestamp; stored as document row.
+- [x] AC-5 Tenant isolation on all new tables proven by cross-app test.

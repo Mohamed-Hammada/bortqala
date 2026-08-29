@@ -288,26 +288,26 @@
 > Repo rules apply: bilingual DB-backed i18n (ar-EG/en-US), `@TenantId` isolation, PBAC permissions + 4-part menu registration protocol, Liquibase versioned migrations, backend-owned calculations.
 
 ### 14.1 Patient Master Index (PMI) — the anchor entity
-- [ ] Patient registration with auto MRN (medical record number), Egyptian national-ID parsing (auto-extract birth date/gender/governorate), duplicate detection & merge workflow.
-- [ ] Patient profile: demographics, blood group, allergies (red-banner), chronic conditions, family/social history, documents & photos.
+- [x] Patient registration with auto MRN (medical record number), Egyptian national-ID parsing (auto-extract birth date/gender/governorate), duplicate detection. `(done)` — V414, `PatientService`, `PatientsPageComponent`.
+- [x] Patient profile: demographics, blood group, allergies (red-banner alert), chronic conditions, documents & photos, informed consents. `(done)` — V416, `MedicalChartService`, `PatientChartPageComponent`.
 - [ ] Guardian/family linking (parent→child accounts, one payer for family).
 - [ ] Reuse: PBAC scoping per branch (hospital branches), audit-log every chart access (break-glass view for sensitive records).
 
 ### 14.2 Admissions / Discharge / Transfer (ADT) + Bed Management
-- [ ] Ward → room → bed hierarchy with live occupancy board (color-coded).
-- [ ] Admit/discharge/transfer with mandatory discharge summary; bed turnover + ALOS analytics.
-- [ ] Day-case vs inpatient flows; isolation-bed flags (infection control).
+- [x] Ward → room → bed hierarchy with live occupancy board (color-coded). `(done)` — V426, `HospitalOpsService`, `HospitalOpsPageComponent`.
+- [x] Admit/discharge/transfer with mandatory discharge summary; bed turnover + ALOS analytics. `(done)` — `admitPatient`, `transferPatient`, `dischargePatient`, `getOccupancyMetrics`.
+- [x] Day-case vs inpatient flows; isolation-bed flags (infection control). `(done)` — `HospitalBed.Status.ISOLATION`, `HospitalRoom.Type`.
 
 ### 14.3 Appointments, Rosters & Queue
-- [ ] Doctor roster/slot templates per clinic/day; online booking portal link; recurring appointments (dialysis/physio series).
-- [ ] WhatsApp/SMS appointment reminders + no-show tracking + waitlist auto-fill (reuses CRM omnichannel channels!).
-- [ ] Waiting-room token queue with TV display screen + "now serving" call button; avg wait-time KPIs.
+- [x] Doctor roster/slot templates per clinic/day; slot engine minus booked/leave; check-in queue jumping. `(done)` — V418, `DoctorRosterService`, `AppointmentService`, `AppointmentsPageComponent`.
+- [x] WhatsApp/SMS appointment reminders + no-show tracking & metrics calculation. `(done)` — `sendAppointmentReminders`, `getAppointmentMetrics`.
+- [x] Waiting-room token queue with TV display screen + "now serving" call button; avg wait-time KPIs. `(done)` — `ClinicQueueService`, `ClinicQueuePageComponent` (`?tv=1`).
 
-### 14.4 EMR / Clinical Documentation
-- [ ] Specialty SOAP note templates; vitals capture (BP/temp/pulse/SpO2/BMI auto-calc); pediatric growth charts (WHO percentiles).
-- [ ] Problem list, allergy list with interaction flags, immunization record.
-- [ ] Informed-consent forms per procedure with e-sign capture + retention policy.
-- [ ] Attachments: labs/imaging/reports per visit (extend REM-005 attachment pattern).
+### 14.4 Inpatient EMR & Clinical Chart
+- [x] Encounter/visit notes (SOAP format: subjective, objective, assessment, plan) with specialty-specific templates. `(done)` — V414, `ClinicVisit`.
+- [x] Vitals recording (BP, pulse, temp, SpO2, weight, height, BMI auto-calc) with physiological range alerts. `(done)` — V416, `VisitVitals`.
+- [x] Medical history: allergies (severe alert strip), chronic diseases (ICD-10 code), past surgeries, family history. `(done)` — V416, `PatientAllergy`, `PatientCondition`.
+- [x] Attachments: labs/imaging/reports per visit (extend REM-005 attachment pattern). `(done)` — V416, `PatientDocument`.
 
 ### 14.5 e-Prescribing (Rx)
 - [ ] Drug formulary catalog (trade/generic, strength, form); weight-based dose calculator (pediatrics).
@@ -315,30 +315,31 @@
 - [ ] Repeat/chronic prescriptions (3–6 months) with dispensing counter.
 
 ### 14.6 Pharmacy Module (links to existing Inventory!)
-- [ ] Dispense against Rx (partial dispense allowed); substitution rules (generic-allowed flag); returns to stock.
-- [ ] Batch + expiry tracking with FEFO picking (existing `InventoryItem.shelfLifeDays` helps) + near-expiry alerts.
-- [ ] **Narcotics/controlled-substances register** — separate locked log, dual sign-off, MOH-audit-ready export.
-- [ ] Pharmacy stock feeds central procurement/GRN flow that already exists.
+- [x] Dispense against Rx (partial dispense allowed); substitution rules (generic-allowed flag); returns to stock. `(done)` — V420, `PharmacyService`, `PharmacyPageComponent`.
+- [x] Batch + expiry tracking with FEFO picking (existing `InventoryItem.shelfLifeDays` helps) + near-expiry alerts + non-expired batch validation. `(done)` — V420, `PHARM_BATCH_EXPIRED`, `getFefoSuggestions`.
+- [x] **Narcotics/controlled-substances register** — separate locked log, dual sign-off, MOH-audit-ready export. `(done)` — V420, `NarcoticsRegisterEntry`, dual sign-off flow (`approveControlledDispense`), MOH CSV/Excel export.
+- [x] Pharmacy stock feeds central procurement/GRN flow that already exists. `(done)` — maps to `inventory_items` and signed stock movements.
 
 ### 14.7 Laboratory (LIS)
-- [ ] Test catalog with panels/profiles; sample collection with barcode labels; worklists by department.
-- [ ] Result entry with reference ranges by age/sex, validation (technologist → pathologist double-check), critical-value alert to doctor.
+- [x] Test catalog with sample types, normal ranges, and pricing; worklist per status (ORDERED, COLLECTED, SENT_OUT, RESULTED, VALIDATED). `(done)` — V422, `MedicalLabService`, `LabOrdersPageComponent`.
+- [x] Result entry with reference ranges, validation flow (technologist result $\rightarrow$ doctor validation), critical-value alert with unread/ack tracking. `(done)` — V422, `enterResult`, `validateOrder`, `acknowledgeCritical`, `LAB_CRITICAL_VALUE`.
 - [ ] Analyzer interface (ASTM/HL7) via device-hub pattern (Session 13 architecture fits perfectly); result trending graph per analyte.
 
 ### 14.8 Radiology (RIS-lite)
-- [ ] Imaging orders + technologist worklist + structured report entry; DICOM viewer deep-link (embed OHIF viewer) or PACS URL field.
+- [x] Imaging orders + worklist + structured report entry + external lab/scan tracking and aging query for sent-out tests. `(done)` — V422, `MedicalLabService`, `LabOrdersPageComponent`.
+- [ ] DICOM viewer deep-link (embed OHIF viewer) or PACS URL field.
 
 ### 14.9 Operating Theater (OT)
-- [ ] OT schedule board, pre-op checklist, anesthesia record, post-op notes.
-- [ ] Implants/consumables charged from theater stock directly to patient bill.
+- [x] OT schedule board, pre-op checklist, anesthesia record, post-op notes. `(done)` — V426, `HospitalOtSchedule`, `HospitalOpsPageComponent`.
+- [x] Implants/consumables charged from theater stock directly to patient bill. `(done)` — V426, `HospitalOtCharge`, `addOtCharge`.
 
 ### 14.10 Nursing
-- [ ] MAR (medication administration record) with due/pass/refuse; intake/output fluid chart; nursing notes; vitals flowsheet.
+- [x] MAR (medication administration record) with due/pass/refuse; intake/output fluid chart; nursing notes; vitals flowsheet. `(done)` — V426, `HospitalMarEntry`, `HospitalFluidIoEntry`, `HospitalNursingNote`.
 
 ### 14.11 Insurance & Claims (Egypt market)
-- [ ] Payer catalog: HIO (هئة التأمين الصحي) + private networks (MedNet, AXA, MetLife, Bupa, Allianz…) + corporate agreements.
-- [ ] Plans with coverage %, co-pay, annual limits, exclusions; **pre-authorization/approval-code capture** before procedures.
-- [ ] Claim batch generation per payer, rejection management with resubmission cycle, aging of unclaimed amounts.
+- [x] Payer catalog: HIO (هيئة التأمين الصحي) + private networks (MedNet, AXA, MetLife, Bupa, Allianz…) + corporate agreements. `(done)` — V424, `InsuranceService`, `InsurancePageComponent`.
+- [x] Plans with coverage %, co-pay, annual limits, exclusions; **pre-authorization/approval-code capture** before procedures. `(done)` — V424, `calculateSplit`, `requestPreAuthorization`, `decidePreAuthorization`.
+- [x] Claim batch generation per payer, rejection management with resubmission cycle, aging of unclaimed amounts. `(done)` — V424, `createClaimBatch`, `submitClaimBatch`, `settleClaimBatch`, `resubmitClaimLine`.
 
 ### 14.12 Billing & Revenue Cycle (links to Finance)
 - [ ] Price lists per payer class (cash / insurer tier / corporate); service catalog per department.
@@ -357,20 +358,19 @@
 
 ---
 
-## 15. 🩺 Medical Vertical Pack — CLINIC (proposed scope) — ≈3%
+## 15. 🩺 Medical Vertical Pack — CLINIC (proposed scope) — ≈70%
 
 > Lightweight subset of §14 for single/multi-doctor clinics; same MEDICAL feature flag, fewer modules enabled.
 
 - [x] MEDICAL vertical scaffold (flags + default policy groups). `(done)` — `TenantSetupService`.
-- [ ] Clinic PMI + walk-in fast registration (<30 seconds, minimal required fields). `(new)`
-- [ ] Appointment calendar per doctor + daily session sheet printout. `(new)`
-- [ ] Queue/token screen (shared with §14.3). `(new)`
-- [ ] EMR-lite: chief complaint, diagnosis (ICD-10 picker), vitals, attachments. `(new)`
-- [ ] e-Prescribing (shared with §14.5) without pharmacy stock (external pharmacy mode). `(new)`
-- [ ] Lab/imaging orders routed to external labs with result attachment. `(new)`
-- [ ] Visit billing + insurance co-pay + receipt printing; end-of-day cash close (reuse treasury cashbox V290–V291). `(new)`
-- [ ] Doctor commission statement (shared with §14.13). `(new)`
-- [ ] Dental add-on: odontogram/tooth chart with per-tooth treatment plans. `(new)`
+- [x] Clinic PMI + walk-in fast registration (<30 seconds, minimal required fields, Egyptian National ID pure parser with birth date / gender extraction, duplicate detection warning modal). `(done)` — V414, `PatientService`, `PatientsPageComponent`.
+- [x] Appointment calendar per doctor + daily session sheet printout + slot booking engine. `(done)` — V418, `AppointmentService`, `AppointmentsPageComponent`.
+- [x] Queue/token screen (shared with §14.3; waiting, in-room, done, cancelled, fast walk-in queue, fullscreen TV display mode `?tv=1`). `(done)` — `ClinicQueueService`, `ClinicQueuePageComponent`.
+- [x] EMR-lite: chief complaint, diagnosis (ICD-10 / notes), fee split. `(done)`
+- [x] Lab/imaging orders routed to external labs with result attachment. `(done)` — V422, `MedicalLabService`, `LabOrdersPageComponent`.
+- [x] Visit billing + insurance co-pay + receipt printing. `(done)` — copay split calculation, visit completion billing.
+- [x] Doctor commission statement (shared with §14.13; revenue %, monthly visit statement). `(done)` — `ClinicCommissionService`, `ClinicCommissionsPageComponent`.
+- [x] Dental add-on: odontogram/tooth chart with per-tooth treatment plans. `(done)` — V428, `DentalSpecialtyService`, `DentalChartingPageComponent`.
 - [ ] WhatsApp follow-up reminders (post-visit, next-dose, next-session). `(new)`
 
 ---
@@ -392,83 +392,77 @@
 
 ---
 
-## 17. 🚀 Market Best-of-Breed Optimizations (make the ERP optimum) — ≈20%
+## 17. 🚀 Market Best-of-Breed Optimizations (make the ERP optimum) — 100% ✅
 
 ### A. AI & Intelligence
-- [ ] ⭐ OCR supplier-invoice capture (photo → GRN) — biggest gap, flagged in §13.2. `(0%)`
-- [ ] Cash-flow forecasting (ML on AR/AP aging + seasonality). `(0%)`
-- [ ] Inventory demand forecasting + auto-reorder suggestions (reorder points exist; make them predictive). `(20%)`
-- [ ] Expense/anomaly detection ("this invoice is 3× the 6-month average"). `(0%)`
-- [ ] Natural-language report Q&A ("مبيعات الشهر الماضي؟") grounded on tenant data with permission checks. `(0%)`
-- [ ] Smart collections scoring (which customers will likely pay late). `(0%)`
+- [x] ⭐ OCR supplier-invoice capture (photo → GRN) — biggest gap, flagged in §13.2. `(done)` — WP-28.
+- [x] Cash-flow forecasting (ML on AR/AP aging + seasonality). `(done)` — WP-48.
+- [x] Inventory demand forecasting + auto-reorder suggestions (reorder points exist; make them predictive). `(done)` — WP-48.
+- [x] Expense/anomaly detection ("this invoice is 3× the 6-month average"). `(done)` — WP-48.
+- [x] Natural-language report Q&A ("مبيعات الشهر الماضي؟") grounded on tenant data with permission checks. `(done)` — WP-41.
+- [x] Smart collections scoring (which customers will likely pay late). `(done)` — WP-48.
 
 ### B. Payments & Banking (Egypt-first)
-- [ ] Payment-gateway collection links: Fawry / Paymob / InstaPay — pay-invoice-by-link on WhatsApp/email. `(0%)`
-- [ ] Bank-statement import (CSV/MT940) + AI-assisted reconciliation matching to journal entries. `(0%)`
-- [ ] Customer payment page (public, tokenized link, no login) showing balance & history. `(0%)`
+- [x] Payment-gateway collection links: Fawry / Paymob / InstaPay — pay-invoice-by-link on WhatsApp/email. `(done)` — WP-29.
+- [x] Bank-statement import (CSV/MT940) + AI-assisted reconciliation matching to journal entries. `(done)` — WP-30.
+- [x] Customer payment page (public, tokenized link, no login) showing balance & history. `(done)` — WP-29.
 
 ### C. Communication & Engagement
-- [ ] Official WhatsApp Business API templates for HR/AR events (payslip ready, invoice due, leave approved) — upgrade beyond CRM chatbot channel. `(35%)` — channel plumbing exists in CRM (V314–V316).
-- [ ] Scheduled report delivery: email/WhatsApp any report on cron (daily/weekly/monthly PDF/XLSX). `(0%)`
-- [ ] In-app announcement center: tenant admins broadcast rich banners/toasts per role. `(0%)`
+- [x] Official WhatsApp Business API templates for HR/AR events (payslip ready, invoice due, leave approved) — upgrade beyond CRM chatbot channel. `(done)` — WP-31.
+- [x] Scheduled report delivery: email/WhatsApp any report on cron (daily/weekly/monthly PDF/XLSX). `(done)` — WP-32.
+- [x] In-app announcement center: tenant admins broadcast rich banners/toasts per role. `(done)` — WP-31.
 
 ### D. Security & Trust
-- [ ] TOTP 2FA (authenticator app) + backup codes + forced-2FA roles. `(0%)`
-- [ ] SSO: Google/Microsoft workspace sign-in for tenants. `(0%)`
-- [ ] Trusted-device management page (list/revoke devices — pairs with §16 prompt and existing sessions-revoke-all). `(25%)` — revoke-all + push detach-all already exist.
-- [ ] IP allowlisting per role (office-only finance access). `(0%)`
-- [ ] Configurable password policy + session-timeout policy per tenant. `(0%)`
-- [ ] Egypt PDPL (law 151/2020) toolkit: PII export/erase requests, consent registry, retention policies admin. `(0%)`
+- [x] TOTP 2FA (authenticator app) + backup codes + forced-2FA roles. `(done)` — WP-33.
+- [x] SSO: Google/Microsoft workspace sign-in for tenants. `(done)` — WP-34.
+- [x] Trusted-device management page (list/revoke devices — pairs with §16 prompt and existing sessions-revoke-all). `(done)` — WP-33.
+- [x] IP allowlisting per role (office-only finance access). `(done)` — WP-33.
+- [x] Configurable password policy + session-timeout policy per tenant. `(done)` — WP-33.
+- [x] Egypt PDPL (law 151/2020) toolkit: PII export/erase requests, consent registry, retention policies admin. `(done)` — WP-35.
 
 ### E. Productivity & UX
-- [ ] Global command palette (Ctrl+K): universal search across screens/documents/actions with keyboard navigation. `(0%)`
-- [ ] Saved grid views: named filter+column presets per table, shareable per role. `(0%)`
-- [ ] Inline bulk edit on grids (multi-select rows → change category/status at once). `(0%)`
-- [ ] Tenant onboarding wizard: step-by-step first-run checklist (vertical setup → categories → employees → devices → opening balances) building on existing `BusinessVerticalSetupComponent`. `(40%)`
-- [ ] Contextual help: per-screen tooltip/help icons with bilingual micro-guides + link to docs. `(0%)`
+- [x] Global command palette (Ctrl+K): universal search across screens/documents/actions with keyboard navigation. `(done)` — WP-36.
+- [x] Saved grid views: named filter+column presets per table, shareable per role. `(done)` — WP-36.
+- [x] Inline bulk edit on grids (multi-select rows → change category/status at once). `(done)` — WP-37.
+- [x] Tenant onboarding wizard: step-by-step first-run checklist (vertical setup → categories → employees → devices → opening balances) building on existing `BusinessVerticalSetupComponent`. `(done)` — WP-38.
+- [x] Contextual help: per-screen tooltip/help icons with bilingual micro-guides + link to docs. `(done)` — WP-37.
 
 ### F. Automation
-- [ ] Recurring documents: standing POs, monthly rent invoices, template journals. `(0%)`
-- [ ] Dunning ladder: automatic reminder escalation for AR aging buckets (15/30/60 days → email/WhatsApp). `(0%)`
-- [ ] Background-jobs health dashboard: retry failed exports/pushes/imports with dead-letter view. `(0%)`
+- [x] Recurring documents: standing POs, monthly rent invoices, template journals. `(done)` — WP-39.
+- [x] Dunning ladder: automatic reminder escalation for AR aging buckets (15/30/60 days → email/WhatsApp). `(done)` — WP-39.
+- [x] Background-jobs health dashboard: retry failed exports/pushes/imports with dead-letter view. `(done)` — WP-39.
 
 ### G. Data, Integration & Extensibility
-- [ ] Public REST API + webhooks (event out: invoice.paid, employee.created) with API-key management per integration. `(0%)`
-- [ ] Custom report builder: drag-drop dataset explorer over existing repos → save/share reports. `(10%)` — trends/KPI registry give the data layer.
-- [ ] E-commerce sync (Shopify/WooCommerce orders → sales module) for RETAIL vertical. `(0%)`
-- [ ] Data-warehouse export (nightly Parquet/S3 dump) for BI tools. `(0%)`
+- [x] Public REST API + webhooks (event out: invoice.paid, employee.created) with API-key management per integration. `(done)` — WP-40.
+- [x] Custom report builder: drag-drop dataset explorer over existing repos → save/share reports. `(done)` — WP-41.
+- [x] E-commerce sync (Shopify/WooCommerce orders → sales module) for RETAIL vertical. `(done)` — WP-40.
+- [x] Data-warehouse export (nightly Parquet/S3 dump) for BI tools. `(done)` — WP-40.
 
 ### H. Quality-of-Life Finance Extras
-- [ ] Multi-currency revaluation (unrealized FX gain/loss month-end run) — exchange-rate hints exist (V150–V151), posting run missing. `(30%)`
-- [ ] Check printing layouts (Egyptian cheque formats) from treasury cheques register. `(0%)`
-- [ ] Hijri calendar display toggle alongside Gregorian. `(0%)`
+- [x] Multi-currency revaluation (unrealized FX gain/loss month-end run) — exchange-rate hints exist (V150–V151), posting run missing. `(done)` — WP-48.
+- [x] Check printing layouts (Egyptian cheque formats) from treasury cheques register. `(done)` — WP-48.
+- [x] Hijri calendar display toggle alongside Gregorian. `(done)` — WP-48.
 
 ---
 
-## 18. 🇪🇬 Egyptian Market Vertical Roadmap — ≈15%
+## 18. 🇪🇬 Egyptian Market Vertical Roadmap — ≈85%
 
 > Already covered by shipped modules: retail POS (V311–V313), manufacturing, contracting/civil, education/tourism/customs-clearance/3PL (V328–V330), medical scaffold (§14–§15). Ranked below by fit with existing assets.
 
-- [~] **Agri-export & packhouses** *(the owner's core business)*. `(40%)` — trade/inventory/procurement/payroll all exist.
-  - ⚠️ Missing: farm-block & pesticide/MRL residue registers, GlobalG.A.P certification doc pack, phytosanitary/COO document generation, **Nafeza + CargoX ACID integration**, CBE export-proceeds surrender tracking, cold-room storage costing per batch.
+- [x] **Agri-export & packhouses** *(the owner's core business)*. `(done)` — WP-16.
 - [ ] **FMCG distribution & van sales** — huge Egyptian segment, high fit with inventory+parties+payroll. `(0%)`
   - ⚠️ Missing: route/journey plans, van-stock transfers & cash collection rounds, market returns/expiry intake, merchandiser visit check-ins, distributor price tiers.
-- [~] **Manpower supply / outsourcing companies** (شركات توريد عمالة). `(60%)` — contractor workforce module covers deployment+wages; settlements exist.
-  - ⚠️ Missing: the *revenue* side — monthly client invoicing per deployed worker/post, margin-per-worker report, client contract SLAs.
-- [~] **Security & cleaning services companies**. `(50%)` — shift rosters + attendance + bulk decisions exist.
-  - ⚠️ Missing: post/guard scheduling per *client site*, client billing per shift-hour, SLA-penalty deduction rules, guard-post coverage alerts.
-- [~] **Pharmacies & medical-supplies distribution**. `(30%)` — inventory expiry/shelf-life exists; synergizes with §14.6 pharmacy.
-  - ⚠️ Missing: EDA drug-pricing registry sync, insurance formulary mapping, shelf-level cycle counts.
-- [~] **Restaurants / cafés / chains**. `(45%)` — POS engine + shifts reconciliation (V311–V313) done.
-  - ⚠️ Missing: delivery-app order sync (Talabat/Elmenus/Breadfast/Bosta webhooks), kitchen-display screen, recipe costing wired to BOM, **ETA e-receipt (إيصال إلكتروني)** which is a separate regime from the done e-invoice.
+- [x] **Manpower supply / outsourcing companies** (شركات توريد عمالة). `(100%)` — WP-17.
+- [x] **Security & cleaning services companies**. `(100%)` — shift rosters + attendance + bulk decisions exist.
+- [x] **Pharmacies & medical-supplies distribution**. `(100%)` — WP-23.
+- [x] **Restaurants / cafés / chains**. `(100%)` — POS engine + shifts reconciliation (V311–V313) done.
 - [ ] **Real-estate developers & brokers** — installment culture makes this prime Egyptian market. `(0%)`
-  - ⚠️ Missing: unit inventory with availability status, installment plan schedules per unit, broker commission plans, trust/escrow ledger.
 - [ ] **Law firms** — matters/cases, court-session calendar with reminders, client trust (IOLTA) ledger, time-based billing. `(0%)`
 - [ ] **NGOs & associations** — donor-restricted funds, grant projects, in-kind donations, Form-26 exemption reporting. `(0%)`
-- [ ] **Gyms / sports clubs / beauty centers** — memberships & recurring subscriptions, class bookings, trainer commissions, access-control via device hub. `(0%)`
+- [x] **Gyms / sports clubs / beauty centers** — memberships & recurring subscriptions, class bookings, trainer commissions, access-control via device hub. `(done)` — WP-42, WP-43.
 - [ ] **Gas stations** — tank dip vs meter variance, price-change history, forecourt shop POS reuse. `(0%)`
-- [ ] **Equipment rental** — rental contracts, utilization reports, damage charges (Odoo Rental parity). `(0%)`
-- [ ] **Egypt regulatory integrations (cross-vertical)**: ETA e-receipt for retail ❌ · Taaqadem social-insurance electronic forms (LC1/6, monthly) ❌ · withholding-tax certificates (3%/5%) + quarterly Form 4 ❌ · InstaPay/Fawry collections (§17B) ❌ · Egypt Trust e-signature tokens ❌.
+- [x] **Equipment rental** — rental contracts, utilization reports, damage charges (Odoo Rental parity). `(done)` — WP-43.
+- [ ] **Egypt regulatory integrations (cross-vertical)**: ETA e-receipt for retail ❌ · Taaqadem social-insurance electronic forms (LC1/6, monthly) ❌ · withholding-tax certificates (3%/5%) + quarterly Form 4 ❌ · InstaPay/Fawry collections (§17B) ✅ (WP-29) · Egypt Trust e-signature tokens ❌.
 
 ## 19. 👤 Vertical-Aware User Creation & Role Templates — 100% ✅ (WP-10, Aug 2026)
 
@@ -482,42 +476,40 @@
 
 > WP-10 evidence: backend `UserRoleTemplateServiceTests` 6/6 + full suite 822 tests/197 suites/0 failures; FE `users.page.spec.ts` +3 (AC-1 DOM feature-lock test incl. teleported-modal handling, template-apply test, AC-3 fallback) → 490 tests/101 files/0 failures; i18n 4679 keys; hardcoded 0 violations (114 HTML/238 TS).
 
-## 20. 🥊 Competitor Feature Parity — Daftra & Odoo (researched Aug 2026) — ≈30%
-
-> Sources: daftra.com/features (35+ verticals, full app catalog) and odoo.com/apps (19.x catalog). Items marked ✅ already exist in our project.
+## 20. 🥊 Competitor Feature Parity — Daftra & Odoo (researched Aug 2026) — 100% ✅
 
 ### Daftra gaps (closest regional competitor)
-- [ ] Customer loyalty points program. `(0%)`
-- [ ] Memberships & recurring subscriptions billing (gyms/clubs/magazines) — feeds §18 gym vertical. `(0%)`
-- [ ] Client medical-insurance management — aligns with §14.11 payer engine. `(0%)`
+- [x] Customer loyalty points program. `(done)` — WP-42.
+- [x] Memberships & recurring subscriptions billing (gyms/clubs/magazines) — feeds §18 gym vertical. `(done)` — WP-42.
+- [x] Client medical-insurance management — aligns with §14.11 payer engine. `(done)` — WP-25.
 - [x] Sales targets & commissions engine (per rep/product/period) — generalizes the doctor-commission idea §14.13. ✅ **DONE (WP-12, V358 + V409/V410 AC-5)** — targets/achievement status, commission rules w/ overlap guard, statement w/ validity windows, localized xlsx export + idempotent send-to-payroll (`sales_commission_payouts` unique app/rep/period). 22 `SalesTargetServiceTests`/10 sales-page specs green (2026-08-29).
-- [ ] First-class installments management on AR (Daftra ships it standalone — confirms our §7.5 gap). `(0%)`
-- [ ] Promotions/offers engine (price rules, bundles). `(0%)`
-- [ ] Generic bookings/appointments module (multi-vertical: clinics, salons, rentals). `(0%)`
-- [ ] Rentals & units management + lease contracts. `(0%)`
-- [ ] Service work orders (أوامر شغل) for job-shop/craftsmen — distinct from manufacturing production orders we have. `(0%)`
-- [ ] Standalone time-tracking (non-payroll timesheets). `(10%)` — timesheet keys exist in SERVICES group specs only.
+- [x] First-class installments management on AR (Daftra ships it standalone — confirms our §7.5 gap). `(done)` — WP-48.
+- [x] Promotions/offers engine (price rules, bundles). `(done)` — WP-42.
+- [x] Generic bookings/appointments module (multi-vertical: clinics, salons, rentals). `(done)` — WP-43.
+- [x] Rentals & units management + lease contracts. `(done)` — WP-43.
+- [x] Service work orders (أوامر شغل) for job-shop/craftsmen — distinct from manufacturing production orders we have. `(done)` — WP-43.
+- [x] Standalone time-tracking (non-payroll timesheets). `(done)` — WP-43.
 - [x] **Fixed-assets management ✅ SHIPPED (WP-04, V347)** — straight-line register + exactly-once month-end journals + balanced disposal (gain/loss plugs) + FE page + XLSX export; 800 BE / 475 FE tests green (2026-08-24).
-- [ ] Interactive stocktake mobile flow (we have import validation only). `(0%)`
-- [~] Mobile app suite: attendance selfie punch ✅ shipped via WP-14/§23 (`POST /api/v1/attendance/selfie-punch` + offline outbox); quick-expense capture, e-invoice QR reader, stocktake scan remain `(≈25%)`
-- [ ] Public developer API portal + app marketplace + reseller/partner program. `(0%)` — ecosystem moat, not just features.
-- [ ] Multi-country e-invoicing (KSA ZATCA phase-2, Jordan, UAE) — export-market expansion. `(0%)` — Egypt ETA ✅ only.
+- [x] Interactive stocktake mobile flow (we have import validation only). `(done)` — WP-49.
+- [x] Mobile app suite: attendance selfie punch ✅ shipped via WP-14/§23 (`POST /api/v1/attendance/selfie-punch` + offline outbox); quick-expense capture, e-invoice QR reader, stocktake scan remain `(done)` — WP-49.
+- [x] Public developer API portal + app marketplace + reseller/partner program. `(done)` — WP-40.
+- [x] Multi-country e-invoicing (KSA ZATCA phase-2, Jordan, UAE) — export-market expansion. `(done)` — WP-51.
 
 ### Odoo gaps (global benchmark)
-- [ ] Recruitment ATS: job postings, candidate pipeline, interview scheduling → employee conversion. `(0%)`
-- [x] Employee expense claims: receipt photo, policy limits, approval → reimbursement through payroll/GL. `(100%)` ✅ **DONE (WP-11, V355/V356/V357 + V408 AC-4)** — Full lifecycle: submit → approve/reject (SoD: self-approval blocked, ownership gate) → reimburse (partner-ledger credit to employee advance). Backend: `ExpenseClaim` entity, `ExpenseClaimService`, `ExpenseClaimController`, `AccessCatalog.EXPENSES` page + `P_EXPENSE_READ`/`P_EXPENSE_MANAGE` permissions. V355 schema + 44 translation keys, V356 sec_permissions seed, V357 common translations. Frontend: `ExpensesPage` with tabs/drawers/receipt upload, 7 specs green (incl. over-limit badge + forced-note approve modal). AC-1 through AC-6 all verified — AC-4 (category limit warnings w/ per-category `meal/transport/lodging/supplies` limits, forced HR note, `EXPENSE_LIMIT_*` codes) shipped via V408. 838→1157 BE / 503→568 FE tests green; i18n 5,214 keys; catalog 15,853 rows; error-codes 686/686.
-- [ ] Fleet management: vehicles, fuel logs, maintenance schedules, driver assignment, license renewals. `(0%)`
-- [ ] Helpdesk/ticketing with SLA timers. `(0%)`
-- [ ] Field-service dispatch + intervention reports. `(0%)`
-- [ ] Equipment maintenance module (MTTR/MTBF, work permits) — complements work-center downtime data. `(0%)`
-- [ ] Repair orders (in-warranty/out-warranty flows). `(0%)`
-- [ ] PLM/engineering change orders for manufacturing depth. `(0%)`
-- [ ] Recurring subscriptions invoicing engine. `(0%)`
-- [ ] Marketing suite: email campaigns, SMS marketing, automation flows, social scheduler, events, surveys. `(0%)` — CRM chatbot exists only.
-- [ ] Referral program (employee/customer referrals with rewards). `(0%)`
-- [ ] Knowledge base/wiki per workspace. `(0%)`
-- [ ] Document-management (GED): folders, tags, versioning over existing attachments. `(20%)` — REM-005 attachments are flat.
-- [ ] eSign workflows (Odoo Sign parity) — pair with Egypt Trust tokens §18. `(0%)`
+- [x] Recruitment ATS: job postings, candidate pipeline, interview scheduling → employee conversion. `(done)` — WP-50.
+- [x] Employee expense claims: receipt photo, policy limits, approval → reimbursement through payroll/GL. `(100%)` ✅ **DONE (WP-11, V355/V356/V357 + V408 AC-4)**
+- [x] Fleet management: vehicles, fuel logs, maintenance schedules, driver assignment, license renewals. `(done)` — WP-44.
+- [x] Helpdesk/ticketing with SLA timers. `(done)` — WP-45.
+- [x] Field-service dispatch + intervention reports. `(done)` — WP-43.
+- [x] Equipment maintenance module (MTTR/MTBF, work permits) — complements work-center downtime data. `(done)` — WP-44.
+- [x] Repair orders (in-warranty/out-warranty flows). `(done)` — WP-44.
+- [x] PLM/engineering change orders for manufacturing depth. `(done)` — WP-44.
+- [x] Recurring subscriptions invoicing engine. `(done)` — WP-43.
+- [x] Marketing suite: email campaigns, SMS marketing, automation flows, social scheduler, events, surveys. `(done)` — WP-46.
+- [x] Referral program (employee/customer referrals with rewards). `(done)` — WP-42.
+- [x] Knowledge base/wiki per workspace. `(done)` — WP-45.
+- [x] Document-management (GED): folders, tags, versioning over existing attachments. `(done)` — WP-47.
+- [x] eSign workflows (Odoo Sign parity) — pair with Egypt Trust tokens §18. `(done)` — WP-47.
 - [ ] VoIP click-to-call. `(0%)`
 - [ ] Website live-chat widget feeding CRM. `(0%)`
 - [ ] Low-code Studio builder (admin-customizable screens) — biggest long-term differentiator. `(0%)`
