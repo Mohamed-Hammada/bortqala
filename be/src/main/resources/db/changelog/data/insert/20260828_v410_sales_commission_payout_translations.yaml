@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260828_v410_sales_commission_payout_translations
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: SELECT COUNT(*) FROM translations WHERE id LIKE 'v410-%'
+      changes:
+        - loadData:
+            relativeToChangelogFile: true
+            file: files/20260828_v410_sales_commission_payout_translations.csv
+            tableName: translations
+            separator: ";"
+            quotchar: '"'
+      rollback:
+        - sql:
+            sql: DELETE FROM translations WHERE id LIKE 'v410-%'

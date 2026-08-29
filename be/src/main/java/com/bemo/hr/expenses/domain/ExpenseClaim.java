@@ -83,10 +83,11 @@ public class ExpenseClaim {
         this.status = Status.SUBMITTED.name();
     }
 
-    public void approve(String approverId) {
+    public void approve(String approverId, String note) {
         requireStatus(Status.SUBMITTED, "approve");
         this.approverId = approverId;
         this.decidedAt = Instant.now();
+        this.decisionNote = note == null || note.isBlank() ? null : note.strip();
         this.status = Status.APPROVED.name();
     }
 

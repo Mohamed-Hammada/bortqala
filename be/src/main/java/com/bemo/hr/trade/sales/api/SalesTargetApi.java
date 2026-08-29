@@ -37,5 +37,13 @@ public class SalesTargetApi {
     public record CommissionStatementResponse(
             String repId, String period,
             java.util.List<CommissionStatementEntry> entries,
-            BigDecimal totalCommission) {}
+            BigDecimal totalCommission, boolean payrollSent, Long payrollSentAt) {}
+
+    public record SendToPayrollRequest(
+            @NotBlank String repId,
+            @NotBlank @Pattern(regexp = "\\d{4}-\\d{2}") String period) {}
+
+    public record PayrollSendResponse(
+            String repId, String period,
+            BigDecimal totalCommission, boolean alreadySent, Long sentAt) {}
 }

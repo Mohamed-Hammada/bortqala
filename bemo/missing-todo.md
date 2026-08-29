@@ -490,7 +490,7 @@
 - [ ] Customer loyalty points program. `(0%)`
 - [ ] Memberships & recurring subscriptions billing (gyms/clubs/magazines) — feeds §18 gym vertical. `(0%)`
 - [ ] Client medical-insurance management — aligns with §14.11 payer engine. `(0%)`
-- [ ] Sales targets & commissions engine (per rep/product/period) — generalizes the doctor-commission idea §14.13. `(0%)`
+- [x] Sales targets & commissions engine (per rep/product/period) — generalizes the doctor-commission idea §14.13. ✅ **DONE (WP-12, V358 + V409/V410 AC-5)** — targets/achievement status, commission rules w/ overlap guard, statement w/ validity windows, localized xlsx export + idempotent send-to-payroll (`sales_commission_payouts` unique app/rep/period). 22 `SalesTargetServiceTests`/10 sales-page specs green (2026-08-29).
 - [ ] First-class installments management on AR (Daftra ships it standalone — confirms our §7.5 gap). `(0%)`
 - [ ] Promotions/offers engine (price rules, bundles). `(0%)`
 - [ ] Generic bookings/appointments module (multi-vertical: clinics, salons, rentals). `(0%)`
@@ -505,7 +505,7 @@
 
 ### Odoo gaps (global benchmark)
 - [ ] Recruitment ATS: job postings, candidate pipeline, interview scheduling → employee conversion. `(0%)`
-- [x] Employee expense claims: receipt photo, policy limits, approval → reimbursement through payroll/GL. `(100%)` ✅ **DONE (WP-11, V355/V356/V357)** — Full lifecycle: submit → approve/reject (SoD: self-approval blocked, ownership gate) → reimburse (partner-ledger credit to employee advance). Backend: `ExpenseClaim` entity, `ExpenseClaimService`, `ExpenseClaimController`, `AccessCatalog.EXPENSES` page + `P_EXPENSE_READ`/`P_EXPENSE_MANAGE` permissions. V355 schema + 44 translation keys, V356 sec_permissions seed, V357 common translations. Frontend: `ExpensesPage` with tabs/drawers/receipt upload, 5 specs green. AC-1 through AC-3, AC-5, AC-6 verified; AC-4 (category limit warnings) deferred. 838 BE / 503 FE tests green; i18n 4,711 keys; catalog 14,216 rows; error-codes 607/607.
+- [x] Employee expense claims: receipt photo, policy limits, approval → reimbursement through payroll/GL. `(100%)` ✅ **DONE (WP-11, V355/V356/V357 + V408 AC-4)** — Full lifecycle: submit → approve/reject (SoD: self-approval blocked, ownership gate) → reimburse (partner-ledger credit to employee advance). Backend: `ExpenseClaim` entity, `ExpenseClaimService`, `ExpenseClaimController`, `AccessCatalog.EXPENSES` page + `P_EXPENSE_READ`/`P_EXPENSE_MANAGE` permissions. V355 schema + 44 translation keys, V356 sec_permissions seed, V357 common translations. Frontend: `ExpensesPage` with tabs/drawers/receipt upload, 7 specs green (incl. over-limit badge + forced-note approve modal). AC-1 through AC-6 all verified — AC-4 (category limit warnings w/ per-category `meal/transport/lodging/supplies` limits, forced HR note, `EXPENSE_LIMIT_*` codes) shipped via V408. 838→1157 BE / 503→568 FE tests green; i18n 5,214 keys; catalog 15,853 rows; error-codes 686/686.
 - [ ] Fleet management: vehicles, fuel logs, maintenance schedules, driver assignment, license renewals. `(0%)`
 - [ ] Helpdesk/ticketing with SLA timers. `(0%)`
 - [ ] Field-service dispatch + intervention reports. `(0%)`
@@ -553,7 +553,7 @@
 - [x] Generated-report-period registry + hide-already-generated months ✅ **DONE (WP-06, V352)** — `GET /api/v1/reports/generated-periods?year=` derived query (APPROVED+EXPORTED only, no new table); picker chips disable with tooltip + inline view-link to the exact report; stale-token refetch on year switch; 824 BE / 493 FE tests green (2026-08-25).
 - [x] Loans deduction-policy switcher ✅ **DONE (WP-07, V350)** — resolved policy (EMPLOYEE→CATEGORY→GLOBAL→defaults AUTO+MONTHLY) gates payroll auto-collection w/ evidence JSON; idempotent manual apply `POST /api/v1/workforce/advances/apply-deduction`; settings policy card + gated employees action; 4 new error codes en/ar; 816 BE / 487 FE tests green (2026-08-24).
 - [ ] Employee-form grouped sections with layout preview (§8).
-- [ ] Sales targets & commissions engine (§20 Daftra gap).
+- [x] Sales targets & commissions engine (§20 Daftra gap). ✅ **DONE (WP-12)** — see Wave-3 row; AC-5 export + send-to-payroll closed 2026-08-29.
 - [ ] Employee expense claims (§20 Odoo gap).
 - [ ] Recruitment ATS basics (job postings → candidate pipeline).
 

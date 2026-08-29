@@ -15,8 +15,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +29,52 @@ public class ExpenseClaimService {
 
     @Value("${hr.expenses.sod-enabled:true}")
     private String sodEnabled;
+
+    @Value("${hr.expenses.limit.MEAL:}")
+    private String mealLimit;
+    @Value("${hr.expenses.limit.TRANSPORT:}")
+    private String transportLimit;
+    @Value("${hr.expenses.limit.LODGING:}")
+    private String lodgingLimit;
+    @Value("${hr.expenses.limit.SUPPLIES:}")
+    private String suppliesLimit;
+    @Value("${hr.expenses.limit.OTHER:}")
+    private String otherLimit;
+
+    public Map<String, String> limits() {
+        return Map.of(
+                "MEAL", mealLimit == null ? "" : mealLimit,
+                "TRANSPORT", transportLimit == null ? "" : transportLimit,
+                "LODGING", lodgingLimit == null ? "" : lodgingLimit,
+                "SUPPLIES", suppliesLimit == null ? "" : suppliesLimit,
+                "OTHER", otherLimit == null ? "" : otherLimit);
+    }
+
+    public boolean isOverLimit(ExpenseClaim claim) {
+        BigDecimal limit = configuredLimit(claim.getCategory());
+        return limit != null && claim.getAmount() != null && claim.getAmount().compareTo(limit) > 0;
+    }
+
+    private BigDecimal configuredLimit(String category) {
+        String raw = limits().get(category);
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            BigDecimal parsed = new BigDecimal(raw.strip());
+            return parsed.signum() > 0 ? parsed : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private void requireDecisionNoteIfOverLimit(ExpenseClaim claim, String note) {
+        if (isOverLimit(claim) && (note == null || note.isBlank())) {
+            throw new BusinessRuleException(
+                    "Claim exceeds the configured limit; an HR decision note is required.",
+                    "EXPENSE_LIMIT_EXCEEDED_NEEDS_NOTE", HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+    }
 
     @Transactional
     public ExpenseClaim create(String username, ExpenseClaimApi.CreateClaimRequest request) {
@@ -76,10 +124,11 @@ public class ExpenseClaimService {
         String approver = actor();
         ExpenseClaim claim = requireById(claimId);
         requireSubmitted(claim);
+        requireDecisionNoteIfOverLimit(claim, note);
         if (sodActive()) {
             assertNotSelfApproval(claim, approver);
         }
-        claim.approve(approver);
+        claim.approve(approver, note);
         return expenseClaimRepository.save(claim);
     }
 
@@ -88,6 +137,7 @@ public class ExpenseClaimService {
         String approver = actor();
         ExpenseClaim claim = requireById(claimId);
         requireSubmitted(claim);
+        requireDecisionNoteIfOverLimit(claim, note);
         if (sodActive()) {
             assertNotSelfApproval(claim, approver);
         }

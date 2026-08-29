@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { formatDate } from '../../../core/date';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
@@ -69,12 +69,13 @@ interface CollectionTask { id:string; invoiceNumber:string; customerId:string; o
 interface CreditProfile { customerId:string; creditLimit:number; paymentTermsDays:number; creditHold:boolean; outstanding:number; available:number; version:number; }
 interface Target { id:string; scope:string; targetRefId:string; period:string; metric:string; targetValue:number; achievedValue:number; version:number; }
 interface CommissionRule { id:string; name:string; basis:string; percent:number; minAmount:number; active:boolean; validFrom:number|null; validTo:number|null; version:number; }
-interface CommissionStatement { repId:string; period:string; entries:CommissionStatementEntry[]; totalCommission:number; }
+interface CommissionStatement { repId:string; period:string; entries:CommissionStatementEntry[]; totalCommission:number; payrollSent:boolean; payrollSentAt:number|null; }
 interface CommissionStatementEntry { ruleId:string; ruleName:string; basisAmount:number; percent:number; commissionAmount:number; }
+interface PayrollSendResponse { repId:string; period:string; totalCommission:number; alreadySent:boolean; sentAt:number; }
 
 @Component({
   selector: 'app-sales-page',
-  imports: [ReactiveFormsModule, DecimalPipe, ModalDialogComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, ModalDialogComponent],
   templateUrl: './sales.page.html',
   styleUrl: './sales.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -107,6 +108,7 @@ export class SalesPage {
   readonly ruleDrawerOpen = signal(false);
   readonly statementRepId = signal('');
   readonly statementPeriod = signal(new Date().toISOString().slice(0, 7));
+  readonly sendingToPayroll = signal(false);
   readonly targetForm = new FormGroup({
     scope: new FormControl('REP', { nonNullable: true, validators: [Validators.required] }),
     targetRefId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -461,5 +463,39 @@ export class SalesPage {
         params: { repId: this.statementRepId(), period: this.statementPeriod() }
       })));
     } catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); }
+  }
+
+  async exportStatement() {
+    const repId = this.statementRepId();
+    const period = this.statementPeriod();
+    if (!repId || !period) return;
+    const blob = await firstValueFrom(this.http.get('/api/v1/sales/targets/commissions/export.xlsx', {
+      params: { repId, period },
+      responseType: 'blob'
+    }));
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'sales-commission-statement.xlsx';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  async sendToPayroll() {
+    const stmt = this.commissionStatement();
+    if (!stmt || stmt.payrollSent || this.sendingToPayroll()) return;
+    this.sendingToPayroll.set(true);
+    this.error.set(null);
+    try {
+      const result = await firstValueFrom(this.http.post<PayrollSendResponse>('/api/v1/sales/targets/commissions/send-to-payroll', {
+        repId: stmt.repId, period: stmt.period
+      }));
+      if (result.alreadySent) {
+        this.notification.info(this.i18n.t('sales.payrollAlreadySent'));
+      } else {
+        this.notification.success(this.i18n.t('sales.payrollSent'));
+      }
+      await this.loadStatement();
+    } catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); }
+    finally { this.sendingToPayroll.set(false); }
   }
 }

@@ -96,19 +96,7 @@ class EinvoicingSettingsServiceTest {
 
     @Test
     void listProvidersReturnsAllThree() {
-        when(providers.stream()).thenReturn(java.util.stream.Stream.of(
-                mockProvider(EinvoicingProviderType.EGYPT_ETA),
-                mockProvider(EinvoicingProviderType.KSA_ZATCA),
-                mockProvider(EinvoicingProviderType.NONE)));
-
-        // Rebuild service with real providers list
-        EinvoicingSettingsService realService = new EinvoicingSettingsService(settingsRepository,
-                java.util.List.of(
-                        mockProvider(EinvoicingProviderType.EGYPT_ETA),
-                        mockProvider(EinvoicingProviderType.KSA_ZATCA),
-                        mockProvider(EinvoicingProviderType.NONE)));
-
-        var result = realService.listProviders();
+        var result = service.listProviders();
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).type()).isEqualTo(EinvoicingProviderType.EGYPT_ETA);

@@ -50,7 +50,6 @@ class ReportScheduleExecutorTests {
     @Test
     void execute_renderAndDeliver_successMarked() {
         when(emailChannel.channel()).thenReturn(ReportSchedule.Channel.EMAIL);
-        when(whatsappChannel.channel()).thenReturn(ReportSchedule.Channel.WHATSAPP);
         when(renderer.render(any(ReportSchedule.class))).thenReturn(new byte[]{1, 2, 3, 'P', 'K'});
         when(emailChannel.deliver(any(), any(), any())).thenReturn(true);
         ReportSchedule schedule = schedule(ReportSchedule.Channel.EMAIL, ReportSchedule.ReportKind.TRENDS);
@@ -77,9 +76,8 @@ class ReportScheduleExecutorTests {
     @Test
     void execute_noMatchingChannel_marksFailed() {
         when(renderer.render(any(ReportSchedule.class))).thenReturn(new byte[]{1});
-        ReportSchedule schedule = schedule(ReportSchedule.Channel.WHATSAPP, ReportSchedule.ReportKind.TRENDS);
+        ReportSchedule schedule = schedule(ReportSchedule.Channel.EMAIL, ReportSchedule.ReportKind.TRENDS);
         var executor = new ReportScheduleExecutor(renderer, List.of());
-        when(renderer.render(schedule)).thenReturn(new byte[]{1});
 
         executor.execute(schedule);
 

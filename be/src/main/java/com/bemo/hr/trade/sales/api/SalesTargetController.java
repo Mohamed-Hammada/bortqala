@@ -1,8 +1,12 @@
 package com.bemo.hr.trade.sales.api;
 
+import com.bemo.hr.shared.security.AuthService;
 import com.bemo.hr.trade.sales.application.SalesTargetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +20,7 @@ import java.util.List;
 public class SalesTargetController {
 
     private final SalesTargetService service;
+    private final AuthService authService;
 
     @PostMapping
     public SalesTargetApi.TargetResponse createTarget(
@@ -54,5 +59,23 @@ public class SalesTargetController {
     public SalesTargetApi.CommissionStatementResponse statement(
             @RequestParam String repId, @RequestParam String period) {
         return service.computeStatement(repId, period);
+    }
+
+    @PostMapping("/commissions/send-to-payroll")
+    public SalesTargetApi.PayrollSendResponse sendToPayroll(
+            @Valid @RequestBody SalesTargetApi.SendToPayrollRequest req, Authentication auth) {
+        return service.sendToPayroll(req.repId(), req.period(), auth.getName(), auth.getName());
+    }
+
+    @GetMapping("/commissions/export.xlsx")
+    public ResponseEntity<byte[]> exportStatement(
+            @RequestParam String repId, @RequestParam String period, Authentication auth) {
+        String locale = authService.currentPreferences(auth.getName()).locale();
+        boolean arabic = locale != null && locale.startsWith("ar");
+        String filename = arabic ? "كشف-عمولات-المبيعات.xlsx" : "sales-commission-statement.xlsx";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(service.exportStatement(repId, period, locale));
     }
 }

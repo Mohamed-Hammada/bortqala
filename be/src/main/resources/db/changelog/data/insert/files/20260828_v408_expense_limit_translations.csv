@@ -1,0 +1,9 @@
+id;translation_key;locale;text_value
+v408-001-en;EXPENSE_LIMIT_EXCEEDED_NEEDS_NOTE;en-US;"Claim exceeds the configured limit; an HR decision note is required."
+v408-001-ar;EXPENSE_LIMIT_EXCEEDED_NEEDS_NOTE;ar-EG;تتجاوز المطالبة الحد المحدد؛ يجب إدخال ملاحظة قرار من الموارد البشرية.
+v408-002-en;expenses.limitExceeded;en-US;Above limit
+v408-002-ar;expenses.limitExceeded;ar-EG;فوق الحد
+v408-003-en;expenses.limitExceededHint;en-US;This claim exceeds the configured limit for its category. An HR decision note is required.
+v408-003-ar;expenses.limitExceededHint;ar-EG;تتجاوز هذه المطالبة الحد المحدد لفئتها. يلزم إدخال ملاحظة قرار من الموارد البشرية.
+v408-004-en;expenses.limitExceededApproveTitle;en-US;Approve Above-Limit Claim
+v408-004-ar;expenses.limitExceededApproveTitle;ar-EG;الموافقة على مطالبة فوق الحد

@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260828_v409_sales_commission_payouts
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: sales_commission_payouts
+      changes:
+        - createTable:
+            tableName: sales_commission_payouts
+            columns:
+              - column: { name: id, type: varchar(32), constraints: { primaryKey: true, primaryKeyName: pk_sales_commission_payouts } }
+              - column: { name: app_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: rep_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: period, type: varchar(7), constraints: { nullable: false } }
+              - column: { name: total_commission, type: "decimal(15,2)", constraints: { nullable: false } }
+              - column: { name: sent_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: sent_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: sales_commission_payouts
+            constraintName: uq_commission_payout_app_rep_period
+            columnNames: app_id, rep_id, period
+        - createIndex:
+            tableName: sales_commission_payouts
+            indexName: idx_sales_commission_payout_rep
+            columns:
+              - column:
+                  name: rep_id
+      rollback:
+        - dropTable:
+            tableName: sales_commission_payouts

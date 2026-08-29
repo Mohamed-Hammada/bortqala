@@ -1,5 +1,5 @@
 # Bemo ERP Feature & Architectural Status Matrix
-*Last Updated: 2026-08-21*
+*Last Updated: 2026-08-29*
 
 This document tracks the end-to-end implementation and verification status of all developer stories, architecture requirements, and business modules across:
 1. **`yalla.md`** (Advanced ERP Lifecycle & Dynamic Security Roadmap)
@@ -52,8 +52,16 @@ This document tracks the end-to-end implementation and verification status of al
 
 ## Verification & CI Gate Summary
 
-- **Backend Tests:** 100% clean execution (`BUILD SUCCESSFUL`).
-- **Frontend Unit Tests:** **428 / 428 passed** across 91 test suites (100% green).
-- **i18n Catalog Validation:** **4,215 keys verified** (`ar-EG` & `en-US`).
-- **Hardcoded Strings Scanner:** **0 violations** across 109 HTML templates and 221 TypeScript files.
+- **Backend Tests:** 100% clean execution — **1157 tests / 232 suites / 0 failures / 1 skipped** (`BUILD SUCCESSFUL`, `-PskipDockerTests`).
+- **Frontend Unit Tests:** **568 / 568 passed** across 114 test suites (100% green, Node 24).
+- **i18n Catalog Validation:** **5,214 literal keys verified** (`ar-EG` & `en-US`); **15,853 translation rows / 0 defects** (`check-translation-catalog`).
+- **Hardcoded Strings Scanner:** **0 violations** across 127 HTML templates and 275 TypeScript source files.
+- **Error-Code→Translation Gate:** **686 / 686** exception codes covered (0 missing).
 - **Production Build (`ng build`):** Production bundle compiled cleanly.
+- **Test-count floors:** BE ≥1157/≥232 (`be/tools/check-test-count.py`), FE ≥568/≥114 (`fe/tools/check-test-count.mjs`).
+
+### Session 25 (2026-08-29) — WP-12 AC-5 Commission Export + Send-to-Payroll; full-suite greening
+- **WP-12 AC-5 shipped**: `SalesCommissionPayout` entity + repo (unique `app_id, rep_id, period`); localized `GET /api/v1/sales/targets/commissions/export.xlsx` (ar/en filename + bilingual columns, 4 cols incl. rule/basisAmount/percent/commission); idempotent `POST /api/v1/sales/targets/commissions/send-to-payroll` (replay `alreadySent=true`, never double-saves); FE export/send buttons + sent-at badge + disabled-once + `payrollSent` metadata. Liquibase **V409** (`sales_commission_payouts`, registered both masters, `TIMESTAMP` + quoted `decimal(15,2)`), **V410** (translations, registered both masters).
+- **Committed-WIP test/artifact fixes** (from `e196a5b`, all now green): `ReportScheduleSchedulerTests` rewritten to real package-private API under `…/scheduled/application/` (old stale path removed both in tree and mirror); `ReportScheduleExecutorTests` ×2 (channel contract + redundant stub); `EinvoicingSettingsServiceTest.listProvidersReturnsAllThree` (nested-stub → plain list); V409 YAML unquoted `decimal(15,2)` → quoted (Liquibase parse); **v406 `content BLOB` → `bytea`** (H2-PG-mode compat, H2 rejects `BLOB`); `SIGN_CONTENT_MISMATCH` translation added (v401 CSV +2 rows). Driver: full-suite gate was broken by these WIP leftovers.
+- **Regression fix**: `ExpenseClaimServiceTests.is_over_limit_reports_true_when_exceeded` set `transportLimit` on a MEAL claim → now `mealLimit` (test bug only).
+- **Evidence**: BE **1157/232/0** (BUILD SUCCESSFUL 4m04s); FE **568/114/0** (expenses spec flaked once on parallel first run under load, green on isolated + 2 sequential full runs); error-codes **686/686**; catalog **15,853 rows PASS**; `check:i18n` **5,214 keys**; `check:hardcoded` **0** (127 HTML + 275 TS); `ng build` green; test-count floors raised (BE 1157/232, FE 568/114); WP-12 AC-5 ticked; `_INDEX.md` + `PROJECT_MAP.md` updated.

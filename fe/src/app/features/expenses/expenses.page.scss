@@ -116,6 +116,7 @@ table {
 .badge-approved { background: var(--success-soft); color: var(--success, #2e7d32); }
 .badge-rejected { background: var(--danger-soft); color: var(--danger); }
 .badge-reimbursed { background: var(--primary-soft, #e3f2fd); color: var(--primary, #1565c0); }
+.badge-limit { background: var(--danger-soft); color: var(--danger); margin-left: 0.5rem; }
 
 .field {
   margin-bottom: 1rem;
@@ -143,4 +144,8 @@ table {
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 1.25rem;
+}
+.amount-cell {
+  white-space: nowrap;
+  vertical-align: middle;
 }

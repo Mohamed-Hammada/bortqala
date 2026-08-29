@@ -3,15 +3,23 @@ package com.bemo.hr.trade.sales.application;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.trade.sales.api.SalesTargetApi;
 import com.bemo.hr.trade.sales.domain.CommissionRule;
+import com.bemo.hr.trade.sales.domain.SalesCommissionPayout;
 import com.bemo.hr.trade.sales.domain.SalesTarget;
 import com.bemo.hr.trade.sales.infrastructure.CommissionRuleRepository;
 import com.bemo.hr.trade.sales.infrastructure.SalesTargetRepository;
+import com.bemo.hr.trade.sales.infrastructure.SalesCommissionPayoutRepository;
 import com.bemo.hr.trade.sales.infrastructure.CustomerInvoiceRepository;
 import com.bemo.hr.trade.sales.infrastructure.CustomerReceiptRepository;
+import com.bemo.hr.shared.i18n.TranslationService;
+import com.bemo.hr.reporting.application.ExcelExportOptions;
+import com.bemo.hr.reporting.infrastructure.ExcelExportSupport;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -29,6 +37,8 @@ public class SalesTargetService {
     private final CommissionRuleRepository ruleRepository;
     private final CustomerInvoiceRepository invoiceRepository;
     private final CustomerReceiptRepository receiptRepository;
+    private final SalesCommissionPayoutRepository payoutRepository;
+    private final TranslationService translationService;
 
     @Transactional
     public SalesTargetApi.TargetResponse createTarget(SalesTargetApi.TargetRequest req, String appId) {
@@ -112,7 +122,54 @@ public class SalesTargetService {
             total = total.add(commission);
         }
 
-        return new SalesTargetApi.CommissionStatementResponse(repId, period, entries, total);
+        SalesCommissionPayout existing = payoutRepository.findByRepIdAndPeriod(repId, period).orElse(null);
+        return new SalesTargetApi.CommissionStatementResponse(
+                repId, period, entries, total,
+                existing != null, existing != null ? existing.getSentAt().toEpochMilli() : null);
+    }
+
+    @Transactional
+    public SalesTargetApi.PayrollSendResponse sendToPayroll(String repId, String period, String appId, String username) {
+        var existing = payoutRepository.findByRepIdAndPeriod(repId, period);
+        if (existing.isPresent()) {
+            return new SalesTargetApi.PayrollSendResponse(
+                    repId, period, existing.get().getTotalCommission(), true,
+                    existing.get().getSentAt().toEpochMilli());
+        }
+        SalesTargetApi.CommissionStatementResponse statement = computeStatement(repId, period);
+        SalesCommissionPayout payout = payoutRepository.save(new SalesCommissionPayout(
+                UUID.randomUUID().toString(), appId, repId, period, statement.totalCommission(),
+                username == null || username.isBlank() ? "system" : username));
+        return new SalesTargetApi.PayrollSendResponse(
+                repId, period, payout.getTotalCommission(), false,
+                payout.getSentAt().toEpochMilli());
+    }
+
+    public byte[] exportStatement(String repId, String period, String locale) {
+        var options = new ExcelExportOptions(locale, null);
+        var messages = ExcelExportSupport.messages(translationService, options);
+        SalesTargetApi.CommissionStatementResponse statement = computeStatement(repId, period);
+        var rows = statement.entries().stream().<List<?>>map(e -> List.of(
+                e.ruleName(), e.basisAmount(), e.percent() + "%", e.commissionAmount())).toList();
+        try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
+            var sheet = ExcelExportSupport.sheet(workbook,
+                    ExcelExportSupport.text(messages, "export.sheet.commissions"), options.rightToLeft());
+            var headers = List.of("rule", "basisAmount", "percent", "commission")
+                    .stream().map(key -> ExcelExportSupport.text(messages, "export.column." + key)).toList();
+            ExcelExportSupport.writeHeader(sheet, headers);
+            var styles = ExcelExportSupport.styles(workbook);
+            int rowIndex = 1;
+            if (rows.isEmpty()) {
+                ExcelExportSupport.writeRow(sheet, rowIndex, List.of("", BigDecimal.ZERO, "", BigDecimal.ZERO), styles);
+                rowIndex++;
+            }
+            for (var values : rows) ExcelExportSupport.writeRow(sheet, rowIndex++, values, styles);
+            ExcelExportSupport.finishTable(sheet, rowIndex - 1, headers.size(), "CommissionStatementTable", options);
+            workbook.write(output);
+            return output.toByteArray();
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not create commission statement workbook.", exception);
+        }
     }
 
     private BigDecimal computeBasisAmount(CommissionRule rule, String repId,

@@ -1,11 +1,14 @@
 package com.bemo.hr.trade.sales.application;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.i18n.TranslationService;
 import com.bemo.hr.trade.sales.api.SalesTargetApi;
 import com.bemo.hr.trade.sales.domain.CommissionRule;
+import com.bemo.hr.trade.sales.domain.SalesCommissionPayout;
 import com.bemo.hr.trade.sales.domain.SalesTarget;
 import com.bemo.hr.trade.sales.infrastructure.CommissionRuleRepository;
 import com.bemo.hr.trade.sales.infrastructure.SalesTargetRepository;
+import com.bemo.hr.trade.sales.infrastructure.SalesCommissionPayoutRepository;
 import com.bemo.hr.trade.sales.infrastructure.CustomerInvoiceRepository;
 import com.bemo.hr.trade.sales.infrastructure.CustomerReceiptRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -29,6 +33,8 @@ class SalesTargetServiceTests {
     @Mock private CommissionRuleRepository ruleRepository;
     @Mock private CustomerInvoiceRepository invoiceRepository;
     @Mock private CustomerReceiptRepository receiptRepository;
+    @Mock private SalesCommissionPayoutRepository payoutRepository;
+    @Mock private TranslationService translationService;
     @InjectMocks private SalesTargetService service;
 
     private static final String APP_ID = "test-app";
@@ -90,6 +96,7 @@ class SalesTargetServiceTests {
     @Test
     void computeStatement_no_rules_returns_zero() {
         when(ruleRepository.findByActiveTrue()).thenReturn(List.of());
+        when(payoutRepository.findByRepIdAndPeriod("emp-1", "2026-08")).thenReturn(Optional.empty());
 
         SalesTargetApi.CommissionStatementResponse resp = service.computeStatement("emp-1", "2026-08");
 
@@ -97,6 +104,7 @@ class SalesTargetServiceTests {
         assertEquals("2026-08", resp.period());
         assertTrue(resp.entries().isEmpty());
         assertEquals(BigDecimal.ZERO, resp.totalCommission());
+        assertFalse(resp.payrollSent());
     }
 
     @Test
@@ -105,11 +113,75 @@ class SalesTargetServiceTests {
                 new BigDecimal("5.00"), new BigDecimal("50000"), true, null, null);
         when(ruleRepository.findByActiveTrue()).thenReturn(List.of(rule));
         when(invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc()).thenReturn(List.of());
+        when(payoutRepository.findByRepIdAndPeriod("emp-1", "2026-08")).thenReturn(Optional.empty());
 
         SalesTargetApi.CommissionStatementResponse resp = service.computeStatement("emp-1", "2026-08");
 
         assertTrue(resp.entries().isEmpty());
         assertEquals(BigDecimal.ZERO, resp.totalCommission());
+        assertFalse(resp.payrollSent());
+    }
+
+    @Test
+    void computeStatement_marks_payroll_sent_when_payout_exists() {
+        SalesCommissionPayout payout = new SalesCommissionPayout("p1", APP_ID, "emp-1", "2026-08",
+                new BigDecimal("125.00"), "admin");
+        when(payoutRepository.findByRepIdAndPeriod("emp-1", "2026-08")).thenReturn(Optional.of(payout));
+
+        SalesTargetApi.CommissionStatementResponse resp = service.computeStatement("emp-1", "2026-08");
+
+        assertTrue(resp.payrollSent());
+        assertEquals(payout.getSentAt().toEpochMilli(), resp.payrollSentAt());
+    }
+
+    @Test
+    void sendToPayroll_firstSend_creates_payout_and_reports_false() {
+        SalesCommissionPayout saved = new SalesCommissionPayout("p1", APP_ID, "emp-1", "2026-08",
+                new BigDecimal("100.00"), "admin");
+        when(payoutRepository.findByRepIdAndPeriod("emp-1", "2026-08")).thenReturn(Optional.empty());
+        when(payoutRepository.save(any(SalesCommissionPayout.class))).thenReturn(saved);
+
+        SalesTargetApi.PayrollSendResponse resp = service.sendToPayroll("emp-1", "2026-08", APP_ID, "admin");
+
+        assertFalse(resp.alreadySent());
+        assertEquals(new BigDecimal("100.00"), resp.totalCommission());
+        assertEquals(saved.getSentAt().toEpochMilli(), resp.sentAt());
+        verify(payoutRepository).save(any(SalesCommissionPayout.class));
+    }
+
+    @Test
+    void sendToPayroll_secondSend_is_idempotent_replay() {
+        SalesCommissionPayout existing = new SalesCommissionPayout("p1", APP_ID, "emp-1", "2026-08",
+                new BigDecimal("100.00"), "admin");
+        when(payoutRepository.findByRepIdAndPeriod("emp-1", "2026-08")).thenReturn(Optional.of(existing));
+
+        SalesTargetApi.PayrollSendResponse resp = service.sendToPayroll("emp-1", "2026-08", APP_ID, "admin");
+
+        assertTrue(resp.alreadySent());
+        assertEquals(new BigDecimal("100.00"), resp.totalCommission());
+        verify(payoutRepository, never()).save(any(SalesCommissionPayout.class));
+    }
+
+    @Test
+    void exportStatement_produces_workbook_bytes() {
+        CommissionRule rule = new CommissionRule("r1", APP_ID, "Std 5%", CommissionRule.Basis.COLLECTED,
+                new BigDecimal("5.00"), BigDecimal.ZERO, true, null, null);
+        when(ruleRepository.findByActiveTrue()).thenReturn(List.of(rule));
+        when(receiptRepository.findAllByOrderByReceiptDateDescCreatedAtDesc()).thenReturn(List.of());
+        when(payoutRepository.findByRepIdAndPeriod("emp-1", "2026-08")).thenReturn(Optional.empty());
+        when(translationService.bundle(anyString())).thenReturn(new TranslationService.TranslationBundle("en-US", APP_ID, java.util.Map.of(
+                "export.sheet.commissions", "Commission statements",
+                "export.column.rule", "Rule",
+                "export.column.basisAmount", "Basis amount",
+                "export.column.percent", "Percent",
+                "export.column.commission", "Commission")));
+
+        byte[] bytes = service.exportStatement("emp-1", "2026-08", "en-US");
+
+        assertNotNull(bytes);
+        assertTrue(bytes.length > 0);
+        assertEquals(0x50, bytes[0]);
+        assertEquals(0x4B, bytes[1]);
     }
 
     @Test

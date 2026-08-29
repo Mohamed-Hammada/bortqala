@@ -18,6 +18,7 @@ export interface ExpenseClaimResponse {
   decidedAt: number | null;
   decisionNote: string | null;
   reimbursementReference: string | null;
+  limitExceeded: boolean;
   createdAt: number;
   updatedAt: number;
 }

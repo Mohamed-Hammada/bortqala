@@ -155,3 +155,5 @@ v401-212-en;esign.method.TYPED;en-US;Typed signature
 v401-212-ar;esign.method.TYPED;ar-EG;توقيع مكتوب
 v401-213-en;esign.method.UPLOADED;en-US;Uploaded signature
 v401-213-ar;esign.method.UPLOADED;ar-EG;توقيع مرفوع
+v401-214-en;SIGN_CONTENT_MISMATCH;en-US;Signature content does not match the packet step
+v401-214-ar;SIGN_CONTENT_MISMATCH;ar-EG;محتوى التوقيع لا يطابق خطوة الطلب

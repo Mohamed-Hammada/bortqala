@@ -196,6 +196,79 @@ describe('SalesPage accounts receivable and quotations', () => {
     expect(component.returnsByOrder()['so-1'][0].creditNoteNumber).toBe('CN-1');
   });
 
+  it('loads the commission statement with payroll-sent metadata', async () => {
+    component.statementRepId.set('emp-1');
+    component.statementPeriod.set('2026-08');
+    const promise = component.loadStatement();
+    const request = http.expectOne(r => r.url === '/api/v1/sales/targets/commissions' && r.params.get('repId') === 'emp-1' && r.params.get('period') === '2026-08');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      repId: 'emp-1',
+      period: '2026-08',
+      entries: [{ ruleId: 'r1', ruleName: 'Std 5%', basisAmount: 2000, percent: 5, commissionAmount: 100 }],
+      totalCommission: 100,
+      payrollSent: true,
+      payrollSentAt: 1724600000000,
+    });
+    await promise;
+    const stmt = component.commissionStatement();
+    expect(stmt?.payrollSent).toBe(true);
+    expect(stmt?.totalCommission).toBe(100);
+  });
+
+  it('downloads the commission statement export as an xlsx blob', async () => {
+    component.statementRepId.set('emp-1');
+    component.statementPeriod.set('2026-08');
+    const promise = component.exportStatement();
+    const request = http.expectOne(r => r.url === '/api/v1/sales/targets/commissions/export.xlsx' && r.params.get('repId') === 'emp-1' && r.params.get('period') === '2026-08');
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['PK\u0003\u0004'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    await promise;
+  });
+
+  it('sends the statement to payroll once and blocks a second click', async () => {
+    component.statementRepId.set('emp-1');
+    component.statementPeriod.set('2026-08');
+    component.commissionStatement.set({
+      repId: 'emp-1',
+      period: '2026-08',
+      entries: [],
+      totalCommission: 0,
+      payrollSent: false,
+      payrollSentAt: null,
+    });
+    const promise = component.sendToPayroll();
+    const request = http.expectOne('/api/v1/sales/targets/commissions/send-to-payroll');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ repId: 'emp-1', period: '2026-08' });
+    request.flush({ repId: 'emp-1', period: '2026-08', totalCommission: 0, alreadySent: false, sentAt: 1724600000000 });
+    await Promise.resolve();
+    await Promise.resolve();
+    http.expectOne(r => r.url === '/api/v1/sales/targets/commissions' && r.params.get('repId') === 'emp-1' && r.params.get('period') === '2026-08').flush({
+      repId: 'emp-1',
+      period: '2026-08',
+      entries: [],
+      totalCommission: 0,
+      payrollSent: true,
+      payrollSentAt: 1724600000000,
+    });
+    await promise;
+    expect(component.sendingToPayroll()).toBe(false);
+
+    component.commissionStatement.set({
+      repId: 'emp-1',
+      period: '2026-08',
+      entries: [],
+      totalCommission: 0,
+      payrollSent: true,
+      payrollSentAt: 1724600000000,
+    });
+    component.activeMainTab.set('COMMISSIONS');
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('button[disabled]');
+    expect(button).toBeTruthy();
+  });
+
   function flushLoad(orders: SalesOrder[] = []) {
     http.expectOne('/api/v1/trade/sales/orders').flush(orders);
     http.expectOne('/api/v1/trade/sales/quotations').flush([

@@ -66,4 +66,37 @@ describe('ExpensesPage', () => {
     await fixture.whenStable();
     expect(component.categories).toEqual(['MEAL', 'TRANSPORT', 'LODGING', 'SUPPLIES', 'OTHER']);
   });
+
+  it('should render above-limit badge and open forced-note approve modal', async () => {
+    fixture.detectChanges();
+    const mineReq = httpMock.expectOne('/api/v1/expenses');
+    mineReq.flush([
+      { id: '1', status: 'SUBMITTED', amount: 250, category: 'MEAL', spentOn: '2026-08-15', currency: 'EGP', limitExceeded: true } as any,
+    ]);
+    flushAll();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const badge = fixture.nativeElement.querySelector('.badge-limit');
+    expect(badge).toBeTruthy();
+
+    component.openApproveReject({ id: '1', status: 'SUBMITTED', limitExceeded: true } as any, 'approve');
+    expect(component.approveOpen()).toBe(true);
+    expect(component.approveTarget()?.id).toBe('1');
+  });
+
+  it('should approve over-limit claim only with a note', async () => {
+    fixture.detectChanges();
+    flushAll();
+    await fixture.whenStable();
+    component.approveTarget.set({ id: '1', status: 'SUBMITTED', limitExceeded: true } as any);
+    component.approveOpen.set(true);
+    component.approveNote.setValue('Approved for the business trip');
+    component.approveFromModal();
+    const req = httpMock.expectOne('/api/v1/expenses/1/approve');
+    expect(req.request.body).toEqual({ note: 'Approved for the business trip' });
+    req.flush({ id: '1', status: 'APPROVED', limitExceeded: true } as any);
+    flushAll();
+    await fixture.whenStable();
+    expect(component.approveOpen()).toBe(false);
+  });
 });

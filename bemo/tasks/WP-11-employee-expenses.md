@@ -20,6 +20,6 @@ Employees currently report costs on paper. Need: submit claim with receipt photo
 - [x] **AC-1** Employee A cannot list/open/approve Employee B's claim (integration test proves 404/403, not UI hiding).
 - [x] **AC-2** State machine matrix green: only DRAFT editable; submit→approve→reimburse happy path; reject requires note; reimburse only from APPROVED.
 - [x] **AC-3** Self-approval blocked with translated error (SoD parity with payroll F-003).
-- [ ] **AC-4** Claim above configured limit renders warning badge and forces HR decision note; limit absent → no warning. *(Future — requires hr.expenses.limit.<CATEGORY> properties + frontend badge)*
+- [x] **AC-4** Claim above configured limit renders warning badge and forces HR decision note; limit absent → no warning. ※Implemented (V408): per-category `hr.expenses.limit.<CATEGORY>` properties, over-limit flag in responses, `.badge-limit` badge + forced-note approve modal, `EXPENSE_LIMIT_*` codes en/ar (2026-08-29).
 - [x] **AC-5** Receipt upload enforces ≤5MB + allowed types client AND server side; remove works before submit.
 - [x] **AC-6** Reimbursement creates exactly one partner-ledger credit visible in party statement; replaying endpoint idempotent.

@@ -45,7 +45,14 @@
             <tr>
               <td>{{ categoryLabel(claim.category) }}</td>
               <td>{{ claim.spentOn }}</td>
-              <td>{{ formatAmount(claim.amount, claim.currency) }}</td>
+              <td class="amount-cell">
+                {{ formatAmount(claim.amount, claim.currency) }}
+                @if (claim.limitExceeded) {
+                  <span class="badge badge-limit" title="{{ i18n.t('expenses.limitExceededHint') }}">
+                    {{ i18n.t('expenses.limitExceeded') }}
+                  </span>
+                }
+              </td>
               <td class="desc-cell">{{ claim.description || '—' }}</td>
               <td>
                 <span class="badge" [class]="'badge-' + claim.status.toLowerCase()">
@@ -144,6 +151,23 @@
       <button class="button secondary" (click)="rejectOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
       <button class="button danger" (click)="rejectClaim()" [disabled]="processing() === rejectTarget()?.id">
         {{ i18n.t('common.reject') }}
+      </button>
+    </div>
+  </app-modal-dialog>
+}
+
+@if (approveOpen() && approveTarget()) {
+  <app-modal-dialog (close)="approveOpen.set(false)">
+    <h2>{{ i18n.t('expenses.limitExceededApproveTitle') }}</h2>
+    <p class="muted">{{ i18n.t('expenses.limitExceededHint') }}</p>
+    <div class="field">
+      <label>{{ i18n.t('expenses.decisionNote') }} *</label>
+      <textarea [formControl]="approveNote" rows="3"></textarea>
+    </div>
+    <div class="drawer-actions">
+      <button class="button secondary" (click)="approveOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+      <button class="button success" (click)="approveFromModal()" [disabled]="processing() === approveTarget()?.id || !approveNote.value.trim()">
+        {{ i18n.t('common.approve') }}
       </button>
     </div>
   </app-modal-dialog>

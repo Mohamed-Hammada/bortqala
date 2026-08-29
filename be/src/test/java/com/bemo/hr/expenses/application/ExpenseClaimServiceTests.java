@@ -108,6 +108,81 @@ class ExpenseClaimServiceTests {
     }
 
     @Test
+    void approve_over_limit_without_note_throws() {
+        when(employeeRepository.findById(alice.getId())).thenReturn(Optional.of(alice));
+        ExpenseClaim claim = buildClaim(alice.getId(), ExpenseClaim.Status.SUBMITTED);
+        claim.setAmount(new BigDecimal("250.00"));
+        when(expenseClaimRepository.findById("clm-1")).thenReturn(Optional.of(claim));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("hr-admin", null));
+        setField(service, "mealLimit", "200");
+
+        assertThatThrownBy(() -> service.approve("clm-1", null))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(code(ex)).isEqualTo("EXPENSE_LIMIT_EXCEEDED_NEEDS_NOTE"));
+    }
+
+    @Test
+    void reject_over_limit_without_note_throws() {
+        when(employeeRepository.findById(alice.getId())).thenReturn(Optional.of(alice));
+        ExpenseClaim claim = buildClaim(alice.getId(), ExpenseClaim.Status.SUBMITTED);
+        claim.setAmount(new BigDecimal("250.00"));
+        when(expenseClaimRepository.findById("clm-1")).thenReturn(Optional.of(claim));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("hr-admin", null));
+        setField(service, "mealLimit", "200");
+
+        assertThatThrownBy(() -> service.reject("clm-1", "  "))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(code(ex)).isEqualTo("EXPENSE_LIMIT_EXCEEDED_NEEDS_NOTE"));
+    }
+
+    @Test
+    void approve_over_limit_with_note_persists_note_and_succeeds() {
+        when(employeeRepository.findById(alice.getId())).thenReturn(Optional.of(alice));
+        ExpenseClaim claim = buildClaim(alice.getId(), ExpenseClaim.Status.SUBMITTED);
+        claim.setAmount(new BigDecimal("250.00"));
+        when(expenseClaimRepository.findById("clm-1")).thenReturn(Optional.of(claim));
+        when(expenseClaimRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("hr-admin", null));
+        setField(service, "mealLimit", "200");
+
+        ExpenseClaim result = service.approve("clm-1", "Approved above limit for the trip");
+        assertThat(result.getStatus()).isEqualTo("APPROVED");
+        assertThat(result.getDecisionNote()).isEqualTo("Approved above limit for the trip");
+    }
+
+    @Test
+    void approve_within_limit_no_note_required_even_with_limit_configured() {
+        when(employeeRepository.findById(alice.getId())).thenReturn(Optional.of(alice));
+        ExpenseClaim claim = buildClaim(alice.getId(), ExpenseClaim.Status.SUBMITTED);
+        when(expenseClaimRepository.findById("clm-1")).thenReturn(Optional.of(claim));
+        when(expenseClaimRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("hr-admin", null));
+        setField(service, "mealLimit", "200");
+
+        ExpenseClaim result = service.approve("clm-1", null);
+        assertThat(result.getStatus()).isEqualTo("APPROVED");
+    }
+
+    @Test
+    void is_over_limit_reports_false_when_limit_absent() {
+        ExpenseClaim claim = buildClaim(alice.getId(), ExpenseClaim.Status.DRAFT);
+        claim.setAmount(new BigDecimal("9999.99"));
+        assertThat(service.isOverLimit(claim)).isFalse();
+    }
+
+    @Test
+    void is_over_limit_reports_true_when_exceeded() {
+        ExpenseClaim claim = buildClaim(alice.getId(), ExpenseClaim.Status.DRAFT);
+        claim.setAmount(new BigDecimal("9999.99"));
+        setField(service, "mealLimit", "5000");
+        assertThat(service.isOverLimit(claim)).isTrue();
+    }
+
+    @Test
     void reimburse_only_from_approved_creates_advance_entry() {
         when(employeeRepository.findById(alice.getId())).thenReturn(Optional.of(alice));
         ExpenseClaim claim = buildClaim(alice.getId(), ExpenseClaim.Status.APPROVED);

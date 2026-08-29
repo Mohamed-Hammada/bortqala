@@ -41,6 +41,6 @@ public class ExpenseClaimApi {
             String category, String spentOn, BigDecimal amount, String currency,
             String description, String receiptName, String receiptContentType, Long receiptSize,
             String status, String approverId, Long decidedAt, String decisionNote,
-            String reimbursementReference, long createdAt, long updatedAt
+            String reimbursementReference, boolean limitExceeded, long createdAt, long updatedAt
     ) {}
 }

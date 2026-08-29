@@ -69,6 +69,9 @@ export class ExpensesPage {
   readonly rejectTarget = signal<ExpenseClaimResponse | null>(null);
   readonly rejectOpen = signal(false);
   readonly rejectNote = new FormControl('', { nonNullable: true });
+  readonly approveTarget = signal<ExpenseClaimResponse | null>(null);
+  readonly approveOpen = signal(false);
+  readonly approveNote = new FormControl('', { nonNullable: true });
 
   readonly categories: ExpenseCategory[] = ['MEAL', 'TRANSPORT', 'LODGING', 'SUPPLIES', 'OTHER'];
   readonly statuses: ExpenseStatus[] = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'REIMBURSED'];
@@ -181,7 +184,13 @@ export class ExpensesPage {
 
   openApproveReject(claim: ExpenseClaimResponse, action: 'approve' | 'reject') {
     if (action === 'approve') {
-      this.approveClaim(claim);
+      if (claim.limitExceeded) {
+        this.approveTarget.set(claim);
+        this.approveNote.reset();
+        this.approveOpen.set(true);
+      } else {
+        void this.approveClaim(claim);
+      }
     } else {
       this.rejectTarget.set(claim);
       this.rejectNote.reset();
@@ -189,17 +198,24 @@ export class ExpensesPage {
     }
   }
 
-  async approveClaim(claim: ExpenseClaimResponse) {
+  async approveClaim(claim: ExpenseClaimResponse, note?: string) {
     this.processing.set(claim.id);
     try {
-      await this.expenseService.approve(claim.id);
+      await this.expenseService.approve(claim.id, note);
       this.notification.success(this.i18n.t('expenses.approveSuccess'));
+      this.approveOpen.set(false);
       await this.load();
     } catch (e) {
       this.notification.error(apiErrorMessage(e, this.i18n));
     } finally {
       this.processing.set(null);
     }
+  }
+
+  approveFromModal() {
+    const target = this.approveTarget();
+    if (!target) return;
+    void this.approveClaim(target, this.approveNote.value || undefined);
   }
 
   async rejectClaim() {

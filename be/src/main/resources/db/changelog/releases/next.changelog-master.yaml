@@ -922,4 +922,13 @@ databaseChangeLog:
   # WP-34 AC-3 + WP-29 AC-2: SSO inactive-user + webhook signature error codes
   - include:
       file: db/changelog/data/insert/20260828_v407_sso_webhook_error_translations.yaml
+  # WP-11 AC-4: expense per-category limit — error code + UI keys (badge + forced HR note)
+  - include:
+      file: db/changelog/data/insert/20260828_v408_expense_limit_translations.yaml
+  # WP-12 AC-5: sales commission payout ledger (idempotent send-to-payroll)
+  - include:
+      file: db/changelog/schema/create/20260828_v409_sales_commission_payouts.yaml
+  # WP-12 AC-5: commission statement export + send-to-payroll translations
+  - include:
+      file: db/changelog/data/insert/20260828_v410_sales_commission_payout_translations.yaml
 

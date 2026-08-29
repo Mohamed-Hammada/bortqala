@@ -114,6 +114,7 @@ public class ExpenseClaimController {
                 c.getDecidedAt() != null ? c.getDecidedAt().toEpochMilli() : null,
                 c.getDecisionNote(),
                 c.getReimbursementReference(),
+                expenseClaimService.isOverLimit(c),
                 c.getCreatedAt() != null ? c.getCreatedAt().toEpochMilli() : 0,
                 c.getUpdatedAt() != null ? c.getUpdatedAt().toEpochMilli() : 0);
     }

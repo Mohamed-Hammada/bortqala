@@ -392,6 +392,15 @@
           <tfoot><tr><td colspan="3"><strong>{{ i18n.t('sales.totalCommission') }}</strong></td><td class="ltr"><strong>{{ stmt.totalCommission | number:'1.2-2' }}</strong></td></tr></tfoot>
         </table>
       </div>
+      <div class="filter-row" style="margin-top:.75rem">
+        <button class="button" (click)="exportStatement()">{{ i18n.t('sales.exportStatement') }}</button>
+        <button class="button primary" [disabled]="stmt.payrollSent || sendingToPayroll()" (click)="sendToPayroll()">
+          {{ stmt.payrollSent ? i18n.t('sales.payrollAlreadySent') : (sendingToPayroll() ? i18n.t('sales.sendingToPayroll') : i18n.t('sales.sendToPayroll')) }}
+        </button>
+        @if (stmt.payrollSent && stmt.payrollSentAt) {
+          <span class="badge-limit">{{ i18n.t('sales.payrollSentAt') }} {{ stmt.payrollSentAt | date:'short' }}</span>
+        }
+      </div>
     }
 
     <div class="section-title" style="margin-top:1.5rem"><h2>{{ i18n.t('sales.commissions') }} — {{ i18n.t('sales.tabOrders') }}</h2></div>

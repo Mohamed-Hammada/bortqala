@@ -31,7 +31,7 @@
 | File | Title | Pri | Owner track | Effort |
 |---|---|---|---|---|
 | WP-11 | Employee expense claims | 🟡 | Full-stack F | 4d |
-| WP-12 | Sales targets & commissions engine | 🟡 | Backend D | 4d |
+| WP-12 | Sales targets & commissions engine ✅ **DONE 2026-08-29** (AC-1..AC-5 all MET: localized `GET /api/v1/sales/targets/commissions/export.xlsx` ar/en workbook via `translateService`; idempotent `POST …/commissions/send-to-payroll` guarded by `sales_commission_payouts` unique app_id/rep_id/period (V409/V410) — replay `alreadySent=true`, UI disabled; whole suite greened this session incl. fixes to committed WIP tests: scheduler spec path rewrite, `ReportScheduleExecutorTests` ×2, `EinvoicingSettingsServiceTest`, V409 decimal-quote + v406 BLOB→bytea H2 fixes, `SIGN_CONTENT_MISMATCH` translation — 1157 BE / 568 FE green 2026-08-29) | 🟡 | Backend D | closed |
 | WP-15 | Medical clinic MVP slice | 🟢 | Squad H+E | ~3wk |
 | WP-16 | Agri-export documentation pack 🟠 **QA 2026-08-28** (AC-2/3/4 MET — compliance window, strict transitions, aging; AC-1 doc generators NOT MET — no print/PDF at all; AC-5 PARTIAL — gate MET, bilingual print missing) | 🟢 | Full-stack B | ~2wk |
 | WP-17 | Manpower-supply client billing | 🟢 | Backend D | ~8d |
