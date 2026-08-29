@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * path evicts, and the TTL is configurable via {@code hr.cache.ttl-seconds}.
  */
 @SpringBootTest(properties = "hr.cache.ttl-seconds=1")
+@org.springframework.context.annotation.Import(CacheBehaviorIntegrationTests.ProbeConfig.class)
 class CacheBehaviorIntegrationTests {
 
     @TestConfiguration
@@ -34,8 +35,8 @@ class CacheBehaviorIntegrationTests {
     }
 
     static class ProbeCacheService {
-        final AtomicInteger dashboardCalls = new AtomicInteger();
-        final AtomicInteger catalogCalls = new AtomicInteger();
+        private final AtomicInteger dashboardCalls = new AtomicInteger();
+        private final AtomicInteger catalogCalls = new AtomicInteger();
 
         @Cacheable(cacheNames = "dashboard", key = "'probe-dashboard'")
         public String dashboardSummary() {
@@ -52,6 +53,19 @@ class CacheBehaviorIntegrationTests {
         @CacheEvict(cacheNames = {"dashboard", "accessCatalog"}, allEntries = true)
         public void writePathInvalidesAggregations() {
             // mirrors TranslationAdminService @CacheEvict pattern
+        }
+
+        public int getDashboardCalls() {
+            return dashboardCalls.get();
+        }
+
+        public int getCatalogCalls() {
+            return catalogCalls.get();
+        }
+
+        public void resetCalls() {
+            dashboardCalls.set(0);
+            catalogCalls.set(0);
         }
     }
 
@@ -72,19 +86,20 @@ class CacheBehaviorIntegrationTests {
         if (catalog != null) {
             catalog.clear();
         }
-        probe.dashboardCalls.set(0);
-        probe.catalogCalls.set(0);
+        if (probe != null) {
+            probe.resetCalls();
+        }
     }
 
     @Test
     void secondIdenticalDashboardCallWithinTtlHitsCache() {
         probe.dashboardSummary();
         probe.dashboardSummary();
-        assertThat(probe.dashboardCalls).hasValue(1);
+        assertThat(probe.getDashboardCalls()).isEqualTo(1);
 
         probe.catalogLookup();
         probe.catalogLookup();
-        assertThat(probe.catalogCalls).hasValue(1);
+        assertThat(probe.getCatalogCalls()).isEqualTo(1);
     }
 
     @Test
@@ -92,7 +107,7 @@ class CacheBehaviorIntegrationTests {
         probe.dashboardSummary();
         probe.writePathInvalidesAggregations();
         probe.dashboardSummary();
-        assertThat(probe.dashboardCalls).hasValue(2);
+        assertThat(probe.getDashboardCalls()).isEqualTo(2);
     }
 
     @Test
@@ -101,13 +116,13 @@ class CacheBehaviorIntegrationTests {
 
         probe.dashboardSummary(); // entry cached
         long deadline = System.currentTimeMillis() + 5_000;
-        while (probe.dashboardCalls.get() < 2 && System.currentTimeMillis() < deadline) {
+        while (probe.getDashboardCalls() < 2 && System.currentTimeMillis() < deadline) {
             Thread.sleep(100);
             probe.dashboardSummary();
         }
         // With the configured 1s TTL the entry expires and the call recomputes;
         // with the 300s default it would never recompute inside the 5s budget.
-        assertThat(probe.dashboardCalls.get())
+        assertThat(probe.getDashboardCalls())
                 .as("cached value must expire after the configured ttl-seconds")
                 .isGreaterThanOrEqualTo(2);
     }

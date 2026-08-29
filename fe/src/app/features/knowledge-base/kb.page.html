@@ -27,8 +27,9 @@
             </span>
             <span class="views">{{ a.views }} {{ i18n.t('kb.views') }}</span>
           </div>
-          <h3>{{ i18n.locale() === 'ar-EG' ? a.titleAr : a.titleEn }}</h3>
-          <p class="tags" *ngIf="a.tags">{{ a.tags }}</p>
+          @if (a.tags) {
+            <p class="tags">{{ a.tags }}</p>
+          }
           <div class="article-actions" (click)="$event.stopPropagation()">
             @if (!a.published) {
               <button class="button small" (click)="publishArticle(a.id)">{{ i18n.t('kb.publish') }}</button>

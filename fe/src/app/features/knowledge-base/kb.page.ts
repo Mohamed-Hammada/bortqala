@@ -8,7 +8,7 @@ import { KbArticle } from '../helpdesk/helpdesk.models';
 @Component({
   selector: 'app-kb-page',
   standalone: true,
-  imports: [DatePipe],
+  imports: [],
   templateUrl: './kb.page.html',
   styleUrl: './kb.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

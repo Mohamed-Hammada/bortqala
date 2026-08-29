@@ -1,73 +1,73 @@
-id;message_key;locale;message_value;description
-v421-001;PHARM_ITEM_NOT_FOUND;ar-EG;تعذر العثور على الصنف في دليل الصيدلية;
-v421-002;PHARM_ITEM_NOT_FOUND;en-US;Drug item was not found in pharmacy catalog;
-v421-003;PHARM_PRESCRIPTION_NOT_FOUND;ar-EG;تعذر العثور على سجل الروشتة الطبية;
-v421-004;PHARM_PRESCRIPTION_NOT_FOUND;en-US;Prescription record was not found;
-v421-005;PHARM_BATCH_EXPIRED;ar-EG;لا يمكن صرف تشغيلة دواء منتهية الصلاحية;
-v421-006;PHARM_BATCH_EXPIRED;en-US;Cannot dispense an expired medication batch;
-v421-007;PHARM_INSUFFICIENT_STOCK;ar-EG;الرصيد المتوفر في الصيدلية غير كافٍ لصرف هذا الدواء;
-v421-008;PHARM_INSUFFICIENT_STOCK;en-US;Insufficient stock available in pharmacy for this item;
-v421-009;PHARM_CONTROLLED_SECOND_SIGNER_REQUIRED;ar-EG;الأدوية المخدرة والمراقبة تتطلب توقيع واعتماد صيدلي ثانٍ;
-v421-010;PHARM_CONTROLLED_SECOND_SIGNER_REQUIRED;en-US;Controlled medications require dual sign-off before dispensing;
-v421-011;PHARM_DISPENSE_ALREADY_PROCESSED;ar-EG;تم تنفيذ طلب الصرف هذا مسبقاً;
-v421-012;PHARM_DISPENSE_ALREADY_PROCESSED;en-US;This dispense request has already been processed;
-v421-013;PHARM_QUANTITY_EXCEEDS_PRESCRIBED;ar-EG;الكمية المصروفة لا يمكن أن تتجاوز الكمية المتبقية بالروشتة;
-v421-014;PHARM_QUANTITY_EXCEEDS_PRESCRIBED;en-US;Dispensed quantity cannot exceed remaining prescribed quantity;
-v421-015;PHARM_SECOND_SIGNER_CANNOT_BE_DISPENSER;ar-EG;لا يمكن للمعتمد الثاني أن يكون هو نفس الصيدلي القائم بالصرف;
-v421-016;PHARM_SECOND_SIGNER_CANNOT_BE_DISPENSER;en-US;Second approver must be different from the dispensing pharmacist;
-v421-017;PHARM_DISPENSE_NOT_FOUND;ar-EG;تعذر العثور على سجل طلب الصرف;
-v421-018;PHARM_DISPENSE_NOT_FOUND;en-US;Dispense record was not found;
-v421-019;nav.clinicPharmacy;ar-EG;الصيدلية وصرف الأدوية;
-v421-020;nav.clinicPharmacy;en-US;Pharmacy & Dispensing;
-v421-021;nav.clinicPharmacyHint;ar-EG;دليل الأدوية، صرف الروشتات، وسجل الأدوية المراقبة;
-v421-022;nav.clinicPharmacyHint;en-US;Medication catalog, prescription dispensing, and narcotics dual sign-off;
-v421-023;clinic.pharmacyTitle;ar-EG;صيدلية العيادة وصرف الأدوية;
-v421-024;clinic.pharmacyTitle;en-US;Clinic Pharmacy & Dispensing;
-v421-025;clinic.pharmacySubtitle;ar-EG;دليل الأدوية، صرف التشغيلات، وسجل أدوية الجدول المعتمد;
-v421-026;clinic.pharmacySubtitle;en-US;Drug catalog, inventory batch dispensing, and MOH narcotics register;
-v421-027;clinic.tabDrugCatalog;ar-EG;دليل الأدوية;
-v421-028;clinic.tabDrugCatalog;en-US;Drug Catalog;
-v421-029;clinic.tabDispense;ar-EG;صرف الروشتات;
-v421-030;clinic.tabDispense;en-US;Dispense Prescriptions;
-v421-031;clinic.tabNarcotics;ar-EG;سجل الأدوية المخدرة (الجدول);
-v421-032;clinic.tabNarcotics;en-US;Narcotics Register;
-v421-033;clinic.tradeName;ar-EG;الاسم التجاري;
-v421-034;clinic.tradeName;en-US;Trade Name;
-v421-035;clinic.genericName;ar-EG;الاسم العلمي;
-v421-036;clinic.genericName;en-US;Generic Name;
-v421-037;clinic.dosageForm;ar-EG;الشكل الدوائي;
-v421-038;clinic.dosageForm;en-US;Dosage Form;
-v421-039;clinic.strength;ar-EG;التركيز;
-v421-040;clinic.strength;en-US;Strength;
-v421-041;clinic.isControlled;ar-EG;دواء مراقب / جدول;
-v421-042;clinic.isControlled;en-US;Controlled Drug;
-v421-043;clinic.controlSchedule;ar-EG;جدول المراقبة;
-v421-044;clinic.controlSchedule;en-US;Control Schedule;
-v421-045;clinic.fefoBatch;ar-EG;التشغيلة الأقرب انتهاءً (FEFO);
-v421-046;clinic.fefoBatch;en-US;Earliest Expiry Batch (FEFO);
-v421-047;clinic.expiryDate;ar-EG;تاريخ الصلاحية;
-v421-048;clinic.expiryDate;en-US;Expiry Date;
-v421-049;clinic.dispenseAction;ar-EG;صرف الدواء;
-v421-050;clinic.dispenseAction;en-US;Dispense;
-v421-051;clinic.dispensed;ar-EG;تم الصرف;
-v421-052;clinic.dispensed;en-US;Dispensed;
-v421-053;clinic.pendingApproval;ar-EG;بانتظار توقيع الصيدلي الثاني;
-v421-054;clinic.pendingApproval;en-US;Pending Second Sign-off;
-v421-055;clinic.secondSigner;ar-EG;الصيدلي الثاني المعتمد;
-v421-056;clinic.secondSigner;en-US;Second Signer;
-v421-057;clinic.signAndApprove;ar-EG;توقيع واعتماد الصرف;
-v421-058;clinic.signAndApprove;en-US;Sign & Approve;
-v421-059;clinic.narcoticsMOHExport;ar-EG;تصدير سجل وزارة الصحة (Excel);
-v421-060;clinic.narcoticsMOHExport;en-US;Export MOH Register (Excel);
-v421-061;clinic.remainingQty;ar-EG;المتبقي;
-v421-062;clinic.remainingQty;en-US;Remaining;
-v421-063;clinic.prescribedQty;ar-EG;المطلوب;
-v421-064;clinic.prescribedQty;en-US;Prescribed;
-v421-065;clinic.batchNumber;ar-EG;رقم التشغيلة;
-v421-066;clinic.batchNumber;en-US;Batch No.;
-v421-067;clinic.dispensedSuccess;ar-EG;تم صرف الأدوية وتحديث رصيد المخزن بنجاح;
-v421-068;clinic.dispensedSuccess;en-US;Medications dispensed and inventory updated successfully;
-v421-069;common.yes;ar-EG;نعم;
-v421-070;common.yes;en-US;Yes;
-v421-071;common.no;ar-EG;لا;
-v421-072;common.no;en-US;No;
+id;translation_key;locale;text_value
+v421-001;PHARM_ITEM_NOT_FOUND;ar-EG;تعذر العثور على الصنف في دليل الصيدلية
+v421-002;PHARM_ITEM_NOT_FOUND;en-US;Drug item was not found in pharmacy catalog
+v421-003;PHARM_PRESCRIPTION_NOT_FOUND;ar-EG;تعذر العثور على سجل الروشتة الطبية
+v421-004;PHARM_PRESCRIPTION_NOT_FOUND;en-US;Prescription record was not found
+v421-005;PHARM_BATCH_EXPIRED;ar-EG;لا يمكن صرف تشغيلة دواء منتهية الصلاحية
+v421-006;PHARM_BATCH_EXPIRED;en-US;Cannot dispense an expired medication batch
+v421-007;PHARM_INSUFFICIENT_STOCK;ar-EG;الرصيد المتوفر في الصيدلية غير كافٍ لصرف هذا الدواء
+v421-008;PHARM_INSUFFICIENT_STOCK;en-US;Insufficient stock available in pharmacy for this item
+v421-009;PHARM_CONTROLLED_SECOND_SIGNER_REQUIRED;ar-EG;الأدوية المخدرة والمراقبة تتطلب توقيع واعتماد صيدلي ثانٍ
+v421-010;PHARM_CONTROLLED_SECOND_SIGNER_REQUIRED;en-US;Controlled medications require dual sign-off before dispensing
+v421-011;PHARM_DISPENSE_ALREADY_PROCESSED;ar-EG;تم تنفيذ طلب الصرف هذا مسبقاً
+v421-012;PHARM_DISPENSE_ALREADY_PROCESSED;en-US;This dispense request has already been processed
+v421-013;PHARM_QUANTITY_EXCEEDS_PRESCRIBED;ar-EG;الكمية المصروفة لا يمكن أن تتجاوز الكمية المتبقية بالروشتة
+v421-014;PHARM_QUANTITY_EXCEEDS_PRESCRIBED;en-US;Dispensed quantity cannot exceed remaining prescribed quantity
+v421-015;PHARM_SECOND_SIGNER_CANNOT_BE_DISPENSER;ar-EG;لا يمكن للمعتمد الثاني أن يكون هو نفس الصيدلي القائم بالصرف
+v421-016;PHARM_SECOND_SIGNER_CANNOT_BE_DISPENSER;en-US;Second approver must be different from the dispensing pharmacist
+v421-017;PHARM_DISPENSE_NOT_FOUND;ar-EG;تعذر العثور على سجل طلب الصرف
+v421-018;PHARM_DISPENSE_NOT_FOUND;en-US;Dispense record was not found
+v421-019;nav.clinicPharmacy;ar-EG;الصيدلية وصرف الأدوية
+v421-020;nav.clinicPharmacy;en-US;Pharmacy & Dispensing
+v421-021;nav.clinicPharmacyHint;ar-EG;دليل الأدوية، صرف الروشتات، وسجل الأدوية المراقبة
+v421-022;nav.clinicPharmacyHint;en-US;Medication catalog, prescription dispensing, and narcotics dual sign-off
+v421-023;clinic.pharmacyTitle;ar-EG;صيدلية العيادة وصرف الأدوية
+v421-024;clinic.pharmacyTitle;en-US;Clinic Pharmacy & Dispensing
+v421-025;clinic.pharmacySubtitle;ar-EG;دليل الأدوية، صرف التشغيلات، وسجل أدوية الجدول المعتمد
+v421-026;clinic.pharmacySubtitle;en-US;Drug catalog, inventory batch dispensing, and MOH narcotics register
+v421-027;clinic.tabDrugCatalog;ar-EG;دليل الأدوية
+v421-028;clinic.tabDrugCatalog;en-US;Drug Catalog
+v421-029;clinic.tabDispense;ar-EG;صرف الروشتات
+v421-030;clinic.tabDispense;en-US;Dispense Prescriptions
+v421-031;clinic.tabNarcotics;ar-EG;سجل الأدوية المخدرة (الجدول)
+v421-032;clinic.tabNarcotics;en-US;Narcotics Register
+v421-033;clinic.tradeName;ar-EG;الاسم التجاري
+v421-034;clinic.tradeName;en-US;Trade Name
+v421-035;clinic.genericName;ar-EG;الاسم العلمي
+v421-036;clinic.genericName;en-US;Generic Name
+v421-037;clinic.dosageForm;ar-EG;الشكل الدوائي
+v421-038;clinic.dosageForm;en-US;Dosage Form
+v421-039;clinic.strength;ar-EG;التركيز
+v421-040;clinic.strength;en-US;Strength
+v421-041;clinic.isControlled;ar-EG;دواء مراقب / جدول
+v421-042;clinic.isControlled;en-US;Controlled Drug
+v421-043;clinic.controlSchedule;ar-EG;جدول المراقبة
+v421-044;clinic.controlSchedule;en-US;Control Schedule
+v421-045;clinic.fefoBatch;ar-EG;التشغيلة الأقرب انتهاءً (FEFO)
+v421-046;clinic.fefoBatch;en-US;Earliest Expiry Batch (FEFO)
+v421-047;clinic.expiryDate;ar-EG;تاريخ الصلاحية
+v421-048;clinic.expiryDate;en-US;Expiry Date
+v421-049;clinic.dispenseAction;ar-EG;صرف الدواء
+v421-050;clinic.dispenseAction;en-US;Dispense
+v421-051;clinic.dispensed;ar-EG;تم الصرف
+v421-052;clinic.dispensed;en-US;Dispensed
+v421-053;clinic.pendingApproval;ar-EG;بانتظار توقيع الصيدلي الثاني
+v421-054;clinic.pendingApproval;en-US;Pending Second Sign-off
+v421-055;clinic.secondSigner;ar-EG;الصيدلي الثاني المعتمد
+v421-056;clinic.secondSigner;en-US;Second Signer
+v421-057;clinic.signAndApprove;ar-EG;توقيع واعتماد الصرف
+v421-058;clinic.signAndApprove;en-US;Sign & Approve
+v421-059;clinic.narcoticsMOHExport;ar-EG;تصدير سجل وزارة الصحة (Excel)
+v421-060;clinic.narcoticsMOHExport;en-US;Export MOH Register (Excel)
+v421-061;clinic.remainingQty;ar-EG;المتبقي
+v421-062;clinic.remainingQty;en-US;Remaining
+v421-063;clinic.prescribedQty;ar-EG;المطلوب
+v421-064;clinic.prescribedQty;en-US;Prescribed
+v421-065;clinic.batchNumber;ar-EG;رقم التشغيلة
+v421-066;clinic.batchNumber;en-US;Batch No.
+v421-067;clinic.dispensedSuccess;ar-EG;تم صرف الأدوية وتحديث رصيد المخزن بنجاح
+v421-068;clinic.dispensedSuccess;en-US;Medications dispensed and inventory updated successfully
+v421-069;common.yes;ar-EG;نعم
+v421-070;common.yes;en-US;Yes
+v421-071;common.no;ar-EG;لا
+v421-072;common.no;en-US;No

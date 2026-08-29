@@ -1,93 +1,93 @@
-id;message_key;locale;message_value;description
-v419-001;SLOT_TAKEN;ar-EG;الموعد المحدد محجوز بالفعل لطبيب آخر أو مريض آخر;
-v419-002;SLOT_TAKEN;en-US;The selected time slot is already booked;
-v419-003;SLOT_OUTSIDE_ROSTER;ar-EG;الموعد المطلوب خارج ساعات عمل الطبيب المجدولة;
-v419-004;SLOT_OUTSIDE_ROSTER;en-US;The requested time is outside the doctor's scheduled working hours;
-v419-005;APPT_PAST;ar-EG;لا يمكن حجز موعد في تاريخ أو وقت سابق;
-v419-006;APPT_PAST;en-US;Cannot book an appointment in the past;
-v419-007;ROSTER_OVERLAP;ar-EG;ساعات العمل تتداخل مع جدول عمل قائم للطبيب;
-v419-008;ROSTER_OVERLAP;en-US;Working hours overlap with an existing roster schedule;
-v419-009;APPT_NOT_FOUND;ar-EG;تعذر العثور على سجل الموعد الطبي;
-v419-010;APPT_NOT_FOUND;en-US;Appointment record was not found;
-v419-011;ROSTER_NOT_FOUND;ar-EG;تعذر العثور على جدول عمل الطبيب;
-v419-012;ROSTER_NOT_FOUND;en-US;Doctor roster record was not found;
-v419-013;APPT_ALREADY_CHECKED_IN;ar-EG;تم تسجيل حضور هذا الموعد مسبقاً;
-v419-014;APPT_ALREADY_CHECKED_IN;en-US;Appointment is already checked in;
-v419-015;nav.clinicAppointments;ar-EG;المواعيد وجداول الأطباء;
-v419-016;nav.clinicAppointments;en-US;Appointments & Rosters;
-v419-017;nav.clinicAppointmentsHint;ar-EG;إدارة جداول الأطباء وحجز المواعيد ومتابعة الحضور;
-v419-018;nav.clinicAppointmentsHint;en-US;Manage doctor schedules, book patient slots, and track check-ins;
-v419-019;clinic.appointmentsTitle;ar-EG;حجز ومتابعة المواعيد الطبية;
-v419-020;clinic.appointmentsTitle;en-US;Clinic Appointments & Scheduling;
-v419-021;clinic.appointmentsSubtitle;ar-EG;جداول عمل الأطباء، تقويم المواعيد ومكتب الاستقبال;
-v419-022;clinic.appointmentsSubtitle;en-US;Doctor weekly rosters, appointment booking calendar, and check-in desk;
-v419-023;clinic.bookAppointment;ar-EG;حجز موعد;
-v419-024;clinic.bookAppointment;en-US;Book Appointment;
-v419-025;clinic.rosterSettings;ar-EG;جداول عمل الأطباء;
-v419-026;clinic.rosterSettings;en-US;Doctor Rosters;
-v419-027;clinic.sendReminders;ar-EG;إرسال تذكيرات الغد;
-v419-028;clinic.sendReminders;en-US;Send Tomorrow Reminders;
-v419-029;clinic.slotsAvailable;ar-EG;المواعيد المتاحة;
-v419-030;clinic.slotsAvailable;en-US;Available Slots;
-v419-031;clinic.noSlotsAvailable;ar-EG;لا توجد مواعيد متاحة في هذا اليوم;
-v419-032;clinic.noSlotsAvailable;en-US;No open slots available on this date;
-v419-033;clinic.selectSlot;ar-EG;اختر الموعد;
-v419-034;clinic.selectSlot;en-US;Select Slot;
-v419-035;clinic.apptSource;ar-EG;مصدر الحجز;
-v419-036;clinic.apptSource;en-US;Booking Source;
-v419-037;clinic.sourcePhone;ar-EG;هاتف;
-v419-038;clinic.sourcePhone;en-US;Phone;
-v419-039;clinic.sourceWalkin;ar-EG;حضور مباشر;
-v419-040;clinic.sourceWalkin;en-US;Walk-in;
-v419-041;clinic.sourceOnline;ar-EG;عبر الإنترنت;
-v419-042;clinic.sourceOnline;en-US;Online;
-v419-043;clinic.sourceWhatsapp;ar-EG;واتساب;
-v419-044;clinic.sourceWhatsapp;en-US;WhatsApp;
-v419-045;clinic.statusBooked;ar-EG;محجوز;
-v419-046;clinic.statusBooked;en-US;Booked;
-v419-047;clinic.statusConfirmed;ar-EG;مؤكد;
-v419-048;clinic.statusConfirmed;en-US;Confirmed;
-v419-049;clinic.statusCheckedIn;ar-EG;تم الحضور;
-v419-050;clinic.statusCheckedIn;en-US;Checked In;
-v419-051;clinic.statusNoShow;ar-EG;لم يحضر;
-v419-052;clinic.statusNoShow;en-US;No Show;
-v419-053;clinic.statusCancelled;ar-EG;ملغى;
-v419-054;clinic.statusCancelled;en-US;Cancelled;
-v419-055;clinic.statusDone;ar-EG;مكتمل;
-v419-056;clinic.statusDone;en-US;Completed;
-v419-057;clinic.confirmAppt;ar-EG;تأكيد;
-v419-058;clinic.confirmAppt;en-US;Confirm;
-v419-059;clinic.checkInAppt;ar-EG;تسجيل حضور;
-v419-060;clinic.checkInAppt;en-US;Check In;
-v419-061;clinic.markNoShow;ar-EG;لم يحضر;
-v419-062;clinic.markNoShow;en-US;Mark No Show;
-v419-063;clinic.cancelAppt;ar-EG;إلغاء الموعد;
-v419-064;clinic.cancelAppt;en-US;Cancel Appointment;
-v419-065;clinic.checkedInQueueJump;ar-EG;تم تسجيل الحضور وإضافة المريض لقائمة الانتظار بنجاح;
-v419-066;clinic.checkedInQueueJump;en-US;Patient checked in and added to doctor queue successfully;
-v419-067;clinic.weekday;ar-EG;يوم الأسبوع;
-v419-068;clinic.weekday;en-US;Weekday;
-v419-069;clinic.slotMinutes;ar-EG;مدة الكشف (دقيقة);
-v419-070;clinic.slotMinutes;en-US;Slot Duration (Minutes);
-v419-071;clinic.startTime;ar-EG;وقت البدء;
-v419-072;clinic.startTime;en-US;Start Time;
-v419-073;clinic.endTime;ar-EG;وقت الانتهاء;
-v419-074;clinic.endTime;en-US;End Time;
-v419-075;clinic.todayAgenda;ar-EG;جدول مواعيد اليوم;
-v419-076;clinic.todayAgenda;en-US;Today's Agenda;
-v419-077;clinic.noApptsToday;ar-EG;لا توجد مواعيد مجدولة لهذا اليوم;
-v419-078;clinic.noApptsToday;en-US;No appointments scheduled for today;
-v419-079;clinic.noShowRate;ar-EG;نسبة عدم الحضور;
-v419-080;clinic.noShowRate;en-US;No-Show Rate;
-v419-081;clinic.totalAppts;ar-EG;إجمالي المواعيد;
-v419-082;clinic.totalAppts;en-US;Total Appointments;
-v419-083;clinic.completedAppts;ar-EG;المكتملة;
-v419-084;clinic.completedAppts;en-US;Completed;
-v419-085;clinic.remindersSent;ar-EG;تم إرسال تذكيرات المواعيد بنجاح;
-v419-086;clinic.remindersSent;en-US;Appointment reminders sent successfully;
-v419-087;clinic.patient;ar-EG;المريض;
-v419-088;clinic.patient;en-US;Patient;
-v419-089;common.available;ar-EG;متاح;
-v419-090;common.available;en-US;Available;
-v419-091;ROSTER_INVALID_HOURS;ar-EG;وقت بدء العمل يجب أن يكون قبل وقت الانتهاء;
-v419-092;ROSTER_INVALID_HOURS;en-US;Start time must be before end time;
+id;translation_key;locale;text_value
+v419-001;SLOT_TAKEN;ar-EG;الموعد المحدد محجوز بالفعل لطبيب آخر أو مريض آخر
+v419-002;SLOT_TAKEN;en-US;The selected time slot is already booked
+v419-003;SLOT_OUTSIDE_ROSTER;ar-EG;الموعد المطلوب خارج ساعات عمل الطبيب المجدولة
+v419-004;SLOT_OUTSIDE_ROSTER;en-US;The requested time is outside the doctor's scheduled working hours
+v419-005;APPT_PAST;ar-EG;لا يمكن حجز موعد في تاريخ أو وقت سابق
+v419-006;APPT_PAST;en-US;Cannot book an appointment in the past
+v419-007;ROSTER_OVERLAP;ar-EG;ساعات العمل تتداخل مع جدول عمل قائم للطبيب
+v419-008;ROSTER_OVERLAP;en-US;Working hours overlap with an existing roster schedule
+v419-009;APPT_NOT_FOUND;ar-EG;تعذر العثور على سجل الموعد الطبي
+v419-010;APPT_NOT_FOUND;en-US;Appointment record was not found
+v419-011;ROSTER_NOT_FOUND;ar-EG;تعذر العثور على جدول عمل الطبيب
+v419-012;ROSTER_NOT_FOUND;en-US;Doctor roster record was not found
+v419-013;APPT_ALREADY_CHECKED_IN;ar-EG;تم تسجيل حضور هذا الموعد مسبقاً
+v419-014;APPT_ALREADY_CHECKED_IN;en-US;Appointment is already checked in
+v419-015;nav.clinicAppointments;ar-EG;المواعيد وجداول الأطباء
+v419-016;nav.clinicAppointments;en-US;Appointments & Rosters
+v419-017;nav.clinicAppointmentsHint;ar-EG;إدارة جداول الأطباء وحجز المواعيد ومتابعة الحضور
+v419-018;nav.clinicAppointmentsHint;en-US;Manage doctor schedules, book patient slots, and track check-ins
+v419-019;clinic.appointmentsTitle;ar-EG;حجز ومتابعة المواعيد الطبية
+v419-020;clinic.appointmentsTitle;en-US;Clinic Appointments & Scheduling
+v419-021;clinic.appointmentsSubtitle;ar-EG;جداول عمل الأطباء، تقويم المواعيد ومكتب الاستقبال
+v419-022;clinic.appointmentsSubtitle;en-US;Doctor weekly rosters, appointment booking calendar, and check-in desk
+v419-023;clinic.bookAppointment;ar-EG;حجز موعد
+v419-024;clinic.bookAppointment;en-US;Book Appointment
+v419-025;clinic.rosterSettings;ar-EG;جداول عمل الأطباء
+v419-026;clinic.rosterSettings;en-US;Doctor Rosters
+v419-027;clinic.sendReminders;ar-EG;إرسال تذكيرات الغد
+v419-028;clinic.sendReminders;en-US;Send Tomorrow Reminders
+v419-029;clinic.slotsAvailable;ar-EG;المواعيد المتاحة
+v419-030;clinic.slotsAvailable;en-US;Available Slots
+v419-031;clinic.noSlotsAvailable;ar-EG;لا توجد مواعيد متاحة في هذا اليوم
+v419-032;clinic.noSlotsAvailable;en-US;No open slots available on this date
+v419-033;clinic.selectSlot;ar-EG;اختر الموعد
+v419-034;clinic.selectSlot;en-US;Select Slot
+v419-035;clinic.apptSource;ar-EG;مصدر الحجز
+v419-036;clinic.apptSource;en-US;Booking Source
+v419-037;clinic.sourcePhone;ar-EG;هاتف
+v419-038;clinic.sourcePhone;en-US;Phone
+v419-039;clinic.sourceWalkin;ar-EG;حضور مباشر
+v419-040;clinic.sourceWalkin;en-US;Walk-in
+v419-041;clinic.sourceOnline;ar-EG;عبر الإنترنت
+v419-042;clinic.sourceOnline;en-US;Online
+v419-043;clinic.sourceWhatsapp;ar-EG;واتساب
+v419-044;clinic.sourceWhatsapp;en-US;WhatsApp
+v419-045;clinic.statusBooked;ar-EG;محجوز
+v419-046;clinic.statusBooked;en-US;Booked
+v419-047;clinic.statusConfirmed;ar-EG;مؤكد
+v419-048;clinic.statusConfirmed;en-US;Confirmed
+v419-049;clinic.statusCheckedIn;ar-EG;تم الحضور
+v419-050;clinic.statusCheckedIn;en-US;Checked In
+v419-051;clinic.statusNoShow;ar-EG;لم يحضر
+v419-052;clinic.statusNoShow;en-US;No Show
+v419-053;clinic.statusCancelled;ar-EG;ملغى
+v419-054;clinic.statusCancelled;en-US;Cancelled
+v419-055;clinic.statusDone;ar-EG;مكتمل
+v419-056;clinic.statusDone;en-US;Completed
+v419-057;clinic.confirmAppt;ar-EG;تأكيد
+v419-058;clinic.confirmAppt;en-US;Confirm
+v419-059;clinic.checkInAppt;ar-EG;تسجيل حضور
+v419-060;clinic.checkInAppt;en-US;Check In
+v419-061;clinic.markNoShow;ar-EG;لم يحضر
+v419-062;clinic.markNoShow;en-US;Mark No Show
+v419-063;clinic.cancelAppt;ar-EG;إلغاء الموعد
+v419-064;clinic.cancelAppt;en-US;Cancel Appointment
+v419-065;clinic.checkedInQueueJump;ar-EG;تم تسجيل الحضور وإضافة المريض لقائمة الانتظار بنجاح
+v419-066;clinic.checkedInQueueJump;en-US;Patient checked in and added to doctor queue successfully
+v419-067;clinic.weekday;ar-EG;يوم الأسبوع
+v419-068;clinic.weekday;en-US;Weekday
+v419-069;clinic.slotMinutes;ar-EG;مدة الكشف (دقيقة)
+v419-070;clinic.slotMinutes;en-US;Slot Duration (Minutes)
+v419-071;clinic.startTime;ar-EG;وقت البدء
+v419-072;clinic.startTime;en-US;Start Time
+v419-073;clinic.endTime;ar-EG;وقت الانتهاء
+v419-074;clinic.endTime;en-US;End Time
+v419-075;clinic.todayAgenda;ar-EG;جدول مواعيد اليوم
+v419-076;clinic.todayAgenda;en-US;Today's Agenda
+v419-077;clinic.noApptsToday;ar-EG;لا توجد مواعيد مجدولة لهذا اليوم
+v419-078;clinic.noApptsToday;en-US;No appointments scheduled for today
+v419-079;clinic.noShowRate;ar-EG;نسبة عدم الحضور
+v419-080;clinic.noShowRate;en-US;No-Show Rate
+v419-081;clinic.totalAppts;ar-EG;إجمالي المواعيد
+v419-082;clinic.totalAppts;en-US;Total Appointments
+v419-083;clinic.completedAppts;ar-EG;المكتملة
+v419-084;clinic.completedAppts;en-US;Completed
+v419-085;clinic.remindersSent;ar-EG;تم إرسال تذكيرات المواعيد بنجاح
+v419-086;clinic.remindersSent;en-US;Appointment reminders sent successfully
+v419-087;clinic.patient;ar-EG;المريض
+v419-088;clinic.patient;en-US;Patient
+v419-089;common.available;ar-EG;متاح
+v419-090;common.available;en-US;Available
+v419-091;ROSTER_INVALID_HOURS;ar-EG;وقت بدء العمل يجب أن يكون قبل وقت الانتهاء
+v419-092;ROSTER_INVALID_HOURS;en-US;Start time must be before end time

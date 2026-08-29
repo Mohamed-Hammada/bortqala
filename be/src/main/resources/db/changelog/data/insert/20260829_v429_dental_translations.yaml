@@ -1,25 +1,29 @@
 databaseChangeLog:
   - changeSet:
-      id: 20260829-v429-001
-      author: bemo-medical
+      id: 20260829_v429_dental_translations
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v429-%'" }
       changes:
         - loadData:
-            tableName: translations
             file: db/changelog/data/insert/files/20260829_v429_dental_translations.csv
             separator: ";"
+            tableName: translations
+            encoding: UTF-8
             columns:
               - column:
                   name: id
                   type: STRING
               - column:
-                  name: message_key
+                  name: translation_key
                   type: STRING
               - column:
                   name: locale
                   type: STRING
               - column:
-                  name: message_value
+                  name: text_value
                   type: STRING
-              - column:
-                  name: description
-                  type: STRING
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v429-%'" }

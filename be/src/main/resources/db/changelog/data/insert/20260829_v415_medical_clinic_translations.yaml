@@ -5,16 +5,25 @@ databaseChangeLog:
       validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
-        - sqlCheck:
-            expectedResult: "0"
-            sql: SELECT COUNT(*) FROM translations WHERE id LIKE 'v415-%'
+        - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v415-%'" }
       changes:
         - loadData:
-            relativeToChangelogFile: true
-            file: files/20260829_v415_medical_clinic_translations.csv
-            tableName: translations
+            file: db/changelog/data/insert/files/20260829_v415_medical_clinic_translations.csv
             separator: ";"
-            quotchar: '"'
+            tableName: translations
+            encoding: UTF-8
+            columns:
+              - column:
+                  name: id
+                  type: STRING
+              - column:
+                  name: translation_key
+                  type: STRING
+              - column:
+                  name: locale
+                  type: STRING
+              - column:
+                  name: text_value
+                  type: STRING
       rollback:
-        - sql:
-            sql: DELETE FROM translations WHERE id LIKE 'v415-%'
+        - delete: { tableName: translations, where: "id LIKE 'v415-%'" }

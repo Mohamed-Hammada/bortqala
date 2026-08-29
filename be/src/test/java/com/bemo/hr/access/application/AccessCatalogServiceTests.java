@@ -43,7 +43,8 @@ class AccessCatalogServiceTests {
     private void enableAllFeatures() {
         Map<String, Boolean> features = new HashMap<>();
         for (String key : List.of("payroll.enabled", "sales.enabled", "manufacturing.enabled",
-                "quality.enabled", "finance.enabled", "workforce.contractorAccounts.enabled")) {
+                "quality.enabled", "finance.enabled", "workforce.contractorAccounts.enabled",
+                "agri.enabled", "medical.enabled")) {
             features.put(key, true);
         }
         when(featureRepository.findByAppId(anyString())).thenAnswer(

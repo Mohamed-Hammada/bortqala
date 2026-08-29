@@ -9,7 +9,7 @@ import { ReportDataset, SavedReport, ReportColumn } from './marketing.models';
 @Component({
   selector: 'app-marketing-page',
   standalone: true,
-  imports: [DatePipe],
+  imports: [],
   templateUrl: './marketing.page.html',
   styleUrl: './marketing.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
