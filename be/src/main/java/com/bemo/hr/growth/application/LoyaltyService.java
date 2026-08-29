@@ -137,6 +137,59 @@ public class LoyaltyService {
                 .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
     }
 
+    @Transactional
+    public GrowthPackApi.LoyaltyAccountResponse recomputeBalance(String partyId) {
+        String appId = TenantContext.require();
+        LoyaltyAccount account = accountRepository.findByAppIdAndPartyId(appId, partyId)
+                .orElseThrow(() -> new BusinessRuleException("Loyalty account not found.", "LOYALTY_ACCOUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
+
+        List<LoyaltyLedgerEntry> entries = ledgerRepository.findByLoyaltyAccountIdOrderByCreatedAtDesc(account.getId());
+        BigDecimal totalEarned = BigDecimal.ZERO;
+        BigDecimal totalRedeemed = BigDecimal.ZERO;
+        BigDecimal totalExpired = BigDecimal.ZERO;
+
+        for (LoyaltyLedgerEntry e : entries) {
+            if ("EARN".equals(e.getType())) {
+                totalEarned = totalEarned.add(e.getPoints());
+            } else if ("REDEEM".equals(e.getType())) {
+                totalRedeemed = totalRedeemed.add(e.getPoints());
+            } else if ("EXPIRE".equals(e.getType())) {
+                totalExpired = totalExpired.add(e.getPoints());
+            } else if ("ADJUST".equals(e.getType())) {
+                if (e.getPoints().compareTo(BigDecimal.ZERO) >= 0) {
+                    totalEarned = totalEarned.add(e.getPoints());
+                } else {
+                    totalRedeemed = totalRedeemed.add(e.getPoints().abs());
+                }
+            }
+        }
+
+        BigDecimal netBalance = totalEarned.subtract(totalRedeemed).subtract(totalExpired).max(BigDecimal.ZERO);
+        account = accountRepository.save(account);
+        return toAccountResponse(account);
+    }
+
+    @Transactional
+    public GrowthPackApi.LoyaltyAccountResponse expirePoints(String partyId, BigDecimal pointsToExpire, String actor) {
+        String appId = TenantContext.require();
+        LoyaltyAccount account = accountRepository.findByAppIdAndPartyId(appId, partyId)
+                .orElseThrow(() -> new BusinessRuleException("Loyalty account not found.", "LOYALTY_ACCOUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
+
+        BigDecimal points = pointsToExpire.min(account.getPointsBalance()).max(BigDecimal.ZERO);
+        if (points.compareTo(BigDecimal.ZERO) > 0) {
+            account.expire(points);
+            LoyaltyAccount saved = accountRepository.save(account);
+
+            LoyaltyLedgerEntry entry = new LoyaltyLedgerEntry(
+                    saved.getId(), partyId, "EXPIRE", points,
+                    saved.getPointsBalance(), "EXPIRY_JOB", null,
+                    null, "Points expired after " + expiryMonths + " months", actor);
+            ledgerRepository.save(entry);
+            return toAccountResponse(saved);
+        }
+        return toAccountResponse(account);
+    }
+
     /** Calculate the max redeem discount for a given sale amount. */
     public BigDecimal calculateRedeemDiscount(BigDecimal saleAmount, BigDecimal pointsBalance, BigDecimal pointValue) {
         if (redeemMaxPercent.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;

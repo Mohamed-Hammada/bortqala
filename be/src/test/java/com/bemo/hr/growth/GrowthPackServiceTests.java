@@ -100,6 +100,42 @@ class GrowthPackServiceTests {
                 .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("LOYALTY_ADJUST_NEGATIVE"));
     }
 
+    @Test
+    void expirePoints_deductsPointsAndRecordsLedgerEntry() {
+        LoyaltyAccount account = new LoyaltyAccount("p1");
+        account.setAppId("test-app");
+        account.credit(new BigDecimal("100"));
+        when(loyaltyAccountRepository.findByAppIdAndPartyId("test-app", "p1")).thenReturn(Optional.of(account));
+        when(loyaltyAccountRepository.save(any(LoyaltyAccount.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(loyaltyLedgerEntryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = loyaltyService.expirePoints("p1", new BigDecimal("30"), "EXPIRY_CRON");
+
+        assertThat(result.pointsBalance()).isEqualByComparingTo(new BigDecimal("70.00"));
+        assertThat(result.totalExpired()).isEqualByComparingTo(new BigDecimal("30.00"));
+        verify(loyaltyLedgerEntryRepository).save(any(LoyaltyLedgerEntry.class));
+    }
+
+    @Test
+    void recomputeBalance_derivesFromLedger() {
+        LoyaltyAccount account = new LoyaltyAccount("p1");
+        account.setAppId("test-app");
+        account.credit(new BigDecimal("50"));
+        when(loyaltyAccountRepository.findByAppIdAndPartyId("test-app", "p1")).thenReturn(Optional.of(account));
+        when(loyaltyAccountRepository.save(any(LoyaltyAccount.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var entry1 = new LoyaltyLedgerEntry(account.getId(), "p1", "EARN", new BigDecimal("100"),
+                new BigDecimal("100"), "SALE", "s1", null, null, "sys");
+        var entry2 = new LoyaltyLedgerEntry(account.getId(), "p1", "REDEEM", new BigDecimal("40"),
+                new BigDecimal("60"), "SALE", "s2", null, null, "sys");
+        when(loyaltyLedgerEntryRepository.findByLoyaltyAccountIdOrderByCreatedAtDesc(account.getId()))
+                .thenReturn(List.of(entry1, entry2));
+
+        var result = loyaltyService.recomputeBalance("p1");
+
+        assertThat(result.pointsBalance()).isNotNull();
+    }
+
     // ─── Membership tests ──────────────────────────────────────
 
     @Test

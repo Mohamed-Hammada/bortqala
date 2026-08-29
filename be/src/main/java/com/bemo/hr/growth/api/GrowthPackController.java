@@ -72,6 +72,21 @@ public class GrowthPackController {
         return loyaltyService.adjustPoints(payload, auth.getName());
     }
 
+    @PostMapping("/loyalty/recompute/{partyId}")
+    @PreAuthorize("@auth.hasPermission('procurement.manage')")
+    public GrowthPackApi.LoyaltyAccountResponse recomputeBalance(@PathVariable String partyId) {
+        return loyaltyService.recomputeBalance(partyId);
+    }
+
+    @PostMapping("/loyalty/expire/{partyId}")
+    @PreAuthorize("@auth.hasPermission('procurement.manage')")
+    public GrowthPackApi.LoyaltyAccountResponse expirePoints(
+            @PathVariable String partyId,
+            @RequestParam java.math.BigDecimal points,
+            Authentication auth) {
+        return loyaltyService.expirePoints(partyId, points, auth.getName());
+    }
+
     // ─── Membership ───────────────────────────────────────────
 
     @GetMapping("/membership/plans")

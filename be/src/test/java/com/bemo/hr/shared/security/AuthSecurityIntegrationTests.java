@@ -94,6 +94,7 @@ class AuthSecurityIntegrationTests {
 
     @BeforeEach
     void setUp() {
+        loginRateLimiter.clear();
         var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue("TEST").orElseThrow();
         appId = app.getId();
         appCode = app.getCode();
@@ -124,6 +125,7 @@ class AuthSecurityIntegrationTests {
             appUserRepository.deleteAllById(createdUserIds);
         } finally {
             createdUserIds.clear();
+            loginRateLimiter.clear();
             TenantContext.clear();
         }
     }

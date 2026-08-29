@@ -49,6 +49,10 @@ public class LoginRateLimiter {
         windows.remove(key(tenantId, "username", username));
     }
 
+    public void clear() {
+        windows.clear();
+    }
+
     private boolean blocked(String key, int limit) {
         Window window = windows.get(key);
         return window != null && window.startedAt.plus(WINDOW).isAfter(Instant.now()) && window.count >= limit;

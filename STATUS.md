@@ -52,14 +52,14 @@ This document tracks the end-to-end implementation and verification status of al
 
 ## Verification & CI Gate Summary
 
-- **Backend Tests:** 100% clean execution — **1,238 tests / 248 suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
+- **Backend Tests:** 100% clean execution — **1,245 tests / 249 suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
 - **Frontend Unit Tests:** **610 / 610 passed** across 127 test files (100% green, Node 24).
 - **i18n Catalog Validation:** **5,594 literal keys verified** (`ar-EG` & `en-US`); **16,963 translation rows / 0 defects / bilingual pairs unique** (`check-translation-catalog.py`).
 - **Hardcoded Strings Scanner:** **0 violations** across 140 HTML templates and 291 TypeScript source files (`check-hardcoded-strings.mjs`).
 - **Error-Code→Translation Gate:** **756 / 756** exception codes covered (0 missing) (`check-error-codes.py`).
 - **Authorization Contract Gate:** **21 declared roles / 21 referenced roles / unknown: 0** (`check-authorization-contract.py`).
 - **Production Build (`ng build`):** Production bundle compiled cleanly.
-- **Test-count floors:** BE ≥1238/≥248 (`be/tools/check-test-count.py`), FE ≥610/≥127 (`fe/tools/check-test-count.mjs`).
+- **Test-count floors:** BE ≥1245/≥249 (`be/tools/check-test-count.py`), FE ≥610/≥127 (`fe/tools/check-test-count.mjs`).
 
 ### Session 27 (2026-08-29) — WP-17 Manpower-Supply Client Billing (AC-1..AC-5 all MET)
 - **WP-17 revenue side shipped**: `ClientBillingService` (`com.bemo.hr.workforce`) — `generate` collects attendance-APPROVED days only from APPROVED/LOCKED `WorkforceSettlementPeriod` windows overlapping the month → draft lines resolved per-day against effective `ClientWorkerRate` (max-by-effectiveFrom; mid-month split = first 15 days old rate, rest new); MISSING_RATE lines carry clear reasons and confirm is blocked (`CLIENT_BILLING_UNRESOLVED_LINES`); overlapping rate windows rejected (`CLIENT_RATE_OVERLAP`, translated ar/en). Confirm issues ONE `CustomerInvoice` via `SalesReceivablesService.createAndIssueDeliveryInvoice` (number `CLB-YYYYMM-<PARTY6>`), period → INVOICED; regenerate → `CLIENT_BILLING_PERIOD_EXISTS`; closed → `CLIENT_BILLING_PERIOD_NOT_OPEN`. Margin = billed − settled `grossWage` per worker (440−360=80 exact) + localized xlsx export. Endpoints `/api/v1/workforce/client-billing` (7) reuse `settlements.read/prepare/finalize` (permission deviation documented; no new AccessCatalog perm).
