@@ -83,3 +83,77 @@ v440-081;outbox.failedEvents;ar-EG;الأحداث المتعثرة
 v440-082;outbox.failedEvents;en-US;Failed Events
 v440-083;outbox.retryNow;ar-EG;إعادة المحاولة الفورية
 v440-084;outbox.retryNow;en-US;Retry Immediately
+v440-085;catalog.title;ar-EG;كتالوج المنتجات
+v440-086;catalog.title;en-US;Product Catalog
+v440-087;catalog.categories;ar-EG;التصنيفات
+v440-088;catalog.categories;en-US;Categories
+v440-089;catalog.brands;ar-EG;الماركات
+v440-090;catalog.brands;en-US;Brands
+v440-091;catalog.inStock;ar-EG;متوفر في المخزون
+v440-092;catalog.inStock;en-US;In Stock
+v440-093;catalog.outOfStock;ar-EG;غير متوفر
+v440-094;catalog.outOfStock;en-US;Out of Stock
+v440-095;catalog.viewDetails;ar-EG;عرض التفاصيل
+v440-096;catalog.viewDetails;en-US;View Details
+v440-097;catalog.backToCatalog;ar-EG;العودة للكتالوج
+v440-098;catalog.backToCatalog;en-US;Back to Catalog
+v440-099;catalog.specifications;ar-EG;المواصفات
+v440-100;catalog.specifications;en-US;Specifications
+v440-101;catalog.sku;ar-EG;رمز المنتج (SKU)
+v440-102;catalog.sku;en-US;SKU
+v440-103;retail.laptopShopTitle;ar-EG;متجر وصيانة اللاب توب
+v440-104;retail.laptopShopTitle;en-US;Laptop Retail & Repair Shop
+v440-105;retail.registerDevice;ar-EG;تسجيل جهاز جديد
+v440-106;retail.registerDevice;en-US;Register Device
+v440-107;retail.inventoryTab;ar-EG;مخزون الأجهزة
+v440-108;retail.inventoryTab;en-US;Device Inventory
+v440-109;retail.repairsTab;ar-EG;تذاكر الصيانة
+v440-110;retail.repairsTab;en-US;Repair Tickets
+v440-111;retail.statusInStock;ar-EG;متوفر في المخزون
+v440-112;retail.statusInStock;en-US;In Stock
+v440-113;retail.statusSold;ar-EG;تم البيع
+v440-114;retail.statusSold;en-US;Sold
+v440-115;retail.statusInRepair;ar-EG;قيد الصيانة
+v440-116;retail.statusInRepair;en-US;In Repair
+v440-117;retail.brand;ar-EG;الماركة
+v440-118;retail.brand;en-US;Brand
+v440-119;retail.model;ar-EG;الموديل
+v440-120;retail.model;en-US;Model
+v440-121;retail.specs;ar-EG;المواصفات
+v440-122;retail.specs;en-US;Specifications
+v440-123;retail.warranty;ar-EG;حالة الضمان
+v440-124;retail.warranty;en-US;Warranty Status
+v440-125;retail.warrantyActive;ar-EG;الضمان سارٍ
+v440-126;retail.warrantyActive;en-US;Warranty Active
+v440-127;retail.warrantyExpired;ar-EG;منتهي الضمان
+v440-128;retail.warrantyExpired;en-US;Warranty Expired
+v440-129;retail.sell;ar-EG;بيع
+v440-130;retail.sell;en-US;Sell
+v440-131;retail.return;ar-EG;مرتجع
+v440-132;retail.return;en-US;Return
+v440-133;retail.ticketNumber;ar-EG;رقم التذكرة
+v440-134;retail.ticketNumber;en-US;Ticket Number
+v440-135;retail.customerName;ar-EG;اسم العميل
+v440-136;retail.customerName;en-US;Customer Name
+v440-137;retail.reportedIssue;ar-EG;المشكلة المشكو منها
+v440-138;retail.reportedIssue;en-US;Reported Issue
+v440-139;retail.underWarranty;ar-EG;تحت الضمان
+v440-140;retail.underWarranty;en-US;Under Warranty
+v440-141;retail.chargedAmount;ar-EG;المبلغ المحصل
+v440-142;retail.chargedAmount;en-US;Charged Amount
+v440-143;retail.cpu;ar-EG;المعالج (CPU)
+v440-144;retail.cpu;en-US;CPU Processor
+v440-145;retail.ramGb;ar-EG;الرام (جيجابايت)
+v440-146;retail.ramGb;en-US;RAM (GB)
+v440-147;retail.storageGb;ar-EG;سعة التخزين (جيجابايت)
+v440-148;retail.storageGb;en-US;Storage (GB)
+v440-149;retail.storageType;ar-EG;نوع التخزين
+v440-150;retail.storageType;en-US;Storage Type
+v440-151;retail.warrantyMonths;ar-EG;مدة الضمان
+v440-152;retail.warrantyMonths;en-US;Warranty Duration
+v440-153;retail.months;ar-EG;أشهر
+v440-154;retail.months;en-US;Months
+v440-155;retail.finalSellingPrice;ar-EG;سعر البيع النهائي
+v440-156;retail.finalSellingPrice;en-US;Final Selling Price
+v440-157;retail.confirmSale;ar-EG;تأكيد البيع
+v440-158;retail.confirmSale;en-US;Confirm Sale

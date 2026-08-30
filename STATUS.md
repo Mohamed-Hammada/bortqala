@@ -56,18 +56,20 @@ This document tracks the end-to-end implementation and verification status of al
 
 ## Verification & CI Gate Summary
 
-- **Backend Tests:** 100% clean execution — **1,390+ tests / 264+ suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
+- **Backend Tests:** 100% clean execution — **1,404 tests / 265 suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
 - **Frontend Unit Tests:** **624 / 624 passed** across 132 test files (100% green, Node 24).
-- **i18n Catalog Validation:** **5,639 literal keys verified** (`ar-EG` & `en-US`); **17,217 translation rows / 0 defects / bilingual pairs unique** (`check-translation-catalog.py`).
-- **Hardcoded Strings Scanner:** **0 violations** across 142 HTML templates and 304 TypeScript source files (`check-hardcoded-strings.mjs`).
+- **i18n Catalog Validation:** **5,685 literal keys verified** (`ar-EG` & `en-US`); **17,291 translation rows / 0 defects / bilingual pairs unique** (`check-translation-catalog.py`).
+- **Hardcoded Strings Scanner:** **0 violations** across 142 HTML templates and 307 TypeScript source files (`check-hardcoded-strings.mjs`).
 - **Error-Code→Translation Gate:** **776 / 776** exception codes covered (0 missing) (`check-error-codes.py`).
 - **Authorization Contract Gate:** **21 declared roles / 21 referenced roles / unknown: 0** (`check-authorization-contract.py`).
 - **Production Build (`ng build`):** Production bundle compiled cleanly.
+- **Test-count floors:** BE ≥1404/≥265 (`be/tools/check-test-count.py`), FE ≥613/≥129 (`fe/tools/check-test-count.mjs`).
 
-### Session 31 (2026-08-30) — Commercial Production Readiness Delivery (P0-04, P1-01, P1-02, P1-05)
+### Session 31 (2026-08-30) — Commercial Production Readiness Delivery (P0-04, P1-01, P1-02, P1-05, P0-01)
+- **Privilege Escalation Defense (P0-01)**: Created `PrivilegeEscalationSecurityTests` verifying server-side enforcement that only `SUPER_ADMIN` can assign `SUPER_ADMIN` or `ADMIN`, self-role modification is rejected, and segregation of duties conflicts are prevented.
 - **Cryptographic Device-Bound Signing (P0-04)**: Implemented cryptographic device enrollment, challenge-nonce issuance, SHA-256 payload integrity hashing, replay attack prevention, and ECDSA-P256 / RSA-SHA256 signature verification in `DeviceSigningService` and `DeviceSigningController`. Liquibase `v437` schema (`sec_user_devices`, `sec_device_signing_challenges`, `sec_device_signature_logs`) + `v438` translations. Frontend `DeviceSigningService` with WebCrypto integration.
-- **Public Product Catalog & Browsing (P1-01)**: Public unauthenticated endpoints (`/api/v1/public/catalog/products`, `/categories`, `/brands`) strictly concealing internal costs, supplier purchase prices, and profit margins. Liquibase `v439` schema + `v440` translations. Frontend `PublicCatalogService`.
-- **Laptop Shop & Serialized Retail Domain (P1-02)**: Complete hardware specifications tracking (CPU, RAM, Storage, GPU, Screen, Condition grade), serial number uniqueness enforcement, customer warranty computation, returns/exchanges, and repair ticket lifecycle management in `LaptopRetailService` and `LaptopRetailController`.
+- **Public Product Catalog & Browsing (P1-01)**: Public storefront browsing (`/products`, `/products/:slug`, `/categories/:slug`, `/brands/:slug`) with search, brand/category filtering, specifications, and strict privacy protection concealing internal costs and supplier purchase prices. Liquibase `v439` schema + `v440` translations. Frontend `PublicCatalogService`, `PublicCatalogPage`, and `PublicProductDetailPage`.
+- **Laptop Shop & Serialized Retail Domain (P1-02)**: Complete hardware specifications tracking (CPU, RAM, Storage, GPU, Condition grade), serial number uniqueness enforcement, customer warranty computation, returns/exchanges, and repair ticket lifecycle management in `LaptopRetailService`, `LaptopRetailController`, `LaptopRetailService`, and `LaptopRetailPage` (`/retail/laptops`).
 - **Transactional Outbox Engine (P1-05)**: Atomic transactional event publishing, status lifecycle (`PENDING` $\rightarrow$ `PUBLISHED` / `FAILED` $\rightarrow$ `DEAD_LETTER`), retry count management, and management REST controller in `OutboxService`.
 - **PostgreSQL Critical Financial Concurrency Suite**: Created `PostgresCriticalTransactionTests` running multi-threaded race condition tests (100 iterations) across:
   - Payroll double-disbursement and reversal races.
@@ -77,7 +79,7 @@ This document tracks the end-to-end implementation and verification status of al
   - Finance fiscal period closing lock vs in-flight journal posting.
   - Multi-tenant strict isolation and thread-safe context scoping.
 - **ERP Control Center Governance Bar**: Integrated real-time operational governance diagnostics (`Failed Jobs`, `Pending Approvals`, `ETA Errors`, `Negative Stock Items`, `Overdue Receivables`) into `ReconciliationCenterComponent`.
-- **Evidence**: BE **1,371/259/0** (BUILD SUCCESSFUL); FE **613/129/0**; error-codes **759/759 PASS**; catalog **17,079 rows PASS**; `check:i18n` **5,639 keys PASS**; `check:hardcoded` **0/142 templates PASS**; `ng build` green; floors raised (BE 1371/259, FE 613/129).
+- **Evidence**: BE **1,404/265/0** (BUILD SUCCESSFUL); FE **624/132/0**; error-codes **776/776 PASS**; catalog **17,291 rows PASS**; `check:i18n` **5,685 keys PASS**; `check:hardcoded` **0/142 templates & 307 TS PASS**; `ng build` green; floors raised (BE 1404/265).
 
 ### Session 29 (2026-08-30) — ⭐ ERP Reconciliation Center (8 Domains ↔ GL & Drill-Down)
 - **Subledger Reconciliation Domain Expansion**: Extended `SubledgerType` enum across 8 core accounting domains: `INVENTORY`, `AR`, `AP`, `CASH`, `BANK`, `PAYROLL`, `PROJECT_COST`, `MANUFACTURING_COST`.

@@ -33,6 +33,27 @@ export const routes: Routes = [
       import('./features/public/pay/pay.page').then((module) => module.PublicPayPage),
   },
   {
+    // P1-01: Public storefront product catalog browsing
+    path: 'products',
+    loadComponent: () =>
+      import('./features/public/catalog/public-catalog.page').then((module) => module.PublicCatalogPage),
+  },
+  {
+    path: 'products/:slug',
+    loadComponent: () =>
+      import('./features/public/catalog/public-product-detail.page').then((module) => module.PublicProductDetailPage),
+  },
+  {
+    path: 'categories/:slug',
+    loadComponent: () =>
+      import('./features/public/catalog/public-catalog.page').then((module) => module.PublicCatalogPage),
+  },
+  {
+    path: 'brands/:slug',
+    loadComponent: () =>
+      import('./features/public/catalog/public-catalog.page').then((module) => module.PublicCatalogPage),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () =>
@@ -470,6 +491,13 @@ export const routes: Routes = [
           import('./features/platform-admin/platform-admin.page').then((module) => module.PlatformAdminPage),
       },
       {
+        path: 'platform-admin/outbox',
+        canActivate: [superAdminGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/platform-admin/pages/outbox/system-outbox.page').then((module) => module.SystemOutboxPage),
+      },
+      {
         path: 'settings',
         canActivate: [menuAccessGuard],
         canDeactivate: [unsavedChangesGuard],
@@ -481,6 +509,13 @@ export const routes: Routes = [
         path: 'support',
         loadComponent: () =>
           import('./features/support/support.page').then((module) => module.SupportPage),
+      },
+      {
+        path: 'retail/laptops',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], menuId: 'pos' },
+        loadComponent: () =>
+          import('./features/retail/laptop-retail.page').then((module) => module.LaptopRetailPage),
       },
       {
         path: 'helpdesk',
