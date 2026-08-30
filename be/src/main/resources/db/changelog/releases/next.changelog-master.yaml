@@ -1030,4 +1030,14 @@ databaseChangeLog:
   # ERP Reconciliation Center Translations
   - include:
       file: db/changelog/data/insert/20260830_v436_reconciliation_center_translations.yaml
+  # Device Signing: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260830_v437_device_signing_schema.yaml
+  - include:
+      file: db/changelog/data/insert/20260830_v438_device_signing_translations.yaml
+  # Catalog, Retail & Outbox: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260830_v439_catalog_retail_outbox_schema.yaml
+  - include:
+      file: db/changelog/data/insert/20260830_v440_catalog_retail_outbox_translations.yaml
 
