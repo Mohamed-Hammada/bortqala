@@ -1,0 +1,7 @@
+id;translation_key;locale;text_value
+v441-ar-001;AUTH_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN;ar-EG;فقط مسؤول النظام الأعلى (Super Admin) يمكنه إنشاء أو تعيين دور مسؤول النظام (Admin).
+v441-en-001;AUTH_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN;en-US;Only a Super Admin can create or assign the Admin role.
+v441-ar-002;AUTH_ADMIN_ACCOUNT_PROTECTED;ar-EG;فقط مسؤول النظام الأعلى (Super Admin) يمكنه تعديل أو إدارة حسابات مسؤولي النظام.
+v441-en-002;AUTH_ADMIN_ACCOUNT_PROTECTED;en-US;Only a Super Admin can modify or manage Admin accounts.
+v441-ar-003;ACCESS_PERMISSION_SUBSET_VIOLATION;ar-EG;لا يمكنك منح صلاحيات لا تمتلكها.
+v441-en-003;ACCESS_PERMISSION_SUBSET_VIOLATION;en-US;You cannot grant permissions that you do not possess.

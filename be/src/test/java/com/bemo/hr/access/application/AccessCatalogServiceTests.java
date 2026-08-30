@@ -158,6 +158,32 @@ class AccessCatalogServiceTests {
     }
 
     @Test
+    void nonSuperAdminCannotAssignAdminRole() {
+        assertThatThrownBy(() -> service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("ADMIN"), List.of(), null, null, null))
+                .isInstanceOf(BusinessRuleException.class)
+                .extracting("code")
+                .isEqualTo("AUTH_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN");
+    }
+
+    @Test
+    void permissionSubsetRuleBlocksExcessPermissions() {
+        assertThatThrownBy(() -> service.validateAssignment(
+                Set.of("HR_MANAGER"), "actor-1", List.of("FINANCE_MANAGER"), List.of(), null, null, null))
+                .isInstanceOf(BusinessRuleException.class)
+                .extracting("code")
+                .isEqualTo("ACCESS_PERMISSION_SUBSET_VIOLATION");
+    }
+
+    @Test
+    void permissionSubsetRuleAllowsValidSubset() {
+        var result = service.validateAssignment(
+                Set.of("FINANCE_MANAGER"), "actor-1", List.of("ACCOUNTANT"), List.of(), null, null, null);
+        assertThat(result.valid()).isTrue();
+    }
+
+
+    @Test
     void selfRoleModificationIsForbidden() {
         assertThatThrownBy(() -> service.validateAssignment(
                 Set.of("ADMIN"), "actor-1", List.of("VIEWER", "ADMIN"), List.of(),
@@ -341,7 +367,7 @@ class AccessCatalogServiceTests {
     void adminValidateBypassesMenuRoleMismatch() {
         enableAllFeatures();
         var result = service.validateAssignment(
-                Set.of("ADMIN"), "actor-1", List.of("ADMIN"), List.of("payroll"),
+                Set.of("SUPER_ADMIN"), "actor-1", List.of("ADMIN"), List.of("payroll"),
                 null, null, null);
         assertThat(result.valid()).isTrue();
         assertThat(result.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)

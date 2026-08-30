@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260830_v441_security_hardening_translations
+      author: bemo-architect
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260830_v441_security_hardening_translations.csv
+            separator: ";"
+            relativeToChangelogFile: false
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+              - column:
+                  name: translation_key
+                  type: VARCHAR(191)
+              - column:
+                  name: locale
+                  type: VARCHAR(16)
+              - column:
+                  name: text_value
+                  type: VARCHAR(1000)

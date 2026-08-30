@@ -475,6 +475,7 @@ public class AuthService {
         boolean actorIsSuperAdmin = actor.getRoles().stream()
                 .anyMatch(role -> role.getCode() == RoleCode.SUPER_ADMIN);
         boolean targetIsSuperAdmin = user.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.SUPER_ADMIN);
+        boolean targetIsAdmin = user.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.ADMIN);
 
         if (!actorIsSuperAdmin) {
             if (targetIsSuperAdmin) {
@@ -484,6 +485,14 @@ public class AuthService {
             if (request.roles().contains(RoleCode.SUPER_ADMIN)) {
                 throw new BusinessRuleException("Only a Super Admin can assign the Super Admin role.",
                         "AUTH_SUPER_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN", HttpStatus.CONFLICT);
+            }
+            if (targetIsAdmin && !user.getId().equals(actor.getId())) {
+                throw new BusinessRuleException("Only a Super Admin can modify Admin accounts.",
+                        "AUTH_ADMIN_ACCOUNT_PROTECTED", HttpStatus.CONFLICT);
+            }
+            if (request.roles().contains(RoleCode.ADMIN) && !targetIsAdmin) {
+                throw new BusinessRuleException("Only a Super Admin can assign the Admin role.",
+                        "AUTH_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN", HttpStatus.CONFLICT);
             }
         }
 

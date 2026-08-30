@@ -1477,3 +1477,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260830_v440_catalog_retail_outbox_translations.yaml
       relativeToChangelogFile: false
+  # Security Hardening & Permission Subset: Translations
+  - include:
+      file: db/changelog/data/insert/20260830_v441_security_hardening_translations.yaml
+      relativeToChangelogFile: false
+
