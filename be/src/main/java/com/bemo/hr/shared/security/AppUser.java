@@ -40,8 +40,12 @@ public class AppUser {
     @Column(name = "can_view_salary", nullable = false)
     private boolean canViewSalary = true;
 
+    @Column(name = "employee_id", length = 36)
+    private String employeeId;
+
     @Column(name = "category_id", length = 36)
     private String categoryId;
+
 
     @Column(name = "dashboard_customization_enabled", nullable = false)
     private boolean dashboardCustomizationEnabled = true;
@@ -236,8 +240,17 @@ public class AppUser {
         return version;
     }
 
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
+
     public boolean isMenuAccessAll() {
         return roles.stream().anyMatch(role -> role.getCode() == RoleCode.SUPER_ADMIN
                 || role.getCode() == RoleCode.ADMIN);
     }
 }
+

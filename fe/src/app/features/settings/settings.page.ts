@@ -33,11 +33,20 @@ function saveNotificationPrefs(prefs: NotificationPreferences): void {
 import { BusinessVerticalSetupComponent } from './business-vertical-setup/business-vertical-setup.component';
 import { AdvancesPolicySettingsComponent } from './advances-policy-settings/advances-policy-settings.component';
 import { IntegrationsSettingsComponent } from './integrations-settings.component';
+import { SecuritySettingsComponent } from './security/security-settings.component';
 
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [ReactiveFormsModule, ShortcutSettingsComponent, SettingsSubmenuComponent, BusinessVerticalSetupComponent, AdvancesPolicySettingsComponent, IntegrationsSettingsComponent],
+  imports: [
+    ReactiveFormsModule,
+    ShortcutSettingsComponent,
+    SettingsSubmenuComponent,
+    BusinessVerticalSetupComponent,
+    AdvancesPolicySettingsComponent,
+    IntegrationsSettingsComponent,
+    SecuritySettingsComponent,
+  ],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

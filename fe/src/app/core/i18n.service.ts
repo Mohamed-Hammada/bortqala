@@ -13,6 +13,7 @@ const LOCALE_STORAGE_KEY = 'bemo-erp-locale';
 
 const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
   'ar-EG': {
+    'common.password': 'كلمة المرور',
     'nav.settingsHint': 'إعدادات النظام والتفضيلات',
     'auth.logoutTitle': 'تسجيل الخروج',
     'auth.logoutHint': 'اختر نطاق تسجيل الخروج لهذا الحساب.',
@@ -35,7 +36,22 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'workspace.projects': 'إدارة المشاريع والإنشاءات',
     'workspace.salesCommercial': 'المبيعات والتجارة',
     'workspace.medical': 'القطاع الطبي والعيادات',
+    'workspace.serviceOps': 'الخدمات والتأجير والعمليات',
+    'workspace.fleet': 'إدارة الأسطول والمعدات',
+    'workspace.ess': 'بوابة الخدمة الذاتية للموظف',
+    'workspace.aiIntelligence': 'الذكاء الاصطناعي وتحليل البيانات',
+    'nav.serviceOps': 'إدارة الخدمات والتأجير',
+    'nav.serviceOpsHint': 'إدارة عقود التأجير وأوامر الشغل وحجوزات الموارد',
+    'nav.fleet': 'الأسطول والصيانة',
+    'nav.fleetHint': 'إدارة المركبات والمعدات، استهلاك الوقود، وجداول الصيانة',
+    'nav.ess': 'الخدمة الذاتية',
+    'nav.essHint': 'عرض قسائم الراتب، رصيد الإجازات، وتقديم طلبات السلف والإجازات',
+    'nav.aiIntelligence': 'مركز الذكاء والمساعد',
+    'nav.aiIntelligenceHint': 'التنبؤ بالتدفق النقدي، كشف شذوذ المصروفات، وتصنيف مخاطر التحصيل',
     'nav.clinicPatients': 'سجلات المرضى',
+
+
+
     'nav.clinicPatientsHint': 'إدارة السجلات الطبية وبيانات المرضى',
     'nav.clinicQueue': 'طابور العيادة',
     'nav.clinicQueueHint': 'إدارة قائمة الانتظار وغرف الكشف واستدعاء المرضى',
@@ -559,6 +575,7 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'compliance.provider.environmentProduction': 'بيئة إنتاج',
   },
   'en-US': {
+    'common.password': 'Password',
     'nav.settingsHint': 'System settings and preferences',
     'auth.logoutTitle': 'Sign out',
     'auth.logoutHint': 'Choose where this account should be signed out.',
@@ -594,7 +611,22 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'workspace.projects': 'Projects & Construction',
     'workspace.salesCommercial': 'Sales & Commercial',
     'workspace.medical': 'Medical & Clinics',
+    'workspace.serviceOps': 'Service Operations & Rentals',
+    'workspace.fleet': 'Fleet & Equipment Maintenance',
+    'workspace.ess': 'Employee Self-Service (ESS)',
+    'workspace.aiIntelligence': 'AI Intelligence & Analytics',
+    'nav.serviceOps': 'Service Operations & Rentals',
+    'nav.serviceOpsHint': 'Manage rentals, work orders, and resource bookings',
+    'nav.fleet': 'Fleet & Maintenance',
+    'nav.fleetHint': 'Manage vehicles, equipment, fuel logs, and maintenance schedules',
+    'nav.ess': 'Self-Service',
+    'nav.essHint': 'View payslips, leave balances, and submit advance/leave requests',
+    'nav.aiIntelligence': 'AI & Analytics Center',
+    'nav.aiIntelligenceHint': 'Cash flow forecast, expense anomalies, and collections risk scoring',
     'nav.clinicPatients': 'Patient Records',
+
+
+
     'nav.clinicPatientsHint': 'Manage patient master index and medical charts',
     'nav.clinicQueue': 'Clinic Queue',
     'nav.clinicQueueHint': 'Manage waiting line, consultation rooms and patient calling',

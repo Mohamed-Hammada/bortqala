@@ -15,8 +15,13 @@ Excel-habit users: select N grid rows → change one field (category, status, br
 Bulk endpoint permission matrix; partial-failure envelope rendering; help drawer content loads from i18n service.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Selecting 10 employees → change category shows exact before/after distribution; cancel changes nothing (no request fired).
-- [ ] AC-2 Bulk call with one forbidden id: succeeds 9, fails 1 — user sees which and why; no silent partial state.
-- [ ] AC-3 Server re-authorizes EVERY id (lower-privileged caller cannot smuggle a forbidden id inside ids[] — security test).
-- [ ] AC-4 Help icon renders Arabic guide on ar locale from DB; missing key falls back gracefully without raw key text.
-- [ ] AC-5 Grids without bulk declaration show no checkboxes (zero regression on untouched pages).
+- [x] AC-1 Selecting 10 employees → change category shows exact before/after distribution; cancel changes nothing (no request fired).
+- [x] AC-2 Bulk call with one forbidden id: succeeds 9, fails 1 — user sees which and why; no silent partial state.
+- [x] AC-3 Server re-authorizes EVERY id (lower-privileged caller cannot smuggle a forbidden id inside ids[] — security test).
+- [x] AC-4 Help icon renders Arabic guide on ar locale from DB; missing key falls back gracefully without raw key text.
+- [x] AC-5 Grids without bulk declaration show no checkboxes (zero regression on untouched pages).
+
+## Deliverables Summary
+- **Backend Services**: Bulk update handlers, partial failure envelopes, per-ID authorization verification, and DB translation help guides.
+- **Frontend Architecture**: `BulkEditComponent` (`fe/src/app/shared/ui/bulk-edit/`), floating bulk action bar, before/after distribution preview dialog, and contextual help tooltips.
+

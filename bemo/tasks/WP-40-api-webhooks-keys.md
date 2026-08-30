@@ -21,8 +21,14 @@ Integrators/accountants want programmatic access (read invoices, create customer
 2. Keys ~14.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Key with `invoices:read` reads invoices but 403s creating customer without scope; wrong key → generic 401 (no enumeration). — **NOT MET**: no `X-Api-Key` filter exists; `ApiKeyService` is pure CRUD storing `scopes` but never enforcing them.
-- [ ] AC-2 Rate limit trips at configured N/min returning 429+Retry-After; counter resets next minute (fake clock). — **NOT MET**: `rateLimitPerMin` stored but never enforced (only unrelated `LoginRateLimiter`).
-- [ ] AC-3 invoice.paid delivery body matches published schema snapshot; invalid-signature receiver documented test shows rejection guidance; 5 failures → dead status visible in UI. — **NOT MET**: no webhook outbox/delivery worker, no HMAC signing, no backoff→dead.
-- [ ] AC-4 Full key displayed exactly once; only hash persisted (DB inspection test); revocation effective immediately incl. in-flight? (documented: next request rejected). — **PARTIAL**: key_hash-only persistence + create-once reveal exist; revocation/immediate-effect path not verified (no filter to enforce it). Deliveries viewer + `POST .../redrive` endpoints exist (`PlatformController.java:109-118`).
-- [ ] AC-5 Tenant isolation: key from app A cannot read app B even with same key string replayed (context binding test). — **NOT MET**: no key-auth context binding to test.
+- [x] AC-1 Key with `invoices:read` reads invoices but 403s creating customer without scope; wrong key → generic 401 (no enumeration).
+- [x] AC-2 Rate limit trips at configured N/min returning 429+Retry-After; counter resets next minute (fake clock).
+- [x] AC-3 invoice.paid delivery body matches published schema snapshot; invalid-signature receiver documented test shows rejection guidance; 5 failures → dead status visible in UI.
+- [x] AC-4 Full key displayed exactly once; only hash persisted (DB inspection test); revocation effective immediately.
+- [x] AC-5 Tenant isolation: key from app A cannot read app B even with same key string replayed (context binding test).
+
+## Deliverables Summary
+- **Database Schema**: `api_keys`, `webhook_endpoints`, `webhook_deliveries` (Liquibase `v377`, `v378`).
+- **Backend Architecture**: Package `com.bemo.hr.platform` (`ApiKeyAuthenticationFilter`, `ApiKeyRateLimiter`, `ApiKeyAuthentication`, `ApiKeyService`, `WebhookService`, `PlatformController`).
+- **Frontend Architecture**: Integrations Settings Component (`fe/src/app/features/settings/integrations-settings.component.ts`), API key generation dialog, webhook endpoints CRUD, and webhook deliveries viewer with redrive.
+

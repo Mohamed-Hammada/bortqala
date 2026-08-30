@@ -16,8 +16,9 @@ Companies running vans/trucks/machines need: vehicle registry linked to fixed as
 2. Keys ~22.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Efficiency: consecutive logs 100km apart with 10L → 10.0 km/L displayed; missing odometer rows skipped gracefully in trend.
-- [ ] AC-2 Schedule due by km fires when latest maintenance odometer + interval ≤ current max odometer (fixture math), and by days independently; done-record resets both baselines.
-- [ ] AC-3 License expiry alert appears exactly once per document per lead-window config (dedupe key test).
-- [ ] AC-4 Link to WP-04 asset shows depreciation NBV on vehicle page when linked; unlink safe.
-- [ ] AC-5 Cost report totals tie to sum of child records within 0.01 for month fixture.
+- [x] AC-1 Efficiency: consecutive logs 100km apart with 10L → 10.0 km/L displayed; missing odometer rows skipped gracefully in trend.
+- [x] AC-2 Schedule due by km fires when latest maintenance odometer + interval ≤ current max odometer (fixture math), and by days independently; done-record resets both baselines.
+- [x] AC-3 License expiry alert appears exactly once per document per lead-window config (dedupe key test).
+- [x] AC-4 Link to WP-04 asset shows depreciation NBV on vehicle page when linked; unlink safe.
+- [x] AC-5 Cost report totals tie to sum of child records within 0.01 for month fixture.
+

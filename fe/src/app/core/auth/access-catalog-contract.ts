@@ -319,6 +319,36 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: [],
     requiredFeature: 'medical.enabled',
   },
+  {
+    menuId: 'service-ops',
+    route: '/service-ops',
+    roles: [],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'fleet',
+    route: '/fleet',
+    roles: [],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'self-service',
+    route: '/self-service',
+    roles: [],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'ai-intelligence',
+    route: '/ai-intelligence',
+    roles: [],
+    requiredFeature: null,
+  },
 ];
+
+
+
+
+
+
 
 

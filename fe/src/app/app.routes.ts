@@ -688,7 +688,38 @@ export const routes: Routes = [
           import('./features/clinic/medical-tools.page').then((m) => m.MedicalToolsPageComponent),
       },
       {
+        path: 'service-ops',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'service-ops' },
+        loadComponent: () =>
+          import('./features/service-ops/service-ops.page').then((m) => m.ServiceOpsPageComponent),
+      },
+      {
+        path: 'fleet',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'fleet' },
+        loadComponent: () =>
+          import('./features/fleet/fleet.page').then((m) => m.FleetPageComponent),
+      },
+      {
+        path: 'self-service',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'self-service' },
+        loadComponent: () =>
+          import('./features/self-service/ess.page').then((m) => m.EssPageComponent),
+      },
+      {
+        path: 'ai-intelligence',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'ai-intelligence' },
+        loadComponent: () =>
+          import('./features/ai-intelligence/ai-intelligence.page').then((m) => m.AiIntelligencePageComponent),
+      },
+      {
         path: 'forbidden',
+
+
+
         loadComponent: () =>
           import('./features/errors/forbidden.page').then((module) => module.ForbiddenPage),
       },

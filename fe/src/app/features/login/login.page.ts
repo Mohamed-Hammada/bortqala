@@ -31,6 +31,11 @@ export class LoginPage {
   readonly credentialHint = signal('DEMO / admin / Admin@12345');
   private readonly http = inject(HttpClient);
   readonly ssoProbe = signal<SsoProbe>({ hasGoogle: false, hasMicrosoft: false });
+  readonly totpChallengeToken = signal<string | null>(null);
+  readonly totpCode = signal('');
+  readonly isBackupCodeMode = signal(false);
+  readonly verifyingTotp = signal(false);
+
   readonly form = new FormGroup({
     appCode: new FormControl('DEMO', { nonNullable: true, validators: [Validators.required] }),
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -117,6 +122,13 @@ export class LoginPage {
           this.form.controls.password.value,
         ),
       );
+
+      if (session.tokenType === '2FA_REQUIRED') {
+        this.totpChallengeToken.set(session.accessToken);
+        this.totpCode.set('');
+        return;
+      }
+
       await this.i18n.use(session.preferences.locale, session.app.id);
       document.documentElement.lang = this.i18n.locale().startsWith('ar') ? 'ar' : 'en';
       document.documentElement.dir = this.i18n.locale().startsWith('ar') ? 'rtl' : 'ltr';
@@ -130,6 +142,33 @@ export class LoginPage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  async submitTotp(): Promise<void> {
+    const token = this.totpChallengeToken();
+    const code = this.totpCode().trim();
+    if (!token || !code || this.verifyingTotp()) return;
+
+    this.verifyingTotp.set(true);
+    this.error.set(null);
+    try {
+      const session = await firstValueFrom(this.authService.verify2fa(token, code));
+      await this.i18n.use(session.preferences.locale, session.app.id);
+      document.documentElement.lang = this.i18n.locale().startsWith('ar') ? 'ar' : 'en';
+      document.documentElement.dir = this.i18n.locale().startsWith('ar') ? 'rtl' : 'ltr';
+      await this.router.navigate(session.mustChangePassword ? ['/change-password'] : ['/dashboard']);
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+    } finally {
+      this.verifyingTotp.set(false);
+    }
+  }
+
+  cancelTotp(): void {
+    this.totpChallengeToken.set(null);
+    this.totpCode.set('');
+    this.isBackupCodeMode.set(false);
+    this.error.set(null);
   }
 
   async loadSsoProbe(): Promise<void> {

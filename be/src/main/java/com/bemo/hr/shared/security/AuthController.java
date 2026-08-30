@@ -51,9 +51,12 @@ public class AuthController {
                                                 HttpServletRequest servletRequest,
                                                 HttpServletResponse servletResponse,
                                                 @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
-        AuthService.LoginResult result = authService.login(request, deviceId, clientIpResolver.resolve(servletRequest));
-        setRefreshCookie(servletResponse, refreshCookieCodec.encode(result.appId(), result.refreshToken()),
-                result.refreshExpiresAt());
+        String userAgent = servletRequest.getHeader(HttpHeaders.USER_AGENT);
+        AuthService.LoginResult result = authService.login(request, deviceId, clientIpResolver.resolve(servletRequest), userAgent);
+        if (result.refreshToken() != null) {
+            setRefreshCookie(servletResponse, refreshCookieCodec.encode(result.appId(), result.refreshToken()),
+                    result.refreshExpiresAt());
+        }
         return ResponseEntity.ok(result.response());
     }
 

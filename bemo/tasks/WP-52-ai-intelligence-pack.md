@@ -23,8 +23,9 @@ Decision-support layer: cash-flow forecast, inventory demand forecast, expense a
 Forecast card on finance dashboard with band chart (CSS), anomaly feed integration, party score badges, chat-style Q&A panel (flag-gated).
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-P1 Forecast on synthetic seasonality fixture tracks trend within stated band; band widens correctly as history shrinks (<3 months → feature returns NOT_ENOUGH_DATA translated).
-- [ ] AC-P2 Anomaly test: vendor invoice 3× mean flagged once (dedupe by vendor+month); normal variance never flagged across 100-row fuzz.
-- [ ] AC-P3 Score bands match hand-computed fixture; explanation text lists the exact factors used (explainability requirement).
-- [ ] AC-P4 NL-QA: question about sales maps ONLY to whitelisted dataset fields (hostile prompt asking for other tenants' data returns refusal + nothing executed — security suite); every Q&A pair audited; flag-off = endpoint 404.
-- [ ] AC-P5 Zero writes anywhere in pack (read-only proof: DB diff empty after full exercise).
+- [x] AC-P1 Forecast on synthetic seasonality fixture tracks trend within stated band; band widens correctly as history shrinks (<3 months → feature returns NOT_ENOUGH_DATA translated).
+- [x] AC-P2 Anomaly test: vendor invoice 3× mean flagged once (dedupe by vendor+month); normal variance never flagged across 100-row fuzz.
+- [x] AC-P3 Score bands match hand-computed fixture; explanation text lists the exact factors used (explainability requirement).
+- [x] AC-P4 NL-QA: question about sales maps ONLY to whitelisted dataset fields (hostile prompt asking for other tenants' data returns refusal + nothing executed — security suite); every Q&A pair audited; flag-off = endpoint 404.
+- [x] AC-P5 Zero writes anywhere in pack (read-only proof: DB diff empty after full exercise).
+

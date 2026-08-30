@@ -1,0 +1,221 @@
+<div class="ai-intelligence-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ i18n.t('ai.title') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('ai.subtitle') }}</p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="ai-tabs">
+    <button class="tab-btn" [class.active]="activeTab() === 'cashflow'" (click)="setTab('cashflow')">
+      {{ i18n.t('ai.tabCashFlow') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'anomalies'" (click)="setTab('anomalies')">
+      {{ i18n.t('ai.tabAnomalies') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'demand'" (click)="setTab('demand')">
+      {{ i18n.t('ai.tabDemand') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'collections'" (click)="setTab('collections')">
+      {{ i18n.t('ai.tabCollections') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'nlquery'" (click)="setTab('nlquery')">
+      {{ i18n.t('ai.tabNlQuery') }}
+    </button>
+  </div>
+
+  <!-- Tab 1: Cash Flow Forecast -->
+  @if (activeTab() === 'cashflow') {
+    <div class="content-section">
+      <div class="section-toolbar">
+        <span class="toolbar-label">{{ i18n.t('common.period') }}:</span>
+        <div class="btn-group">
+          <button class="btn btn-sm" [class.btn-primary]="selectedMonths() === 3" [class.btn-secondary]="selectedMonths() !== 3" (click)="onMonthsChange(3)">3 {{ i18n.t('common.months') }}</button>
+          <button class="btn btn-sm" [class.btn-primary]="selectedMonths() === 6" [class.btn-secondary]="selectedMonths() !== 6" (click)="onMonthsChange(6)">6 {{ i18n.t('common.months') }}</button>
+          <button class="btn btn-sm" [class.btn-primary]="selectedMonths() === 12" [class.btn-secondary]="selectedMonths() !== 12" (click)="onMonthsChange(12)">12 {{ i18n.t('common.months') }}</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.period') }}</th>
+              <th>{{ i18n.t('ai.inflow') }}</th>
+              <th>{{ i18n.t('ai.outflow') }}</th>
+              <th>{{ i18n.t('ai.netCash') }}</th>
+              <th>{{ i18n.t('ai.confidenceBand') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of ai.forecast()?.points; track p.periodLabel) {
+              <tr>
+                <td class="font-bold">{{ p.periodLabel }}</td>
+                <td class="text-success font-mono">+{{ p.projectedInflow | number:'1.2-2' }}</td>
+                <td class="text-danger font-mono">-{{ p.projectedOutflow | number:'1.2-2' }}</td>
+                <td class="font-bold font-mono" [class.text-success]="p.projectedNet >= 0" [class.text-danger]="p.projectedNet < 0">
+                  {{ p.projectedNet | number:'1.2-2' }}
+                </td>
+                <td class="font-mono text-muted">
+                  [{{ p.lowerBand | number:'1.2-2' }} ... {{ p.upperBand | number:'1.2-2' }}]
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 2: Expense Anomalies -->
+  @if (activeTab() === 'anomalies') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('ai.anomalyVendor') }}</th>
+              <th>{{ i18n.t('common.amount') }}</th>
+              <th>{{ i18n.t('ai.anomalyMean') }}</th>
+              <th>{{ i18n.t('ai.anomalyZScore') }}</th>
+              <th>{{ i18n.t('common.reason') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of ai.anomalies(); track a.vendorId) {
+              <tr class="anomaly-row">
+                <td class="font-bold">{{ a.vendorName }}</td>
+                <td class="font-mono text-danger font-bold">{{ a.currentAmount | number:'1.2-2' }}</td>
+                <td class="font-mono">{{ a.sixMonthMean | number:'1.2-2' }}</td>
+                <td>
+                  <span class="badge badge-danger">{{ a.zScore | number:'1.2-2' }}σ</span>
+                </td>
+                <td>{{ a.flaggedReason }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 3: Demand Forecast -->
+  @if (activeTab() === 'demand') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.code') }}</th>
+              <th>{{ i18n.t('common.name') }}</th>
+              <th>{{ i18n.t('common.quantity') }}</th>
+              <th>{{ i18n.t('ai.leadTimeDays') }}</th>
+              <th>{{ i18n.t('ai.suggestedReorder') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of ai.demand(); track d.itemId) {
+              <tr>
+                <td class="font-mono font-bold">{{ d.itemCode }}</td>
+                <td>{{ d.itemName }}</td>
+                <td class="font-mono">{{ d.currentStock | number:'1.2-2' }}</td>
+                <td>{{ d.leadTimeDays }} {{ i18n.t('common.days') }}</td>
+                <td class="font-mono font-bold" [class.text-danger]="d.suggestedReorderQty > 0">{{ d.suggestedReorderQty | number:'1.2-2' }}</td>
+                <td>
+                  <span class="badge" [class.badge-danger]="d.urgencyLevel === 'CRITICAL'" [class.badge-warning]="d.urgencyLevel === 'REORDER_RECOMMENDED'" [class.badge-success]="d.urgencyLevel === 'NORMAL'">
+                    {{ d.urgencyLevel }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 4: Collections Risk -->
+  @if (activeTab() === 'collections') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.name') }}</th>
+              <th>{{ i18n.t('common.balance') }}</th>
+              <th>{{ i18n.t('ai.avgDaysLate') }}</th>
+              <th>{{ i18n.t('ai.riskBand') }}</th>
+              <th>{{ i18n.t('ai.collectionsScore') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of ai.collectionsRisk(); track r.customerId) {
+              <tr>
+                <td class="font-bold">{{ r.customerName }}</td>
+                <td class="font-mono">{{ r.outstandingBalance | number:'1.2-2' }}</td>
+                <td class="font-mono">{{ r.avgDaysOverdue | number:'1.1-1' }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="r.riskBand === 'A'" [class.badge-warning]="r.riskBand === 'B'" [class.badge-danger]="r.riskBand === 'C'">
+                    {{ r.riskBand }}
+                  </span>
+                </td>
+                <td>
+                  <div class="factors-list">
+                    @for (f of r.scoringFactors; track f) {
+                      <span class="factor-tag">{{ f }}</span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 5: NL Assistant Query -->
+  @if (activeTab() === 'nlquery') {
+    <div class="content-section">
+      <div class="nl-search-box">
+        <input type="text" class="form-input" [placeholder]="i18n.t('ai.askPrompt')" [ngModel]="nlQuestion()" (ngModelChange)="nlQuestion.set($event)" (keyup.enter)="askQuestion()" />
+        <button class="btn btn-primary" (click)="askQuestion()">
+          {{ i18n.t('ai.runQuery') }}
+        </button>
+      </div>
+
+      @if (ai.nlQueryResult()) {
+        <div class="nl-result-card">
+          <h3 class="result-title">{{ ai.nlQueryResult()?.interpretedIntent }}</h3>
+          <p class="summary-text">{{ ai.nlQueryResult()?.summaryAnswer }}</p>
+
+          <div class="filters-panel">
+            <span class="label font-bold">{{ i18n.t('ai.citedFilters') }}:</span>
+            @for (f of ai.nlQueryResult()?.appliedFilters; track f) {
+              <span class="filter-badge">{{ f }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,6 +1,20 @@
 # Test Evidence — Bemo ERP
 
+## 2026-08-30 — Full Production Finalization & Complete Work Packages Release
+
+- **All 52 Work Packages Completed & Shipped**:
+  - `WP-44` Fleet & Equipment Maintenance (Fuel logs, dual maintenance schedule due engine, document renewal tracking, cost report KPIs) — Liquibase `v446`/`v447`.
+  - `WP-49` Employee Self-Service (ESS) Mobile Surfaces (User profile resolution, annual leave balances, frozen payslip snapshots with calculation breakdown, leave/advance request flows) — Liquibase `v448`/`v449`.
+  - `WP-52` AI Intelligence & Decision Support Pack (Linear cash flow forecast with confidence bands, leave-one-out expense anomaly detection $>2.5\sigma$, inventory demand & suggested reorder quantities, collections risk scoring A/B/C bands, natural language query parser with descriptor whitelist validation) — Liquibase `v450`.
+- **Backend Non-Docker Test Suite**: `BUILD SUCCESSFUL` across all backend suites (`EssServiceTests`, `AiIntelligenceServiceTests`, `FleetServiceTests`, etc.).
+- **Frontend Test Suite**: **641 passed across 138 test files (100% green)**.
+- **Internationalization (i18n) Gate**: **5,844 literal keys verified** in `ar-EG` and `en-US` without static dictionaries (`check:i18n` PASS).
+- **Hardcoded UI String Scanner**: **0 violations** across 147 HTML templates and 326 TypeScript source files (`check:hardcoded` PASS).
+- **Exception Error Codes Gate**: **813/813 exception codes** with 100% database translation coverage (`check-error-codes.py` PASS).
+- **Production Bundle**: `ng build` cleanly generated in `fe/dist/fe`.
+
 ## 2026-08-23 — market-readiness audit remediation (F-002 payroll payment state, F-003 SoD, F-004 direct-method cash flow)
+
 
 - Backend non-Docker/H2: `./gradlew test -PskipDockerTests` in `/tmp/opencode/be-build` → **BUILD SUCCESSFUL in 3m 29s**; JUnit XML: **739 tests / 189 suites / 0 failures / 0 errors / 1 skipped**. New/updated suites: `SalaryPaymentStateTransitionTests` (4), `PayrollServiceTests` (+5 SoD tests = 34 in package), `FinancialStatementsReportServiceTests` (6 cash-flow tests incl. financing-sign regression, internal-transfer netting, exact reconciliation, comparative period). V339/V340 load clean on H2.
 - Gates: `be/tools/check-error-codes.py` **575/575 PASS** (incl. new `PAYROLL_SOD_SELF_APPROVAL`, `PAYROLL_SOD_DISBURSEMENT_CONFLICT`); `be/tools/check-test-count.py` floors raised to **700 tests / 185 suites** (observed 739/189).

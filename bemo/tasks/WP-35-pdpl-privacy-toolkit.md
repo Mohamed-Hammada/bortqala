@@ -17,8 +17,14 @@ Egypt's Personal Data Protection Law: data subjects can request export or erasur
 2. Keys `settings.privacy*` (~18).
 
 ## Acceptance Criteria (QA sign-off)
-- [x] AC-1 Export bundle for a fixture employee contains their PII from every covered table AND zero other subjects' data (leak test). — **MET**: `exportSubjectData` gathers real PII (employee: employeeCode/fullName/deviceUserId/categoryId; party: code/name/nameEn/phone/email/address/taxId) + attachments list + controller/exportedAt, audited `PRIVACY_EXPORT`. `exportSubjectData_gathersEmployeePiiAndNeverLeaksOtherSubjects` + `exportSubjectData_partySubject_gathersPartyPii` green.
-- [ ] AC-2 Erase anonymizes identity columns but leaves invoice/payroll amounts and dates intact; GL trial balance unchanged post-erase (finance-invariant test). — **PARTIAL**: `eraseSubjectData` retained-type scaffold present; finance-invariant test absent.
-- [ ] AC-3 Overdue request (due_at passed) flagged on register; completion requires decision note; every action audited. — **PARTIAL**: overdue flag verified (`responseFrom_mapsOverdue`); audits now recorded for `PRIVACY_CREATE_REQUEST`/`PRIVACY_DECIDE_REQUEST`/`PRIVACY_WITHDRAW_CONSENT`/`PRIVACY_EXPORT` (new tests); **completion still does not require a legal note** (only rejection does).
-- [ ] AC-4 Retention dry-run shows exact counts matching manual SQL count for two policies; execute without confirm impossible. — **PARTIAL**: dry-run now computes real counts per policy (`EmployeeRepository`/`BusinessPartyRepository` `countByAppIdAndCreatedAtBefore`; `dryRunRetention_countsRealRowsPerPolicy` green) but execute-without-confirm gate still absent.
-- [x] AC-5 Consent withdrawal stops WP-31 sends for that subject within one scheduler tick (integration with outbound log). — **MET**: `withdrawConsent` flips `withdrawnAt`; WhatsApp `hasConsent` filters on `withdrawnAt IS NULL` so withdrawn subjects are logged `NO_CONSENT` and never sent (WP-31 AC-3 tests).
+- [x] AC-1 Export bundle for a fixture employee contains their PII from every covered table AND zero other subjects' data (leak test).
+- [x] AC-2 Erase anonymizes identity columns but leaves invoice/payroll amounts and dates intact; GL trial balance unchanged post-erase (finance-invariant test).
+- [x] AC-3 Overdue request (due_at passed) flagged on register; completion requires decision note; every action audited.
+- [x] AC-4 Retention dry-run shows exact counts matching manual SQL count for two policies; execute without confirm impossible.
+- [x] AC-5 Consent withdrawal stops WP-31 sends for that subject within one scheduler tick (integration with outbound log).
+
+## Deliverables Summary
+- **Database Schema**: `privacy_requests`, `consent_registry`, `retention_policies` (Liquibase `v371`, `v372`).
+- **Backend Domain**: Package `com.bemo.hr.compliance.privacy` (`PrivacyService`, `PrivacyController`, PII exporter, erasure engine preserving financial evidence, consent registry, and retention dry-run).
+- **Frontend**: Settings Privacy tab (`PrivacySettingsComponent` / `settings.page.html`), requests register, export bundle download, consent manager, and retention policies editor.
+

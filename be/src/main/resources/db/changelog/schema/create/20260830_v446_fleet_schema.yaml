@@ -1,0 +1,108 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260830-v446-01-flt-vehicles
+      author: bemo-tech-lead
+      changes:
+        - createTable:
+            tableName: flt_vehicles
+            columns:
+              - column: { name: id, type: VARCHAR(64), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: plate_number, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: make, type: VARCHAR(128), constraints: { nullable: false } }
+              - column: { name: model, type: VARCHAR(128), constraints: { nullable: false } }
+              - column: { name: year, type: INT, constraints: { nullable: false } }
+              - column: { name: vehicle_type, type: VARCHAR(32), constraints: { nullable: false } } # SEDAN, TRUCK, VAN, BUS, HEAVY_EQUIPMENT
+              - column: { name: asset_id, type: VARCHAR(64) } # FK to fixed asset if linked
+              - column: { name: default_driver_id, type: VARCHAR(64) }
+              - column: { name: default_driver_name, type: VARCHAR(255) }
+              - column: { name: current_odometer, type: NUMERIC(15, 2), defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(32), defaultValue: "ACTIVE", constraints: { nullable: false } } # ACTIVE, MAINTENANCE, RETIRED
+              - column: { name: notes, type: VARCHAR(1000) }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 20260830-v446-02-flt-fuel-logs
+      author: bemo-tech-lead
+      changes:
+        - createTable:
+            tableName: flt_fuel_logs
+            columns:
+              - column: { name: id, type: VARCHAR(64), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: vehicle_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: log_date, type: VARCHAR(32), constraints: { nullable: false } }
+              - column: { name: liters, type: NUMERIC(10, 2), constraints: { nullable: false } }
+              - column: { name: odometer, type: NUMERIC(15, 2), constraints: { nullable: false } }
+              - column: { name: total_cost, type: NUMERIC(15, 2), constraints: { nullable: false } }
+              - column: { name: station_name, type: VARCHAR(255) }
+              - column: { name: driver_name, type: VARCHAR(255) }
+              - column: { name: notes, type: VARCHAR(1000) }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 20260830-v446-03-flt-maintenance-schedules
+      author: bemo-tech-lead
+      changes:
+        - createTable:
+            tableName: flt_maintenance_schedules
+            columns:
+              - column: { name: id, type: VARCHAR(64), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: vehicle_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: title, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: maintenance_kind, type: VARCHAR(32), constraints: { nullable: false } } # OIL, TIRES, INSPECTION, BRAKES, CUSTOM
+              - column: { name: interval_km, type: NUMERIC(15, 2) }
+              - column: { name: interval_days, type: INT }
+              - column: { name: last_done_odometer, type: NUMERIC(15, 2) }
+              - column: { name: last_done_date, type: VARCHAR(32) }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 20260830-v446-04-flt-maintenance-records
+      author: bemo-tech-lead
+      changes:
+        - createTable:
+            tableName: flt_maintenance_records
+            columns:
+              - column: { name: id, type: VARCHAR(64), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: vehicle_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: schedule_id, type: VARCHAR(64) } # optional linked schedule
+              - column: { name: title, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: performed_date, type: VARCHAR(32), constraints: { nullable: false } }
+              - column: { name: odometer, type: NUMERIC(15, 2), constraints: { nullable: false } }
+              - column: { name: cost, type: NUMERIC(15, 2), constraints: { nullable: false } }
+              - column: { name: vendor_party_id, type: VARCHAR(64) }
+              - column: { name: vendor_name, type: VARCHAR(255) }
+              - column: { name: description, type: VARCHAR(1000) }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 20260830-v446-05-flt-vehicle-documents
+      author: bemo-tech-lead
+      changes:
+        - createTable:
+            tableName: flt_vehicle_documents
+            columns:
+              - column: { name: id, type: VARCHAR(64), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: vehicle_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: document_type, type: VARCHAR(32), constraints: { nullable: false } } # LICENSE, INSURANCE, INSPECTION_PASS, PERMIT
+              - column: { name: document_number, type: VARCHAR(128), constraints: { nullable: false } }
+              - column: { name: issue_date, type: VARCHAR(32) }
+              - column: { name: expiry_date, type: VARCHAR(32), constraints: { nullable: false } }
+              - column: { name: issuer, type: VARCHAR(255) }
+              - column: { name: notes, type: VARCHAR(1000) }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }

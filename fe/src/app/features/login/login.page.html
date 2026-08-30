@@ -62,56 +62,105 @@
         <div class="alert error" role="alert">{{ error() }}</div>
       }
 
-      <div class="field">
-        <label for="appCode">{{ i18n.t('login.appCode') }}</label>
-        <input
-          id="appCode"
-          class="technical-input ltr"
-          dir="ltr"
-          formControlName="appCode"
-          autocomplete="organization"
-          [placeholder]="i18n.t('login.appCodePlaceholder')"
-        />
-      </div>
-
-      <div class="field">
-        <label for="username">{{ i18n.t('login.username') }}</label>
-        <input
-          id="username"
-          class="technical-input ltr"
-          dir="ltr"
-          formControlName="username"
-          autocomplete="username"
-          [placeholder]="i18n.t('login.usernamePlaceholder')"
-        />
-      </div>
-
-      <div class="field password-field">
-        <label for="password">{{ i18n.t('login.password') }}</label>
-        <div class="password-control">
+      @if (!totpChallengeToken()) {
+        <div class="field">
+          <label for="appCode">{{ i18n.t('login.appCode') }}</label>
           <input
-            id="password"
+            id="appCode"
             class="technical-input ltr"
             dir="ltr"
-            formControlName="password"
-            [type]="showPassword() ? 'text' : 'password'"
-            autocomplete="current-password"
+            formControlName="appCode"
+            autocomplete="organization"
+            [placeholder]="i18n.t('login.appCodePlaceholder')"
           />
-          <button
-            type="button"
-            class="password-visibility-toggle"
-            (click)="showPassword.set(!showPassword())"
-            [attr.aria-label]="i18n.t(showPassword() ? 'login.hide' : 'login.show')"
-            [attr.title]="i18n.t(showPassword() ? 'login.hide' : 'login.show')"
-          >
-            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" />
-          </button>
         </div>
-      </div>
 
-      <button class="button primary submit-btn" type="submit" [disabled]="loading()">
-        {{ i18n.t(loading() ? 'login.loading' : 'login.submit') }}
-      </button>
+        <div class="field">
+          <label for="username">{{ i18n.t('login.username') }}</label>
+          <input
+            id="username"
+            class="technical-input ltr"
+            dir="ltr"
+            formControlName="username"
+            autocomplete="username"
+            [placeholder]="i18n.t('login.usernamePlaceholder')"
+          />
+        </div>
+
+        <div class="field password-field">
+          <label for="password">{{ i18n.t('login.password') }}</label>
+          <div class="password-control">
+            <input
+              id="password"
+              class="technical-input ltr"
+              dir="ltr"
+              formControlName="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="password-visibility-toggle"
+              (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="i18n.t(showPassword() ? 'login.hide' : 'login.show')"
+              [attr.title]="i18n.t(showPassword() ? 'login.hide' : 'login.show')"
+            >
+              <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" />
+            </button>
+          </div>
+        </div>
+
+        <button class="button primary submit-btn" type="submit" [disabled]="loading()">
+          {{ i18n.t(loading() ? 'login.loading' : 'login.submit') }}
+        </button>
+      } @else {
+        <!-- 2FA Verification Challenge Step -->
+        <div class="totp-challenge-step">
+          <div class="totp-step-header">
+            <h3>{{ i18n.t('auth.totp.title') }}</h3>
+            <p>{{ i18n.t(isBackupCodeMode() ? 'auth.totp.backupCodePlaceholder' : 'auth.totp.desc') }}</p>
+          </div>
+
+          <div class="field">
+            <input
+              type="text"
+              class="technical-input ltr totp-code-input"
+              dir="ltr"
+              [placeholder]="i18n.t(isBackupCodeMode() ? 'auth.totp.backupCodePlaceholder' : 'auth.totp.codePlaceholder')"
+              [value]="totpCode()"
+              (input)="totpCode.set($any($event.target).value)"
+              (keydown.enter)="$event.preventDefault(); submitTotp()"
+              autocomplete="one-time-code"
+            />
+          </div>
+
+          <button
+            class="button primary submit-btn"
+            type="button"
+            [disabled]="verifyingTotp() || !totpCode().trim()"
+            (click)="submitTotp()"
+          >
+            {{ i18n.t('auth.totp.verifyBtn') }}
+          </button>
+
+          <div class="totp-options-row">
+            <button
+              type="button"
+              class="button text-link"
+              (click)="isBackupCodeMode.set(!isBackupCodeMode())"
+            >
+              {{ i18n.t(isBackupCodeMode() ? 'auth.totp.useTotpCode' : 'auth.totp.useBackupCode') }}
+            </button>
+            <button
+              type="button"
+              class="button text-link cancel-btn"
+              (click)="cancelTotp()"
+            >
+              {{ i18n.t('common.cancel') }}
+            </button>
+          </div>
+        </div>
+      }
 
       @if (ssoProbe().hasGoogle || ssoProbe().hasMicrosoft) {
         <div class="sso-divider">

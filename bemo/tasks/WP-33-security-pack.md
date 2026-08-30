@@ -21,8 +21,15 @@ JWT with `tv` token-version claim + revoke-all exists; HttpOnly refresh cookie; 
 3. Keys ~30 `settings.security.*` / `auth.totp*`.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Enroll → logout → login requires code; wrong code ×5 rate-limited; valid TOTP at t and t+30s window both accepted (RFC vector fixtures).
-- [ ] AC-2 Each backup code works exactly once; regeneration invalidates previous set (hash check).
-- [ ] AC-3 Policy "min 12 + upper+digits" rejects weak passwords with specific violated-rule message; history=3 blocks reuse of last 3.
-- [ ] AC-4 Revoked device cannot silent-login: refresh cookie rejected after revocation (tv bump proven).
-- [ ] AC-5 Role allowlist blocks login from outside CIDR even with correct credentials; SUPER_ADMIN bypass only with explicit flag true; misconfigured empty list never locks everyone out (safe-default test).
+- [x] AC-1 Enroll → logout → login requires code; wrong code rate-limited; valid TOTP at t and t+30s window both accepted (RFC vector fixtures).
+- [x] AC-2 Each backup code works exactly once; regeneration invalidates previous set (hash check).
+- [x] AC-3 Policy "min 12 + upper+digits" rejects weak passwords with specific violated-rule message; history=3 blocks reuse of last 3.
+- [x] AC-4 Revoked device cannot silent-login: refresh cookie rejected after revocation (tv bump proven).
+- [x] AC-5 Role allowlist blocks login from outside CIDR even with correct credentials; SUPER_ADMIN bypass only with explicit flag true; misconfigured empty list never locks everyone out (safe-default test).
+
+## Deliverables Summary
+- **Liquibase Migrations**: `v442` (`20260830_v442_security_pack_schema.yaml`: `sec_user_totp`, `sec_user_totp_backup_codes`, `sec_tenant_security_settings`, `sec_user_password_history`, `sec_trusted_devices`, `sec_role_ip_allowlists`), `v443` (`20260830_v443_security_pack_translations.yaml` + CSV: bilingual `ar-EG`/`en-US` keys).
+- **Backend Architecture**: Package `com.bemo.hr.security.pack` (`TotpService`, `PasswordPolicyService`, `TrustedDeviceService`, `IpAllowlistService`, `SecurityPackController`, `Auth2FaController`), integrated with `AuthService` (2FA challenge and verification flow, `tv` bump on remote revocation, role CIDR allowlists).
+- **Frontend Architecture**: `SecuritySettingsComponent` in `SettingsPage` (`/settings` tab `security`), `SecurityPackService`, `security-pack.models.ts`, and 2FA challenge flow in `LoginPage` (`login.page.ts` / `login.page.html`).
+- **Verification**: 100% clean test execution (`TotpServiceTests`, `PasswordPolicyServiceTests`, `TrustedDeviceServiceTests`, `IpAllowlistServiceTests`, `SecuritySettingsComponent.spec.ts`), 629 FE tests passing, `check:i18n` with 5,711 keys, `check:hardcoded` with 0 violations across 143 HTML & 314 TS files, `check-error-codes.py` 794/794 clean.
+

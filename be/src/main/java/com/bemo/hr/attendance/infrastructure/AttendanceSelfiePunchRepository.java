@@ -10,4 +10,7 @@ import java.util.Optional;
 public interface AttendanceSelfiePunchRepository extends JpaRepository<AttendanceSelfiePunch, String> {
 
     Optional<AttendanceSelfiePunch> findByOperationId(String operationId);
+
+    java.util.List<AttendanceSelfiePunch> findByEmployeeIdOrderByPunchedAtDesc(String employeeId);
 }
+

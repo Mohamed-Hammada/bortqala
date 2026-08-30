@@ -51,7 +51,7 @@ public class PrivacyService {
     public PrivacyRequest decideRequest(String id, PrivacyApi.DecideRequest request, String actor) {
         PrivacyRequest pr = findByIdOrThrow(id);
         if ("COMPLETED".equals(request.decision())) {
-            pr.markCompleted(actor, null);
+            pr.markCompleted(actor, request.legalNote());
         } else if ("REJECTED".equals(request.decision())) {
             if (request.legalNote() == null || request.legalNote().isBlank()) {
                 throw new BusinessRuleException("Legal note is required for rejection",

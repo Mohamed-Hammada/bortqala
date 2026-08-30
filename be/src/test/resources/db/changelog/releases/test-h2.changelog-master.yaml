@@ -1481,4 +1481,40 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260830_v441_security_hardening_translations.yaml
       relativeToChangelogFile: false
+  # WP-33: Security Pack Schema and Translations (2FA, Password Policy, Devices, IP Rules)
+  - include:
+      file: db/changelog/schema/create/20260830_v442_security_pack_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v443_security_pack_translations.yaml
+      relativeToChangelogFile: false
+  # WP-43: Service Ops Pack Schema and Translations (Rentals, Work Orders, Bookings)
+  - include:
+      file: db/changelog/schema/create/20260830_v444_service_ops_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v445_service_ops_translations.yaml
+      relativeToChangelogFile: false
+  # WP-44: Fleet & Equipment Maintenance Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260830_v446_fleet_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v447_fleet_translations.yaml
+      relativeToChangelogFile: false
+  # WP-49: Employee Self-Service (ESS) Schema and Translations
+  - include:
+      file: db/changelog/schema/alter/20260830_v448_app_user_employee_id.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v449_ess_translations.yaml
+      relativeToChangelogFile: false
+  # WP-52: AI Intelligence Pack Translations
+  - include:
+      file: db/changelog/data/insert/20260830_v450_ai_intelligence_translations.yaml
+      relativeToChangelogFile: false
+
+
+
+
 

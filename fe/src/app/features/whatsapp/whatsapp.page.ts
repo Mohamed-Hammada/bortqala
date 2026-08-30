@@ -50,10 +50,11 @@ import { OutboundLogEntry, WhatsAppSettings } from '../finance/payment-links/pay
             <thead>
               <tr>
                 <th>{{ i18n.t('settings.whatsappTestPhone') }}</th>
-                <th>Template</th>
-                <th>Status</th>
-                <th>Error</th>
+                <th>{{ i18n.t('marketing.template') }}</th>
+                <th>{{ i18n.t('common.status') }}</th>
+                <th>{{ i18n.t('common.error') }}</th>
                 <th></th>
+
               </tr>
             </thead>
             <tbody>

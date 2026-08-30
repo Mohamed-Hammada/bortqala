@@ -74,6 +74,8 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    maxHeapSize = '2048m'
+    forkEvery = 150
     finalizedBy tasks.named('jacocoTestReport')
 
     // Docker/Testcontainers unavailable in some local environments; skip those suites

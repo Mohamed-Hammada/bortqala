@@ -23,8 +23,13 @@ export type WorkspaceGroup =
   | 'workspace.documents'
   | 'workspace.esign'
   | 'workspace.medical'
+  | 'workspace.serviceOps'
+  | 'workspace.fleet'
+  | 'workspace.ess'
+  | 'workspace.aiIntelligence'
   | 'workspace.administration'
   | 'workspace.platformAdministration';
+
 
 export interface NavItem {
   menuId: string;
@@ -64,9 +69,17 @@ export const WORKSPACE_ORDER: readonly WorkspaceGroup[] = [
   'workspace.documents',
   'workspace.esign',
   'workspace.medical',
+  'workspace.serviceOps',
+  'workspace.fleet',
+  'workspace.ess',
+  'workspace.aiIntelligence',
   'workspace.administration',
   'workspace.platformAdministration',
 ];
+
+
+
+
 
 const PROJECT_ROLES: RoleCode[] = ['SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'];
 const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'];
@@ -732,6 +745,47 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN'],
     allowAsLandingPage: false,
   },
+  // Service Operations & Rentals
+  {
+    menuId: 'service-ops',
+    labelKey: 'nav.serviceOps',
+    descriptionKey: 'nav.serviceOpsHint',
+    path: '/service-ops',
+    icon: 'dashboard',
+    workspace: 'workspace.serviceOps',
+  },
+  // Fleet & Equipment Maintenance
+  {
+    menuId: 'fleet',
+    labelKey: 'nav.fleet',
+    descriptionKey: 'nav.fleetHint',
+    path: '/fleet',
+    icon: 'dashboard',
+    workspace: 'workspace.fleet',
+  },
+  // Employee Self-Service (ESS)
+  {
+    menuId: 'self-service',
+    labelKey: 'nav.ess',
+    descriptionKey: 'nav.essHint',
+    path: '/self-service',
+    icon: 'dashboard',
+    workspace: 'workspace.ess',
+  },
+  // AI Intelligence & Analytics Center
+  {
+    menuId: 'ai-intelligence',
+    labelKey: 'nav.aiIntelligence',
+    descriptionKey: 'nav.aiIntelligenceHint',
+    path: '/ai-intelligence',
+    icon: 'dashboard',
+    workspace: 'workspace.aiIntelligence',
+  },
+
+
+
+
+  // Setup Readiness & Deployment Verification Checklist
   {
     menuId: 'admin-setup-readiness',
     labelKey: 'onboarding.tab',

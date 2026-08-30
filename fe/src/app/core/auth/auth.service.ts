@@ -87,7 +87,21 @@ export class AuthService {
   login(appCode: string, username: string, password: string) {
     return this.httpClient
       .post<LoginResponse>('/api/v1/auth/login', { appCode, username, password }, { withCredentials: true })
-      .pipe(tap((session) => { this.session.set(session); this.persistStoredSession(session); }));
+      .pipe(tap((session) => {
+        if (session.tokenType !== '2FA_REQUIRED') {
+          this.session.set(session);
+          this.persistStoredSession(session);
+        }
+      }));
+  }
+
+  verify2fa(challengeToken: string, code: string) {
+    return this.httpClient
+      .post<LoginResponse>('/api/v1/auth/2fa/verify', { challengeToken, code }, { withCredentials: true })
+      .pipe(tap((session) => {
+        this.session.set(session);
+        this.persistStoredSession(session);
+      }));
   }
 
   demoLogin(secret: string) {

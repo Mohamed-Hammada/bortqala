@@ -1,0 +1,121 @@
+id;key;locale;value
+v447-ar-001;workspace.fleet;ar-EG;إدارة الأسطول والمعدات
+v447-en-001;workspace.fleet;en-US;Fleet & Equipment Maintenance
+v447-ar-002;nav.fleet;ar-EG;الأسطول والصيانة
+v447-en-002;nav.fleet;en-US;Fleet & Maintenance
+v447-ar-003;nav.fleetHint;ar-EG;إدارة المركبات والمعدات، استهلاك الوقود، وجداول الصيانة
+v447-en-003;nav.fleetHint;en-US;Manage vehicles, equipment, fuel logs, and maintenance schedules
+v447-ar-004;fleet.title;ar-EG;إدارة الأسطول والمعدات
+v447-en-004;fleet.title;en-US;Fleet & Equipment Hub
+v447-ar-005;fleet.subtitle;ar-EG;تتبع استهلاك الوقود، جداول الصيانة الدورية، وتراخيص المركبات
+v447-en-005;fleet.subtitle;en-US;Track fuel efficiency, periodic maintenance schedules, and vehicle renewals
+v447-ar-006;fleet.tabVehicles;ar-EG;سجل المركبات
+v447-en-006;fleet.tabVehicles;en-US;Vehicles Registry
+v447-ar-007;fleet.tabFuelLogs;ar-EG;سجلات استهلاك الوقود
+v447-en-007;fleet.tabFuelLogs;en-US;Fuel Logs
+v447-ar-008;fleet.tabMaintenance;ar-EG;جداول وسجلات الصيانة
+v447-en-008;fleet.tabMaintenance;en-US;Maintenance Schedules
+v447-ar-009;fleet.tabDocuments;ar-EG;التراخيص والتأمين
+v447-en-009;fleet.tabDocuments;en-US;Licenses & Insurance
+v447-ar-010;fleet.tabCostReport;ar-EG;تقرير تكاليف الأسطول
+v447-en-010;fleet.tabCostReport;en-US;Fleet Cost Report
+v447-ar-011;fleet.newVehicle;ar-EG;إضافة مركبة جديدة
+v447-en-011;fleet.newVehicle;en-US;Add Vehicle
+v447-ar-012;fleet.plateNumber;ar-EG;رقم اللوحة
+v447-en-012;fleet.plateNumber;en-US;Plate Number
+v447-ar-013;fleet.makeAndModel;ar-EG;الماركة والموديل
+v447-en-013;fleet.makeAndModel;en-US;Make & Model
+v447-ar-014;fleet.year;ar-EG;سنة الصنع
+v447-en-014;fleet.year;en-US;Year
+v447-ar-015;fleet.vehicleType;ar-EG;نوع المركبة
+v447-en-015;fleet.vehicleType;en-US;Vehicle Type
+v447-ar-016;fleet.driver;ar-EG;السائق الافتراضي
+v447-en-016;fleet.driver;en-US;Default Driver
+v447-ar-017;fleet.odometer;ar-EG;قراءة العداد (كم)
+v447-en-017;fleet.odometer;en-US;Odometer (km)
+v447-ar-018;fleet.linkedAsset;ar-EG;الأصل الثابت المرتبط
+v447-en-018;fleet.linkedAsset;en-US;Linked Fixed Asset
+v447-ar-019;fleet.newFuelLog;ar-EG;تسجيل وقود
+v447-en-019;fleet.newFuelLog;en-US;Log Fuel
+v447-ar-020;fleet.liters;ar-EG;عدد اللترات
+v447-en-020;fleet.liters;en-US;Liters
+v447-ar-021;fleet.efficiency;ar-EG;معدل الاستهلاك (كم/لتر)
+v447-en-021;fleet.efficiency;en-US;Efficiency (km/L)
+v447-ar-022;fleet.station;ar-EG;محطة الوقود
+v447-en-022;fleet.station;en-US;Fuel Station
+v447-ar-023;fleet.newSchedule;ar-EG;جدول صيانة جديد
+v447-en-023;fleet.newSchedule;en-US;New Schedule
+v447-ar-024;fleet.maintenanceKind;ar-EG;نوع الصيانة
+v447-en-024;fleet.maintenanceKind;en-US;Maintenance Type
+v447-ar-025;fleet.intervalKm;ar-EG;كل كم (كيلومتر)
+v447-en-025;fleet.intervalKm;en-US;Interval (km)
+v447-ar-026;fleet.intervalDays;ar-EG;كل كم (يوم)
+v447-en-026;fleet.intervalDays;en-US;Interval (days)
+v447-ar-027;fleet.dueStatus;ar-EG;حالة الاستحقاق
+v447-en-027;fleet.dueStatus;en-US;Due Status
+v447-ar-028;fleet.recordMaintenance;ar-EG;تسجيل صيانة منفذة
+v447-en-028;fleet.recordMaintenance;en-US;Record Maintenance
+v447-ar-029;fleet.totalFuelCost;ar-EG;إجمالي تكلفة الوقود
+v447-en-029;fleet.totalFuelCost;en-US;Total Fuel Cost
+v447-ar-030;fleet.totalMaintCost;ar-EG;إجمالي تكلفة الصيانة
+v447-en-030;fleet.totalMaintCost;en-US;Total Maintenance Cost
+v447-ar-031;fleet.totalFleetCost;ar-EG;إجمالي مصروفات الأسطول
+v447-en-031;fleet.totalFleetCost;en-US;Total Fleet Cost
+v447-ar-032;fleet.costPerKm;ar-EG;التكلفة لكل كم
+v447-en-032;fleet.costPerKm;en-US;Cost / km
+v447-ar-033;fleet.newDocument;ar-EG;إضافة وثيقة / ترخيص
+v447-en-033;fleet.newDocument;en-US;Add Document / License
+v447-ar-034;fleet.docType;ar-EG;نوع الوثيقة
+v447-en-034;fleet.docType;en-US;Document Type
+v447-ar-035;fleet.docNumber;ar-EG;رقم الوثيقة
+v447-en-035;fleet.docNumber;en-US;Document Number
+v447-ar-036;fleet.expiryDate;ar-EG;تاريخ الانتهاء
+v447-en-036;fleet.expiryDate;en-US;Expiry Date
+v447-ar-037;fleet.dueSoon;ar-EG;مستحقة قريباً
+v447-en-037;fleet.dueSoon;en-US;Due Soon
+v447-ar-038;fleet.overdue;ar-EG;متأخرة عن موعدها
+v447-en-038;fleet.overdue;en-US;Overdue
+v447-ar-039;FLEET_VEHICLE_NOT_FOUND;ar-EG;المركبة المطلوبة غير موجودة.
+v447-en-039;FLEET_VEHICLE_NOT_FOUND;en-US;Vehicle not found.
+v447-ar-040;FLEET_PLATE_ALREADY_EXISTS;ar-EG;رقم لوحة المركبة مسجل مسبقاً.
+v447-en-040;FLEET_PLATE_ALREADY_EXISTS;en-US;Vehicle plate number is already registered.
+v447-ar-041;FLEET_INVALID_ODOMETER;ar-EG;قراءة العداد الجديدة لا يمكن أن تكون أقل من القراءة السابقة المسجلة.
+v447-en-041;FLEET_INVALID_ODOMETER;en-US;New odometer reading cannot be less than previously recorded odometer.
+v447-ar-042;FLEET_INVALID_LITERS;ar-EG;كمية الوقود باللترات يجب أن تكون أكبر من الصفر.
+v447-en-042;FLEET_INVALID_LITERS;en-US;Fuel volume in liters must be greater than zero.
+v447-ar-043;FLEET_SCHEDULE_NOT_FOUND;ar-EG;جدول الصيانة المطلوب غير موجود.
+v447-en-043;FLEET_SCHEDULE_NOT_FOUND;en-US;Maintenance schedule not found.
+v447-ar-044;FLEET_DOCUMENT_NOT_FOUND;ar-EG;وثيقة المركبة المطلوبة غير موجودة.
+v447-en-044;FLEET_DOCUMENT_NOT_FOUND;en-US;Vehicle document not found.
+v447-ar-045;common.complete;ar-EG;مكتمل
+v447-en-045;common.complete;en-US;Complete
+v447-ar-046;common.days;ar-EG;أيام
+v447-en-046;common.days;en-US;Days
+v447-ar-047;common.hold;ar-EG;تعليق / انتظار
+v447-en-047;common.hold;en-US;Hold
+v447-ar-048;fleet.unitKm;ar-EG;كم
+v447-en-048;fleet.unitKm;en-US;km
+v447-ar-049;fleet.unitLiters;ar-EG;لتر
+v447-en-049;fleet.unitLiters;en-US;L
+v447-ar-050;fleet.unitKmPerLiter;ar-EG;كم/لتر
+v447-en-050;fleet.unitKmPerLiter;en-US;km/L
+v447-ar-051;fleet.typeSedan;ar-EG;سيارة صالون
+v447-en-051;fleet.typeSedan;en-US;Sedan
+v447-ar-052;fleet.typeTruck;ar-EG;شاحنة / نقل
+v447-en-052;fleet.typeTruck;en-US;Truck
+v447-ar-053;fleet.typeVan;ar-EG;حافلة صغيرة / فان
+v447-en-053;fleet.typeVan;en-US;Van
+v447-ar-054;fleet.typeBus;ar-EG;حافلة / باص
+v447-en-054;fleet.typeBus;en-US;Bus
+v447-ar-055;fleet.typeHeavyEquipment;ar-EG;معدة ثقيلة
+v447-en-055;fleet.typeHeavyEquipment;en-US;Heavy Equipment
+v447-ar-056;fleet.docLicense;ar-EG;رخصة تسيير
+v447-en-056;fleet.docLicense;en-US;Vehicle License
+v447-ar-057;fleet.docInsurance;ar-EG;وثيقة تأمين
+v447-en-057;fleet.docInsurance;en-US;Insurance Policy
+v447-ar-058;fleet.docInspection;ar-EG;فحص دوري
+v447-en-058;fleet.docInspection;en-US;Periodic Inspection
+v447-ar-059;fleet.docPermit;ar-EG;تصريح تشغيل
+v447-en-059;fleet.docPermit;en-US;Operating Permit
+
+

@@ -116,7 +116,7 @@ export interface MeResponse {
 
 export interface LoginResponse {
   accessToken: string;
-  tokenType: 'Bearer';
+  tokenType: 'Bearer' | '2FA_REQUIRED' | string;
   expiresAt: number;
   mustChangePassword: boolean;
   app: { id: string; code: string; name: string; adminDashboardCustomizationEnabled?: boolean };
@@ -126,7 +126,7 @@ export interface LoginResponse {
 
 export interface RefreshResponse {
   accessToken: string;
-  tokenType: 'Bearer';
+  tokenType: 'Bearer' | string;
   expiresAt: number;
 }
 

@@ -18,8 +18,9 @@ The ⭐ competitor killer-feature: employees themselves use the app — selfie a
 4. Keys ~28 `ess.*`.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Employee token CANNOT list other employees' payslips even by guessing ids (404-scope test matrix).
-- [ ] AC-2 Payslip detail figures equal frozen snapshot exactly (no client recomputation — diff test vs admin view).
-- [ ] AC-3 Leave request appears in HR approvals inbox; approve/deny reflects in employee app status ≤ poll interval; balance shown pre-submit prevents over-request client-side AND server-side.
-- [ ] AC-4 Advance request creates PLAN_REQUESTED (not active); HR approval activates schedule and payroll starts deducting next run (ties WP-07 resolver).
-- [ ] AC-5 Offline selfie punch from WP-14 flows unchanged with ESS role; push taps open correct screen cold-started.
+- [x] AC-1 Employee token CANNOT list other employees' payslips even by guessing ids (404-scope test matrix).
+- [x] AC-2 Payslip detail figures equal frozen snapshot exactly (no client recomputation — diff test vs admin view).
+- [x] AC-3 Leave request appears in HR approvals inbox; approve/deny reflects in employee app status ≤ poll interval; balance shown pre-submit prevents over-request client-side AND server-side.
+- [x] AC-4 Advance request creates PLAN_REQUESTED (not active); HR approval activates schedule and payroll starts deducting next run (ties WP-07 resolver).
+- [x] AC-5 Offline selfie punch from WP-14 flows unchanged with ESS role; push taps open correct screen cold-started.
+

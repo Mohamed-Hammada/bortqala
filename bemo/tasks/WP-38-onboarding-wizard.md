@@ -19,7 +19,13 @@ New tenant lands on empty ERP and flounders. A step-by-step first-run checklist 
 Status endpoint truth table over seeded DB states; overlay shows only when pending & not dismissed; deep-links route correctly.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Brand-new tenant sees 6-step checklist with all pending; completing steps live-updates ticks without reload (refetch on window focus).
-- [ ] AC-2 Each action button lands the admin exactly where the work happens (route assertions).
-- [ ] AC-3 Dismissal persists per-user; another admin still sees it; all-done tenants never see it again automatically.
-- [ ] AC-4 Status endpoint answers ≤150ms on populated DB (EXISTS-only queries proven in test log).
+- [x] AC-1 Brand-new tenant sees 6-step checklist with all pending; completing steps live-updates ticks without reload (refetch on window focus).
+- [x] AC-2 Each action button lands the admin exactly where the work happens (route assertions).
+- [x] AC-3 Dismissal persists per-user; another admin still sees it; all-done tenants never see it again automatically.
+- [x] AC-4 Status endpoint answers ≤150ms on populated DB (EXISTS-only queries proven in test log).
+
+## Deliverables Summary
+- **Database Schema**: Liquibase `v172`, `v173`, `v266`.
+- **Backend Architecture**: Package `com.bemo.hr.product.onboarding` (`GuidedOnboardingService`, `GuidedOnboardingController`, fast `EXISTS` evidence queries).
+- **Frontend Architecture**: `GuidedOnboardingComponent` (`fe/src/app/features/settings/guided-onboarding.component.ts`), progress indicators, and deep-linking action buttons.
+

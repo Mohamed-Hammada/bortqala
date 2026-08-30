@@ -1,0 +1,132 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260830-v442-create-security-pack-schema
+      author: bemo-architect
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: sec_user_totp
+      changes:
+        - createTable:
+            tableName: sec_user_totp
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: user_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: secret_encrypted, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: enabled, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: enabled_at, type: timestamp }
+              - column: { name: last_used_step, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: sec_user_totp
+            constraintName: uq_user_totp_app_user
+            columnNames: app_id, user_id
+
+        - createTable:
+            tableName: sec_user_totp_backup_codes
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: user_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: code_hash, type: VARCHAR(128), constraints: { nullable: false } }
+              - column: { name: used, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: used_at, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: sec_user_totp_backup_codes
+            indexName: idx_totp_backup_app_user
+            columns:
+              - column: { name: app_id }
+              - column: { name: user_id }
+
+        - createTable:
+            tableName: sec_tenant_security_settings
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: min_password_length, type: INT, defaultValueNumeric: 8, constraints: { nullable: false } }
+              - column: { name: require_uppercase, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: require_lowercase, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: require_digits, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: require_special_chars, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: password_history_count, type: INT, defaultValueNumeric: 3, constraints: { nullable: false } }
+              - column: { name: max_password_age_days, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: session_timeout_minutes, type: INT, defaultValueNumeric: 30, constraints: { nullable: false } }
+              - column: { name: super_admin_ip_bypass, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: sec_tenant_security_settings
+            constraintName: uq_tenant_security_app
+            columnNames: app_id
+
+        - createTable:
+            tableName: sec_user_password_history
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: user_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: password_hash, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: sec_user_password_history
+            indexName: idx_pwd_hist_app_user
+            columns:
+              - column: { name: app_id }
+              - column: { name: user_id }
+
+        - createTable:
+            tableName: sec_trusted_devices
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: user_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: device_id, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: device_label, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: user_agent, type: VARCHAR(500) }
+              - column: { name: ip_address, type: VARCHAR(45) }
+              - column: { name: last_seen_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: revoked, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: revoked_at, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: sec_trusted_devices
+            indexName: idx_trusted_devices_app_user
+            columns:
+              - column: { name: app_id }
+              - column: { name: user_id }
+
+        - createTable:
+            tableName: sec_role_ip_allowlists
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: role_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: cidr_block, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: description, type: VARCHAR(255) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: sec_role_ip_allowlists
+            indexName: idx_role_ip_app_role
+            columns:
+              - column: { name: app_id }
+              - column: { name: role_code }
+
+      rollback:
+        - dropTable: { tableName: sec_role_ip_allowlists }
+        - dropTable: { tableName: sec_trusted_devices }
+        - dropTable: { tableName: sec_user_password_history }
+        - dropTable: { tableName: sec_tenant_security_settings }
+        - dropTable: { tableName: sec_user_totp_backup_codes }
+        - dropTable: { tableName: sec_user_totp }

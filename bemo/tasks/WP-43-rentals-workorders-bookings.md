@@ -18,8 +18,9 @@ Three service-economy modules Daftra/Odoo ship: (1) rent out equipment/units wit
 
 ## Acceptance Criteria (QA sign-off)
 - AC block:
-- [ ] AC-1 Rental 12 days @ weekly rate uses 7+5 pricing rule as configured (period-billing fixture); overdue open contract appears in aging and blocks new rental to same party when property set.
-- [ ] AC-2 Close contract posts invoice lines exactly matching computed charges incl. damage fee; deposit handling documented (refund line).
-- [ ] AC-3 WO moving WAITING_PARTS→DONE requires parts issued OR override note; delivery creates one draft invoice containing labor+parts totals.
-- [ ] AC-4 Stock parts issue decrements inventory once; cancel after issue reverses movement.
-- [ ] AC-5 Utilization % matches manual calc for a month fixture; booking double-slot race rejected like WP-22.
+- [x] AC-1 Rental 12 days @ weekly rate uses 7+5 pricing rule as configured (period-billing fixture); overdue open contract appears in aging and blocks new rental to same party when property set.
+- [x] AC-2 Close contract posts invoice lines exactly matching computed charges incl. damage fee; deposit handling documented (refund line).
+- [x] AC-3 WO moving WAITING_PARTS→DONE requires parts issued OR override note; delivery creates one draft invoice containing labor+parts totals.
+- [x] AC-4 Stock parts issue decrements inventory once; cancel after issue reverses movement.
+- [x] AC-5 Utilization % matches manual calc for a month fixture; booking double-slot race rejected like WP-22.
+

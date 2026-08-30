@@ -1,0 +1,514 @@
+<div class="service-ops-page">
+  <header class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('serviceOps.title') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('serviceOps.subtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      @if (activeTab() === 'rentals') {
+        <button class="btn btn-secondary btn-sm" (click)="showNewItemModal.set(true)">
+          + {{ i18n.t('rental.newItem') }}
+        </button>
+        <button class="btn btn-primary btn-sm" (click)="showNewContractModal.set(true)">
+          + {{ i18n.t('rental.newContract') }}
+        </button>
+      } @else if (activeTab() === 'work-orders') {
+        <button class="btn btn-primary btn-sm" (click)="showNewWorkOrderModal.set(true)">
+          + {{ i18n.t('workOrder.newTicket') }}
+        </button>
+      } @else if (activeTab() === 'bookings') {
+        <button class="btn btn-secondary btn-sm" (click)="showNewResourceModal.set(true)">
+          + {{ i18n.t('booking.resource') }}
+        </button>
+        <button class="btn btn-primary btn-sm" (click)="showNewBookingModal.set(true)">
+          + {{ i18n.t('booking.newBooking') }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="ops-tabs">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'rentals'"
+      (click)="setTab('rentals')"
+    >
+      {{ i18n.t('serviceOps.tabRentals') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'work-orders'"
+      (click)="setTab('work-orders')"
+    >
+      {{ i18n.t('serviceOps.tabWorkOrders') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'bookings'"
+      (click)="setTab('bookings')"
+    >
+      {{ i18n.t('serviceOps.tabBookings') }}
+    </button>
+  </nav>
+
+  <!-- Tab 1: Rentals -->
+  @if (activeTab() === 'rentals') {
+    @if (serviceOps.utilization(); as util) {
+      <div class="utilization-summary-grid">
+        <div class="stat-card">
+          <span class="stat-label">{{ i18n.t('rental.utilization') }}</span>
+          <span class="stat-value highlight">{{ util.utilizationPercentage }}%</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">{{ i18n.t('rental.activeContracts') }}</span>
+          <span class="stat-value">{{ util.rentedItems }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">{{ i18n.t('common.total') }}</span>
+          <span class="stat-value">{{ util.totalItems }}</span>
+        </div>
+      </div>
+    }
+
+    <div class="content-section">
+      <h2 class="section-title">{{ i18n.t('rental.activeContracts') }}</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('rental.contractNo') }}</th>
+              <th>{{ i18n.t('common.date') }}</th>
+              <th>{{ i18n.t('rental.rateDaily') }}</th>
+              <th>{{ i18n.t('rental.deposit') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (contract of serviceOps.rentalContracts(); track contract.id) {
+              <tr>
+                <td class="font-mono">{{ contract.contractNo }}</td>
+                <td>{{ contract.startDate }} — {{ contract.expectedEndDate }}</td>
+
+                <td>{{ contract.rateAmount | number:'1.2-2' }}</td>
+                <td>{{ contract.depositAmount | number:'1.2-2' }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="contract.status === 'ACTIVE'" [class.badge-muted]="contract.status === 'DRAFT'">
+                    {{ contract.status }}
+                  </span>
+                </td>
+                <td>
+                  @if (contract.status === 'DRAFT') {
+                    <button class="btn btn-sm btn-outline-primary" (click)="activateContract(contract)">
+                      {{ i18n.t('common.approve') }}
+                    </button>
+                  } @else if (contract.status === 'ACTIVE') {
+                    <button class="btn btn-sm btn-outline-success" (click)="openCloseContract(contract)">
+                      {{ i18n.t('rental.returnAndClose') }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 2: Work Orders -->
+  @if (activeTab() === 'work-orders') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('workOrder.ticketNo') }}</th>
+              <th>{{ i18n.t('common.name') }}</th>
+              <th>{{ i18n.t('common.priority') }}</th>
+              <th>{{ i18n.t('workOrder.laborTotal') }}</th>
+              <th>{{ i18n.t('workOrder.partsTotal') }}</th>
+              <th>{{ i18n.t('workOrder.grandTotal') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (wo of serviceOps.workOrders(); track wo.id) {
+              <tr>
+                <td class="font-mono">{{ wo.ticketNo }}</td>
+                <td>
+                  <strong>{{ wo.title }}</strong>
+                  <div class="text-muted text-xs">{{ wo.customerName }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-priority-{{ wo.priority | lowercase }}">{{ wo.priority }}</span>
+                </td>
+                <td>{{ wo.laborTotal | number:'1.2-2' }}</td>
+                <td>{{ wo.partsTotal | number:'1.2-2' }}</td>
+                <td class="font-bold">{{ wo.grandTotal | number:'1.2-2' }}</td>
+                <td>
+                  <span class="badge badge-status-{{ wo.status | lowercase }}">{{ wo.status }}</span>
+                </td>
+                <td class="actions-cell">
+                  @if (wo.status === 'OPEN' || wo.status === 'IN_PROGRESS' || wo.status === 'WAITING_PARTS') {
+                    <button class="btn btn-xs btn-ghost" (click)="openLaborModal(wo)">
+                      + {{ i18n.t('workOrder.addLabor') }}
+                    </button>
+                    <button class="btn btn-xs btn-ghost" (click)="openPartsModal(wo)">
+                      + {{ i18n.t('workOrder.addPart') }}
+                    </button>
+                    @if (wo.status === 'OPEN') {
+                      <button class="btn btn-xs btn-outline-primary" (click)="setWorkOrderStatus(wo, 'IN_PROGRESS')">
+                        {{ i18n.t('common.status') }}
+                      </button>
+                    } @else if (wo.status === 'IN_PROGRESS') {
+                      <button class="btn btn-xs btn-outline-warning" (click)="setWorkOrderStatus(wo, 'WAITING_PARTS')">
+                        {{ i18n.t('common.hold') }}
+                      </button>
+                      <button class="btn btn-xs btn-outline-success" (click)="setWorkOrderStatus(wo, 'DONE')">
+                        {{ i18n.t('common.complete') }}
+                      </button>
+                    } @else if (wo.status === 'WAITING_PARTS') {
+                      <button class="btn btn-xs btn-outline-success" (click)="setWorkOrderStatus(wo, 'DONE')">
+                        {{ i18n.t('common.complete') }}
+                      </button>
+                    }
+                  } @else if (wo.status === 'DONE') {
+                    <button class="btn btn-xs btn-success" (click)="deliverWorkOrder(wo)">
+                      {{ i18n.t('workOrder.deliver') }}
+                    </button>
+                  }
+
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 3: Bookings -->
+  @if (activeTab() === 'bookings') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('booking.resource') }}</th>
+              <th>{{ i18n.t('common.name') }}</th>
+              <th>{{ i18n.t('booking.startTime') }}</th>
+              <th>{{ i18n.t('booking.endTime') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (booking of serviceOps.bookings(); track booking.id) {
+              <tr>
+                <td>{{ booking.resourceId }}</td>
+                <td>
+                  <strong>{{ booking.title }}</strong>
+                  <div class="text-muted text-xs">{{ booking.customerName }}</div>
+                </td>
+                <td>{{ booking.startTime | date:'short' }}</td>
+                <td>{{ booking.endTime | date:'short' }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="booking.status === 'CONFIRMED'" [class.badge-danger]="booking.status === 'CANCELLED'">
+                    {{ booking.status }}
+                  </span>
+                </td>
+                <td>
+                  @if (booking.status === 'CONFIRMED') {
+                    <button class="btn btn-xs btn-outline-danger" (click)="cancelBooking(booking)">
+                      {{ i18n.t('common.cancel') }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: New Rental Item -->
+  @if (showNewItemModal()) {
+    <div class="modal-overlay" (click)="showNewItemModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">{{ i18n.t('rental.newItem') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('common.code') }}</label>
+          <input type="text" class="form-input" [ngModel]="itemForm().code" (ngModelChange)="itemForm().code = $event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.name') }}</label>
+          <input type="text" class="form-input" [ngModel]="itemForm().name" (ngModelChange)="itemForm().name = $event" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('rental.rateDaily') }}</label>
+            <input type="number" class="form-input" [ngModel]="itemForm().rateDaily" (ngModelChange)="itemForm().rateDaily = +$event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('rental.rateWeekly') }}</label>
+            <input type="number" class="form-input" [ngModel]="itemForm().rateWeekly" (ngModelChange)="itemForm().rateWeekly = +$event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('rental.deposit') }}</label>
+            <input type="number" class="form-input" [ngModel]="itemForm().depositAmount" (ngModelChange)="itemForm().depositAmount = +$event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showNewItemModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveRentalItem()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: New Rental Contract -->
+  @if (showNewContractModal()) {
+    <div class="modal-overlay" (click)="showNewContractModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">{{ i18n.t('rental.newContract') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('rental.contractNo') }}</label>
+          <input type="text" class="form-input" [ngModel]="contractForm().contractNo" (ngModelChange)="contractForm().contractNo = $event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.party') }}</label>
+          <input type="text" class="form-input" [ngModel]="contractForm().customerPartyId" (ngModelChange)="contractForm().customerPartyId = $event" />
+        </div>
+
+        <div class="form-group">
+          <label>{{ i18n.t('rental.item') }}</label>
+          <select class="form-select" [ngModel]="contractForm().selectedItemId" (ngModelChange)="contractForm().selectedItemId = $event">
+            <option value="">{{ i18n.t('common.select') }}</option>
+            @for (item of serviceOps.rentalItems(); track item.id) {
+              <option [value]="item.id">{{ item.code }} - {{ item.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('common.startDate') }}</label>
+            <input type="date" class="form-input" [ngModel]="contractForm().startDate" (ngModelChange)="contractForm().startDate = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.endDate') }}</label>
+            <input type="date" class="form-input" [ngModel]="contractForm().expectedEndDate" (ngModelChange)="contractForm().expectedEndDate = $event" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('rental.rateDaily') }}</label>
+            <input type="number" class="form-input" [ngModel]="contractForm().rateAmount" (ngModelChange)="contractForm().rateAmount = +$event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('rental.deposit') }}</label>
+            <input type="number" class="form-input" [ngModel]="contractForm().depositAmount" (ngModelChange)="contractForm().depositAmount = +$event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showNewContractModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveRentalContract()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Close Contract -->
+  @if (showCloseContractModal()) {
+    <div class="modal-overlay" (click)="showCloseContractModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">{{ i18n.t('rental.returnAndClose') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('common.endDate') }}</label>
+          <input type="date" class="form-input" [ngModel]="closeContractForm().actualEndDate" (ngModelChange)="closeContractForm().actualEndDate = $event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('rental.damageFee') }}</label>
+          <input type="number" class="form-input" [ngModel]="closeContractForm().damageFee" (ngModelChange)="closeContractForm().damageFee = +$event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <textarea class="form-textarea" [ngModel]="closeContractForm().notes" (ngModelChange)="closeContractForm().notes = $event"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showCloseContractModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-success" (click)="submitCloseContract()">{{ i18n.t('common.confirm') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: New Work Order -->
+  @if (showNewWorkOrderModal()) {
+    <div class="modal-overlay" (click)="showNewWorkOrderModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">{{ i18n.t('workOrder.newTicket') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('workOrder.ticketNo') }}</label>
+          <input type="text" class="form-input" [ngModel]="workOrderForm().ticketNo" (ngModelChange)="workOrderForm().ticketNo = $event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.party') }}</label>
+          <input type="text" class="form-input" [ngModel]="workOrderForm().customerName" (ngModelChange)="workOrderForm().customerName = $event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.title') }}</label>
+          <input type="text" class="form-input" [ngModel]="workOrderForm().title" (ngModelChange)="workOrderForm().title = $event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.description') }}</label>
+          <textarea class="form-textarea" [ngModel]="workOrderForm().description" (ngModelChange)="workOrderForm().description = $event"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showNewWorkOrderModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveWorkOrder()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Add Labor -->
+  @if (showAddLaborModal()) {
+    <div class="modal-overlay" (click)="showAddLaborModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">{{ i18n.t('workOrder.addLabor') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('common.description') }}</label>
+          <input type="text" class="form-input" [ngModel]="laborForm().description" (ngModelChange)="laborForm().description = $event" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('common.hours') }}</label>
+            <input type="number" class="form-input" [ngModel]="laborForm().hours" (ngModelChange)="laborForm().hours = +$event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('workOrder.laborTotal') }}</label>
+            <input type="number" class="form-input" [ngModel]="laborForm().hourlyRate" (ngModelChange)="laborForm().hourlyRate = +$event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showAddLaborModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="submitLabor()">{{ i18n.t('common.confirm') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Add Parts -->
+  @if (showAddPartModal()) {
+    <div class="modal-overlay" (click)="showAddPartModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">{{ i18n.t('workOrder.addPart') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('common.code') }}</label>
+          <input type="text" class="form-input" [ngModel]="partsForm().itemCode" (ngModelChange)="partsForm().itemCode = $event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.name') }}</label>
+          <input type="text" class="form-input" [ngModel]="partsForm().itemName" (ngModelChange)="partsForm().itemName = $event" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('common.quantity') }}</label>
+            <input type="number" class="form-input" [ngModel]="partsForm().quantity" (ngModelChange)="partsForm().quantity = +$event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.price') }}</label>
+            <input type="number" class="form-input" [ngModel]="partsForm().unitPrice" (ngModelChange)="partsForm().unitPrice = +$event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showAddPartModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="submitParts()">{{ i18n.t('common.confirm') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: New Resource -->
+  @if (showNewResourceModal()) {
+    <div class="modal-overlay" (click)="showNewResourceModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">{{ i18n.t('booking.resource') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('common.code') }}</label>
+          <input type="text" class="form-input" [ngModel]="resourceForm().code" (ngModelChange)="resourceForm().code = $event" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.name') }}</label>
+          <input type="text" class="form-input" [ngModel]="resourceForm().name" (ngModelChange)="resourceForm().name = $event" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('booking.capacity') }}</label>
+            <input type="number" class="form-input" [ngModel]="resourceForm().capacity" (ngModelChange)="resourceForm().capacity = +$event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('booking.location') }}</label>
+            <input type="text" class="form-input" [ngModel]="resourceForm().location" (ngModelChange)="resourceForm().location = $event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showNewResourceModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveResource()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: New Booking -->
+  @if (showNewBookingModal()) {
+    <div class="modal-overlay" (click)="showNewBookingModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">{{ i18n.t('booking.newBooking') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('booking.resource') }}</label>
+          <select class="form-select" [ngModel]="bookingForm().resourceId" (ngModelChange)="bookingForm().resourceId = $event">
+            <option value="">{{ i18n.t('common.select') }}</option>
+            @for (res of serviceOps.resources(); track res.id) {
+              <option [value]="res.id">{{ res.code }} - {{ res.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.title') }}</label>
+          <input type="text" class="form-input" [ngModel]="bookingForm().title" (ngModelChange)="bookingForm().title = $event" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('booking.startTime') }}</label>
+            <input type="datetime-local" class="form-input" [ngModel]="bookingForm().startTime" (ngModelChange)="bookingForm().startTime = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('booking.endTime') }}</label>
+            <input type="datetime-local" class="form-input" [ngModel]="bookingForm().endTime" (ngModelChange)="bookingForm().endTime = $event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showNewBookingModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveBooking()">{{ i18n.t('common.confirm') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

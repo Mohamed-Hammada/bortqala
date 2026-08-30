@@ -21,8 +21,14 @@
 3. Keys ~24 `reportBuilder.*`.
 
 ## Acceptance Criteria (QA sign-off)
-- [ ] AC-1 Sales-lines dataset: dimension=branch+month, measure=SUM(net) matches manual SQL fixture exactly for 3 branches × 4 months.
-- [ ] AC-2 Injection attempts in filter values are parameterized (engine test with hostile strings asserts no SQL error/leak).
-- [ ] AC-3 Unknown/disallowed field rejected translated listing allowed fields; limit>10k clamped with notice.
-- [ ] AC-4 Saved report runs identically after save (round-trip); dataset version drift shows non-blocking warning banner.
-- [ ] AC-5 Datasets respect permissions: attendance dataset hidden from role without HR read; cross-tenant impossible (context test).
+- [x] AC-1 Sales-lines dataset: dimension=branch+month, measure=SUM(net) matches manual SQL fixture exactly for 3 branches × 4 months.
+- [x] AC-2 Injection attempts in filter values are parameterized (engine test with hostile strings asserts no SQL error/leak).
+- [x] AC-3 Unknown/disallowed field rejected translated listing allowed fields; limit>10k clamped with notice.
+- [x] AC-4 Saved report runs identically after save (round-trip); dataset version drift shows non-blocking warning banner.
+- [x] AC-5 Datasets respect permissions: attendance dataset hidden from role without HR read; cross-tenant impossible (context test).
+
+## Deliverables Summary
+- **Database Schema**: `saved_reports` (Liquibase `v379`, `v380`).
+- **Backend Architecture**: Package `com.bemo.hr.reportbuilder` (`ReportDataset`, `ReportBuilderService`, `ReportBuilderController`, dataset whitelist projection engine, parameterized criteria builder, saved reports repository).
+- **Frontend Architecture**: `ReportBuilderPage` (`fe/src/app/features/report-builder/report-builder.page.ts`), dataset field picker, dimensions/measures selector, filter builder, live data grid, and saved report runner.
+

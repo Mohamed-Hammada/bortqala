@@ -1,0 +1,386 @@
+<div class="security-settings-container">
+  <!-- Section 1: Two-Factor Authentication (2FA / TOTP) -->
+  <section class="card settings-card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">{{ i18n.t('settings.security.totpTitle') }}</h3>
+        <p class="card-subtitle">{{ i18n.t('settings.security.totpDesc') }}</p>
+      </div>
+      <div class="status-badge" [class.enabled]="totpStatus()?.enabled" [class.disabled]="!totpStatus()?.enabled">
+        @if (totpStatus()?.enabled) {
+          <span>● {{ i18n.t('settings.security.totpEnabled') }}</span>
+        } @else {
+          <span>○ {{ i18n.t('settings.security.totpDisabled') }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="card-body">
+      @if (!totpStatus()?.enabled && !enrollData()) {
+        <div class="action-row">
+          <button class="button primary" type="button" [disabled]="enrolling()" (click)="startEnroll()">
+            {{ i18n.t('settings.security.totpEnableBtn') }}
+          </button>
+        </div>
+      }
+
+      <!-- Enrollment Flow: QR Code & Code Confirmation -->
+      @if (enrollData()) {
+        <div class="enrollment-panel">
+          <div class="enroll-step">
+            <p class="step-title">{{ i18n.t('settings.security.totpScanQr') }}</p>
+            <div class="qr-code-wrapper">
+              <div class="qr-placeholder">
+                <code class="ltr secret-display">{{ enrollData()?.secret }}</code>
+              </div>
+            </div>
+            <p class="key-hint">{{ i18n.t('settings.security.totpSecretKey') }}</p>
+            <div class="secret-box">
+              <input type="text" readonly [value]="enrollData()?.secret" class="ltr" />
+            </div>
+          </div>
+
+          <div class="enroll-step">
+            <p class="step-title">{{ i18n.t('settings.security.totpEnterCode') }}</p>
+            <div class="verify-input-group">
+              <input
+                type="text"
+                maxlength="6"
+                placeholder="000000"
+                class="ltr code-input"
+                [value]="activationCode()"
+                (input)="activationCode.set($any($event.target).value)"
+              />
+              <button
+                class="button primary"
+                type="button"
+                [disabled]="activating() || activationCode().length < 6"
+                (click)="confirmActivation()"
+              >
+                {{ i18n.t('settings.security.totpVerifyAndActivate') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- If 2FA is Active: Management & Backup Codes -->
+      @if (totpStatus()?.enabled) {
+        <div class="active-totp-panel">
+          <div class="backup-codes-info">
+            <h4>{{ i18n.t('settings.security.backupCodesTitle') }}</h4>
+            <p>{{ i18n.t('settings.security.backupCodesDesc') }}</p>
+            <div class="backup-actions">
+              <button class="button secondary" type="button" (click)="regenerateBackupCodes()">
+                {{ i18n.t('settings.security.regenerateBackupCodes') }}
+              </button>
+              <button class="button danger outline" type="button" (click)="showDisableModal.set(true)">
+                {{ i18n.t('settings.security.totpDisableBtn') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Section 2: Password Policy (Admin Only) -->
+  @if (isAdmin()) {
+    <section class="card settings-card admin-section">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">{{ i18n.t('settings.security.passwordPolicyTitle') }}</h3>
+          <p class="card-subtitle">{{ i18n.t('settings.security.passwordPolicyDesc') }}</p>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>{{ i18n.t('settings.security.minLength') }}</label>
+            <input
+              type="number"
+              min="6"
+              max="128"
+              class="ltr"
+              [value]="minPasswordLength()"
+              (input)="minPasswordLength.set(+$any($event.target).value)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>{{ i18n.t('settings.security.historyCount') }}</label>
+            <input
+              type="number"
+              min="0"
+              max="24"
+              class="ltr"
+              [value]="passwordHistoryCount()"
+              (input)="passwordHistoryCount.set(+$any($event.target).value)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>{{ i18n.t('settings.security.maxAgeDays') }}</label>
+            <input
+              type="number"
+              min="0"
+              max="365"
+              class="ltr"
+              [value]="maxPasswordAgeDays()"
+              (input)="maxPasswordAgeDays.set(+$any($event.target).value)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>{{ i18n.t('settings.security.sessionTimeout') }}</label>
+            <input
+              type="number"
+              min="5"
+              max="1440"
+              class="ltr"
+              [value]="sessionTimeoutMinutes()"
+              (input)="sessionTimeoutMinutes.set(+$any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <div class="switches-grid">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="requireUppercase()"
+              (change)="requireUppercase.set($any($event.target).checked)"
+            />
+            <span>{{ i18n.t('settings.security.requireUpper') }}</span>
+          </label>
+
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="requireLowercase()"
+              (change)="requireLowercase.set($any($event.target).checked)"
+            />
+            <span>{{ i18n.t('settings.security.requireLower') }}</span>
+          </label>
+
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="requireDigits()"
+              (change)="requireDigits.set($any($event.target).checked)"
+            />
+            <span>{{ i18n.t('settings.security.requireDigits') }}</span>
+          </label>
+
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="requireSpecialChars()"
+              (change)="requireSpecialChars.set($any($event.target).checked)"
+            />
+            <span>{{ i18n.t('settings.security.requireSpecial') }}</span>
+          </label>
+
+          <label class="checkbox-label full-width">
+            <input
+              type="checkbox"
+              [checked]="superAdminIpBypass()"
+              (change)="superAdminIpBypass.set($any($event.target).checked)"
+            />
+            <span>{{ i18n.t('settings.security.superAdminBypass') }}</span>
+          </label>
+        </div>
+
+        <div class="action-footer">
+          <button class="button primary" type="button" [disabled]="savingPolicy()" (click)="savePolicy()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Section 3: Registered Devices & Active Sessions -->
+  <section class="card settings-card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">{{ i18n.t('settings.security.trustedDevicesTitle') }}</h3>
+        <p class="card-subtitle">{{ i18n.t('settings.security.trustedDevicesDesc') }}</p>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('settings.security.deviceLabel') }}</th>
+              <th>{{ i18n.t('settings.security.ipAddress') }}</th>
+              <th>{{ i18n.t('settings.security.lastSeen') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (dev of devices(); track dev.id) {
+              <tr [class.revoked-row]="dev.revoked">
+                <td>
+                  <span class="device-icon">💻</span>
+                  <strong>{{ dev.deviceLabel }}</strong>
+                </td>
+                <td class="ltr">{{ dev.ipAddress || '—' }}</td>
+                <td class="ltr">{{ dev.lastSeenAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+                <td>
+                  @if (!dev.revoked) {
+                    <button class="button danger small outline" type="button" (click)="revokeDevice(dev.id)">
+                      {{ i18n.t('settings.security.revokeDevice') }}
+                    </button>
+                  } @else {
+                    <span class="status-revoked">{{ dev.revokedAt | date: 'yyyy-MM-dd' }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Role-Based Allowed IP Ranges (Admin Only) -->
+  @if (isAdmin()) {
+    <section class="card settings-card admin-section">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">{{ i18n.t('settings.security.ipRulesTitle') }}</h3>
+          <p class="card-subtitle">{{ i18n.t('settings.security.ipRulesDesc') }}</p>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="add-ip-rule-form">
+          <div class="form-inline-group">
+            <select [value]="newRuleRole()" (change)="newRuleRole.set($any($event.target).value)">
+              @for (role of availableRoles; track role.code) {
+                <option [value]="role.code">{{ role.label }}</option>
+              }
+            </select>
+
+            <input
+              type="text"
+              placeholder="192.168.1.0/24"
+              class="ltr"
+              [value]="newRuleCidr()"
+              (input)="newRuleCidr.set($any($event.target).value)"
+            />
+
+            <input
+              type="text"
+              placeholder="{{ i18n.t('common.notes') }}"
+              [value]="newRuleDesc()"
+              (input)="newRuleDesc.set($any($event.target).value)"
+            />
+
+            <button
+              class="button primary"
+              type="button"
+              [disabled]="addingRule() || !newRuleCidr().trim()"
+              (click)="addIpRule()"
+            >
+              {{ i18n.t('settings.security.addRule') }}
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('settings.security.role') }}</th>
+                <th>{{ i18n.t('settings.security.cidr') }}</th>
+                <th>{{ i18n.t('common.notes') }}</th>
+                <th>{{ i18n.t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (rule of ipRules(); track rule.id) {
+                <tr>
+                  <td><strong>{{ rule.roleCode }}</strong></td>
+                  <td class="ltr"><code>{{ rule.cidrBlock }}</code></td>
+                  <td>{{ rule.description || '—' }}</td>
+                  <td>
+                    <button class="button danger small outline" type="button" (click)="deleteIpRule(rule.id)">
+                      {{ i18n.t('settings.security.deleteRule') }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  }
+</div>
+
+<!-- Modal: Backup Codes View -->
+@if (showBackupCodesModal()) {
+  <div class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('settings.security.backupCodesTitle') }}</h3>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">{{ i18n.t('settings.security.backupCodesDesc') }}</p>
+        <div class="backup-codes-grid">
+          @for (code of backupCodesList(); track code) {
+            <code class="backup-code-pill ltr">{{ code }}</code>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="button primary" type="button" (click)="downloadBackupCodes()">
+          {{ i18n.t('settings.security.downloadBackupCodes') }}
+        </button>
+        <button class="button secondary" type="button" (click)="showBackupCodesModal.set(false)">
+          {{ i18n.t('common.close') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal: Disable 2FA Password Prompt -->
+@if (showDisableModal()) {
+  <div class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('settings.security.totpDisableBtn') }}</h3>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>{{ i18n.t('common.password') }}</label>
+          <input
+            type="password"
+            class="ltr"
+            [value]="disablePassword()"
+            (input)="disablePassword.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          class="button danger"
+          type="button"
+          [disabled]="disabling() || !disablePassword().trim()"
+          (click)="confirmDisable()"
+        >
+          {{ i18n.t('settings.security.totpDisableBtn') }}
+        </button>
+        <button class="button secondary" type="button" (click)="showDisableModal.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
