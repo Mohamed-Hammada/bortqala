@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-v54-seed-procurement-sequences
       author: codex
+      validCheckSum: ANY
       dbms: postgresql
       changes:
         - sql:

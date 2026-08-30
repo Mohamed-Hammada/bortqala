@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v105-contractor-settlement-translations
       author: Antigravity
+      validCheckSum: ANY
       comment: "Bilingual translations for contractor workforce settlement lifecycle: machine exception keys, invoice linking, finance journal posting, payment recording, and contractor statements."
       changes:
         - loadData:

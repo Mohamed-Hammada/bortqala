@@ -1,0 +1,192 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829_v418_01
+      author: squad-medical
+      changes:
+        - createTable:
+            tableName: doctor_rosters
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: doctor_employee_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: weekday
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: VARCHAR(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_time
+                  type: VARCHAR(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: slot_minutes
+                  type: INT
+                  defaultValueNumeric: 20
+                  constraints:
+                    nullable: false
+              - column:
+                  name: max_patients_per_slot
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valid_from
+                  type: VARCHAR(16)
+              - column:
+                  name: valid_to
+                  type: VARCHAR(16)
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_doctor_rosters_tenant_doc
+            tableName: doctor_rosters
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: doctor_employee_id
+
+  - changeSet:
+      id: 20260829_v418_02
+      author: squad-medical
+      changes:
+        - createTable:
+            tableName: clinic_appointments
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: patient_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: doctor_employee_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: visit_date
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: VARCHAR(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: starts_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration_minutes
+                  type: INT
+                  defaultValueNumeric: 20
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: BOOKED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source
+                  type: VARCHAR(32)
+                  defaultValue: PHONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: VARCHAR(500)
+              - column:
+                  name: clinic_visit_id
+                  type: VARCHAR(64)
+              - column:
+                  name: reminder_sent_at
+                  type: BIGINT
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_clinic_appts_tenant_doc_date
+            tableName: clinic_appointments
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: doctor_employee_id
+              - column:
+                  name: visit_date
+        - createIndex:
+            indexName: idx_clinic_appts_tenant_patient
+            tableName: clinic_appointments
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: patient_id

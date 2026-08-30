@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260808-v143-operations-references-ui-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "REM-005: Arabic/English UI labels for the stock-movement document-reference section shown in the operations transaction form (hint text and attachment removal)."
       changes:
         - loadData:

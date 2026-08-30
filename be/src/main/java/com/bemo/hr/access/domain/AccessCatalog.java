@@ -43,6 +43,8 @@ public final class AccessCatalog {
     public static final String P_OPERATIONS_MANAGE = "operations.manage";
     public static final String P_PROCUREMENT_READ = "procurement.read";
     public static final String P_PROCUREMENT_MANAGE = "procurement.manage";
+    public static final String P_EXPORT_READ = "export.read";
+    public static final String P_EXPORT_MANAGE = "export.manage";
     public static final String P_SALES_READ = "sales.read";
     public static final String P_SALES_MANAGE = "sales.manage";
     public static final String P_MANUFACTURING_READ = "manufacturing.read";
@@ -56,6 +58,8 @@ public final class AccessCatalog {
     public static final String P_FINANCE_MANAGE = "finance.manage";
     public static final String P_BUDGET_READ = "budget.read";
     public static final String P_BUDGET_MANAGE = "budget.manage";
+    public static final String P_ASSET_READ = "asset.read";
+    public static final String P_ASSET_MANAGE = "asset.manage";
     public static final String P_JOURNAL_READ = "journal.read";
     public static final String P_JOURNAL_CREATE = "journal.create";
     public static final String P_JOURNAL_POST = "journal.post";
@@ -99,6 +103,53 @@ public final class AccessCatalog {
     public static final String P_APPROVALS_DECIDE = "approvals.decide";
     public static final String P_WORKFLOW_DEFINITIONS_READ = "workflowDefinitions.read";
     public static final String P_WORKFLOW_DEFINITIONS_MANAGE = "workflowDefinitions.manage";
+    public static final String P_PROJECTS_READ = "projects.read";
+    public static final String P_PROJECTS_MANAGE = "projects.manage";
+    public static final String P_PROJECTS_WBS_MANAGE = "projects.wbs.manage";
+    public static final String P_PROJECTS_CLOSE = "projects.close";
+    public static final String P_LEAVES_READ = "leaves.read";
+    public static final String P_LEAVES_MANAGE = "leaves.manage";
+    public static final String P_PERFORMANCE_READ = "performance.read";
+    public static final String P_PERFORMANCE_MANAGE = "performance.manage";
+    public static final String P_ETA_TAX_READ = "etaTax.read";
+    public static final String P_ETA_TAX_MANAGE = "etaTax.manage";
+    public static final String P_POS_READ = "pos.read";
+    public static final String P_POS_OPERATE = "pos.operate";
+    public static final String P_POS_MANAGE = "pos.manage";
+    public static final String P_CRM_READ = "crm.read";
+    public static final String P_CRM_MANAGE = "crm.manage";
+    public static final String P_CRM_OMNICHANNEL = "crm.omnichannel";
+    public static final String P_VERTICALS_READ = "verticals.read";
+    public static final String P_VERTICALS_MANAGE = "verticals.manage";
+    public static final String P_EXPENSE_READ = "expense.read";
+    public static final String P_EXPENSE_MANAGE = "expense.manage";
+    public static final String P_RECRUITMENT_READ = "recruitment.read";
+    public static final String P_RECRUITMENT_MANAGE = "recruitment.manage";
+    public static final String P_DOCUMENTS_READ = "documents.read";
+    public static final String P_DOCUMENTS_MANAGE = "documents.manage";
+    public static final String P_ESIGN_READ = "esign.read";
+    public static final String P_ESIGN_MANAGE = "esign.manage";
+    public static final String P_EINVOICING_READ = "einvoicing.read";
+    public static final String P_EINVOICING_MANAGE = "einvoicing.manage";
+    public static final String P_CLINIC_PATIENTS_READ = "clinic.patients.read";
+    public static final String P_CLINIC_PATIENTS_MANAGE = "clinic.patients.manage";
+    public static final String P_CLINIC_QUEUE_READ = "clinic.queue.read";
+    public static final String P_CLINIC_QUEUE_MANAGE = "clinic.queue.manage";
+    public static final String P_CLINIC_COMMISSIONS_READ = "clinic.commissions.read";
+    public static final String P_CLINIC_APPOINTMENTS_READ = "clinic.appointments.read";
+    public static final String P_CLINIC_APPOINTMENTS_MANAGE = "clinic.appointments.manage";
+    public static final String P_CLINIC_PHARMACY_READ = "clinic.pharmacy.read";
+    public static final String P_CLINIC_PHARMACY_MANAGE = "clinic.pharmacy.manage";
+    public static final String P_CLINIC_NARCOTICS_READ = "clinic.narcotics.read";
+    public static final String P_CLINIC_NARCOTICS_APPROVE = "clinic.narcotics.approve";
+    public static final String P_CLINIC_LAB_READ = "clinic.lab.read";
+    public static final String P_CLINIC_LAB_MANAGE = "clinic.lab.manage";
+    public static final String P_CLINIC_INSURANCE_READ = "clinic.insurance.read";
+    public static final String P_CLINIC_INSURANCE_MANAGE = "clinic.insurance.manage";
+    public static final String P_CLINIC_HOSPITAL_READ = "clinic.hospital.read";
+    public static final String P_CLINIC_HOSPITAL_MANAGE = "clinic.hospital.manage";
+    public static final String P_CLINIC_DENTAL_READ = "clinic.dental.read";
+    public static final String P_CLINIC_DENTAL_MANAGE = "clinic.dental.manage";
 
     /**
      * Every permission a super user can act on.
@@ -113,6 +164,7 @@ public final class AccessCatalog {
             P_FINANCE_READ, P_FINANCE_MANAGE, P_JOURNAL_READ, P_JOURNAL_CREATE, P_JOURNAL_POST, P_JOURNAL_REVERSE,
             P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE,
             P_BUDGET_READ, P_BUDGET_MANAGE,
+            P_ASSET_READ, P_ASSET_MANAGE,
             P_INVENTORY_READ, P_INVENTORY_MANAGE,
             P_ORGANIZATION_READ, P_ORGANIZATION_MANAGE, P_AUDIT_READ,
             P_USERS_READ, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_READ, P_SETTINGS_MANAGE,
@@ -124,23 +176,45 @@ public final class AccessCatalog {
             P_ADVANCES_READ, P_ADVANCES_MANAGE,
             P_CONTRACTOR_ACCOUNTS_READ, P_CONTRACTOR_ACCOUNTS_MANAGE, P_WORKFORCE_REPORTS_READ,
             P_APPROVALS_READ, P_APPROVALS_DECIDE,
-            P_WORKFLOW_DEFINITIONS_READ, P_WORKFLOW_DEFINITIONS_MANAGE);
+            P_WORKFLOW_DEFINITIONS_READ, P_WORKFLOW_DEFINITIONS_MANAGE,
+            P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE, P_PROJECTS_CLOSE,
+            P_LEAVES_READ, P_LEAVES_MANAGE,
+            P_PERFORMANCE_READ, P_PERFORMANCE_MANAGE,
+            P_ETA_TAX_READ, P_ETA_TAX_MANAGE,
+            P_POS_READ, P_POS_OPERATE, P_POS_MANAGE,
+            P_CRM_READ, P_CRM_MANAGE, P_CRM_OMNICHANNEL,
+            P_VERTICALS_READ, P_VERTICALS_MANAGE,
+            P_EXPENSE_READ, P_EXPENSE_MANAGE,
+            P_RECRUITMENT_READ, P_RECRUITMENT_MANAGE,
+            P_DOCUMENTS_READ, P_DOCUMENTS_MANAGE,
+            P_ESIGN_READ, P_ESIGN_MANAGE,
+            P_EINVOICING_READ, P_EINVOICING_MANAGE,
+            P_CLINIC_PATIENTS_READ, P_CLINIC_PATIENTS_MANAGE,
+            P_CLINIC_QUEUE_READ, P_CLINIC_QUEUE_MANAGE,
+            P_CLINIC_COMMISSIONS_READ,
+            P_CLINIC_APPOINTMENTS_READ, P_CLINIC_APPOINTMENTS_MANAGE,
+            P_CLINIC_PHARMACY_READ, P_CLINIC_PHARMACY_MANAGE,
+            P_CLINIC_NARCOTICS_READ, P_CLINIC_NARCOTICS_APPROVE,
+            P_CLINIC_LAB_READ, P_CLINIC_LAB_MANAGE,
+            P_CLINIC_INSURANCE_READ, P_CLINIC_INSURANCE_MANAGE);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
-            P_REPORTS_READ, P_PAYROLL_READ, P_ORGANIZATION_READ);
+            P_REPORTS_READ, P_PAYROLL_READ, P_ORGANIZATION_READ, P_LEAVES_READ, P_PERFORMANCE_READ,
+            P_EXPENSE_READ, P_RECRUITMENT_READ, P_DOCUMENTS_READ, P_ESIGN_READ);
 
     private static final Set<String> HR_WRITE = Set.of(
             P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE, P_CATEGORIES_MANAGE, P_IMPORTS_MANAGE,
-            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE, P_ORGANIZATION_MANAGE);
+            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE, P_ORGANIZATION_MANAGE, P_LEAVES_MANAGE,
+            P_PERFORMANCE_MANAGE, P_EXPENSE_MANAGE, P_RECRUITMENT_MANAGE, P_DOCUMENTS_MANAGE, P_ESIGN_MANAGE);
 
     private static final Set<String> WORKFORCE_READ = Set.of(
             P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ, P_LABOR_REQUESTS_READ, P_DISPATCH_DISPUTES_READ,
             P_ATTENDANCE_READ, P_SETTLEMENTS_READ, P_ADVANCES_READ,
             P_CONTRACTOR_ACCOUNTS_READ, P_WORKFORCE_REPORTS_READ, P_CATEGORIES_READ);
 
-    private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ);
-    private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST);
+    private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ, P_ETA_TAX_READ, P_ASSET_READ, P_EINVOICING_READ);
+    private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST, P_ETA_TAX_MANAGE, P_ASSET_MANAGE, P_EINVOICING_MANAGE);
 
     // ------------------------------------------------------------------
     // Page route-guard role matrices (mirrors the frontend route guards,
@@ -155,6 +229,9 @@ public final class AccessCatalog {
             "ADMIN", "SUPER_ADMIN", "PROCUREMENT_MANAGER", "PROCUREMENT_USER",
             "INVENTORY_MANAGER", "FINANCE_MANAGER", "ACCOUNTANT", "TREASURY_USER", "AUDITOR");
     private static final Set<String> SALES_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "SALES_MANAGER");
+    private static final Set<String> TRADE_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "PROCUREMENT_MANAGER", "PROCUREMENT_USER",
+            "SALES_MANAGER", "FINANCE_MANAGER", "ACCOUNTANT", "AUDITOR");
     private static final Set<String> PRODUCTION_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "MANUFACTURING_MANAGER");
     private static final Set<String> QUALITY_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "MANUFACTURING_MANAGER", "QUALITY_MANAGER");
     private static final Set<String> PAYROLL_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "PAYROLL_MANAGER", "HR_MANAGER", "HR_REVIEWER");
@@ -172,6 +249,8 @@ public final class AccessCatalog {
             "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "FINANCE_MANAGER", "PROCUREMENT_MANAGER",
             "HR_MANAGER", "WORKFORCE_REVIEWER", "ACCOUNTANT", "PROCUREMENT_USER");
     private static final Set<String> APPROVAL_PERMS = Set.of(P_APPROVALS_READ, P_APPROVALS_DECIDE);
+    private static final Set<String> PROJECT_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "PROJECT_MANAGER", "FINANCE_MANAGER", "AUDITOR", "VIEWER");
 
     private static final String FEATURE_PAYROLL = "payroll.enabled";
     private static final String FEATURE_SALES = "sales.enabled";
@@ -179,13 +258,15 @@ public final class AccessCatalog {
     private static final String FEATURE_QUALITY = "quality.enabled";
     private static final String FEATURE_FINANCE = "finance.enabled";
     private static final String FEATURE_CONTRACTOR_ACCOUNTS = "workforce.contractorAccounts.enabled";
+    private static final String FEATURE_AGRI = "agri.enabled";
+    private static final String FEATURE_MEDICAL = "medical.enabled";
 
     private static final String KEY_ROLE_PREFIX = "roles.access.";
     private static final String KEY_PAGE_PREFIX = "access.pages.";
     private static final Set<String> SENSITIVE_PERMISSIONS = Set.of(
             P_JOURNAL_POST, P_JOURNAL_REVERSE, P_PAYROLL_APPROVE, P_PAYMENTS_EXECUTE,
             P_PAYMENTS_APPROVE, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_MANAGE,
-            P_SETTLEMENTS_FINALIZE, P_ATTENDANCE_REVIEW);
+            P_SETTLEMENTS_FINALIZE, P_ATTENDANCE_REVIEW, P_PROJECTS_CLOSE);
     // ------------------------------------------------------------------
     // Role definitions (permissions derived from the enforced @PreAuthorize sets).
     // ------------------------------------------------------------------
@@ -201,17 +282,22 @@ public final class AccessCatalog {
                     Set.of(), "access.sensitive.hrManager"),
             new AccessRoleDef("HR_REVIEWER", key("hrReviewer"), AccessSensitivity.MEDIUM,
                     RoleKind.APPROVAL,
-                    union(HR_READ, Set.of(P_ATTENDANCE_REVIEW, P_REPORTS_DECIDE, P_IMPORTS_MANAGE)),
+                    union(HR_READ, Set.of(P_ATTENDANCE_REVIEW, P_REPORTS_DECIDE)),
                     Set.of(), "access.sensitive.hrReviewer"),
             new AccessRoleDef("VIEWER", key("viewer"), AccessSensitivity.LOW,
                     RoleKind.READ_ONLY,
-                    Set.of(P_DASHBOARD_VIEW, P_REPORTS_READ, P_SETTINGS_READ),
+                    Set.of(P_DASHBOARD_VIEW, P_REPORTS_READ, P_SETTINGS_READ, P_PROJECTS_READ),
                     Set.of(), null),
+            new AccessRoleDef("PROJECT_MANAGER", key("projectManager"), AccessSensitivity.MEDIUM,
+                    RoleKind.OPERATIONAL,
+                    union(Set.of(P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE, P_PROJECTS_CLOSE,
+                            P_PROCUREMENT_READ, P_INVENTORY_READ, P_BUDGET_READ), APPROVAL_PERMS),
+                    Set.of(), "access.sensitive.projectManager"),
             new AccessRoleDef("FINANCE_MANAGER", key("financeManager"), AccessSensitivity.HIGH,
                     RoleKind.FINANCE,
                     union(FINANCE_READ, FINANCE_WRITE, APPROVAL_PERMS,
                             Set.of(P_JOURNAL_REVERSE, P_PROCUREMENT_READ, P_PAYMENTS_EXECUTE, P_AUDIT_READ,
-                                    P_BUDGET_READ, P_BUDGET_MANAGE)),
+                                    P_BUDGET_READ, P_BUDGET_MANAGE, P_PROJECTS_READ)),
                     Set.of(), "access.sensitive.financeManager"),
             new AccessRoleDef("ACCOUNTANT", key("accountant"), AccessSensitivity.MEDIUM,
                     RoleKind.FINANCE,
@@ -274,7 +360,7 @@ public final class AccessCatalog {
                     RoleKind.READ_ONLY,
                     Set.of(P_AUDIT_READ, P_FINANCE_READ, P_JOURNAL_READ, P_PROCUREMENT_READ,
                             P_SALES_READ, P_MANUFACTURING_READ, P_QUALITY_READ, P_OPERATIONS_READ,
-                            P_INVENTORY_READ, P_BUDGET_READ),
+                            P_INVENTORY_READ, P_BUDGET_READ, P_PROJECTS_READ),
                     Set.of(), null));
     // ------------------------------------------------------------------
     // Page definitions (menuId matches the shell navigation and users.page).
@@ -282,10 +368,21 @@ public final class AccessCatalog {
     private final List<AccessPageDef> pages = List.of(
             page("DASHBOARD", "DASHBOARD", "/dashboard", "dashboard", "nav.dashboard", P_DASHBOARD_VIEW,
                     NO_ROLE_GUARD, null),
+            page("PROJECTS", "PROJECTS", "/projects", "projects", "nav.projects", P_PROJECTS_READ,
+                    PROJECT_ROLES, null,
+                    action("MANAGE", P_PROJECTS_MANAGE, false),
+                    action("WBS_MANAGE", P_PROJECTS_WBS_MANAGE, false),
+                    action("CLOSE", P_PROJECTS_CLOSE, true)),
             page("EMPLOYEES", "HR", "/employees", "employees", "nav.employees", P_EMPLOYEES_READ,
                     HR_ROLES, null,
                     action("EDIT", P_EMPLOYEES_EDIT, false),
                     action("DEACTIVATE", P_EMPLOYEES_DEACTIVATE, false)),
+            page("LEAVES", "HR", "/leaves", "leaves", "nav.leaves", P_LEAVES_READ,
+                    HR_REVIEW_ROLES, null,
+                    action("MANAGE", P_LEAVES_MANAGE, false)),
+            page("PERFORMANCE", "HR", "/performance", "performance", "nav.performance", P_PERFORMANCE_READ,
+                    HR_REVIEW_ROLES, null,
+                    action("MANAGE", P_PERFORMANCE_MANAGE, false)),
             page("CATEGORIES", "HR", "/categories", "categories", "nav.categories", P_CATEGORIES_READ,
                     HR_ROLES, null,
                     action("MANAGE", P_CATEGORIES_MANAGE, false)),
@@ -299,6 +396,8 @@ public final class AccessCatalog {
                     NO_ROLE_GUARD, null,
                     action("DECIDE", P_REPORTS_DECIDE, false),
                     action("APPROVE", P_REPORTS_APPROVE, true)),
+            page("EXECUTIVE_ANALYTICS", "REPORTS", "/analytics/executive", "executive-analytics", "nav.executiveAnalytics",
+                    P_REPORTS_READ, PROJECT_ROLES, null),
             page("OPERATIONS", "OPERATIONS", "/operations", "operations", "nav.operations", P_OPERATIONS_READ,
                     ADMIN_ONLY, null,
                     action("MANAGE", P_OPERATIONS_MANAGE, false)),
@@ -308,6 +407,20 @@ public final class AccessCatalog {
             page("SALES", "TRADE", "/trade/sales", "sales", "nav.sales", P_SALES_READ,
                     SALES_ROLES, FEATURE_SALES,
                     action("MANAGE", P_SALES_MANAGE, false)),
+            page("SALES_TARGETS", "TRADE", "/trade/sales/targets", "sales-targets", "nav.salesTargets", P_SALES_READ,
+                    SALES_ROLES, FEATURE_SALES,
+                    action("MANAGE", P_SALES_MANAGE, false)),
+            page("POS", "TRADE", "/trade/pos", "pos", "pos.title", P_POS_READ,
+                    SALES_ROLES, FEATURE_SALES,
+                    action("OPERATE", P_POS_OPERATE, false),
+                    action("MANAGE", P_POS_MANAGE, true)),
+            page("CRM", "TRADE", "/crm", "crm", "nav.crm", P_CRM_READ,
+                    SALES_ROLES, FEATURE_SALES,
+                    action("MANAGE", P_CRM_MANAGE, false),
+                    action("OMNICHANNEL", P_CRM_OMNICHANNEL, false)),
+            page("EXPORT_SHIPMENTS", "TRADE", "/trade/export-shipments", "export-shipments", "nav.exportShipments", P_EXPORT_READ,
+                    TRADE_ROLES, FEATURE_AGRI,
+                    action("MANAGE", P_EXPORT_MANAGE, false)),
             page("PRODUCTION", "MANUFACTURING", "/manufacturing/production", "production", "nav.production",
                     P_MANUFACTURING_READ, PRODUCTION_ROLES, FEATURE_MANUFACTURING,
                     action("MANAGE", P_MANUFACTURING_MANAGE, false)),
@@ -338,9 +451,27 @@ public final class AccessCatalog {
             page("BUDGETS", "FINANCE", "/finance/budgets", "budgets", "nav.budgets", P_BUDGET_READ,
                     FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_BUDGET_MANAGE, false)),
+            page("FIXED_ASSETS", "FINANCE", "/finance/fixed-assets", "fixed-assets", "nav.fixedAssets",
+                    P_ASSET_READ, FINANCE_ROLES, FEATURE_FINANCE,
+                    action("MANAGE", P_ASSET_MANAGE, false)),
+            page("ETA_TAX", "FINANCE", "/compliance/eta-tax", "eta-tax", "nav.etaTax", P_ETA_TAX_READ,
+                    FINANCE_ROLES, FEATURE_FINANCE,
+                    action("MANAGE", P_ETA_TAX_MANAGE, false)),
             page("ORGANIZATION", "HR", "/organization", "organization", "nav.organization",
                     P_ORGANIZATION_READ, HR_ROLES, null,
                     action("MANAGE", P_ORGANIZATION_MANAGE, false)),
+            page("EXPENSES", "HR", "/expenses", "expenses", "nav.expenses", P_EXPENSE_READ,
+                    HR_ROLES, null,
+                    action("MANAGE", P_EXPENSE_MANAGE, false)),
+            page("RECRUITMENT", "HR", "/recruitment", "recruitment", "nav.recruitment", P_RECRUITMENT_READ,
+                    HR_ROLES, null,
+                    action("MANAGE", P_RECRUITMENT_MANAGE, false)),
+            page("DOCUMENTS", "HR", "/documents", "documents", "nav.documents", P_DOCUMENTS_READ,
+                    HR_ROLES, null,
+                    action("MANAGE", P_DOCUMENTS_MANAGE, false)),
+            page("ESIGN", "HR", "/esign", "esign", "nav.esign", P_ESIGN_READ,
+                    HR_ROLES, null,
+                    action("MANAGE", P_ESIGN_MANAGE, true)),
             page("AUDIT_LOGS", "ADMINISTRATION", "/audit-logs", "audit-logs", "nav.auditLogs", P_AUDIT_READ,
                     ADMIN_ONLY, null),
             page("USERS", "ADMINISTRATION", "/users", "users", "nav.users", P_USERS_READ,
@@ -395,7 +526,39 @@ public final class AccessCatalog {
                     "approvals.workflows", P_WORKFLOW_DEFINITIONS_READ, ADMIN_ONLY, null,
                     action("MANAGE", P_WORKFLOW_DEFINITIONS_MANAGE, true)),
             page("NOTIFICATIONS_SEND", "ADMINISTRATION", "/notifications/send", "notifications-send",
-                    "nav.notificationsSend", P_USERS_READ, ADMIN_ONLY, null));
+                    "nav.notificationsSend", P_USERS_READ, ADMIN_ONLY, null),
+            page("SPECIALIZED_VERTICALS", "VERTICALS", "/verticals/specialized", "specialized-verticals",
+                    "nav.specializedVerticals", P_VERTICALS_READ, NO_ROLE_GUARD, null,
+                    action("MANAGE", P_VERTICALS_MANAGE, false)),
+            page("CLINIC_PATIENTS", "MEDICAL", "/clinic/patients", "clinic-patients",
+                    "nav.clinicPatients", P_CLINIC_PATIENTS_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_PATIENTS_MANAGE, false)),
+            page("CLINIC_QUEUE", "MEDICAL", "/clinic/queue", "clinic-queue",
+                    "nav.clinicQueue", P_CLINIC_QUEUE_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_QUEUE_MANAGE, false)),
+            page("CLINIC_COMMISSIONS", "MEDICAL", "/clinic/commissions", "clinic-commissions",
+                    "nav.clinicCommissions", P_CLINIC_COMMISSIONS_READ, NO_ROLE_GUARD, FEATURE_MEDICAL),
+            page("CLINIC_APPOINTMENTS", "MEDICAL", "/clinic/appointments", "clinic-appointments",
+                    "nav.clinicAppointments", P_CLINIC_APPOINTMENTS_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_APPOINTMENTS_MANAGE, false)),
+            page("CLINIC_PHARMACY", "MEDICAL", "/clinic/pharmacy", "clinic-pharmacy",
+                    "nav.clinicPharmacy", P_CLINIC_PHARMACY_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_PHARMACY_MANAGE, false)),
+            page("CLINIC_LAB", "MEDICAL", "/clinic/lab", "clinic-lab",
+                    "nav.clinicLab", P_CLINIC_LAB_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_LAB_MANAGE, false)),
+            page("CLINIC_INSURANCE", "MEDICAL", "/clinic/insurance", "clinic-insurance",
+                    "nav.clinicInsurance", P_CLINIC_INSURANCE_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_INSURANCE_MANAGE, false)),
+            page("CLINIC_HOSPITAL", "MEDICAL", "/clinic/hospital", "hospital-ops",
+                    "nav.hospitalOps", P_CLINIC_HOSPITAL_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_HOSPITAL_MANAGE, false)),
+            page("CLINIC_DENTAL", "MEDICAL", "/clinic/dental", "dental-charting",
+                    "nav.dentalCharting", P_CLINIC_DENTAL_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_DENTAL_MANAGE, false)),
+            page("CLINIC_TOOLS", "MEDICAL", "/clinic/tools", "medical-tools",
+                    "nav.medicalTools", P_CLINIC_PATIENTS_READ, NO_ROLE_GUARD, FEATURE_MEDICAL,
+                    action("MANAGE", P_CLINIC_PATIENTS_MANAGE, false)));
     // ------------------------------------------------------------------
     // Segregation-of-duties rules.
     // ------------------------------------------------------------------
@@ -415,6 +578,8 @@ public final class AccessCatalog {
     // ------------------------------------------------------------------
     private final List<AccessNeedDef> needs = List.of(
             need("VIEW_DASHBOARD", Set.of(P_DASHBOARD_VIEW)),
+            need("VIEW_PROJECTS", Set.of(P_PROJECTS_READ)),
+            need("MANAGE_PROJECTS", Set.of(P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE)),
             need("VIEW_REPORTS", Set.of(P_REPORTS_READ)),
             need("MANAGE_EMPLOYEES", Set.of(P_EMPLOYEES_READ, P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE)),
             need("VIEW_WORKERS", Set.of(P_WORKERS_READ)),

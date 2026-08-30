@@ -53,6 +53,36 @@ Spring Boot 4.1 modular monolith for Bemo ERP. The build, CI, and container runt
 docker build -t bemo-hr-backend .
 ```
 
+### GraalVM launcher scripts (WP-18 T-1)
+
+Convenience launchers probe `GRAALVM_HOME` / SDKMAN / common install paths, set
+`JAVA_HOME` to GraalVM when found, and otherwise fall back to the standard JDK
+with an actionable message:
+
+```powershell
+# Windows
+.\start-backend-graal.bat
+```
+
+```bash
+# Linux / macOS / WSL
+./start-backend-graal.sh
+```
+
+Building a native image requires GraalVM (JVM features like `@EnableCaching`,
+Dynamic Proxies and JDK proxy generation need `--enable-preview`-free reflection
+config; the Gradle Spring AOT plugin resolves these):
+
+```bash
+cd be
+export GRAALVM_HOME=/path/to/graalvm
+./gradlew nativeCompile
+./build/native/images/bemo-erp
+```
+
+> Native-image build is a dev convenience only — it is intentionally **not**
+> wired into CI.
+
 | Configuration Variable | Purpose / Default Value |
 |---|---|
 | `DB_URL` | `jdbc:postgresql://localhost:5432/bemo_erp` |

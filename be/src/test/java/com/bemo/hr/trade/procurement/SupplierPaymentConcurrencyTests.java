@@ -182,7 +182,7 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
                 start.await();
                 long paymentDate = LocalDate.of(2026, 8, 1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
                 var payload = new ProcurementApi.SupplierPaymentPayload("PMT-" + operationId, paymentDate,
-                        supplierId, invoiceId, new BigDecimal(amount), "BANK_TRANSFER", null, operationId);
+                        supplierId, invoiceId, new BigDecimal(amount), null, "BANK_TRANSFER", null, operationId);
                 try {
                     procurementService.createSupplierPayment(payload);
                     succeeded.incrementAndGet();

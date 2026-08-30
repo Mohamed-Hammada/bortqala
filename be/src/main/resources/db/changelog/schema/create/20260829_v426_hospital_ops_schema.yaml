@@ -1,0 +1,612 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829-v426-001
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_wards
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_wards
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: department_id
+                  type: VARCHAR(36)
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-002
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_rooms
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_rooms
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ward_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: room_number
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: room_type
+                  type: VARCHAR(20)
+                  defaultValue: "STANDARD"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-003
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_beds
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_beds
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: room_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bed_number
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: "FREE"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_admission_id
+                  type: VARCHAR(36)
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-004
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_admissions
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_admissions
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: patient_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: admitting_doctor_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_bed_id
+                  type: VARCHAR(36)
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: "ADMITTED"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chief_complaint
+                  type: VARCHAR(500)
+              - column:
+                  name: admitted_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: discharged_at
+                  type: BIGINT
+              - column:
+                  name: discharge_summary
+                  type: VARCHAR(2000)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-005
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_bed_stays
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_bed_stays
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: admission_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bed_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ended_at
+                  type: BIGINT
+              - column:
+                  name: transfer_reason
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-006
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_ot_schedules
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_ot_schedules
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: theater_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: patient_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: surgeon_doctor_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: surgery_type
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: "PLANNED"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: planned_start
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration_minutes
+                  type: INT
+                  defaultValueNumeric: 60
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actual_start
+                  type: BIGINT
+              - column:
+                  name: actual_end
+                  type: BIGINT
+              - column:
+                  name: anesthesia_notes
+                  type: VARCHAR(1000)
+              - column:
+                  name: surgical_notes
+                  type: VARCHAR(2000)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-007
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_ot_charges
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_ot_charges
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ot_schedule_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_name
+                  type: VARCHAR(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: NUMERIC(10, 2)
+                  defaultValueNumeric: 1.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_price
+                  type: NUMERIC(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_amount
+                  type: NUMERIC(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: charged_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-008
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_mar_entries
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_mar_entries
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: admission_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: medication_name
+                  type: VARCHAR(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dose
+                  type: VARCHAR(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: route
+                  type: VARCHAR(30)
+                  defaultValue: "ORAL"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: "DUE"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: administered_at
+                  type: BIGINT
+              - column:
+                  name: nurse_id
+                  type: VARCHAR(36)
+              - column:
+                  name: nurse_name
+                  type: VARCHAR(160)
+              - column:
+                  name: notes
+                  type: VARCHAR(500)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-009
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_fluid_io_entries
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_fluid_io_entries
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: admission_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entry_time
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: route_or_fluid
+                  type: VARCHAR(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_ml
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recorded_by
+                  type: VARCHAR(160)
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260829-v426-010
+      author: bemo-medical
+      changes:
+        - createTable:
+            tableName: hospital_nursing_notes
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_hospital_nursing_notes
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: admission_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recorded_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nurse_name
+                  type: VARCHAR(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note_text
+                  type: VARCHAR(2000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

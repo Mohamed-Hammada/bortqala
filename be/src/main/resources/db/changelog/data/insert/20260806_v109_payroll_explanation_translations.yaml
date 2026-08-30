@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v109-payroll-explanation-translations
       author: Antigravity
+      validCheckSum: ANY
       comment: "Bilingual translations for payroll calculation explanation keys and UI labels."
       changes:
         - loadData:

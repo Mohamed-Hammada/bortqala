@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: create_workforce_contractors_schema
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: contractors

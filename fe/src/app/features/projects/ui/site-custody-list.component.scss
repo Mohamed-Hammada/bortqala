@@ -1,0 +1,238 @@
+.site-custody-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  .custody-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin: 0.25rem 0 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+  }
+
+  .custody-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.25rem;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .custody-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    .custody-card {
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: var(--bg-surface);
+      transition: all 0.15s ease;
+
+      &:hover, &.selected {
+        border-color: var(--primary-color);
+        background: var(--bg-muted);
+      }
+
+      .custody-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .custodian-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .type-badge {
+        font-size: 0.75rem;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+      }
+
+      .balance-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+
+        strong {
+          color: var(--primary-color);
+        }
+      }
+    }
+  }
+
+  .custody-details {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+
+    .details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+
+      h4 {
+        margin: 0 0 0.5rem;
+        font-size: 1.15rem;
+      }
+
+      .details-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+    }
+
+    .metric-pills-row {
+      display: flex;
+      gap: 1rem;
+
+      .metric-pill {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--bg-muted);
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+
+        .label {
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+        }
+
+        .val {
+          font-size: 1.25rem;
+          font-weight: 700;
+
+          &.highlight {
+            color: var(--primary-color);
+          }
+        }
+      }
+    }
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 0.65rem;
+      text-align: start;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: var(--bg-muted);
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+  }
+
+  .table-actions {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+
+    .modal-card {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h4 {
+          margin: 0;
+        }
+
+        .btn-close {
+          background: none;
+          border: none;
+          font-size: 1.25rem;
+          cursor: pointer;
+        }
+      }
+
+      .form-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 0.5rem;
+
+        label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+        }
+      }
+
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--text-secondary);
+  }
+}

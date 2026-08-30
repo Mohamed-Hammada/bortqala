@@ -1,0 +1,9 @@
+id;translation_key;locale;text_value
+v342-001-en;dashboard.peakTitle;en-US;Peak clock-in hours
+v342-001-ar;dashboard.peakTitle;ar-EG;ساعات الحضور الأكثر ازدحاماً
+v342-002-en;dashboard.peakHint;en-US;When most punches happen for each category across the selected period.
+v342-002-ar;dashboard.peakHint;ar-EG;التوقيت الذي تحدث فيه معظم البصمات لكل فئة خلال الفترة المحددة.
+v342-003-en;dashboard.peakHour;en-US;Hour
+v342-003-ar;dashboard.peakHour;ar-EG;الساعة
+v342-004-en;dashboard.peakEmpty;en-US;No punch data in the selected period yet.
+v342-004-ar;dashboard.peakEmpty;ar-EG;لا توجد بيانات بصمة في الفترة المحددة بعد.

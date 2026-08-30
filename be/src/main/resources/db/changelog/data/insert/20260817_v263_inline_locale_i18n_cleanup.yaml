@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260817-v263-inline-locale-i18n-cleanup
       author: wolfn
+      validCheckSum: ANY
       comment: Replace all inline ar/en ternaries with DB-backed i18n keys (attendance, workforce import, workflow, subscription, imports). Entitlements keys already exist in v246.
       preConditions:
         - onFail: MARK_RAN

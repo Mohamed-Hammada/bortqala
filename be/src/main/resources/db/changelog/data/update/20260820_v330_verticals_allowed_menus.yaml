@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260820_v330_verticals_allowed_menus
+      author: bemo-platform
+      validCheckSum: ANY
+      comment: "Grant the specialized-verticals screen to existing users for Feature 30 Specialized Industry Verticals."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',specialized-verticals')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%specialized-verticals%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(allowed_menus, ',specialized-verticals', '')
+              WHERE allowed_menus IS NOT NULL;

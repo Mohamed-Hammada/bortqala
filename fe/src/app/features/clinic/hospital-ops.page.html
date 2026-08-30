@@ -1,0 +1,584 @@
+<div class="hospital-ops-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('hospital.title') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('hospital.subtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" *ngIf="activeTab() === 'BEDS'" (click)="openAdmitModal()">
+        + {{ i18n.t('hospital.admitPatient') }}
+      </button>
+      <button class="btn btn-primary" *ngIf="activeTab() === 'OT'" (click)="openScheduleOtModal()">
+        + {{ i18n.t('clinic.newAppointment') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Strip -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <span class="metric-label">{{ i18n.t('hospital.occupancyRate') }}</span>
+      <span class="metric-value text-primary">{{ metrics().occupancyRatePercent }}%</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">{{ i18n.t('hospital.totalBeds') }}</span>
+      <span class="metric-value">{{ metrics().totalBeds }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">{{ i18n.t('hospital.occupiedBeds') }}</span>
+      <span class="metric-value text-danger">{{ metrics().occupiedBeds }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">{{ i18n.t('hospital.alos') }}</span>
+      <span class="metric-value">{{ metrics().averageLengthOfStayDays }}</span>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'BEDS'"
+      (click)="setTab('BEDS')"
+    >
+      🛏️ {{ i18n.t('hospital.tabBeds') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'ADMISSIONS'"
+      (click)="setTab('ADMISSIONS')"
+    >
+      🏥 {{ i18n.t('hospital.tabAdmissions') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'OT'"
+      (click)="setTab('OT')"
+    >
+      🔪 {{ i18n.t('hospital.tabOt') }}
+    </button>
+  </div>
+
+  <!-- TAB 1: LIVE BED BOARD -->
+  <div class="tab-content" *ngIf="activeTab() === 'BEDS'">
+    <div class="beds-grid" *ngIf="beds().length > 0; else noBeds">
+      <div
+        class="bed-card"
+        *ngFor="let b of beds()"
+        [ngClass]="{
+          'bed-free': b.status === 'FREE',
+          'bed-occupied': b.status === 'OCCUPIED',
+          'bed-isolation': b.status === 'ISOLATION',
+          'bed-maintenance': b.status === 'MAINTENANCE'
+        }"
+      >
+        <div class="bed-header">
+          <span class="bed-number font-bold">{{ b.bedNumber }}</span>
+          <span class="badge" [ngClass]="{
+            'badge-success': b.status === 'FREE',
+            'badge-danger': b.status === 'OCCUPIED',
+            'badge-warning': b.status === 'ISOLATION',
+            'badge-neutral': b.status === 'MAINTENANCE'
+          }">
+            <ng-container [ngSwitch]="b.status">
+              <span *ngSwitchCase="'FREE'">🟢 {{ b.status }}</span>
+              <span *ngSwitchCase="'OCCUPIED'">🔴 {{ b.status }}</span>
+              <span *ngSwitchCase="'ISOLATION'">🟡 {{ b.status }}</span>
+              <span *ngSwitchDefault>⚙️ {{ b.status }}</span>
+            </ng-container>
+          </span>
+        </div>
+        <div class="bed-location">
+          <span>{{ b.wardName || '—' }}</span>
+          <span>{{ i18n.t('hospital.roomNumber') }}: {{ b.roomNumber || '—' }}</span>
+        </div>
+        <div class="bed-occupant" *ngIf="b.status === 'OCCUPIED'">
+          <div class="patient-name font-bold">{{ b.currentPatientName }}</div>
+          <span class="badge badge-info">{{ b.currentPatientMrn }}</span>
+        </div>
+        <div class="bed-actions" *ngIf="b.status === 'FREE'">
+          <button class="btn btn-xs btn-primary" (click)="openAdmitModal(b)">
+            {{ i18n.t('hospital.admitPatient') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <ng-template #noBeds>
+      <div class="empty-state card">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- TAB 2: INPATIENT ADMISSIONS & CHART -->
+  <div class="tab-content" *ngIf="activeTab() === 'ADMISSIONS'">
+    <div class="admissions-layout">
+      <!-- Admissions List -->
+      <div class="card admissions-card">
+        <h3>{{ i18n.t('hospital.tabAdmissions') }}</h3>
+        <div class="admissions-list" *ngIf="admissions().length > 0; else noAdmissions">
+          <div
+            class="admission-item"
+            *ngFor="let a of admissions()"
+            [class.selected]="a.id === selectedAdmission()?.id"
+            (click)="selectAdmission(a)"
+          >
+            <div class="admission-header">
+              <span class="font-bold">{{ a.patientName }}</span>
+              <span class="badge badge-info">{{ a.patientMrn }}</span>
+            </div>
+            <div class="admission-details">
+              <span>{{ i18n.t('hospital.bedNumber') }}: {{ a.currentBedId || '—' }}</span>
+              <span>{{ a.chiefComplaint || '—' }}</span>
+            </div>
+          </div>
+        </div>
+        <ng-template #noAdmissions>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+
+      <!-- Inpatient Chart Detail -->
+      <div class="card inpatient-chart-card" *ngIf="selectedAdmission()">
+        <div class="chart-header">
+          <div>
+            <h3>{{ selectedAdmission()!.patientName }} ({{ selectedAdmission()!.patientMrn }})</h3>
+            <p class="text-xs text-secondary">{{ selectedAdmission()!.chiefComplaint }}</p>
+          </div>
+          <div class="chart-actions">
+            <button class="btn btn-sm btn-secondary" (click)="openTransferModal(selectedAdmission()!)">
+              {{ i18n.t('hospital.transferPatient') }}
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="openDischargeModal(selectedAdmission()!)">
+              {{ i18n.t('hospital.dischargePatient') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Nursing MAR Section -->
+        <div class="section-card">
+          <div class="section-header">
+            <h4>{{ i18n.t('hospital.marTimeline') }}</h4>
+            <button class="btn btn-xs btn-primary" (click)="openAddMarModal()">
+              + {{ i18n.t('clinic.addMedication') }}
+            </button>
+          </div>
+          <table class="data-table" *ngIf="marEntries().length > 0; else noMar">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('hospital.medicationName') }}</th>
+                <th>{{ i18n.t('hospital.dose') }}</th>
+                <th>{{ i18n.t('hospital.route') }}</th>
+                <th>{{ i18n.t('common.status') }}</th>
+                <th>{{ i18n.t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of marEntries()">
+                <td class="font-bold">{{ m.medicationName }}</td>
+                <td>{{ m.dose }}</td>
+                <td><span class="badge badge-neutral">{{ m.route }}</span></td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'badge-warning': m.status === 'DUE',
+                    'badge-success': m.status === 'GIVEN',
+                    'badge-danger': m.status === 'REFUSED',
+                    'badge-neutral': m.status === 'HELD'
+                  }">
+                    {{ m.status }}
+                  </span>
+                </td>
+                <td class="action-cell">
+                  <button *ngIf="m.status === 'DUE'" class="btn btn-xs btn-success" (click)="administerDose(m, 'GIVEN')">
+                    ✓ {{ i18n.t('hospital.actionGiven') }}
+                  </button>
+                  <button *ngIf="m.status === 'DUE'" class="btn btn-xs btn-danger" (click)="administerDose(m, 'REFUSED')">
+                    ✕ {{ i18n.t('hospital.actionRefused') }}
+                  </button>
+                  <button *ngIf="m.status === 'DUE'" class="btn btn-xs btn-secondary" (click)="administerDose(m, 'HELD')">
+                    ⏸ {{ i18n.t('hospital.actionHeld') }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noMar>
+            <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+          </ng-template>
+        </div>
+
+        <!-- Fluid I/O Balance -->
+        <div class="section-card">
+          <div class="section-header">
+            <h4>{{ i18n.t('hospital.fluidIo') }} - {{ i18n.t('hospital.netBalance') }}: {{ netFluid }}</h4>
+            <button class="btn btn-xs btn-primary" (click)="openAddFluidModal()">
+              + {{ i18n.t('common.add') }}
+            </button>
+          </div>
+          <div class="fluid-summary">
+            <span class="badge badge-success">{{ i18n.t('hospital.totalIntake') }}: {{ totalIntake }}</span>
+            <span class="badge badge-danger">{{ i18n.t('hospital.totalOutput') }}: {{ totalOutput }}</span>
+          </div>
+          <table class="data-table" *ngIf="fluidEntries().length > 0; else noFluid">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('common.type') }}</th>
+                <th>{{ i18n.t('hospital.route') }}</th>
+                <th>{{ i18n.t('common.amount') }} (ml)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let f of fluidEntries()">
+                <td>
+                  <span class="badge" [class.badge-success]="f.type === 'INTAKE'" [class.badge-danger]="f.type === 'OUTPUT'">
+                    {{ f.type }}
+                  </span>
+                </td>
+                <td>{{ f.routeOrFluid }}</td>
+                <td class="font-bold">{{ f.amountMl }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noFluid>
+            <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+          </ng-template>
+        </div>
+
+        <!-- Nursing Notes Stream -->
+        <div class="section-card">
+          <div class="section-header">
+            <h4>{{ i18n.t('hospital.nursingNotes') }}</h4>
+            <button class="btn btn-xs btn-primary" (click)="openAddNoteModal()">
+              + {{ i18n.t('hospital.addNote') }}
+            </button>
+          </div>
+          <div class="notes-stream" *ngIf="nursingNotes().length > 0; else noNotes">
+            <div class="note-item" *ngFor="let n of nursingNotes()">
+              <div class="note-header">
+                <span class="font-bold">{{ n.nurseName }}</span>
+              </div>
+              <p class="note-body">{{ n.noteText }}</p>
+            </div>
+          </div>
+          <ng-template #noNotes>
+            <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: OPERATING THEATER -->
+  <div class="tab-content card" *ngIf="activeTab() === 'OT'">
+    <table class="data-table" *ngIf="otSchedules().length > 0; else noOt">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('hospital.theaterName') }}</th>
+          <th>{{ i18n.t('clinic.mrn') }}</th>
+          <th>{{ i18n.t('clinic.fullName') }}</th>
+          <th>{{ i18n.t('hospital.surgeryType') }}</th>
+          <th>{{ i18n.t('hospital.durationMinutes') }}</th>
+          <th>{{ i18n.t('common.status') }}</th>
+          <th>{{ i18n.t('common.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ot of otSchedules()">
+          <td class="font-bold">{{ ot.theaterName }}</td>
+          <td><span class="badge badge-info">{{ ot.patientMrn }}</span></td>
+          <td>{{ ot.patientName }}</td>
+          <td>{{ ot.surgeryType }}</td>
+          <td>{{ ot.durationMinutes }}</td>
+          <td>
+            <span class="badge" [ngClass]="{
+              'badge-warning': ot.status === 'PLANNED',
+              'badge-info': ot.status === 'IN_PROGRESS',
+              'badge-success': ot.status === 'COMPLETED',
+              'badge-danger': ot.status === 'CANCELLED'
+            }">
+              {{ ot.status }}
+            </span>
+          </td>
+          <td class="action-cell">
+            <button *ngIf="ot.status === 'PLANNED'" class="btn btn-xs btn-primary" (click)="startSurgery(ot)">
+              {{ i18n.t('common.confirm') }}
+            </button>
+            <button *ngIf="ot.status === 'IN_PROGRESS'" class="btn btn-xs btn-success" (click)="completeSurgery(ot)">
+              ✓ {{ i18n.t('clinic.validateAction') }}
+            </button>
+            <button class="btn btn-xs btn-secondary" (click)="openAddChargeModal(ot)">
+              + {{ i18n.t('hospital.addCharge') }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noOt>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- Admit Patient Modal -->
+  <div class="modal-overlay" *ngIf="showAdmitModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('hospital.admitPatient') }}</h3>
+        <button class="btn-close" (click)="showAdmitModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitAdmit()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.mrn') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="admitForm.patientId" name="patientId" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('hospital.bedNumber') }} *</label>
+          <select class="form-control" [(ngModel)]="admitForm.bedId" name="bedId" required>
+            <option *ngFor="let b of beds()" [value]="b.id">{{ b.bedNumber }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.reason') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="admitForm.chiefComplaint" name="complaint" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showAdmitModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!admitForm.patientId || !admitForm.bedId || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Transfer Modal -->
+  <div class="modal-overlay" *ngIf="showTransferModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('hospital.transferPatient') }}</h3>
+        <button class="btn-close" (click)="showTransferModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitTransfer()">
+        <div class="form-group">
+          <label>{{ i18n.t('hospital.bedNumber') }} *</label>
+          <select class="form-control" [(ngModel)]="transferForm.targetBedId" name="targetBedId" required>
+            <option *ngFor="let b of beds()" [value]="b.id">{{ b.bedNumber }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.reason') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="transferForm.transferReason" name="reason" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showTransferModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!transferForm.targetBedId || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Discharge Modal -->
+  <div class="modal-overlay" *ngIf="showDischargeModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('hospital.dischargePatient') }}</h3>
+        <button class="btn-close" (click)="showDischargeModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitDischarge()">
+        <div class="form-group">
+          <label>{{ i18n.t('hospital.dischargeSummary') }} *</label>
+          <textarea
+            class="form-control"
+            [(ngModel)]="dischargeForm.dischargeSummary"
+            name="summary"
+            rows="4"
+            required
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showDischargeModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button
+            type="submit"
+            class="btn btn-danger"
+            [disabled]="dischargeForm.dischargeSummary.length < 20 || saving()"
+          >
+            {{ i18n.t('hospital.dischargePatient') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add MAR Modal -->
+  <div class="modal-overlay" *ngIf="showMarModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.addMedication') }}</h3>
+        <button class="btn-close" (click)="showMarModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitMarEntry()">
+        <div class="form-group">
+          <label>{{ i18n.t('hospital.medicationName') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="marForm.medicationName" name="medName" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('hospital.dose') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="marForm.dose" name="dose" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('hospital.route') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="marForm.route" name="route" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showMarModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!marForm.medicationName || !marForm.dose || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Fluid I/O Modal -->
+  <div class="modal-overlay" *ngIf="showFluidModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('hospital.fluidIo') }}</h3>
+        <button class="btn-close" (click)="showFluidModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitFluidIo()">
+        <div class="form-group">
+          <label>{{ i18n.t('common.type') }} *</label>
+          <select class="form-control" [(ngModel)]="fluidForm.type" name="type" required>
+            <option value="INTAKE">{{ i18n.t('hospital.totalIntake') }}</option>
+            <option value="OUTPUT">{{ i18n.t('hospital.totalOutput') }}</option>
+          </select>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('hospital.route') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="fluidForm.routeOrFluid" name="route" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.amount') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="fluidForm.amountMl" name="amount" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showFluidModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!fluidForm.routeOrFluid || fluidForm.amountMl <= 0 || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Nursing Note Modal -->
+  <div class="modal-overlay" *ngIf="showNoteModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('hospital.addNote') }}</h3>
+        <button class="btn-close" (click)="showNoteModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitNursingNote()">
+        <div class="form-group">
+          <label>{{ i18n.t('hospital.nursingNotes') }} *</label>
+          <textarea class="form-control" [(ngModel)]="noteForm.noteText" name="noteText" rows="3" required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showNoteModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!noteForm.noteText || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Schedule OT Modal -->
+  <div class="modal-overlay" *ngIf="showOtModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('hospital.tabOt') }}</h3>
+        <button class="btn-close" (click)="showOtModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitScheduleOt()">
+        <div class="form-group">
+          <label>{{ i18n.t('hospital.theaterName') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="otForm.theaterName" name="theaterName" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.mrn') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="otForm.patientId" name="patientId" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('hospital.surgeryType') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="otForm.surgeryType" name="surgeryType" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('hospital.durationMinutes') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="otForm.durationMinutes" name="duration" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showOtModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!otForm.patientId || !otForm.surgeryType || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add OT Charge Modal -->
+  <div class="modal-overlay" *ngIf="showOtChargeModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('hospital.addCharge') }}</h3>
+        <button class="btn-close" (click)="showOtChargeModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitAddCharge()">
+        <div class="form-group">
+          <label>{{ i18n.t('hospital.implantCharges') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="otChargeForm.itemName" name="itemName" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('common.quantity') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="otChargeForm.quantity" name="qty" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.unitPrice') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="otChargeForm.unitPrice" name="price" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showOtChargeModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!otChargeForm.itemName || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

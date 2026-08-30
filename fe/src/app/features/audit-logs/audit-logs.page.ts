@@ -29,6 +29,7 @@ export class AuditLogsPage {
   readonly actionFilter = signal('');
   readonly usernameFilter = signal('');
   readonly searchFilter = signal('');
+  readonly breakGlassFilter = signal(false);
   readonly fromFilter = signal(this.relativeDate(-1));
   readonly toFilter = signal(this.relativeDate(0));
 
@@ -54,6 +55,7 @@ export class AuditLogsPage {
     this.actionFilter.set('');
     this.usernameFilter.set('');
     this.searchFilter.set('');
+    this.breakGlassFilter.set(false);
     this.fromFilter.set(this.relativeDate(-1));
     this.toFilter.set(this.relativeDate(0));
     this.load(1);
@@ -76,6 +78,7 @@ export class AuditLogsPage {
       if (action) params['action'] = action;
       if (username) params['username'] = username;
       if (search) params['search'] = search;
+      if (this.breakGlassFilter()) params['isBreakGlass'] = 'true';
       const from = this.dateToEpochMillis(this.fromFilter(), true);
       const to = this.dateToEpochMillis(this.toFilter(), false);
       if (from !== null) params['from'] = String(from);

@@ -1,0 +1,22 @@
+.page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+.table-card { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 0.75rem; text-align: start; border-bottom: 1px solid var(--line); }
+th { font-weight: 600; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; }
+.actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.status-badge { font-weight: 600; }
+.button { padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer; background: var(--gold); color: var(--ink); }
+.button.secondary { background: var(--surface-muted); color: var(--ink); }
+.button.danger { background: var(--danger-soft); color: var(--danger); }
+.button.small { padding: 0.3rem 0.7rem; font-size: 0.85rem; }
+.button:disabled { opacity: 0.5; cursor: not-allowed; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal { padding: 1.5rem; min-width: 360px; max-width: 480px; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.85rem; }
+.form-group input, .form-group select { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--line); background: var(--input-bg); }
+.modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+.alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+.alert.warning { background: var(--warning-soft); color: var(--warning-text); }
+.loading, .empty-state { padding: 2rem; text-align: center; color: var(--muted); }

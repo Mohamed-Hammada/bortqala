@@ -94,6 +94,7 @@ class AuthSecurityIntegrationTests {
 
     @BeforeEach
     void setUp() {
+        loginRateLimiter.clear();
         var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue("TEST").orElseThrow();
         appId = app.getId();
         appCode = app.getCode();
@@ -124,6 +125,7 @@ class AuthSecurityIntegrationTests {
             appUserRepository.deleteAllById(createdUserIds);
         } finally {
             createdUserIds.clear();
+            loginRateLimiter.clear();
             TenantContext.clear();
         }
     }
@@ -1055,4 +1057,79 @@ class AuthSecurityIntegrationTests {
                 .orElseThrow();
         assertThat(details).contains("accessChangeReason=audited-2026");
     }
+
+    @Test
+    void superAdminCanCreateAdminUser() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var request = new AuthApi.UserUpsertRequest("newadmin-" + suffix, "New Admin", "Auth#Test1!",
+                Set.of(RoleCode.ADMIN), null, true, null, true, true, null, "superadmin-creation");
+        TenantContext.set(appId);
+
+        var created = authService.create(request, "superadmin");
+        createdUserIds.add(created.id());
+        assertThat(created.roles()).contains(RoleCode.ADMIN);
+    }
+
+    @Test
+    void adminCannotCreateAdminUser() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var request = new AuthApi.UserUpsertRequest("badadmin-" + suffix, "Bad Admin", "Auth#Test1!",
+                Set.of(RoleCode.ADMIN), null, true, null, true, true, null, null);
+        TenantContext.set(appId);
+
+        assertThatThrownBy(() -> authService.create(request, "admin"))
+                .isInstanceOfSatisfying(BusinessRuleException.class, ex ->
+                        assertThat(ex.getCode()).isEqualTo("AUTH_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN"));
+    }
+
+    @Test
+    void adminCannotPromoteUserToAdmin() {
+        AppUser normalUser = createUser("normuser", Set.of(RoleCode.VIEWER));
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var request = new AuthApi.UserUpsertRequest("normuser-" + suffix, "Promoted Admin", null,
+                Set.of(RoleCode.ADMIN), null, true, null, true, true, normalUser.getVersion(), null);
+        TenantContext.set(appId);
+
+        assertThatThrownBy(() -> authService.update(normalUser.getId(), request, "admin"))
+                .isInstanceOfSatisfying(BusinessRuleException.class, ex ->
+                        assertThat(ex.getCode()).isEqualTo("AUTH_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN"));
+    }
+
+    @Test
+    void adminCannotModifyOtherAdminAccount() {
+        AppUser superAdmin = loadAccount("superadmin");
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var createReq = new AuthApi.UserUpsertRequest("adm2-" + suffix, "Admin Two", "Auth#Test1!",
+                Set.of(RoleCode.ADMIN), null, true, null, true, true, null, null);
+        TenantContext.set(appId);
+        var created = authService.create(createReq, superAdmin.getUsername());
+        createdUserIds.add(created.id());
+        var user = loadWithRoles(created.id());
+
+        var updateReq = new AuthApi.UserUpsertRequest("adm2-" + suffix, "Admin Two Edited", null,
+                Set.of(RoleCode.ADMIN), null, true, null, true, true, user.getVersion(), null);
+
+        assertThatThrownBy(() -> authService.update(created.id(), updateReq, "admin"))
+                .isInstanceOfSatisfying(BusinessRuleException.class, ex ->
+                        assertThat(ex.getCode()).isEqualTo("AUTH_ADMIN_ACCOUNT_PROTECTED"));
+    }
+
+    @Test
+    void superAdminCanModifyAdminAccount() {
+        AppUser superAdmin = loadAccount("superadmin");
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var createReq = new AuthApi.UserUpsertRequest("adm3-" + suffix, "Admin Three", "Auth#Test1!",
+                Set.of(RoleCode.ADMIN), null, true, null, true, true, null, null);
+        TenantContext.set(appId);
+        var created = authService.create(createReq, superAdmin.getUsername());
+        createdUserIds.add(created.id());
+        var user = loadWithRoles(created.id());
+
+        var updateReq = new AuthApi.UserUpsertRequest("adm3-" + suffix, "Admin Three Updated", null,
+                Set.of(RoleCode.ADMIN), null, true, null, true, true, user.getVersion(), "superadmin-update");
+
+        var updated = authService.update(created.id(), updateReq, superAdmin.getUsername());
+        assertThat(updated.displayName()).isEqualTo("Admin Three Updated");
+    }
 }
+

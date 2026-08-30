@@ -1,0 +1,336 @@
+<app-modal-dialog
+  [isOpen]="true"
+  [title]="report ? i18n.t('dpr.editorTitleEdit') : i18n.t('dpr.editorTitleNew')"
+  size="wide"
+  (close)="cancel()"
+  (closeModal)="cancel()"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" class="dpr-editor-form">
+    <!-- Header Meta & Environment Bar -->
+    <div class="meta-strip">
+      <div class="form-group date-group">
+        <label class="form-label">{{ i18n.t('dpr.reportDate') }} *</label>
+        <input type="date" formControlName="reportDate" class="form-control" [readonly]="!!report" />
+      </div>
+
+      <div class="form-group shift-group">
+        <label class="form-label">{{ i18n.t('dpr.shift') }} *</label>
+        <select formControlName="shift" class="form-control">
+          <option value="DAY">{{ i18n.t('dpr.shiftDay') }}</option>
+          <option value="NIGHT">{{ i18n.t('dpr.shiftNight') }}</option>
+          <option value="FULL_DAY">{{ i18n.t('dpr.shiftFullDay') }}</option>
+        </select>
+      </div>
+
+      <div class="form-group weather-group">
+        <label class="form-label">{{ i18n.t('dpr.weather') }}</label>
+        <select formControlName="weatherCondition" class="form-control">
+          <option value="SUNNY">{{ i18n.t('dpr.weatherSunny') }}</option>
+          <option value="RAINY">{{ i18n.t('dpr.weatherRainy') }}</option>
+          <option value="WINDY">{{ i18n.t('dpr.weatherWindy') }}</option>
+          <option value="HOT">{{ i18n.t('dpr.weatherHot') }}</option>
+          <option value="DUSTY">{{ i18n.t('dpr.weatherDusty') }}</option>
+          <option value="STORMY">{{ i18n.t('dpr.weatherStormy') }}</option>
+        </select>
+      </div>
+
+      <div class="form-group temp-group">
+        <label class="form-label">{{ i18n.t('dpr.temperature') }}</label>
+        <input type="number" formControlName="temperatureCelsius" class="form-control" placeholder="28" />
+      </div>
+
+      <div class="summary-pill">
+        <span class="pill-label">{{ i18n.t('dpr.totalWorkforce') }}:</span>
+        <strong class="pill-val">{{ calculateTotalHeadcount() }}</strong>
+        <span class="pill-divider">|</span>
+        <span class="pill-label">{{ i18n.t('dpr.totalEquipment') }}:</span>
+        <strong class="pill-val">{{ calculateTotalEquipment() }}</strong>
+      </div>
+    </div>
+
+    <!-- Multi-tab navigation inside modal -->
+    <div class="tab-strip">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'progress'"
+        (click)="activeTab.set('progress')"
+      >
+        📑 {{ i18n.t('dpr.tabProgress') }} ({{ progressLines.length }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'labor'"
+        (click)="activeTab.set('labor')"
+      >
+        👷 {{ i18n.t('dpr.tabLabor') }} ({{ laborSnapshots.length }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'equipment'"
+        (click)="activeTab.set('equipment')"
+      >
+        🚜 {{ i18n.t('dpr.tabEquipment') }} ({{ equipmentLogs.length }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'materials'"
+        (click)="activeTab.set('materials')"
+      >
+        📦 {{ i18n.t('dpr.tabMaterials') }} ({{ materialConsumptions.length }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'general'"
+        (click)="activeTab.set('general')"
+      >
+        📝 {{ i18n.t('dpr.generalNotes') }}
+      </button>
+    </div>
+
+    <!-- Tab 1: Physical WBS Execution Progress -->
+    <div *ngIf="activeTab() === 'progress'" class="tab-pane">
+      <div class="pane-header">
+        <p class="pane-hint">{{ i18n.t('dpr.subtitle') }}</p>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addProgressLine()">
+          + {{ i18n.t('dpr.addProgressLine') }}
+        </button>
+      </div>
+
+      <div formArrayName="progressLines" class="lines-container">
+        <div *ngFor="let line of progressLines.controls; let i = index" [formGroupName]="i" class="line-row">
+          <div class="form-group wbs-select-group">
+            <label class="form-label">{{ i18n.t('dpr.wbsItem') }} *</label>
+            <select formControlName="wbsNodeId" class="form-control">
+              <option value="">{{ i18n.t('dpr.selectWbs') }}</option>
+              <option *ngFor="let node of availableWbsNodes" [value]="node.id">
+                [{{ node.wbsCode }}] {{ node.name }} ({{ node.plannedQuantity || 0 | number }} {{ node.unitOfMeasure || '' }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group qty-group">
+            <label class="form-label">{{ i18n.t('dpr.todayQuantity') }} *</label>
+            <input type="number" formControlName="todayQuantity" class="form-control" step="0.01" />
+          </div>
+
+          <div class="form-group loc-group">
+            <label class="form-label">{{ i18n.t('dpr.locationNotes') }}</label>
+            <input
+              type="text"
+              formControlName="locationNotes"
+              class="form-control"
+              [placeholder]="i18n.t('dpr.locationPlaceholder')"
+            />
+          </div>
+
+          <div class="form-group remarks-group">
+            <label class="form-label">{{ i18n.t('projectRoles.notes') }}</label>
+            <input type="text" formControlName="remarks" class="form-control" />
+          </div>
+
+          <button type="button" class="btn-remove" (click)="removeProgressLine(i)" [attr.title]="i18n.t('common.remove')">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Site Labor & Manpower -->
+    <div *ngIf="activeTab() === 'labor'" class="tab-pane">
+      <div class="pane-header">
+        <p class="pane-hint">{{ i18n.t('dpr.tabLabor') }}</p>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addLaborSnapshot()">
+          + {{ i18n.t('dpr.addLaborSnapshot') }}
+        </button>
+      </div>
+
+      <div formArrayName="laborSnapshots" class="lines-container">
+        <div *ngFor="let labor of laborSnapshots.controls; let i = index" [formGroupName]="i" class="line-row labor-row">
+          <div class="form-group trade-group">
+            <label class="form-label">{{ i18n.t('dpr.tradeCategory') }} *</label>
+            <input
+              type="text"
+              formControlName="tradeCategory"
+              class="form-control"
+              [placeholder]="i18n.t('dpr.tradePlaceholder')"
+            />
+          </div>
+
+          <div class="form-group source-group">
+            <label class="form-label">{{ i18n.t('dpr.sourceType') }} *</label>
+            <select formControlName="sourceType" class="form-control">
+              <option value="DIRECT_EMPLOYEE">{{ i18n.t('dpr.sourceDirect') }}</option>
+              <option value="CONTRACTOR_WORKER">{{ i18n.t('dpr.sourceContractor') }}</option>
+              <option value="SUBCONTRACTOR_CREW">{{ i18n.t('dpr.sourceSubcontractor') }}</option>
+            </select>
+          </div>
+
+          <div class="form-group head-group">
+            <label class="form-label">{{ i18n.t('dpr.headcount') }} *</label>
+            <input type="number" formControlName="headcount" class="form-control" min="1" />
+          </div>
+
+          <div class="form-group hours-group">
+            <label class="form-label">{{ i18n.t('dpr.hoursWorked') }} *</label>
+            <input type="number" formControlName="hoursWorked" class="form-control" step="0.5" min="0" />
+          </div>
+
+          <div class="form-group desc-group">
+            <label class="form-label">{{ i18n.t('projects.formDescription') }}</label>
+            <input type="text" formControlName="activityDescription" class="form-control" />
+          </div>
+
+          <button type="button" class="btn-remove" (click)="removeLaborSnapshot(i)" [attr.title]="i18n.t('common.remove')">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Heavy Equipment & Machinery Logs -->
+    <div *ngIf="activeTab() === 'equipment'" class="tab-pane">
+      <div class="pane-header">
+        <p class="pane-hint">{{ i18n.t('dpr.tabEquipment') }}</p>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addEquipmentLog()">
+          + {{ i18n.t('dpr.addEquipmentLog') }}
+        </button>
+      </div>
+
+      <div formArrayName="equipmentLogs" class="lines-container">
+        <div *ngFor="let eq of equipmentLogs.controls; let i = index" [formGroupName]="i" class="line-row equip-row">
+          <div class="form-group eq-type-group">
+            <label class="form-label">{{ i18n.t('dpr.equipmentType') }} *</label>
+            <input
+              type="text"
+              formControlName="equipmentType"
+              class="form-control"
+              [placeholder]="i18n.t('dpr.equipmentTypePlaceholder')"
+            />
+          </div>
+
+          <div class="form-group eq-code-group">
+            <label class="form-label">{{ i18n.t('dpr.equipmentCode') }}</label>
+            <input type="text" formControlName="equipmentCode" class="form-control" placeholder="EQ-101" />
+          </div>
+
+          <div class="form-group eq-status-group">
+            <label class="form-label">{{ i18n.t('dpr.equipmentStatus') }} *</label>
+            <select formControlName="status" class="form-control">
+              <option value="WORKING">{{ i18n.t('dpr.statusWorking') }}</option>
+              <option value="STANDBY">{{ i18n.t('dpr.statusStandby') }}</option>
+              <option value="BREAKDOWN">{{ i18n.t('dpr.statusBreakdown') }}</option>
+              <option value="MAINTENANCE">{{ i18n.t('dpr.statusMaintenance') }}</option>
+            </select>
+          </div>
+
+          <div class="form-group eq-hours-group">
+            <label class="form-label">{{ i18n.t('dpr.hoursOperated') }}</label>
+            <input type="number" formControlName="hoursOperated" class="form-control" step="0.5" />
+          </div>
+
+          <div class="form-group eq-fuel-group">
+            <label class="form-label">{{ i18n.t('dpr.fuelConsumed') }}</label>
+            <input type="number" formControlName="fuelConsumedLiters" class="form-control" step="1" />
+          </div>
+
+          <div class="form-group eq-operator-group">
+            <label class="form-label">{{ i18n.t('dpr.operatorName') }}</label>
+            <input type="text" formControlName="operatorName" class="form-control" />
+          </div>
+
+          <button type="button" class="btn-remove" (click)="removeEquipmentLog(i)" [attr.title]="i18n.t('common.remove')">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Materials Consumed -->
+    <div *ngIf="activeTab() === 'materials'" class="tab-pane">
+      <div class="pane-header">
+        <p class="pane-hint">{{ i18n.t('dpr.tabMaterials') }}</p>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addMaterialConsumption()">
+          + {{ i18n.t('dpr.addMaterial') }}
+        </button>
+      </div>
+
+      <div formArrayName="materialConsumptions" class="lines-container">
+        <div *ngFor="let m of materialConsumptions.controls; let i = index" [formGroupName]="i" class="line-row mat-row">
+          <div class="form-group mat-name-group">
+            <label class="form-label">{{ i18n.t('dpr.materialName') }} *</label>
+            <input
+              type="text"
+              formControlName="materialName"
+              class="form-control"
+              [placeholder]="i18n.t('dpr.materialPlaceholder')"
+            />
+          </div>
+
+          <div class="form-group mat-uom-group">
+            <label class="form-label">{{ i18n.t('wbs.unitOfMeasure') }} *</label>
+            <input type="text" formControlName="unitOfMeasure" class="form-control" placeholder="م3" />
+          </div>
+
+          <div class="form-group mat-qty-group">
+            <label class="form-label">{{ i18n.t('dpr.quantityUsed') }} *</label>
+            <input type="number" formControlName="quantityUsed" class="form-control" step="0.01" />
+          </div>
+
+          <div class="form-group mat-dn-group">
+            <label class="form-label">{{ i18n.t('dpr.deliveryNote') }}</label>
+            <input type="text" formControlName="deliveryNoteNumber" class="form-control" placeholder="DN-2026-001" />
+          </div>
+
+          <div class="form-group mat-notes-group">
+            <label class="form-label">{{ i18n.t('projectRoles.notes') }}</label>
+            <input type="text" formControlName="notes" class="form-control" />
+          </div>
+
+          <button type="button" class="btn-remove" (click)="removeMaterialConsumption(i)" [attr.title]="i18n.t('common.remove')">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 5: General Operations, Blockers, Safety -->
+    <div *ngIf="activeTab() === 'general'" class="tab-pane">
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('dpr.generalNotes') }}</label>
+        <textarea
+          formControlName="generalNotes"
+          class="form-control"
+          rows="3"
+          [placeholder]="i18n.t('dpr.generalNotesPlaceholder')"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('dpr.blockers') }}</label>
+        <textarea
+          formControlName="blockersAndIssues"
+          class="form-control"
+          rows="2"
+          [placeholder]="i18n.t('dpr.blockersPlaceholder')"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('dpr.safety') }}</label>
+        <textarea
+          formControlName="safetyObservations"
+          class="form-control"
+          rows="2"
+          [placeholder]="i18n.t('dpr.safetyPlaceholder')"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="cancel()">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+        {{ submitting() ? i18n.t('common.saving') : i18n.t('common.save') }}
+      </button>
+    </div>
+  </form>
+</app-modal-dialog>

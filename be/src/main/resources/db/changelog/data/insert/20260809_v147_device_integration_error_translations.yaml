@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260809-v147-device-integration-error-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "E-2 error-codes gate: Arabic/English translation rows for the five device-integration exception codes (DEVICE_HUB_ID_INVALID, DEVICE_HUB_REGISTRATION_INVALID, DEVICE_INTEGRATION_CONFIG_INVALID, DEVICE_INTEGRATION_NOT_FOUND, DEVICE_INTEGRATION_ROUTE_UNAVAILABLE) so ApiExceptionHandler never falls back to a raw English message."
       changes:
         - loadData:

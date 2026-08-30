@@ -375,6 +375,16 @@
                 >
                   {{ status(row.status) }}
                 </span>
+                @if (ruleState(row); as state) {
+                  <span
+                    class="status-pill rule-chip"
+                    [class.success]="state === 'AUTO'"
+                    [class.warning]="state === 'BLOCKING'"
+                    style="margin-left:4px;font-size:0.7em"
+                  >
+                    {{ state === 'AUTO' ? i18n.t('review.ruleAutoAttended') : i18n.t('review.ruleBlocking') }}
+                  </span>
+                }
                 @if (row.warning) {
                   <small class="warning-copy">{{ warningLabel(row.warning) }}</small>
                 }

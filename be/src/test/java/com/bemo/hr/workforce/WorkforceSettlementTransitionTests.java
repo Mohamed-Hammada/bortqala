@@ -49,6 +49,10 @@ class WorkforceSettlementTransitionTests {
     @Mock
     private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
     @Mock
+    private WorkerAssignmentRepository assignmentRepository;
+    @Mock
+    private com.bemo.hr.project.infrastructure.ProjectCostLedgerEntryRepository projectCostLedgerEntryRepository;
+    @Mock
     private IdempotencyService idempotencyService;
     @Mock
     private WorkforceExcelExportService excelExportService;
@@ -75,8 +79,8 @@ class WorkforceSettlementTransitionTests {
     private WorkforceSettlementService service() {
         return new WorkforceSettlementService(periodRepository, workerSettlementRepository, contractorSettlementRepository,
                 contractorSettlementLineRepository, contractorSettlementAdjustmentRepository,
-                issueRepository, attendanceRepository, workerRepository, contractorRepository, advanceRepository,
-                advancePolicyRepository, partnerLedgerEntryRepository, idempotencyService,
+                issueRepository, attendanceRepository, assignmentRepository, workerRepository, contractorRepository, advanceRepository,
+                advancePolicyRepository, partnerLedgerEntryRepository, projectCostLedgerEntryRepository, idempotencyService,
                 excelExportService, auditService, platformTransactionManager);
     }
 
@@ -123,6 +127,6 @@ class WorkforceSettlementTransitionTests {
 
         assertThatThrownBy(() -> service().lockPeriod("p1"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("اعتماد");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("SETTL_LOCK_BEFORE_APPROVAL"));
     }
 }

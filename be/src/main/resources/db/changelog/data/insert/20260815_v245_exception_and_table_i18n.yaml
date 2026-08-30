@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260815-v245-exception-and-table-i18n
       author: openai
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v245-%'" }

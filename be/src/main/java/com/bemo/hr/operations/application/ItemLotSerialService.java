@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -106,6 +108,93 @@ public class ItemLotSerialService {
     @Transactional(readOnly = true)
     public List<ItemLotSerial> getAvailableLotsByItem(String itemId) {
         return repository.findByItemIdAndStatus(itemId, ItemLotSerial.Status.AVAILABLE);
+    }
+
+    /**
+     * FEFO (First-Expired, First-Out) picking: auto-issue from the earliest-expiring lots.
+     * Blocks expired lots. Returns the list of lots that were partially or fully issued.
+     * Throws if total available quantity across all valid lots is insufficient.
+     */
+    @Transactional
+    public List<ItemLotSerial> pickFefo(String itemId, String warehouseId, BigDecimal requiredQty, String documentReference) {
+        log.debug("pickFefo called with itemId={}, warehouseId={}, requiredQty={}", itemId, warehouseId, requiredQty);
+        if (requiredQty == null || requiredQty.signum() <= 0) {
+            throw new BusinessRuleException("Required quantity must be positive.", "LOT_SERIAL_PICK_QTY_INVALID", HttpStatus.CONFLICT);
+        }
+
+        // Mark any expired lots first
+        List<ItemLotSerial> allAvailable = repository.findFifoLots(itemId, warehouseId);
+        LocalDate today = LocalDate.now();
+        for (ItemLotSerial lot : allAvailable) {
+            lot.checkExpired(today);
+            if (lot.getStatus() != ItemLotSerial.Status.AVAILABLE) {
+                repository.save(lot);
+            }
+        }
+
+        // Get FEFO-sorted lots (earliest expiry first)
+        List<ItemLotSerial> fefoLots = repository.findFefoLots(itemId, warehouseId);
+        BigDecimal remaining = requiredQty;
+        List<ItemLotSerial> issuedLots = new ArrayList<>();
+
+        for (ItemLotSerial lot : fefoLots) {
+            if (remaining.signum() <= 0) break;
+            BigDecimal toIssue = remaining.min(lot.getQuantity());
+            lot.issue(toIssue, documentReference);
+            repository.save(lot);
+            issuedLots.add(lot);
+            remaining = remaining.subtract(toIssue);
+        }
+
+        if (remaining.signum() > 0) {
+            throw new BusinessRuleException(
+                "Insufficient stock for FEFO pick. Short by " + remaining + " units.",
+                "LOT_SERIAL_INSUFFICIENT_STOCK_FEFO", HttpStatus.CONFLICT);
+        }
+
+        log.info("FEFO pick completed: issued {} lots, total={}", issuedLots.size(), requiredQty);
+        return issuedLots;
+    }
+
+    /**
+     * FIFO (First-In, First-Out) picking: auto-issue from the oldest lots.
+     */
+    @Transactional
+    public List<ItemLotSerial> pickFifo(String itemId, String warehouseId, BigDecimal requiredQty, String documentReference) {
+        log.debug("pickFifo called with itemId={}, warehouseId={}, requiredQty={}", itemId, warehouseId, requiredQty);
+        if (requiredQty == null || requiredQty.signum() <= 0) {
+            throw new BusinessRuleException("Required quantity must be positive.", "LOT_SERIAL_PICK_QTY_INVALID", HttpStatus.CONFLICT);
+        }
+
+        List<ItemLotSerial> fifoLots = repository.findFifoLots(itemId, warehouseId);
+        BigDecimal remaining = requiredQty;
+        List<ItemLotSerial> issuedLots = new ArrayList<>();
+
+        for (ItemLotSerial lot : fifoLots) {
+            if (remaining.signum() <= 0) break;
+            BigDecimal toIssue = remaining.min(lot.getQuantity());
+            lot.issue(toIssue, documentReference);
+            repository.save(lot);
+            issuedLots.add(lot);
+            remaining = remaining.subtract(toIssue);
+        }
+
+        if (remaining.signum() > 0) {
+            throw new BusinessRuleException(
+                "Insufficient stock for FIFO pick. Short by " + remaining + " units.",
+                "LOT_SERIAL_INSUFFICIENT_STOCK_FIFO", HttpStatus.CONFLICT);
+        }
+
+        log.info("FIFO pick completed: issued {} lots, total={}", issuedLots.size(), requiredQty);
+        return issuedLots;
+    }
+
+    /**
+     * Returns lots expiring within the given number of days (for expiry warnings).
+     */
+    @Transactional(readOnly = true)
+    public List<ItemLotSerial> getLotsExpiringWithinDays(String itemId, String warehouseId, int days) {
+        return repository.findLotsExpiringWithinDays(itemId, warehouseId, java.time.LocalDate.now().plusDays(days));
     }
 
     private ItemLotSerial getItem(String id) {

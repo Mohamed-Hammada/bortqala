@@ -18,43 +18,43 @@ public class DeviceIntegrationController {
     private final DeviceIntegrationService service;
 
     @GetMapping("/health")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     JsonNode health() {
         return service.health();
     }
 
     @GetMapping("/suppliers")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     JsonNode suppliers() {
         return service.suppliers();
     }
 
     @GetMapping("/suppliers/{vendor}/routes")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     JsonNode routes(@PathVariable String vendor) {
         return service.routes(vendor);
     }
 
     @PostMapping("/resolve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     DeviceIntegrationApi.RouteResolution resolve(@Valid @RequestBody DeviceIntegrationApi.RouteRequest request) {
         return service.resolve(request);
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     List<DeviceIntegrationApi.DeviceResponse> list() {
         return service.list();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     DeviceIntegrationApi.DeviceResponse get(@PathVariable String id) {
         return service.get(id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     DeviceIntegrationApi.DeviceResponse create(
             @Valid @RequestBody DeviceIntegrationApi.DeviceRequest request,
@@ -63,7 +63,7 @@ public class DeviceIntegrationController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     DeviceIntegrationApi.DeviceResponse update(
             @PathVariable String id,
             @Valid @RequestBody DeviceIntegrationApi.DeviceRequest request,
@@ -72,13 +72,13 @@ public class DeviceIntegrationController {
     }
 
     @PostMapping("/{id}/probe")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     DeviceIntegrationApi.ProbeResponse probe(@PathVariable String id, Authentication authentication) {
         return service.probe(id, authentication.getName());
     }
 
     @PostMapping("/{id}/sync")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     ImportApi.DeviceSyncResponse sync(@PathVariable String id, Authentication authentication) {
         return service.sync(id, authentication.getName());
     }

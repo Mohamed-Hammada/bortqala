@@ -2,18 +2,23 @@
   <header class="page-header">
     <div>
       <p class="eyebrow">{{ i18n.t('banks.eyebrow') }}</p>
-      <h1>{{ i18n.t('banks.title') }}</h1>
+      <h1>{{ i18n.t('treasury.title') }}</h1>
       <p>{{ i18n.t('banks.description') }}</p>
     </div>
     <div class="toolbar">
       @if (tab() === 'accounts') { <button class="button primary" (click)="openNew()">＋ {{ i18n.t('banks.add') }}</button> }
       @if (tab() === 'reconciliation') { <button class="button primary" (click)="openImport()">＋ {{ i18n.t('banks.reconciliation.import') }}</button> }
+      @if (tab() === 'cashboxes') { <button class="button primary" (click)="openNewCashbox()">＋ {{ i18n.t('treasury.addCashbox') }}</button> }
+      @if (tab() === 'cheques') { <button class="button primary" (click)="openNewCheque()">＋ {{ i18n.t('treasury.registerCheque') }}</button> }
     </div>
   </header>
   <nav class="tabs">
     <button [class.active]="tab() === 'accounts'" (click)="tab.set('accounts')">{{ i18n.t('banks.reconciliation.accountsTab') }}</button>
     <button [class.active]="tab() === 'reconciliation'" (click)="tab.set('reconciliation')">{{ i18n.t('banks.reconciliation.title') }}</button>
     <button [class.active]="tab() === 'cash'" (click)="tab.set('cash')">{{ i18n.t('banks.reconciliation.cashPosition') }}</button>
+    <button [class.active]="tab() === 'cashboxes'" (click)="tab.set('cashboxes')">{{ i18n.t('treasury.tabCashboxes') }}</button>
+    <button [class.active]="tab() === 'cheques'" (click)="tab.set('cheques')">{{ i18n.t('treasury.tabCheques') }}</button>
+    <button [class.active]="tab() === 'liquidity'" (click)="tab.set('liquidity')">{{ i18n.t('treasury.tabLiquidity') }}</button>
   </nav>
 
   @if (loading()) {
@@ -24,6 +29,7 @@
   }
 
   @if (!loading()) {
+    <!-- 1. Bank Accounts Tab -->
     <div class="table-card" [hidden]="tab() !== 'accounts'">
       <table>
         <thead>
@@ -54,93 +60,393 @@
         </tbody>
       </table>
     </div>
+
+    <!-- 4. Cashboxes Tab -->
+    <div class="table-card" [hidden]="tab() !== 'cashboxes'">
+      <div class="split-view">
+        <div class="split-list">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ i18n.t('treasury.cashboxCode') }}</th>
+                <th>{{ i18n.t('treasury.cashboxName') }}</th>
+                <th>{{ i18n.t('treasury.currentBalance') }}</th>
+                <th>{{ i18n.t('common.status') }}</th>
+                <th>{{ i18n.t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cb of cashboxes(); track cb.id) {
+                <tr [class.selected]="selectedCashbox()?.id === cb.id" (click)="selectCashbox(cb)">
+                  <td><strong class="ltr">{{ cb.code }}</strong></td>
+                  <td><strong>💵 {{ cb.name }}</strong></td>
+                  <td class="ltr"><strong>{{ cb.currentBalance | number:'1.2-2' }}</strong> <small>{{ cb.currency }}</small></td>
+                  <td><span class="status" [class.success]="cb.active">{{ cb.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
+                  <td>
+                    <button class="button secondary btn-sm" (click)="selectCashbox(cb); openCashTx('RECEIPT')">＋ {{ i18n.t('treasury.recordCashTransaction') }}</button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5"><div class="empty-state">{{ i18n.t('treasury.noCashboxes') }}</div></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (selectedCashbox()) {
+          <div class="split-detail">
+            <div class="detail-header">
+              <h3>💵 {{ selectedCashbox()?.name }} ({{ selectedCashbox()?.code }})</h3>
+              <div class="actions">
+                <button class="button primary btn-sm" (click)="openCashTx('RECEIPT')">＋ {{ i18n.t('treasury.cashReceipt') }}</button>
+                <button class="button secondary btn-sm" (click)="openCashTx('PAYMENT')">－ {{ i18n.t('treasury.cashPayment') }}</button>
+                <button class="button secondary btn-sm" (click)="openCashTx('PHYSICAL_COUNT_ADJUSTMENT')">⚖ {{ i18n.t('treasury.physicalCountAdjustment') }}</button>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('common.date') }}</th>
+                  <th>{{ i18n.t('treasury.transactionType') }}</th>
+                  <th>{{ i18n.t('treasury.voucherNumber') }}</th>
+                  <th>{{ i18n.t('common.amount') }}</th>
+                  <th>{{ i18n.t('common.description') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (tx of cashboxTransactions(); track tx.id) {
+                  <tr>
+                    <td class="ltr">{{ date(tx.transactionDate) }}</td>
+                    <td><span class="status info">{{ tx.transactionType }}</span></td>
+                    <td class="ltr">{{ tx.voucherNumber || '—' }}</td>
+                    <td class="ltr" [class.success-text]="tx.transactionType === 'RECEIPT' || tx.transactionType === 'PETTY_CASH_SETTLEMENT'" [class.danger-text]="tx.transactionType === 'PAYMENT' || tx.transactionType === 'PETTY_CASH_ADVANCE'">
+                      <strong>{{ tx.amount | number:'1.2-2' }}</strong>
+                    </td>
+                    <td>{{ tx.description || '—' }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5"><div class="empty-state">{{ i18n.t('common.noResults') }}</div></td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- 5. Cheques Tab -->
+    <div class="table-card" [hidden]="tab() !== 'cheques'">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('treasury.chequeNumber') }}</th>
+            <th>{{ i18n.t('treasury.chequeType') }}</th>
+            <th>{{ i18n.t('treasury.drawerPayee') }}</th>
+            <th>{{ i18n.t('common.amount') }}</th>
+            <th>{{ i18n.t('treasury.dueDate') }}</th>
+            <th>{{ i18n.t('common.status') }}</th>
+            <th>{{ i18n.t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (chq of cheques(); track chq.id) {
+            <tr>
+              <td><strong class="ltr">📜 {{ chq.chequeNumber }}</strong></td>
+              <td>
+                <span class="status" [class.info]="chq.chequeType === 'RECEIVED'" [class.warning]="chq.chequeType === 'ISSUED'">
+                  {{ chq.chequeType === 'RECEIVED' ? i18n.t('treasury.statusReceived') : i18n.t('treasury.statusIssued') }}
+                </span>
+              </td>
+              <td><strong>{{ chq.drawerPayeeName }}</strong></td>
+              <td class="ltr"><strong>{{ chq.amount | number:'1.2-2' }}</strong> <small>{{ chq.currency }}</small></td>
+              <td class="ltr">{{ date(chq.dueDate) }}</td>
+              <td>
+                <span class="status"
+                  [class.warning]="chq.status === 'RECEIVED' || chq.status === 'ISSUED'"
+                  [class.info]="chq.status === 'DEPOSITED'"
+                  [class.success]="chq.status === 'COLLECTED'"
+                  [class.danger]="chq.status === 'BOUNCED' || chq.status === 'CANCELLED'">
+                  {{ chq.status }}
+                </span>
+              </td>
+              <td>
+                <div class="table-row-actions">
+                  @if (chq.status === 'RECEIVED' || chq.status === 'BOUNCED') {
+                    <button class="button secondary btn-sm" (click)="openDepositCheque(chq)">🏦 {{ i18n.t('treasury.deposit') }}</button>
+                  }
+                  @if (chq.status === 'DEPOSITED' || chq.status === 'ISSUED') {
+                    <button class="button primary btn-sm" (click)="collectCheque(chq)">✓ {{ i18n.t('treasury.collect') }}</button>
+                    <button class="button secondary btn-sm danger-btn" (click)="bounceCheque(chq)">✕ {{ i18n.t('treasury.bounce') }}</button>
+                  }
+                  @if (chq.status !== 'COLLECTED' && chq.status !== 'CANCELLED') {
+                    <button class="button secondary btn-sm" (click)="cancelCheque(chq)">🚫 {{ i18n.t('treasury.cancel') }}</button>
+                  }
+                  <button class="button secondary btn-sm" (click)="printCheque(chq)" [title]="i18n.t('treasury.printChequeHint')">🖨 {{ i18n.t('treasury.printCheque') }}</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7"><div class="empty-state">{{ i18n.t('treasury.noCheques') }}</div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 6. Unified Liquidity Position Tab -->
+    @if (tab() === 'liquidity' && liquiditySummary()) {
+      <div class="liquidity-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-title">{{ i18n.t('treasury.totalBankLiquidity') }}</span>
+            <span class="kpi-value ltr">{{ liquiditySummary()?.totalBankBalance | number:'1.2-2' }} <small>{{ i18n.t('common.egp') }}</small></span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">{{ i18n.t('treasury.totalCashLiquidity') }}</span>
+            <span class="kpi-value ltr">{{ liquiditySummary()?.totalCashBalance | number:'1.2-2' }} <small>{{ i18n.t('common.egp') }}</small></span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">{{ i18n.t('treasury.totalChequesUnderCollection') }}</span>
+            <span class="kpi-value ltr">{{ liquiditySummary()?.chequesUnderCollection | number:'1.2-2' }} <small>{{ i18n.t('common.egp') }}</small></span>
+          </div>
+          <div class="kpi-card highlight">
+            <span class="kpi-title">{{ i18n.t('treasury.totalNetLiquidity') }}</span>
+            <span class="kpi-value ltr">{{ liquiditySummary()?.netLiquidityPosition | number:'1.2-2' }} <small>{{ i18n.t('common.egp') }}</small></span>
+          </div>
+        </div>
+      </div>
+    }
   }
 
   @if (!loading() && tab() === 'reconciliation') {
     <div class="reconciliation-layout">
-      <aside class="statement-list">
-        <h2>{{ i18n.t('banks.reconciliation.statements') }}</h2>
-        @for (statement of statements(); track statement.id) {
-          <button [class.active]="workbench()?.statement?.id === statement.id" (click)="openStatement(statement.id)">
-            <strong>{{ statement.statementReference }}</strong>
-            <span>{{ date(statement.periodEnd) }} · {{ money(statement.closingBalance, statement.currencyCode) }}</span>
-            <small>{{ statement.unmatchedCount }} {{ i18n.t('banks.reconciliation.unmatched') }}</small>
-          </button>
-        } @empty { <div class="empty-state">{{ i18n.t('banks.reconciliation.empty') }}</div> }
-      </aside>
-      <main class="workbench">
-        @if (workbench(); as view) {
-          <header class="workbench-header">
-            <div><h2>{{ view.statement.statementReference }}</h2><p>{{ money(view.statement.openingBalance, view.statement.currencyCode) }} → {{ money(view.statement.closingBalance, view.statement.currencyCode) }}</p></div>
-            <button class="button secondary" (click)="autoMatch()">{{ i18n.t('banks.reconciliation.autoMatch') }}</button>
-          </header>
-          <div class="metric-row">
-            <article><strong>{{ view.statement.lineCount }}</strong><span>{{ i18n.t('banks.reconciliation.lines') }}</span></article>
-            <article><strong>{{ view.statement.unmatchedCount }}</strong><span>{{ i18n.t('banks.reconciliation.unmatched') }}</span></article>
-            <article><strong>{{ reconciliationStatus(view.statement.status) }}</strong><span>{{ i18n.t('common.status') }}</span></article>
-          </div>
-          @for (line of view.lines; track line.id) {
-            <article class="statement-line" [class.matched]="line.status === 'MATCHED'">
-              <div class="line-main"><time>{{ date(line.transactionDate) }}</time><div><strong>{{ line.description }}</strong><small>{{ line.bankReference || '—' }}</small></div><b [class.negative]="line.amount < 0">{{ money(line.amount, view.statement.currencyCode) }}</b></div>
-              <div class="line-status"><span>{{ reconciliationStatus(line.status) }}</span><small>{{ i18n.t('banks.reconciliation.remaining') }}: {{ money(line.remainingAmount, view.statement.currencyCode) }}</small></div>
-              @if (line.status !== 'MATCHED') {
-                <div class="suggestions">
-                  @for (candidate of line.suggestions; track candidate.journalEntryId) {
-                    <button (click)="openMatch(line, candidate)"><strong>{{ candidate.entryNumber }}</strong><span>{{ candidate.description }}</span><small>{{ money(candidate.availableAmount, view.statement.currencyCode) }}</small></button>
-                  } @empty { <button class="button secondary" (click)="openMatch(line)">{{ i18n.t('banks.reconciliation.manualMatch') }}</button> }
-                </div>
-              }
-              @for (match of line.matches; track match.id) {
-                @if (match.status === 'ACTIVE') { <div class="match-row"><span>{{ match.matchType }} · {{ money(match.matchedAmount, view.statement.currencyCode) }}</span><button class="link-danger" (click)="reverseMatch(match)">{{ i18n.t('banks.reconciliation.reverse') }}</button></div> }
-              }
-            </article>
+      <aside class="sidebar-card">
+        <h3>{{ i18n.t('banks.reconciliation.statementsTitle') }}</h3>
+        <div class="statement-list">
+          @for (s of statements(); track s.id) {
+            <button class="statement-item" [class.selected]="workbench()?.statement?.id === s.id" (click)="openStatement(s.id)">
+              <div class="ref">{{ s.statementReference }}</div>
+              <div class="meta">{{ s.currencyCode }} | {{ s.unmatchedCount }} {{ i18n.t('banks.reconciliation.unmatchedCount') }}</div>
+            </button>
+          } @empty {
+            <p class="empty">{{ i18n.t('banks.reconciliation.noStatements') }}</p>
           }
-        } @else { <div class="empty-state">{{ i18n.t('banks.reconciliation.selectStatement') }}</div> }
-      </main>
+        </div>
+      </aside>
+
+      <div class="workbench-main">
+        @if (workbench(); as wb) {
+          <div class="statement-header">
+            <div>
+              <h3>{{ wb.statement.statementReference }}</h3>
+              <p>{{ i18n.t('banks.reconciliation.opening') }}: {{ wb.statement.openingBalance }} | {{ i18n.t('banks.reconciliation.closing') }}: {{ wb.statement.closingBalance }}</p>
+            </div>
+            <div class="actions">
+              <button class="button secondary btn-sm" (click)="autoMatch()">⚡ {{ i18n.t('banks.reconciliation.autoMatch') }}</button>
+              <button class="button primary btn-sm" (click)="postDifference()">📝 {{ i18n.t('banks.reconciliation.postDifference') }}</button>
+            </div>
+          </div>
+
+          <table class="lines-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('banks.reconciliation.date') }}</th>
+                <th>{{ i18n.t('banks.reconciliation.description') }}</th>
+                <th>{{ i18n.t('banks.reconciliation.amount') }}</th>
+                <th>{{ i18n.t('banks.reconciliation.matchedAmount') }}</th>
+                <th>{{ i18n.t('banks.reconciliation.remaining') }}</th>
+                <th>{{ i18n.t('banks.reconciliation.status') }}</th>
+                <th>{{ i18n.t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of wb.lines; track line.id) {
+                <tr>
+                  <td>{{ line.transactionDate }}</td>
+                  <td>{{ line.description }}</td>
+                  <td>{{ line.amount }}</td>
+                  <td>{{ line.matchedAmount }}</td>
+                  <td>{{ line.remainingAmount }}</td>
+                  <td><span class="status" [class.success]="line.status === 'MATCHED'" [class.warning]="line.status === 'PARTIAL'" [class.danger]="line.status === 'UNMATCHED'">{{ line.status }}</span></td>
+                  <td>
+                    @if (line.status !== 'MATCHED') {
+                      <button class="button primary btn-sm" (click)="openMatch(line)">{{ i18n.t('banks.reconciliation.manualMatch') }}</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="empty-state">{{ i18n.t('banks.reconciliation.selectStatement') }}</div>
+        }
+      </div>
     </div>
   }
 
-  @if (!loading() && tab() === 'cash' && cashPosition(); as cash) {
-    <div class="cash-totals">@for (total of cashTotals(); track total.currency) { <div class="cash-summary"><span>{{ i18n.t('banks.reconciliation.totalCash') }} · {{ total.currency }}</span><strong>{{ money(total.amount, total.currency) }}</strong></div> }</div>
-    <div class="table-card"><table><thead><tr><th>{{ i18n.t('banks.colBank') }}</th><th>{{ i18n.t('banks.reconciliation.asOf') }}</th><th>{{ i18n.t('banks.reconciliation.balance') }}</th><th>{{ i18n.t('banks.reconciliation.unmatched') }}</th></tr></thead><tbody>
-      @for (row of cash.accounts; track row.bankAccountId) { <tr><td>{{ row.bankName }}</td><td>{{ date(row.asOfDate) }}</td><td>{{ money(row.latestStatementBalance, row.currencyCode) }}</td><td>{{ row.unmatchedLines }}</td></tr> }
-    </tbody></table></div>
+  @if (!loading() && tab() === 'cash') {
+    <div class="cash-position-grid">
+      @if (cashPosition(); as cp) {
+        <div class="table-card">
+          <h3>{{ i18n.t('banks.reconciliation.cashPosition') }}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>{{ i18n.t('banks.colBank') }}</th>
+                <th>{{ i18n.t('banks.currency') }}</th>
+                <th>{{ i18n.t('banks.reconciliation.latestBalance') }}</th>
+                <th>{{ i18n.t('banks.reconciliation.unmatchedCount') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (acc of cp.accounts; track acc.bankAccountId) {
+                <tr>
+                  <td><strong>{{ acc.bankName }}</strong></td>
+                  <td>{{ acc.currencyCode }}</td>
+                  <td><strong>{{ acc.latestStatementBalance }}</strong></td>
+                  <td>{{ acc.unmatchedLines }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (aging().length > 0) {
+        <div class="table-card" style="margin-top:1rem">
+          <h3>{{ i18n.t('banks.reconciliation.aging') }}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>{{ i18n.t('banks.colBank') }}</th>
+                <th>{{ i18n.t('banks.reconciliation.latestBalance') }}</th>
+                @for (b of ['0-7d','8-30d','31-60d','61-90d','90d+']; track b) {
+                  <th>{{ b }}</th>
+                }
+                <th>{{ i18n.t('banks.reconciliation.totalUnmatched') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of aging(); track a.bankAccountId) {
+                <tr>
+                  <td><strong>{{ a.bankName }}</strong></td>
+                  <td>{{ a.latestStatementBalance }}</td>
+                  @for (bucket of a.buckets; track bucket.label) {
+                    <td [style.color]="bucket.lineCount > 0 && bucket.maxDays >= 31 ? 'var(--danger)' : ''">
+                      {{ bucket.lineCount > 0 ? (bucket.totalRemaining | number:'1.2-2') + ' (' + bucket.lineCount + ')' : '—' }}
+                    </td>
+                  }
+                  <td><strong>{{ a.totalUnmatched | number:'1.2-2' }}</strong></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
   }
 
-  <app-modal-dialog
-    [isOpen]="drawerOpen()"
-    [title]="i18n.t('banks.newTitle')"
-    size="wide"
-    (close)="closeDrawer()"
-  >
+  <!-- Modals -->
+  <app-modal-dialog [isOpen]="drawerOpen()" [title]="editingId() ? i18n.t('banks.edit') : i18n.t('banks.add')" (close)="closeDrawer()">
     <form [formGroup]="form" class="modal-form" (ngSubmit)="submit()">
       <div class="form-grid">
-        <div class="field span-2">
-          <label>{{ i18n.t('banks.bankNameLabel') }} *</label>
-          <input formControlName="bankName" [placeholder]="i18n.t('banks.bankNamePlaceholder')" />
-        </div>
+        <div class="field span-2"><label>{{ i18n.t('banks.bankNameLabel') }} *</label><input formControlName="bankName" [placeholder]="i18n.t('banks.bankNamePlaceholder')" /></div>
         <div class="field span-2"><label>{{ i18n.t('banks.glAccount') }} *</label><select formControlName="accountId"><option value="">{{ i18n.t('banks.selectGlAccount') }}</option>@for (a of accounts(); track a.id) { @if (!a.isHeader && a.active) { <option [value]="a.id">{{ a.code }} — {{ a.name }}</option> } }</select></div>
         <div class="field span-2"><label>{{ i18n.t('banks.currency') }}</label><select formControlName="currencyCode"><option value="EGP">{{ i18n.t('parties.currencyEgp') }}</option><option value="USD">{{ i18n.t('parties.currencyUsd') }}</option><option value="EUR">{{ i18n.t('parties.currencyEur') }}</option></select></div>
+        <div class="field span-2"><label>{{ i18n.t('banks.accountNumberLabel') }} *</label><input class="ltr" formControlName="accountNumber" [placeholder]="i18n.t('banks.accountNumberPlaceholder')" /></div>
+        <div class="field span-2"><label>{{ i18n.t('banks.ibanLabel') }}</label><input class="ltr" formControlName="iban" [placeholder]="i18n.t('banks.ibanPlaceholder')" /></div>
+        <div class="field span-2"><label>{{ i18n.t('banks.swiftLabel') }}</label><input class="ltr" formControlName="swiftCode" [placeholder]="i18n.t('banks.swiftPlaceholder')" /></div>
+      </div>
+    </form>
+    <div modal-actions>
+      <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submit()" [disabled]="form.invalid">{{ i18n.t('banks.save') }}</button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Cashbox Modal -->
+  <app-modal-dialog [isOpen]="cashboxModalOpen()" [title]="i18n.t('treasury.addCashbox')" (close)="cashboxModalOpen.set(false)">
+    <form [formGroup]="cashboxForm" class="modal-form" (ngSubmit)="submitCashbox()">
+      <div class="form-grid">
+        <div class="field"><label>{{ i18n.t('treasury.cashboxCode') }} *</label><input class="ltr" formControlName="code" /></div>
+        <div class="field"><label>{{ i18n.t('treasury.cashboxName') }} *</label><input formControlName="name" /></div>
+        <div class="field"><label>{{ i18n.t('treasury.custodian') }}</label><input formControlName="custodianUserId" /></div>
+        <div class="field"><label>{{ i18n.t('banks.currency') }}</label><select formControlName="currency"><option value="EGP">{{ i18n.t('parties.currencyEgp') }}</option><option value="USD">{{ i18n.t('parties.currencyUsd') }}</option><option value="EUR">{{ i18n.t('parties.currencyEur') }}</option></select></div>
+      </div>
+    </form>
+    <div modal-actions>
+      <button class="button secondary" type="button" (click)="cashboxModalOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submitCashbox()" [disabled]="cashboxForm.invalid">{{ i18n.t('common.save') }}</button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Cashbox Transaction Modal -->
+  <app-modal-dialog [isOpen]="cashTxModalOpen()" [title]="i18n.t('treasury.recordCashTransaction')" (close)="cashTxModalOpen.set(false)">
+    <form [formGroup]="cashTxForm" class="modal-form" (ngSubmit)="submitCashTx()">
+      <div class="form-grid">
         <div class="field span-2">
-          <label>{{ i18n.t('banks.accountNumberLabel') }} *</label>
-          <input class="ltr" formControlName="accountNumber" [placeholder]="i18n.t('banks.accountNumberPlaceholder')" />
+          <label>{{ i18n.t('treasury.transactionType') }} *</label>
+          <select formControlName="transactionType">
+            <option value="RECEIPT">{{ i18n.t('treasury.cashReceipt') }}</option>
+            <option value="PAYMENT">{{ i18n.t('treasury.cashPayment') }}</option>
+            <option value="PETTY_CASH_ADVANCE">{{ i18n.t('treasury.pettyCashAdvance') }}</option>
+            <option value="PETTY_CASH_SETTLEMENT">{{ i18n.t('treasury.pettyCashSettlement') }}</option>
+            <option value="PHYSICAL_COUNT_ADJUSTMENT">{{ i18n.t('treasury.physicalCountAdjustment') }}</option>
+          </select>
         </div>
-        <div class="field span-2">
-          <label>{{ i18n.t('banks.ibanLabel') }}</label>
-          <input class="ltr" formControlName="iban" [placeholder]="i18n.t('banks.ibanPlaceholder')" />
+        <div class="field"><label>{{ i18n.t('common.amount') }} *</label><input type="number" step="0.01" formControlName="amount" /></div>
+        <div class="field"><label>{{ i18n.t('treasury.voucherNumber') }}</label><input class="ltr" formControlName="voucherNumber" /></div>
+        <div class="field span-2"><label>{{ i18n.t('common.description') }}</label><input formControlName="description" /></div>
+      </div>
+    </form>
+    <div modal-actions>
+      <button class="button secondary" type="button" (click)="cashTxModalOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submitCashTx()" [disabled]="cashTxForm.invalid">{{ i18n.t('common.save') }}</button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Cheque Registration Modal -->
+  <app-modal-dialog [isOpen]="chequeModalOpen()" [title]="i18n.t('treasury.registerCheque')" (close)="chequeModalOpen.set(false)">
+    <form [formGroup]="chequeForm" class="modal-form" (ngSubmit)="submitCheque()">
+      <div class="form-grid">
+        <div class="field"><label>{{ i18n.t('treasury.chequeNumber') }} *</label><input class="ltr" formControlName="chequeNumber" /></div>
+        <div class="field">
+          <label>{{ i18n.t('treasury.chequeType') }} *</label>
+          <select formControlName="chequeType">
+            <option value="RECEIVED">{{ i18n.t('treasury.statusReceived') }}</option>
+            <option value="ISSUED">{{ i18n.t('treasury.statusIssued') }}</option>
+          </select>
         </div>
+        <div class="field"><label>{{ i18n.t('treasury.drawerPayee') }} *</label><input formControlName="drawerPayeeName" /></div>
+        <div class="field"><label>{{ i18n.t('banks.colBank') }}</label><input formControlName="bankName" /></div>
+        <div class="field"><label>{{ i18n.t('common.amount') }} *</label><input type="number" step="0.01" formControlName="amount" /></div>
+        <div class="field"><label>{{ i18n.t('banks.currency') }}</label><select formControlName="currency"><option value="EGP">{{ i18n.t('parties.currencyEgp') }}</option><option value="USD">{{ i18n.t('parties.currencyUsd') }}</option><option value="EUR">{{ i18n.t('parties.currencyEur') }}</option></select></div>
+        <div class="field"><label>{{ i18n.t('treasury.issueDate') }} *</label><input type="date" formControlName="issueDate" /></div>
+        <div class="field"><label>{{ i18n.t('treasury.dueDate') }} *</label><input type="date" formControlName="dueDate" /></div>
+        <div class="field span-2"><label>{{ i18n.t('common.notes') }}</label><input formControlName="notes" /></div>
+      </div>
+    </form>
+    <div modal-actions>
+      <button class="button secondary" type="button" (click)="chequeModalOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submitCheque()" [disabled]="chequeForm.invalid">{{ i18n.t('common.save') }}</button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Deposit Cheque Modal -->
+  <app-modal-dialog [isOpen]="chequeDepositModalOpen()" [title]="i18n.t('treasury.deposit')" (close)="chequeDepositModalOpen.set(false)">
+    <form [formGroup]="depositForm" class="modal-form" (ngSubmit)="submitDepositCheque()">
+      <div class="form-grid">
         <div class="field span-2">
-          <label>{{ i18n.t('banks.swiftLabel') }}</label>
-          <input class="ltr" formControlName="swiftCode" [placeholder]="i18n.t('banks.swiftPlaceholder')" />
+          <label>{{ i18n.t('banks.reconciliation.bankAccount') }} *</label>
+          <select formControlName="targetBankAccountId">
+            @for (bank of banks(); track bank.id) {
+              <option [value]="bank.id">{{ bank.bankName }} — {{ bank.accountNumber }}</option>
+            }
+          </select>
         </div>
       </div>
     </form>
-
     <div modal-actions>
-      <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
-      <button class="button primary" type="button" (click)="submit()" [disabled]="form.invalid">
-        {{ i18n.t('banks.save') }}
-      </button>
+      <button class="button secondary" type="button" (click)="chequeDepositModalOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submitDepositCheque()" [disabled]="depositForm.invalid">{{ i18n.t('treasury.deposit') }}</button>
     </div>
   </app-modal-dialog>
 
@@ -163,5 +469,22 @@
       <div class="field span-2"><label>{{ i18n.t('banks.reconciliation.feeAccount') }}</label><select formControlName="feeExpenseAccountId"><option value="">{{ i18n.t('banks.selectGlAccount') }}</option>@for (a of accounts(); track a.id) { @if (!a.isHeader && a.active && a.type === 'EXPENSE') { <option [value]="a.id">{{ a.code }} — {{ a.name }}</option> } }</select></div>
     </div></form>
     <div modal-actions><button class="button secondary" (click)="matchOpen.set(false)">{{ i18n.t('common.cancel') }}</button><button class="button primary" (click)="submitMatch()">{{ i18n.t('banks.reconciliation.confirmMatch') }}</button></div>
+  </app-modal-dialog>
+
+  <!-- Cheque Print Preview Dialog -->
+  <app-modal-dialog [isOpen]="chequePrintOpen()" [title]="i18n.t('treasury.printPreview')" (close)="chequePrintOpen.set(false)">
+    @if (chequePrintLoading()) {
+      <div class="loading"></div>
+    } @else if (chequePrintHtml()) {
+      <div class="cheque-print-preview">
+        <iframe id="cheque-print-frame" [srcdoc]="chequePrintHtml()" style="width:100%;height:320px;border:1px solid var(--line);border-radius:4px;background:#fff;"></iframe>
+      </div>
+    } @else {
+      <div class="empty-state">{{ i18n.t('treasury.noLayouts') }}</div>
+    }
+    <div modal-actions>
+      <button class="button secondary" type="button" (click)="chequePrintOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="printChequeNow()" [disabled]="!chequePrintHtml() || chequePrintLoading()">🖨 {{ i18n.t('treasury.printNow') }}</button>
+    </div>
   </app-modal-dialog>
 </section>

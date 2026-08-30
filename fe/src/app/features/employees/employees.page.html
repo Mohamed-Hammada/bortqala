@@ -9,7 +9,17 @@
       <button class="button secondary" type="button" (click)="openEmployeeAdvances()">
         {{ i18n.t('workforce.advances.title') }}
       </button
-      ><button class="button secondary" (click)="store.export()">⇩ Excel</button
+      >@if (applyDeductionVisible()) {
+        <button
+          class="button secondary"
+          type="button"
+          (click)="openApplyDeduction()"
+          [disabled]="applyDeductionBusy()"
+        >
+          {{ i18n.t('employees.applyDeductionAction') }}
+        </button>
+      }
+      <button class="button secondary" (click)="store.export()">⇩ Excel</button
       ><button class="button primary" (click)="openNew()" [disabled]="!store.categories().length">
         ＋ {{ i18n.t('employees.add') }}
       </button>
@@ -93,8 +103,9 @@
               </td>
               <td>
                 <div class="row-actions">
-                  <button (click)="openEdit(item)" [attr.aria-label]="i18n.t('common.edit')" [attr.title]="i18n.t('common.edit')">✎</button
-                  >@if (item.active) {
+                  <button (click)="openContracts(item)" [attr.aria-label]="i18n.t('employees.contractsBtn')" [attr.title]="i18n.t('employees.contractsBtn')">📜</button>
+                  <button (click)="openEdit(item)" [attr.aria-label]="i18n.t('common.edit')" [attr.title]="i18n.t('common.edit')">✎</button>
+                  @if (item.active) {
                     <button
                       class="danger-link"
                       (click)="deactivate(item)"
@@ -153,91 +164,179 @@
       @if (submitAttempted() && form.invalid) {
         <div class="alert error" role="alert">{{ i18n.t('employees.validationError') }}</div>
       }
-      <div class="form-grid">
-        <div class="field">
-          <label>{{ i18n.t('employees.employeeCode') }}</label>
-          <input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
-        </div>
-        <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('employees.fullName') }}</label>
-          <input formControlName="fullName" />
-          @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
-            <small class="field-error">{{ i18n.t('employees.fullNameRequired') }}</small>
-          }
-        </div>
-        <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('employees.category') }}</label>
-          <select formControlName="categoryId">
-            @for (category of store.categories(); track category.id) {
-              <option [value]="category.id">
-                {{ category.name }} —
-                {{
-                  i18n.t(
-                    category.attendanceMode === 'MANUAL'
-                      ? 'attendance.manual'
-                      : 'attendance.biometric'
-                  )
-                }}
-              </option>
+
+      <button
+        class="button secondary btn-preview"
+        type="button"
+        (click)="previewOpen.set(!previewOpen())"
+      >
+        {{ i18n.t('employees.previewLayout') }}
+      </button>
+
+      @for (group of groups; track group.key) {
+        <details class="accordion-group" [class.expanded]="isGroupExpanded(group.key)" [class.collapsed]="!isGroupExpanded(group.key)">
+          <summary
+            class="accordion-header"
+            (click)="$event.preventDefault(); toggleGroup(group.key)"
+            [attr.aria-expanded]="isGroupExpanded(group.key)"
+          >
+            <span class="accordion-chevron">{{ isGroupExpanded(group.key) ? '▾' : '▸' }}</span>
+            <span class="accordion-title">{{ i18n.t(group.titleKey) }}</span>
+            <span class="accordion-hint">{{ i18n.t(group.hintKey) }}</span>
+            @if (submitAttempted() && isGroupExpanded(group.key) && groupHasInvalidFields(group.key)) {
+              <span class="accordion-badge invalid-badge">{{ i18n.t('employees.group.invalidFields') }}</span>
+            } @else if (submitAttempted() && requiredFieldCount(group.key) > 0 && !isGroupExpanded(group.key)) {
+              <span class="accordion-badge required-badge">{{ requiredFieldCount(group.key) }} *</span>
             }
-          </select>
-          @if (
-            form.controls.categoryId.touched && form.controls.categoryId.hasError('required')
-          ) {
-            <small class="field-error">{{ i18n.t('employees.categoryRequired') }}</small>
+          </summary>
+
+          @if (isGroupExpanded(group.key)) {
+            <div class="accordion-body">
+              @switch (group.key) {
+                @case ('identity') {
+                  <div class="form-grid">
+                    <div class="field">
+                      <label>{{ i18n.t('employees.employeeCode') }}</label>
+                      <input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
+                    </div>
+                    <div class="field">
+                      <label><span class="required">*</span> {{ i18n.t('employees.fullName') }}</label>
+                      <input formControlName="fullName" />
+                      @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
+                        <small class="field-error">{{ i18n.t('employees.fullNameRequired') }}</small>
+                      }
+                    </div>
+                  </div>
+                }
+                @case ('job') {
+                  <div class="form-grid">
+                    <div class="field">
+                      <label><span class="required">*</span> {{ i18n.t('employees.category') }}</label>
+                      <select formControlName="categoryId">
+                        @for (category of store.categories(); track category.id) {
+                          <option [value]="category.id">
+                            {{ category.name }} —
+                            {{
+                              i18n.t(
+                                category.attendanceMode === 'MANUAL'
+                                  ? 'attendance.manual'
+                                  : 'attendance.biometric'
+                              )
+                            }}
+                          </option>
+                        }
+                      </select>
+                      @if (
+                        form.controls.categoryId.touched && form.controls.categoryId.hasError('required')
+                      ) {
+                        <small class="field-error">{{ i18n.t('employees.categoryRequired') }}</small>
+                      }
+                    </div>
+                    <div class="field">
+                      <label>{{ i18n.t('employees.employmentType') }}</label>
+                      <select formControlName="employmentType">
+                        <option value="FIXED">{{ i18n.t('employment.fixed') }}</option>
+                        <option value="DAILY">{{ i18n.t('employment.daily') }}</option>
+                      </select>
+                    </div>
+                  </div>
+                }
+                @case ('salary') {
+                  @if (auth.canViewSalary()) {
+                    <div class="form-grid">
+                      <div class="field">
+                        <label>{{ i18n.t('employees.baseSalary') }}</label>
+                        <input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="group-empty">{{ i18n.t('employees.salaryHidden') }}</div>
+                  }
+                }
+                @case ('biometric') {
+                  <div class="form-grid">
+                    <div class="field span-2">
+                      <label>
+                        @if (isBiometricCategorySelected()) {
+                          <span class="required">*</span> {{ i18n.t('employees.deviceUserId') }}
+                        } @else {
+                          {{ i18n.t('employees.deviceUserIdOptional') }}
+                        }
+                      </label>
+                      <input
+                        class="ltr"
+                        formControlName="deviceUserId"
+                        [placeholder]="i18n.t('employees.deviceUserIdPlaceholder')"
+                      />
+                      @if (form.controls.deviceUserId.invalid && (form.controls.deviceUserId.touched || submitAttempted())) {
+                        <small class="field-error">{{ i18n.t('employees.deviceUserIdRequired') }}</small>
+                      } @else {
+                        <small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
+                      }
+                    </div>
+                  </div>
+                }
+                @case ('dates') {
+                  <div class="form-grid">
+                    <div class="field">
+                      <label><span class="required">*</span> {{ i18n.t('employees.activeFrom') }}</label>
+                      <input type="date" formControlName="activeFrom" />
+                      @if (
+                        form.controls.activeFrom.touched && form.controls.activeFrom.hasError('required')
+                      ) {
+                        <small class="field-error">{{ i18n.t('employees.activeFromRequired') }}</small>
+                      }
+                    </div>
+                    <div class="field">
+                      <label>{{ i18n.t('employees.activeToOptional') }}</label>
+                      <input type="date" formControlName="activeTo" />
+                    </div>
+                  </div>
+                  <label class="active-check">
+                    <input type="checkbox" formControlName="active" />
+                    {{ i18n.t('employees.activeCheck') }}
+                  </label>
+                }
+              }
+            </div>
           }
+        </details>
+      }
+    </form>
+
+    @if (previewOpen()) {
+      <div class="preview-drawer" role="dialog" [attr.aria-label]="i18n.t('employees.previewLayout')">
+        <div class="preview-drawer-header">
+          <h3>{{ i18n.t('employees.previewLayout') }}</h3>
+          <button class="button secondary btn-sm" type="button" (click)="previewOpen.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
         </div>
-        <div class="field">
-          <label>{{ i18n.t('employees.employmentType') }}</label>
-          <select formControlName="employmentType">
-            <option value="FIXED">{{ i18n.t('employment.fixed') }}</option>
-            <option value="DAILY">{{ i18n.t('employment.daily') }}</option>
-          </select>
-        </div>
-        @if (auth.canViewSalary()) {
-          <div class="field">
-            <label>{{ i18n.t('employees.baseSalary') }}</label>
-            <input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
-          </div>
-        }
-        <div class="field span-2">
-          <label>
-            @if (isBiometricCategorySelected()) {
-              <span class="required">*</span> {{ i18n.t('employees.deviceUserId') }}
-            } @else {
-              {{ i18n.t('employees.deviceUserIdOptional') }}
-            }
-          </label>
-          <input
-            class="ltr"
-            formControlName="deviceUserId"
-            [placeholder]="i18n.t('employees.deviceUserIdPlaceholder')"
-          />
-          @if (form.controls.deviceUserId.invalid && (form.controls.deviceUserId.touched || submitAttempted())) {
-            <small class="field-error">{{ i18n.t('employees.deviceUserIdRequired') }}</small>
-          } @else {
-            <small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
+        <div class="preview-drawer-body">
+          @for (group of groups; track group.key) {
+            <div class="preview-group">
+              <div class="preview-group-header">
+                <strong>{{ i18n.t(group.titleKey) }}</strong>
+                <small>{{ i18n.t(group.hintKey) }}</small>
+              </div>
+              <div class="preview-fields">
+                @for (fieldId of previewFields(group.key); track fieldId) {
+                  <div class="preview-field">
+                    <span class="preview-field-label">{{ fieldLabel(fieldId) }}</span>
+                    <span class="preview-field-value">{{ (form.get(fieldId)?.value) ?? '—' }}</span>
+                  </div>
+                }
+                @if (previewFields(group.key).length === 0) {
+                  <div class="preview-field">
+                    <span class="preview-field-value muted">{{ i18n.t('common.noResults') }}</span>
+                  </div>
+                }
+              </div>
+            </div>
           }
-        </div>
-        <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('employees.activeFrom') }}</label>
-          <input type="date" formControlName="activeFrom" />
-          @if (
-            form.controls.activeFrom.touched && form.controls.activeFrom.hasError('required')
-          ) {
-            <small class="field-error">{{ i18n.t('employees.activeFromRequired') }}</small>
-          }
-        </div>
-        <div class="field">
-          <label>{{ i18n.t('employees.activeToOptional') }}</label>
-          <input type="date" formControlName="activeTo" />
         </div>
       </div>
-      <label class="active-check">
-        <input type="checkbox" formControlName="active" />
-        {{ i18n.t('employees.activeCheck') }}
-      </label>
-    </form>
+    }
 
     <div modal-actions class="drawer-actions">
       <button class="button primary" type="button" (click)="submit()" [disabled]="store.loading()">
@@ -246,6 +345,220 @@
       <button class="button secondary" type="button" (click)="closeDrawer()">
         {{ i18n.t('common.cancel') }}
       </button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Contracts Workbench Modal -->
+  <app-modal-dialog
+    [isOpen]="contractsModalOpen()"
+    [title]="i18n.t('contracts.title') + ': ' + (selectedEmployeeForContracts()?.fullName ?? '')"
+    size="wide"
+    (close)="closeContractsModal()"
+  >
+    <div class="contracts-workbench">
+      <div class="contracts-header">
+        <div class="emp-summary-badge">
+          <strong>{{ selectedEmployeeForContracts()?.fullName }}</strong>
+          <span class="ltr"><code>{{ selectedEmployeeForContracts()?.employeeCode }}</code></span>
+        </div>
+        <button class="button primary" type="button" (click)="openCreateContract()">
+          ＋ {{ i18n.t('contracts.addContract') }}
+        </button>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('contracts.contractNumber') }}</th>
+              <th>{{ i18n.t('contracts.contractType') }}</th>
+              <th>{{ i18n.t('contracts.status') }}</th>
+              <th>{{ i18n.t('contracts.startDate') }}</th>
+              <th>{{ i18n.t('contracts.endDate') }}</th>
+              <th>{{ i18n.t('contracts.basicSalary') }}</th>
+              <th>{{ i18n.t('contracts.grossSalary') }}</th>
+              <th>{{ i18n.t('contracts.jobTitle') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of contractsList(); track c.id) {
+              <tr>
+                <td><strong class="ltr">{{ c.contractNumber }}</strong></td>
+                <td><span class="status neutral">{{ contractTypeLabel(c.contractType) }}</span></td>
+                <td>
+                  <span
+                    class="status"
+                    [class.success]="c.status === 'ACTIVE'"
+                    [class.info]="c.status === 'AMENDED'"
+                    [class.warning]="c.status === 'EXPIRED'"
+                    [class.danger]="c.status === 'TERMINATED'"
+                  >
+                    {{ contractStatusLabel(c.status) }}
+                  </span>
+                </td>
+                <td class="ltr">{{ c.startDate }}</td>
+                <td class="ltr">{{ c.endDate ?? '—' }}</td>
+                <td class="ltr"><strong>{{ c.basicSalary | number:'1.2-2' }}</strong> <small class="ltr">{{ i18n.t('parties.currencyEgp') }}</small></td>
+                <td class="ltr"><strong class="success-text">{{ c.grossSalary | number:'1.2-2' }}</strong> <small class="ltr">{{ i18n.t('parties.currencyEgp') }}</small></td>
+                <td>{{ c.jobTitle ?? '—' }}</td>
+                <td>
+                  <div class="row-actions">
+                    @if (c.status === 'ACTIVE') {
+                      <button class="primary" (click)="openAmendContract(c)" [attr.title]="i18n.t('contracts.amend')">✎ {{ i18n.t('contracts.amend') }}</button>
+                      <button class="danger-link" (click)="openTerminateContract(c)" [attr.title]="i18n.t('contracts.terminate')">✕ {{ i18n.t('contracts.terminate') }}</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Contract Drawer for Create / Amend / Terminate -->
+      @if (contractDrawerOpen()) {
+        <div class="contract-action-card">
+          <div class="contract-action-header">
+            <h3>{{ contractDrawerMode() === 'CREATE' ? i18n.t('contracts.addContract') : contractDrawerMode() === 'AMEND' ? i18n.t('contracts.amend') : i18n.t('contracts.terminate') }}</h3>
+            <button class="button secondary btn-sm" type="button" (click)="closeContractDrawer()">✕</button>
+          </div>
+
+          @if (contractDrawerMode() === 'CREATE') {
+            <form [formGroup]="contractForm" (ngSubmit)="submitContract()">
+              <div class="dialog-form-grid">
+                <div class="field">
+                  <label>{{ i18n.t('contracts.contractNumber') }}</label>
+                  <input class="ltr" formControlName="contractNumber" placeholder="CNT-2026-XXXX" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.contractType') }} *</label>
+                  <select formControlName="contractType">
+                    <option value="PERMANENT">{{ i18n.t('contracts.permanent') }}</option>
+                    <option value="FIXED_TERM">{{ i18n.t('contracts.fixedTerm') }}</option>
+                    <option value="PROBATIONARY">{{ i18n.t('contracts.probationary') }}</option>
+                    <option value="PART_TIME">{{ i18n.t('contracts.partTime') }}</option>
+                    <option value="CONSULTANT">{{ i18n.t('contracts.consultant') }}</option>
+                    <option value="SEASONAL">{{ i18n.t('contracts.seasonal') }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.startDate') }} *</label>
+                  <input type="date" formControlName="startDate" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.endDate') }}</label>
+                  <input type="date" formControlName="endDate" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.probationEndDate') }}</label>
+                  <input type="date" formControlName="probationEndDate" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.noticePeriod') }}</label>
+                  <input class="ltr" type="number" formControlName="noticePeriodDays" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.basicSalary') }} *</label>
+                  <input class="ltr" type="number" formControlName="basicSalary" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.housingAllowance') }}</label>
+                  <input class="ltr" type="number" formControlName="housingAllowance" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.transportAllowance') }}</label>
+                  <input class="ltr" type="number" formControlName="transportationAllowance" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.otherAllowances') }}</label>
+                  <input class="ltr" type="number" formControlName="otherAllowances" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.jobTitle') }}</label>
+                  <input formControlName="jobTitle" />
+                </div>
+                <div class="field span-2">
+                  <label>{{ i18n.t('common.notes') }}</label>
+                  <textarea formControlName="notes"></textarea>
+                </div>
+              </div>
+              <div class="drawer-actions">
+                <button class="button secondary" type="button" (click)="closeContractDrawer()">{{ i18n.t('common.cancel') }}</button>
+                <button class="button primary" type="submit" [disabled]="contractForm.invalid">{{ i18n.t('common.save') }}</button>
+              </div>
+            </form>
+          }
+
+          @if (contractDrawerMode() === 'AMEND') {
+            <form [formGroup]="amendForm" (ngSubmit)="submitAmend()">
+              <div class="dialog-form-grid">
+                <div class="field">
+                  <label>{{ i18n.t('contracts.contractNumber') }}</label>
+                  <input class="ltr" formControlName="newContractNumber" placeholder="CNT-2026-XXXX-A1" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.basicSalary') }} *</label>
+                  <input class="ltr" type="number" formControlName="basicSalary" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.housingAllowance') }}</label>
+                  <input class="ltr" type="number" formControlName="housingAllowance" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.transportAllowance') }}</label>
+                  <input class="ltr" type="number" formControlName="transportationAllowance" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.otherAllowances') }}</label>
+                  <input class="ltr" type="number" formControlName="otherAllowances" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.jobTitle') }}</label>
+                  <input formControlName="jobTitle" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.endDate') }}</label>
+                  <input type="date" formControlName="endDate" />
+                </div>
+                <div class="field span-2">
+                  <label>{{ i18n.t('contracts.amend') }} - {{ i18n.t('common.notes') }} *</label>
+                  <textarea formControlName="amendmentReason"></textarea>
+                </div>
+              </div>
+              <div class="drawer-actions">
+                <button class="button secondary" type="button" (click)="closeContractDrawer()">{{ i18n.t('common.cancel') }}</button>
+                <button class="button primary" type="submit" [disabled]="amendForm.invalid">{{ i18n.t('common.save') }}</button>
+              </div>
+            </form>
+          }
+
+          @if (contractDrawerMode() === 'TERMINATE') {
+            <form [formGroup]="terminateForm" (ngSubmit)="submitTerminate()">
+              <div class="dialog-form-grid">
+                <div class="field">
+                  <label>{{ i18n.t('contracts.endDate') }} *</label>
+                  <input type="date" formControlName="terminationDate" />
+                </div>
+                <div class="field span-2">
+                  <label>{{ i18n.t('contracts.terminate') }} - {{ i18n.t('common.notes') }} *</label>
+                  <textarea formControlName="reason"></textarea>
+                </div>
+              </div>
+              <div class="drawer-actions">
+                <button class="button secondary" type="button" (click)="closeContractDrawer()">{{ i18n.t('common.cancel') }}</button>
+                <button class="button danger" type="submit" [disabled]="terminateForm.invalid">{{ i18n.t('contracts.terminate') }}</button>
+              </div>
+            </form>
+          }
+        </div>
+      }
     </div>
   </app-modal-dialog>
 </section>

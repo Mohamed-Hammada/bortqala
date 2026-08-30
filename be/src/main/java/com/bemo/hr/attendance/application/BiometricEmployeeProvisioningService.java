@@ -102,7 +102,7 @@ public class BiometricEmployeeProvisioningService {
         String code = nextAvailableAutoCategoryCode();
         var category = new AttendanceCategory(
                 code,
-                "موظفو البصمة - تلقائي",
+                "Biometric Employees - Auto",
                 480,
                 PayCycle.MONTHLY,
                 AttendanceMode.BIOMETRIC,
@@ -115,7 +115,7 @@ public class BiometricEmployeeProvisioningService {
         employeeCodeSequenceRepository.save(new EmployeeCodeSequence(category.getId()));
         scheduleRuleRepository.save(new ScheduleRule(
                 category.getId(),
-                "الدوام الافتراضي",
+                "Default Schedule",
                 LocalDate.of(2000, 1, 1),
                 null,
                 LocalTime.of(8, 0),

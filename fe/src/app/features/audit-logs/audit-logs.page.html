@@ -83,6 +83,15 @@
             (keydown.enter)="applyFilters()"
           />
         </div>
+        <div class="field">
+          <label for="audit-filter-break-glass">{{ i18n.t('audit.filterBreakGlass') }}</label>
+          <input
+            id="audit-filter-break-glass"
+            type="checkbox"
+            [checked]="breakGlassFilter()"
+            (change)="breakGlassFilter.set($any($event.target).checked); applyFilters()"
+          />
+        </div>
         <div class="field filter-actions">
           <button
             type="button"
@@ -128,11 +137,21 @@
             @for (log of logs(); track log.id) {
               <tr>
                 <td class="ltr"><strong>{{ dateTime(log.occurredAt) }}</strong></td>
-                <td><strong>{{ log.username }}</strong></td>
+                <td>
+                  <strong>{{ log.username }}</strong>
+                  @if (log.isBreakGlass) {
+                    <span class="status danger">{{ i18n.t('audit.breakGlassBadge') }}</span>
+                  }
+                </td>
                 <td><span class="status neutral">{{ log.entityType }}</span></td>
                 <td><span class="status info">{{ log.action }}</span></td>
                 <td class="ltr"><small>{{ log.entityId || '—' }}</small></td>
-                <td><code>{{ log.detailsJson || '—' }}</code></td>
+                <td>
+                  @if (log.reason) {
+                    <div class="reason-note"><strong>{{ i18n.t('audit.reason') }}:</strong> {{ log.reason }}</div>
+                  }
+                  <code>{{ log.detailsJson || '—' }}</code>
+                </td>
               </tr>
             } @empty {
               <tr>

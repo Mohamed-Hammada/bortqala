@@ -1,0 +1,46 @@
+.server-setup {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+
+  .card {
+    width: min(26rem, 100%);
+    display: grid;
+    gap: 0.75rem;
+    padding: 2rem 1.75rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-1, 0 10px 30px rgb(15 23 42 / 12%));
+    background: var(--surface, #fff);
+
+    h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--text-muted, #64748b);
+      font-size: 0.875rem;
+    }
+
+    label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid var(--border, #e2e8f0);
+      border-radius: 0.5rem;
+    }
+
+    .probe-error {
+      margin: 0;
+      color: var(--danger, #dc2626);
+      font-size: 0.8125rem;
+    }
+  }
+}

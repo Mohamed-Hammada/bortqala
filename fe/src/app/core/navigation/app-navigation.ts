@@ -10,6 +10,7 @@ import { IconName } from '../../shared/ui/icon/icon.component';
  */
 export type WorkspaceGroup =
   | 'workspace.homeOverview'
+  | 'workspace.projects'
   | 'workspace.peopleHr'
   | 'workspace.attendanceTime'
   | 'workspace.contractorWorkforce'
@@ -19,8 +20,16 @@ export type WorkspaceGroup =
   | 'workspace.manufacturingDomain'
   | 'workspace.businessPartners'
   | 'workspace.financeAccounting'
+  | 'workspace.documents'
+  | 'workspace.esign'
+  | 'workspace.medical'
+  | 'workspace.serviceOps'
+  | 'workspace.fleet'
+  | 'workspace.ess'
+  | 'workspace.aiIntelligence'
   | 'workspace.administration'
   | 'workspace.platformAdministration';
+
 
 export interface NavItem {
   menuId: string;
@@ -36,6 +45,8 @@ export interface NavItem {
   strictRoles?: boolean;
   /** Pages such as Settings/Audit should not be selectable as the normal landing page. */
   allowAsLandingPage?: boolean;
+  /** When false, this navigation item is not exposed in the user permission/menu editor. */
+  showInPermissionEditor?: boolean;
 }
 
 export interface WorkspaceSection {
@@ -45,6 +56,7 @@ export interface WorkspaceSection {
 
 export const WORKSPACE_ORDER: readonly WorkspaceGroup[] = [
   'workspace.homeOverview',
+  'workspace.projects',
   'workspace.peopleHr',
   'workspace.attendanceTime',
   'workspace.contractorWorkforce',
@@ -54,10 +66,22 @@ export const WORKSPACE_ORDER: readonly WorkspaceGroup[] = [
   'workspace.manufacturingDomain',
   'workspace.businessPartners',
   'workspace.financeAccounting',
+  'workspace.documents',
+  'workspace.esign',
+  'workspace.medical',
+  'workspace.serviceOps',
+  'workspace.fleet',
+  'workspace.ess',
+  'workspace.aiIntelligence',
   'workspace.administration',
   'workspace.platformAdministration',
 ];
 
+
+
+
+
+const PROJECT_ROLES: RoleCode[] = ['SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'];
 const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'];
 const FINANCE_REPORT_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'];
 const PROCUREMENT_ROLES: RoleCode[] = [
@@ -70,6 +94,7 @@ const PROCUREMENT_ROLES: RoleCode[] = [
   'AUDITOR',
 ];
 const SALES_ROLES: RoleCode[] = ['SALES_MANAGER'];
+const EXPORT_ROLES: RoleCode[] = ['PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'SALES_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'];
 const PRODUCTION_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER'];
 const QUALITY_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER'];
 const PAYROLL_ROLES: RoleCode[] = ['PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'];
@@ -95,6 +120,26 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'dashboard',
     workspace: 'workspace.homeOverview',
   },
+  {
+    menuId: 'executive-analytics',
+    labelKey: 'nav.executiveAnalytics',
+    descriptionKey: 'nav.executiveAnalyticsHint',
+    path: '/analytics/executive',
+    icon: 'reports',
+    workspace: 'workspace.homeOverview',
+    roles: PROJECT_ROLES,
+  },
+
+  // Projects / Construction Backbone
+  {
+    menuId: 'projects',
+    labelKey: 'nav.projects',
+    descriptionKey: 'nav.projectsHint',
+    path: '/projects',
+    icon: 'dashboard',
+    workspace: 'workspace.projects',
+    roles: PROJECT_ROLES,
+  },
 
   // People & HR
   {
@@ -105,6 +150,42 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'employees',
     workspace: 'workspace.peopleHr',
     roles: ['ADMIN', 'HR_MANAGER'],
+  },
+  {
+    menuId: 'leaves',
+    labelKey: 'nav.leaves',
+    descriptionKey: 'nav.leavesHint',
+    path: '/leaves',
+    icon: 'employees',
+    workspace: 'workspace.peopleHr',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
+  {
+    menuId: 'performance',
+    labelKey: 'nav.performance',
+    descriptionKey: 'nav.performanceHint',
+    path: '/performance',
+    icon: 'dashboard',
+    workspace: 'workspace.peopleHr',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
+  {
+    menuId: 'expenses',
+    labelKey: 'nav.expenses',
+    descriptionKey: 'nav.expensesHint',
+    path: '/expenses',
+    icon: 'dashboard',
+    workspace: 'workspace.peopleHr',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+  },
+  {
+    menuId: 'recruitment',
+    labelKey: 'nav.recruitment',
+    descriptionKey: 'nav.recruitmentHint',
+    path: '/recruitment',
+    icon: 'employees',
+    workspace: 'workspace.peopleHr',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
   },
   {
     menuId: 'organization',
@@ -245,6 +326,15 @@ export const NAV_ITEMS: NavItem[] = [
     roles: WORKFORCE_ACCOUNT_ROLES,
   },
   {
+    menuId: 'workforce-client-billing',
+    labelKey: 'workforce.clientBilling.title',
+    descriptionKey: 'nav.workforceHint',
+    path: '/workforce/client-billing',
+    icon: 'imports',
+    workspace: 'workspace.contractorWorkforce',
+    roles: WORKFORCE_BASE_ROLES,
+  },
+  {
     menuId: 'workforce-reports',
     labelKey: 'workforce.reports.title',
     descriptionKey: 'nav.workforceHint',
@@ -304,6 +394,104 @@ export const NAV_ITEMS: NavItem[] = [
     workspace: 'workspace.salesCommercial',
     roles: SALES_ROLES,
   },
+  {
+    menuId: 'pos',
+    labelKey: 'nav.pos',
+    descriptionKey: 'nav.posHint',
+    path: '/trade/pos',
+    icon: 'reports',
+    workspace: 'workspace.salesCommercial',
+    roles: SALES_ROLES,
+  },
+  {
+    menuId: 'crm',
+    labelKey: 'nav.crm',
+    descriptionKey: 'nav.crmHint',
+    path: '/crm',
+    icon: 'users',
+    workspace: 'workspace.salesCommercial',
+    roles: SALES_ROLES,
+  },
+  {
+    menuId: 'export-shipments',
+    labelKey: 'nav.exportShipments',
+    descriptionKey: 'nav.exportShipmentsHint',
+    path: '/trade/export-shipments',
+    icon: 'imports',
+    workspace: 'workspace.salesCommercial',
+    roles: EXPORT_ROLES,
+  },
+  {
+    menuId: 'specialized-verticals',
+    labelKey: 'nav.specializedVerticals',
+    descriptionKey: 'nav.specializedVerticalsHint',
+    path: '/verticals/specialized',
+    icon: 'categories',
+    workspace: 'workspace.salesCommercial',
+  },
+  {
+    menuId: 'growth',
+    labelKey: 'nav.growth',
+    descriptionKey: 'nav.growthHint',
+    path: '/growth',
+    icon: 'categories',
+    workspace: 'workspace.salesCommercial',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER', 'HR_MANAGER', 'FINANCE_MANAGER'],
+  },
+  {
+    menuId: 'helpdesk',
+    labelKey: 'nav.helpdesk',
+    descriptionKey: 'nav.helpdeskHint',
+    path: '/helpdesk',
+    icon: 'dashboard',
+    workspace: 'workspace.homeOverview',
+    roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
+  {
+    menuId: 'kb',
+    labelKey: 'nav.kb',
+    descriptionKey: 'nav.kbHint',
+    path: '/kb',
+    icon: 'reports',
+    workspace: 'workspace.homeOverview',
+    roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
+  {
+    menuId: 'marketing',
+    labelKey: 'nav.marketing',
+    descriptionKey: 'nav.marketingHint',
+    path: '/marketing',
+    icon: 'dashboard',
+    workspace: 'workspace.salesCommercial',
+    roles: ['ADMIN', 'SALES_MANAGER'],
+  },
+  {
+    menuId: 'report-builder',
+    labelKey: 'nav.reportBuilder',
+    descriptionKey: 'nav.reportBuilderHint',
+    path: '/report-builder',
+    icon: 'reports',
+    workspace: 'workspace.homeOverview',
+    roles: ['ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER', 'VIEWER'],
+  },
+  {
+    menuId: 'documents',
+    labelKey: 'nav.documents',
+    descriptionKey: 'nav.documentsHint',
+    path: '/documents',
+    icon: 'reports',
+    workspace: 'workspace.documents',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
+  {
+    menuId: 'esign',
+    labelKey: 'nav.esign',
+    descriptionKey: 'nav.esignHint',
+    path: '/esign',
+    icon: 'reports',
+    workspace: 'workspace.esign',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+  },
 
   // Manufacturing
   {
@@ -346,6 +534,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'PROCUREMENT_MANAGER', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER'],
     permissionMenuId: 'settings',
     allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
 
   // Finance
@@ -403,6 +592,127 @@ export const NAV_ITEMS: NavItem[] = [
     workspace: 'workspace.financeAccounting',
     roles: FINANCE_ROLES,
   },
+  {
+    menuId: 'fixed-assets',
+    labelKey: 'nav.fixedAssets',
+    descriptionKey: 'nav.fixedAssetsHint',
+    path: '/finance/fixed-assets',
+    icon: 'reports',
+    workspace: 'workspace.financeAccounting',
+    roles: FINANCE_ROLES,
+  },
+  {
+    menuId: 'payment-links',
+    labelKey: 'nav.paymentLinks',
+    descriptionKey: 'nav.paymentLinksHint',
+    path: '/finance/payment-links',
+    icon: 'reports',
+    workspace: 'workspace.financeAccounting',
+    roles: FINANCE_ROLES,
+  },
+  {
+    menuId: 'reconciliation-center',
+    labelKey: 'reconciliation.title',
+    descriptionKey: 'reconciliation.subtitle',
+    path: '/finance/reconciliation',
+    icon: 'dashboard',
+    workspace: 'workspace.financeAccounting',
+    roles: FINANCE_ROLES,
+    permissionMenuId: 'accounts',
+    allowAsLandingPage: false,
+    showInPermissionEditor: false,
+  },
+  {
+    menuId: 'eta-tax',
+    labelKey: 'nav.etaTax',
+    descriptionKey: 'nav.etaTaxHint',
+    path: '/compliance/eta-tax',
+    icon: 'reports',
+    workspace: 'workspace.financeAccounting',
+    roles: FINANCE_ROLES,
+  },
+
+  // Medical & Clinics
+  {
+    menuId: 'clinic-patients',
+    labelKey: 'nav.clinicPatients',
+    descriptionKey: 'nav.clinicPatientsHint',
+    path: '/clinic/patients',
+    icon: 'users',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-queue',
+    labelKey: 'nav.clinicQueue',
+    descriptionKey: 'nav.clinicQueueHint',
+    path: '/clinic/queue',
+    icon: 'dashboard',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-commissions',
+    labelKey: 'nav.clinicCommissions',
+    descriptionKey: 'nav.clinicCommissionsHint',
+    path: '/clinic/commissions',
+    icon: 'reports',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-appointments',
+    labelKey: 'nav.clinicAppointments',
+    descriptionKey: 'nav.clinicAppointmentsHint',
+    path: '/clinic/appointments',
+    icon: 'dashboard',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-pharmacy',
+    labelKey: 'nav.clinicPharmacy',
+    descriptionKey: 'nav.clinicPharmacyHint',
+    path: '/clinic/pharmacy',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-lab',
+    labelKey: 'nav.clinicLab',
+    descriptionKey: 'nav.clinicLabHint',
+    path: '/clinic/lab',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'clinic-insurance',
+    labelKey: 'nav.clinicInsurance',
+    descriptionKey: 'nav.clinicInsuranceHint',
+    path: '/clinic/insurance',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'hospital-ops',
+    labelKey: 'nav.hospitalOps',
+    descriptionKey: 'nav.hospitalOpsHint',
+    path: '/clinic/hospital',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'dental-charting',
+    labelKey: 'nav.dentalCharting',
+    descriptionKey: 'nav.dentalChartingHint',
+    path: '/clinic/dental',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
+  {
+    menuId: 'medical-tools',
+    labelKey: 'nav.medicalTools',
+    descriptionKey: 'nav.medicalToolsHint',
+    path: '/clinic/tools',
+    icon: 'categories',
+    workspace: 'workspace.medical',
+  },
 
   // Administration
   {
@@ -435,6 +745,47 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN'],
     allowAsLandingPage: false,
   },
+  // Service Operations & Rentals
+  {
+    menuId: 'service-ops',
+    labelKey: 'nav.serviceOps',
+    descriptionKey: 'nav.serviceOpsHint',
+    path: '/service-ops',
+    icon: 'dashboard',
+    workspace: 'workspace.serviceOps',
+  },
+  // Fleet & Equipment Maintenance
+  {
+    menuId: 'fleet',
+    labelKey: 'nav.fleet',
+    descriptionKey: 'nav.fleetHint',
+    path: '/fleet',
+    icon: 'dashboard',
+    workspace: 'workspace.fleet',
+  },
+  // Employee Self-Service (ESS)
+  {
+    menuId: 'self-service',
+    labelKey: 'nav.ess',
+    descriptionKey: 'nav.essHint',
+    path: '/self-service',
+    icon: 'dashboard',
+    workspace: 'workspace.ess',
+  },
+  // AI Intelligence & Analytics Center
+  {
+    menuId: 'ai-intelligence',
+    labelKey: 'nav.aiIntelligence',
+    descriptionKey: 'nav.aiIntelligenceHint',
+    path: '/ai-intelligence',
+    icon: 'dashboard',
+    workspace: 'workspace.aiIntelligence',
+  },
+
+
+
+
+  // Setup Readiness & Deployment Verification Checklist
   {
     menuId: 'admin-setup-readiness',
     labelKey: 'onboarding.tab',
@@ -445,6 +796,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN', 'ADMIN'],
     permissionMenuId: 'settings',
     allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
   {
     menuId: 'admin-product-insights',
@@ -456,6 +808,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN', 'ADMIN'],
     permissionMenuId: 'settings',
     allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
   {
     menuId: 'settings',
@@ -465,6 +818,18 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'settings',
     workspace: 'workspace.administration',
     allowAsLandingPage: false,
+  },
+  {
+    menuId: 'migration',
+    labelKey: 'migration.title',
+    descriptionKey: 'migration.subtitle',
+    path: '/migration',
+    icon: 'imports',
+    workspace: 'workspace.administration',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    permissionMenuId: 'settings',
+    allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
   // Platform Administration is intentionally separated from tenant/user Settings.
   {
@@ -478,6 +843,7 @@ export const NAV_ITEMS: NavItem[] = [
     permissionMenuId: 'settings',
     strictRoles: true,
     allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
 ];
 
@@ -500,7 +866,8 @@ export function canAccessNavigationItem(
   hasMenuAccess: (menuId: string) => boolean,
 ): boolean {
   if (roles.includes('SUPER_ADMIN')) return true;
-  if (roles.includes('ADMIN') && !item.strictRoles) return true;
-  const roleOk = !item.roles || item.roles.some((role) => roles.includes(role));
+  const roleOk = roles.includes('ADMIN') && !item.strictRoles
+    ? true
+    : !item.roles || item.roles.some((role) => roles.includes(role));
   return roleOk && hasMenuAccess(item.permissionMenuId ?? item.menuId);
 }

@@ -62,6 +62,9 @@ public final class ReportingApi {
     public record PeriodOption(int year, int month, PeriodKind kind, LocalDate start, LocalDate end) {
     }
 
+    public record GeneratedPeriod(LocalDate from, LocalDate to, PayCycle type, String reportId) {
+    }
+
     public record Summary(String id, LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle, ReportStatus status,
                           int unresolvedCount, String createdBy, Instant createdAt, String approvedBy,
                           Instant approvedAt, Instant exportedAt, long version, String generationHash) {

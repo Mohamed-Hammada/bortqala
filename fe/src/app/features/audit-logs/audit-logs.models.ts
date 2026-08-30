@@ -6,6 +6,9 @@ export interface AuditLog {
   username: string;
   detailsJson?: string;
   ipAddress?: string;
+  reason?: string;
+  isBreakGlass?: boolean;
+  userAgent?: string;
   occurredAt: number;
 }
 

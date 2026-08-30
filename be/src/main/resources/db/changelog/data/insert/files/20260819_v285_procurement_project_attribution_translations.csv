@@ -1,0 +1,61 @@
+id;translation_key;locale;text_value
+v285-001;procurement.project;ar-EG;المشروع
+v285-002;procurement.project;en-US;Project
+v285-003;procurement.projectHint;ar-EG;ربط أمر الشراء بمشروع إنشائي محدد
+v285-004;procurement.projectHint;en-US;Link purchase order to a specific construction project
+v285-005;procurement.wbsNode;ar-EG;بند هيكل العمل (WBS)
+v285-006;procurement.wbsNode;en-US;WBS Node
+v285-007;procurement.wbsNodeHint;ar-EG;تخصيص التكلفة لبند WBS محدد
+v285-008;procurement.wbsNodeHint;en-US;Allocate cost to a specific WBS node
+v285-009;procurement.costCode;ar-EG;رمز التكلفة (Cost Code)
+v285-010;procurement.costCode;en-US;Cost Code
+v285-011;procurement.costCodeHint;ar-EG;رمز تصنيف التكلفة
+v285-012;procurement.costCodeHint;en-US;Cost classification code
+v285-013;procurement.tabSupplierScorecard;ar-EG;بطاقة تقييم أداء الموردين (Scorecard)
+v285-014;procurement.tabSupplierScorecard;en-US;Supplier Performance Scorecard
+v285-015;procurement.supplierScorecard;ar-EG;مؤشرات كفاءة والتزام الموردين
+v285-016;procurement.supplierScorecard;en-US;Supplier Efficiency & Compliance KPIs
+v285-017;procurement.onTimeDeliveryRate;ar-EG;نسبة الالتزام بمواعيد التوريد (OTD %)
+v285-018;procurement.onTimeDeliveryRate;en-US;On-Time Delivery Rate (OTD %)
+v285-019;procurement.priceVarianceRate;ar-EG;نسبة انحراف الأسعار %
+v285-020;procurement.priceVarianceRate;en-US;Price Variance %
+v285-021;procurement.matchExceptionsCount;ar-EG;استثناءات المطابقة الثلاثية
+v285-022;procurement.matchExceptionsCount;en-US;3-Way Match Exceptions
+v285-023;procurement.overallRating;ar-EG;التقييم العام
+v285-024;procurement.overallRating;en-US;Overall Rating
+v285-025;procurement.ratingExcellent;ar-EG;ممتاز
+v285-026;procurement.ratingExcellent;en-US;Excellent
+v285-027;procurement.ratingGood;ar-EG;جيد
+v285-028;procurement.ratingGood;en-US;Good
+v285-029;procurement.ratingFair;ar-EG;مقبول
+v285-030;procurement.ratingFair;en-US;Fair
+v285-031;procurement.ratingAtRisk;ar-EG;عالي المخاطر
+v285-032;procurement.ratingAtRisk;en-US;At Risk
+v285-033;procurement.totalOrdersCount;ar-EG;عدد أوامر الشراء
+v285-034;procurement.totalOrdersCount;en-US;Total PO Count
+v285-035;procurement.totalOrdersValue;ar-EG;إجمالي قيمة المشتريات
+v285-036;procurement.totalOrdersValue;en-US;Total Purchasing Value
+v285-037;procurement.traceabilityTitle;ar-EG;سجل التتبع والمستندات المصدرية
+v285-038;procurement.traceabilityTitle;en-US;Document Traceability & Audit Trail
+v285-039;procurement.unassignedProject;ar-EG;عام (بدون مشروع)
+v285-040;procurement.unassignedProject;en-US;General (No Project)
+v285-041;procurement.tabScorecard;ar-EG;تقييم أداء الموردين
+v285-042;procurement.tabScorecard;en-US;Supplier Scorecard
+v285-043;procurement.withoutProjectOption;ar-EG;بدون مشروع (مشتريات عامة)
+v285-044;procurement.withoutProjectOption;en-US;Without Project (General PO)
+v285-045;procurement.scorecardSupplier;ar-EG;اسم المورد
+v285-046;procurement.scorecardSupplier;en-US;Supplier Name
+v285-047;procurement.scorecardTotalOrders;ar-EG;إجمالي الأوامر
+v285-048;procurement.scorecardTotalOrders;en-US;Total Orders
+v285-049;procurement.scorecardTotalValue;ar-EG;إجمالي القيمة
+v285-050;procurement.scorecardTotalValue;en-US;Total Value
+v285-051;procurement.scorecardOnTimeRate;ar-EG;نسبة الالتزام بالمواعيد %
+v285-052;procurement.scorecardOnTimeRate;en-US;On-Time Rate %
+v285-053;procurement.scorecardPriceVariance;ar-EG;انحراف الأسعار %
+v285-054;procurement.scorecardPriceVariance;en-US;Price Variance %
+v285-055;procurement.scorecardMatchExceptions;ar-EG;استثناءات المطابقة
+v285-056;procurement.scorecardMatchExceptions;en-US;Match Exceptions
+v285-057;procurement.scorecardRating;ar-EG;التقييم
+v285-058;procurement.scorecardRating;en-US;Rating
+v285-059;procurement.scorecardEmpty;ar-EG;لا توجد بيانات تقييم للموردين حالياً
+v285-060;procurement.scorecardEmpty;en-US;No supplier performance scorecards available

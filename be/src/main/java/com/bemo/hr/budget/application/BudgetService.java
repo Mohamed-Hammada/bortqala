@@ -103,10 +103,10 @@ public class BudgetService {
         Budget budget = requireBudget(id);
         List<Encumbrance> encumbrances = encumbranceRepository.findByBudgetId(id);
         if (encumbrances.stream().anyMatch(item -> item.getStatus() == EncumbranceStatus.ACTIVE)) {
-            throw new BusinessRuleException("لا يمكن حذف ميزانية عليها التزامات نشطة.", "BUDGET_HAS_ACTIVE_ENCUMBRANCES", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot delete a budget with active encumbrances.", "BUDGET_HAS_ACTIVE_ENCUMBRANCES", HttpStatus.CONFLICT);
         }
         if (!encumbrances.isEmpty()) {
-            throw new BusinessRuleException("لا يمكن حذف ميزانية لها سجل اعتمادات؛ يمكن إلغاء تفعيلها بدلاً من الحذف.", "BUDGET_HAS_ENCUMBRANCES", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot delete a budget with approval history; deactivate it instead.", "BUDGET_HAS_ENCUMBRANCES", HttpStatus.CONFLICT);
         }
         budgetRepository.delete(budget);
         auditService.record("DELETE", "BUDGET", id, getCurrentUser(), "{\"year\":" + budget.getFiscalYear() + "}", null);
@@ -178,8 +178,8 @@ public class BudgetService {
         BigDecimal amount = baseTotalAmount == null ? BigDecimal.ZERO : baseTotalAmount;
         BigDecimal available = availableFor(budget);
         if (amount.compareTo(available) > 0 && budget.isBlocking()) {
-            throw new BusinessRuleException("يتجاوز مبلغ أمر الشراء الميزانية المتاحة للقسم (" + amount
-                    + " مقابل " + available + " " + budget.getCurrencyCode() + ").", "BUDGET_AVAILABILITY_BLOCKED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Purchase order amount exceeds available budget for department (" + amount
+                    + " vs " + available + " " + budget.getCurrencyCode() + ").", "BUDGET_AVAILABILITY_BLOCKED", HttpStatus.CONFLICT);
         }
         Encumbrance encumbrance = encumbranceRepository.save(new Encumbrance(budget.getId(),
                 purchaseOrderId, purchaseOrderNumber, amount, budget.getCurrencyCode()));
@@ -265,16 +265,16 @@ public class BudgetService {
         BudgetPeriodType type = payload.periodType() == null ? BudgetPeriodType.ANNUAL : payload.periodType();
         if (type == BudgetPeriodType.MONTHLY
                 && (payload.periodMonth() == null || payload.periodMonth() < 1 || payload.periodMonth() > 12)) {
-            throw new BusinessRuleException("شهر الميزانية يجب أن يكون بين 1 و12 للميزانية الشهرية.", "BUDGET_PERIOD_MONTH_INVALID", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Budget month must be between 1 and 12 for monthly budgets.", "BUDGET_PERIOD_MONTH_INVALID", HttpStatus.CONFLICT);
         }
     }
 
     private void requireDepartment(String departmentId) {
         if (departmentId == null || departmentId.isBlank()) {
-            throw new BusinessRuleException("يجب اختيار القسم المرتبط بالميزانية.", "BUDGET_DEPARTMENT_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Department is required for the budget.", "BUDGET_DEPARTMENT_REQUIRED", HttpStatus.CONFLICT);
         }
         if (departmentRepository.findById(departmentId.strip()).isEmpty()) {
-            throw new BusinessRuleException("القسم المحدد غير موجود في التنظيم الإداري.", "BUDGET_DEPARTMENT_NOT_FOUND", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Selected department not found in the organization hierarchy.", "BUDGET_DEPARTMENT_NOT_FOUND", HttpStatus.CONFLICT);
         }
     }
 

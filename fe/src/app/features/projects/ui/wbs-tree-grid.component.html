@@ -1,0 +1,144 @@
+<div class="tree-grid-container">
+  <div class="tree-toolbar">
+    <div class="toolbar-actions">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="expandAll()">
+        <span>{{ i18n.t('wbs.treeExpandAll') }}</span>
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="collapseAll()">
+        <span>{{ i18n.t('wbs.treeCollapseAll') }}</span>
+      </button>
+    </div>
+  </div>
+
+  @if (nodes.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">🏗️</div>
+      <h3 class="empty-title">{{ i18n.t('wbs.noNodesTitle') }}</h3>
+      <p class="empty-desc">{{ i18n.t('wbs.noNodesDesc') }}</p>
+    </div>
+  } @else {
+    <div class="table-responsive">
+      <table class="wbs-table">
+        <thead>
+          <tr>
+            <th class="col-code">{{ i18n.t('wbs.code') }}</th>
+            <th class="col-name">{{ i18n.t('wbs.name') }}</th>
+            <th class="col-type">{{ i18n.t('wbs.nodeType') }}</th>
+            <th class="col-uom">{{ i18n.t('wbs.unitOfMeasure') }}</th>
+            <th class="col-qty text-end">{{ i18n.t('wbs.plannedQuantity') }}</th>
+            <th class="col-rate text-end">{{ i18n.t('wbs.unitRate') }}</th>
+            <th class="col-amount text-end">{{ i18n.t('wbs.plannedAmount') }}</th>
+            <th class="col-status text-center">{{ i18n.t('wbs.status') }}</th>
+            @if (!readOnly) {
+              <th class="col-actions text-center">{{ i18n.t('wbs.actions') }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngTemplateOutlet="nodeTreeTemplate; context: { $implicit: nodes }"></ng-container>
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<ng-template #nodeTreeTemplate let-nodeList>
+  @for (node of nodeList; track node.id) {
+    <tr class="wbs-row level-{{ node.level }}">
+      <td class="col-code">
+        <div class="cell-indent" [style.padding-inline-start.px]="(node.level - 1) * 20">
+          @if (node.children && node.children.length > 0) {
+            <button
+              type="button"
+              class="btn-expand"
+              (click)="toggleExpand(node.id)"
+              [attr.aria-expanded]="isExpanded(node.id)">
+              {{ isExpanded(node.id) ? '▼' : '▶' }}
+            </button>
+          } @else {
+            <span class="expand-placeholder"></span>
+          }
+          <span class="code-text font-mono">{{ node.wbsCode }}</span>
+        </div>
+      </td>
+      <td class="col-name">
+        <span class="node-name font-medium">{{ node.name }}</span>
+        @if (node.nameEn) {
+          <span class="node-name-en text-muted">({{ node.nameEn }})</span>
+        }
+      </td>
+      <td class="col-type">
+        <span class="badge" [ngClass]="getTypeBadgeClass(node.nodeType)">
+          @switch (node.nodeType) {
+            @case ('PHASE') { {{ i18n.t('wbs.type.phase') }} }
+            @case ('SUB_PHASE') { {{ i18n.t('wbs.type.subPhase') }} }
+            @case ('WORK_PACKAGE') { {{ i18n.t('wbs.type.workPackage') }} }
+            @case ('BOQ_ITEM') { {{ i18n.t('wbs.type.boqItem') }} }
+            @case ('MILESTONE') { {{ i18n.t('wbs.type.milestone') }} }
+            @default { {{ node.nodeType }} }
+          }
+        </span>
+      </td>
+      <td class="col-uom">{{ node.unitOfMeasure || '—' }}</td>
+      <td class="col-qty text-end font-mono">
+        {{ node.plannedQuantity > 0 ? (node.plannedQuantity | number:'1.2-2') : '—' }}
+      </td>
+      <td class="col-rate text-end font-mono">
+        {{ node.unitRate > 0 ? (node.unitRate | number:'1.2-2') : '—' }}
+      </td>
+      <td class="col-amount text-end font-mono font-bold">
+        {{ node.plannedAmount > 0 ? (node.plannedAmount | number:'1.2-2') : '—' }}
+      </td>
+      <td class="col-status text-center">
+        <span class="status-pill" [ngClass]="getStatusBadgeClass(node.status)">
+          @switch (node.status) {
+            @case ('PLANNED') { {{ i18n.t('wbs.status.planned') }} }
+            @case ('IN_PROGRESS') { {{ i18n.t('wbs.status.inProgress') }} }
+            @case ('COMPLETED') { {{ i18n.t('wbs.status.completed') }} }
+            @case ('ON_HOLD') { {{ i18n.t('wbs.status.onHold') }} }
+            @case ('CANCELLED') { {{ i18n.t('wbs.status.cancelled') }} }
+            @default { {{ node.status }} }
+          }
+        </span>
+      </td>
+      @if (!readOnly) {
+        <td class="col-actions text-center">
+          <div class="row-actions">
+            <button
+              type="button"
+              class="btn-icon"
+              (click)="addChild.emit(node)"
+              [title]="i18n.t('wbs.addChild')">
+              ➕
+            </button>
+            <button
+              type="button"
+              class="btn-icon"
+              (click)="editNode.emit(node)"
+              [title]="i18n.t('wbs.editNode')">
+              ✏️
+            </button>
+            <button
+              type="button"
+              class="btn-icon"
+              (click)="repositionNode.emit(node)"
+              [title]="i18n.t('wbs.repositionNode')">
+              ⇄
+            </button>
+            <button
+              type="button"
+              class="btn-icon btn-icon-danger"
+              (click)="deleteNode.emit(node)"
+              [title]="i18n.t('wbs.deleteNode')">
+              🗑️
+            </button>
+          </div>
+        </td>
+      }
+    </tr>
+
+    @if (node.children && node.children.length > 0 && isExpanded(node.id)) {
+      <ng-container *ngTemplateOutlet="nodeTreeTemplate; context: { $implicit: node.children }"></ng-container>
+    }
+  }
+</ng-template>

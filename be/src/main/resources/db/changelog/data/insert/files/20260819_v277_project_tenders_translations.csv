@@ -1,0 +1,165 @@
+id;translation_key;locale;text_value
+v277-001;tenders.title;ar-EG;إدارة المناقصات والمنافسات
+v277-002;tenders.title;en-US;Tender & Competition Management
+v277-003;tenders.subtitle;ar-EG;تسجيل المنافسات وتحديد نوعها (داخلية/خارجية) وإدارة العطاءات والتقييم الفني والمالي والترسية
+v277-004;tenders.subtitle;en-US;Tender registration (internal/external), bidding, technical & financial evaluation, and award
+v277-005;tenders.createTender;ar-EG;إنشاء مناقصة جديدة
+v277-006;tenders.createTender;en-US;Create New Tender
+v277-007;tenders.editTender;ar-EG;تعديل بيانات المناقصة
+v277-008;tenders.editTender;en-US;Edit Tender Details
+v277-009;tenders.deleteTender;ar-EG;حذف المناقصة
+v277-010;tenders.deleteTender;en-US;Delete Tender
+v277-011;tenders.tenderNumber;ar-EG;رقم المناقصة
+v277-012;tenders.tenderNumber;en-US;Tender Number
+v277-013;tenders.tenderType;ar-EG;نوع المنافسة
+v277-014;tenders.tenderType;en-US;Tender Type
+v277-015;tenders.typeInternal;ar-EG;منافسة داخلية (مقاولين باطن)
+v277-016;tenders.typeInternal;en-US;Internal Subcontractor Competition
+v277-017;tenders.typeExternal;ar-EG;مناقصة خارجية (عملاء ومشاريع)
+v277-018;tenders.typeExternal;en-US;External Client Tender
+v277-019;tenders.statusDraft;ar-EG;مسودة
+v277-020;tenders.statusDraft;en-US;Draft
+v277-021;tenders.statusPublished;ar-EG;مطروحة للمنافسة
+v277-022;tenders.statusPublished;en-US;Published
+v277-023;tenders.statusEvaluation;ar-EG;قيد التقييم والدراسة
+v277-024;tenders.statusEvaluation;en-US;Under Evaluation
+v277-025;tenders.statusAwarded;ar-EG;تمت الترسية
+v277-026;tenders.statusAwarded;en-US;Awarded
+v277-027;tenders.statusCancelled;ar-EG;ملغاة
+v277-028;tenders.statusCancelled;en-US;Cancelled
+v277-029;tenders.submissionDeadline;ar-EG;الموعد النهائي لتقديم العطاءات
+v277-030;tenders.submissionDeadline;en-US;Submission Deadline
+v277-031;tenders.estimatedValue;ar-EG;القيمة التقديرية (المقايسة)
+v277-032;tenders.estimatedValue;en-US;Estimated Budget Value
+v277-033;tenders.technicalWeight;ar-EG;وزن التقييم الفني %
+v277-034;tenders.technicalWeight;en-US;Technical Weight %
+v277-035;tenders.financialWeight;ar-EG;وزن التقييم المالي %
+v277-036;tenders.financialWeight;en-US;Financial Weight %
+v277-037;tenders.bidBondRequired;ar-EG;طلب خطاب ضمان ابتدائي (تأمين مؤقت)
+v277-038;tenders.bidBondRequired;en-US;Bid Bond Required
+v277-039;tenders.bidBondAmount;ar-EG;قيمة التأمين الابتدائي
+v277-040;tenders.bidBondAmount;en-US;Bid Bond Amount
+v277-041;tenders.bidBondValidity;ar-EG;صلاحية التأمين (أيام)
+v277-042;tenders.bidBondValidity;en-US;Bond Validity (Days)
+v277-043;tenders.bidBondNumber;ar-EG;رقم خطاب الضمان
+v277-044;tenders.bidBondNumber;en-US;Bid Bond Number
+v277-045;tenders.bidBondReceived;ar-EG;تم استلام خطاب الضمان
+v277-046;tenders.bidBondReceived;en-US;Bid Bond Received
+v277-047;tenders.tabOverview;ar-EG;البيانات العامة
+v277-048;tenders.tabOverview;en-US;Overview & Terms
+v277-049;tenders.tabBoq;ar-EG;جدول الكميات والمواصفات (BOQ)
+v277-050;tenders.tabBoq;en-US;Tender BOQ Items
+v277-051;tenders.tabBidders;ar-EG;المتنافسون والعطاءات المقدمة
+v277-052;tenders.tabBidders;en-US;Bidders & Submissions
+v277-053;tenders.tabEvaluation;ar-EG;مصفوفة التقييم والمفاضلة
+v277-054;tenders.tabEvaluation;en-US;Evaluation Matrix & Ranking
+v277-055;tenders.tabClarifications;ar-EG;الاستفسارات والملاحق الفنية (Addenda)
+v277-056;tenders.tabClarifications;en-US;Clarifications & Addenda
+v277-057;tenders.tabAward;ar-EG;الترسية والتعاقد
+v277-058;tenders.tabAward;en-US;Award & Contract
+v277-059;tenders.addBoqItem;ar-EG;إضافة بند مقايسة
+v277-060;tenders.addBoqItem;en-US;Add BOQ Item
+v277-061;tenders.editBoqItem;ar-EG;تعديل بند المقايسة
+v277-062;tenders.editBoqItem;en-US;Edit BOQ Item
+v277-063;tenders.deleteBoqItem;ar-EG;حذف بند المقايسة
+v277-064;tenders.deleteBoqItem;en-US;Delete BOQ Item
+v277-065;tenders.itemCode;ar-EG;كود البند
+v277-066;tenders.itemCode;en-US;Item Code
+v277-067;tenders.estimatedRate;ar-EG;الفئة التقديرية
+v277-068;tenders.estimatedRate;en-US;Estimated Rate
+v277-069;tenders.estimatedAmount;ar-EG;الإجمالي التقديري
+v277-070;tenders.estimatedAmount;en-US;Estimated Total
+v277-071;tenders.inviteBidder;ar-EG;دعوة متنافس / مقاول
+v277-072;tenders.inviteBidder;en-US;Invite Bidder
+v277-073;tenders.bidderName;ar-EG;اسم المتنافس / الشركة
+v277-074;tenders.bidderName;en-US;Bidder Name
+v277-075;tenders.bidderStatus;ar-EG;حالة العطاء
+v277-076;tenders.bidderStatus;en-US;Bidder Status
+v277-077;tenders.submissionDate;ar-EG;تاريخ تقديم العطاء
+v277-078;tenders.submissionDate;en-US;Submission Date
+v277-079;tenders.totalBidAmount;ar-EG;إجمالي قيمة العطاء
+v277-080;tenders.totalBidAmount;en-US;Total Bid Value
+v277-081;tenders.submitBid;ar-EG;تسجيل العطاء المالي والفني
+v277-082;tenders.submitBid;en-US;Submit Bid & Pricing
+v277-083;tenders.unitRate;ar-EG;فئة العطاء
+v277-084;tenders.unitRate;en-US;Bid Unit Rate
+v277-085;tenders.totalAmount;ar-EG;القيمة الإجمالية
+v277-086;tenders.totalAmount;en-US;Total Amount
+v277-087;tenders.technicalRemarks;ar-EG;الملاحظات الفنية
+v277-088;tenders.technicalRemarks;en-US;Technical Remarks
+v277-089;tenders.deviations;ar-EG;التحفظات أو الانحرافات عن المواصفات
+v277-090;tenders.deviations;en-US;Specification Deviations
+v277-091;tenders.technicalScore;ar-EG;درجة التقييم الفني
+v277-092;tenders.technicalScore;en-US;Technical Score
+v277-093;tenders.financialScore;ar-EG;درجة التقييم المالي
+v277-094;tenders.financialScore;en-US;Financial Score
+v277-095;tenders.combinedScore;ar-EG;الدرجة المرجحة الكلية
+v277-096;tenders.combinedScore;en-US;Weighted Combined Score
+v277-097;tenders.rankOrder;ar-EG;الترتيب النهائي
+v277-098;tenders.rankOrder;en-US;Rank
+v277-099;tenders.evaluateTender;ar-EG;حساب مصفوفة التقييم والترتيب
+v277-100;tenders.evaluateTender;en-US;Calculate Evaluation & Ranking
+v277-101;tenders.evaluationSuccess;ar-EG;تم احتساب الدرجات الفنية والمالية وترتيب المتنافسين بنجاح
+v277-102;tenders.evaluationSuccess;en-US;Technical and financial scores calculated successfully
+v277-103;tenders.awardTender;ar-EG;اعتماد الترسية النهائية
+v277-104;tenders.awardTender;en-US;Final Award Approval
+v277-105;tenders.awardSuccess;ar-EG;تمت الترسية بنجاح وتحديث بيانات المشروع والتعاقد
+v277-106;tenders.awardSuccess;en-US;Tender awarded successfully and project contract synchronized
+v277-107;tenders.awardedBidder;ar-EG;المتنافس الفائز بالترسية
+v277-108;tenders.awardedBidder;en-US;Awarded Winner
+v277-109;tenders.awardedAmount;ar-EG;قيمة الترسية المعتمدة
+v277-110;tenders.awardedAmount;en-US;Awarded Amount
+v277-111;tenders.awardToContract;ar-EG;تحويل الترسية إلى عقد مشروع معتمد
+v277-112;tenders.awardToContract;en-US;Convert Award to Project Contract
+v277-113;tenders.addClarification;ar-EG;إضافة استفسار / ملحق فني
+v277-114;tenders.addClarification;en-US;Add Clarification / Addendum
+v277-115;tenders.question;ar-EG;نص الاستفسار
+v277-116;tenders.question;en-US;Question / Inquiry
+v277-117;tenders.answer;ar-EG;الرد الفني المعتمد
+v277-118;tenders.answer;en-US;Official Answer
+v277-119;tenders.isPublicAddendum;ar-EG;ملحق فني عام لجميع المتنافسين
+v277-120;tenders.isPublicAddendum;en-US;Public Addendum to All Bidders
+v277-121;tenders.askedBy;ar-EG;مقدم الاستفسار
+v277-122;tenders.askedBy;en-US;Asked By
+v277-123;tenders.answeredBy;ar-EG;المجيب
+v277-124;tenders.answeredBy;en-US;Answered By
+v277-125;tenders.publishTender;ar-EG;طرح المناقصة للمتنافسين
+v277-126;tenders.publishTender;en-US;Publish Tender
+v277-127;tenders.publishSuccess;ar-EG;تم طرح المناقصة للمنافسة وتفعيل فترة تلقي العطاءات
+v277-128;tenders.publishSuccess;en-US;Tender published and bidding period opened
+v277-129;tenders.tenderCreatedSuccess;ar-EG;تم إنشاء المناقصة بنجاح
+v277-130;tenders.tenderCreatedSuccess;en-US;Tender created successfully
+v277-131;tenders.tenderUpdatedSuccess;ar-EG;تم تحديث بيانات المناقصة بنجاح
+v277-132;tenders.tenderUpdatedSuccess;en-US;Tender updated successfully
+v277-133;tenders.tenderDeletedSuccess;ar-EG;تم حذف المناقصة بنجاح
+v277-134;tenders.tenderDeletedSuccess;en-US;Tender deleted successfully
+v277-135;tenders.noTendersTitle;ar-EG;لا توجد مناقصات مسجلة
+v277-136;tenders.noTendersDesc;ar-EG;ابدأ بإنشاء مناقصة جديدة لتتبع المقايسات والعطاءات والترسية
+v277-137;tenders.noTendersTitle;en-US;No tenders found
+v277-138;tenders.noTendersDesc;en-US;Start by creating a tender to manage bidding, evaluations, and contract awards
+v277-139;tenders.deleteConfirmTitle;ar-EG;تأكيد حذف المناقصة
+v277-140;tenders.deleteConfirmTitle;en-US;Confirm Tender Deletion
+v277-141;tenders.deleteConfirmMessage;ar-EG;هل أنت متأكد من حذف هذه المناقصة وجميع مقايساتها وعطاءاتها؟
+v277-142;tenders.deleteConfirmMessage;en-US;Are you sure you want to delete this tender and all its items and bids?
+v277-143;tenders.disqualifyBidder;ar-EG;استبعاد المتنافس
+v277-144;tenders.disqualifyBidder;en-US;Disqualify Bidder
+v277-145;tenders.lowestCompliantBid;ar-EG;أقل عطاء مالي مطابق
+v277-146;tenders.lowestCompliantBid;en-US;Lowest Compliant Bid
+v277-147;tenders.navTenders;ar-EG;المناقصات والمنافسات
+v277-148;tenders.navTenders;en-US;Tenders & Bidding
+v277-149;common.currency;ar-EG;العملة
+v277-150;common.currency;en-US;Currency
+v277-151;common.email;ar-EG;البريد الإلكتروني
+v277-152;common.email;en-US;Email
+v277-153;common.genericError;ar-EG;حدث خطأ أثناء معالجة الطلب
+v277-154;common.genericError;en-US;An error occurred while processing the request
+v277-155;common.noData;ar-EG;لا توجد بيانات متاحة
+v277-156;common.noData;en-US;No data available
+v277-157;common.phone;ar-EG;رقم الهاتف
+v277-158;common.phone;en-US;Phone
+v277-159;common.quantity;ar-EG;الكمية
+v277-160;common.quantity;en-US;Quantity
+v277-161;common.title;ar-EG;العنوان
+v277-162;common.title;en-US;Title
+v277-163;tenders.formulaHint;ar-EG;المعادلة: وزن فني + وزن مالي (مقياس أقل سعر مطابق)
+v277-164;tenders.formulaHint;en-US;Formula: Tech weight + Financial weight (Lowest compliant bid benchmark)

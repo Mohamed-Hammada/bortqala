@@ -5,6 +5,7 @@ import {
   computed,
   inject,
   signal,
+  Signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
@@ -23,6 +24,26 @@ import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { apiErrorMessage } from '../../core/api-error';
+import { WorkforceService } from '../workforce/data-access/workforce.service';
+import { AdvancePolicy } from '../workforce/models/workforce.models';
+
+export interface FormGroupDef {
+  key: string;
+  titleKey: string;
+  hintKey: string;
+  fieldIds: string[];
+}
+
+export const FORM_GROUPS: FormGroupDef[] = [
+  { key: 'identity', titleKey: 'employees.group.identity', hintKey: 'employees.group.identityHint', fieldIds: ['employeeCode', 'fullName'] },
+  { key: 'job', titleKey: 'employees.group.job', hintKey: 'employees.group.jobHint', fieldIds: ['categoryId', 'employmentType'] },
+  { key: 'schedule', titleKey: 'employees.group.schedule', hintKey: 'employees.group.scheduleHint', fieldIds: [] },
+  { key: 'salary', titleKey: 'employees.group.salary', hintKey: 'employees.group.salaryHint', fieldIds: ['baseSalary'] },
+  { key: 'contracts', titleKey: 'employees.group.contracts', hintKey: 'employees.group.contractsHint', fieldIds: [] },
+  { key: 'biometric', titleKey: 'employees.group.biometric', hintKey: 'employees.group.biometricHint', fieldIds: ['deviceUserId'] },
+  { key: 'dates', titleKey: 'employees.group.dates', hintKey: 'employees.group.datesHint', fieldIds: ['activeFrom', 'activeTo', 'active'] },
+];
 
 @Component({
   selector: 'app-employees-page',
@@ -48,6 +69,7 @@ export class EmployeesPage {
   private readonly confirm = inject(ConfirmDialogService);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
+  private readonly workforceService = inject(WorkforceService);
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
   readonly pagination = new TablePagination();
@@ -57,10 +79,201 @@ export class EmployeesPage {
   private biometricReturnUrl: string | null = null;
   private biometricMonth: string | null = null;
 
+  // WP-20: Form group accordion state
+  readonly groups = FORM_GROUPS;
+  readonly collapsedSignals: Record<string, Signal<boolean>> = Object.fromEntries(
+    FORM_GROUPS.map((g, i) => [g.key, signal(i >= 2)]),
+  );
+  readonly previewOpen = signal(false);
+
+  toggleGroup(key: string): void {
+    const s = this.collapsedSignals[key] as ReturnType<typeof signal<boolean>>;
+    s.set(!s());
+  }
+
+  isGroupExpanded(key: string): boolean {
+    return !(this.collapsedSignals[key] as ReturnType<typeof signal<boolean>>)();
+  }
+
+  private expandInvalidGroups(): void {
+    for (const group of FORM_GROUPS) {
+      const hasInvalid = group.fieldIds.some((fieldId) => {
+        const control = this.form.get(fieldId);
+        return !!control && control.invalid;
+      });
+      if (!hasInvalid) continue;
+      const signalFor = this.collapsedSignals[group.key] as ReturnType<typeof signal<boolean>> | undefined;
+      if (signalFor && signalFor()) signalFor.set(false);
+    }
+  }
+
+  requiredFieldCount(groupKey: string): number {
+    const fieldMap: Record<string, string> = {
+      fullName: 'required',
+      categoryId: 'required',
+      activeFrom: 'required',
+      deviceUserId: 'biometricRequired',
+    };
+    let count = 0;
+    for (const fieldId of FORM_GROUPS.find((g) => g.key === groupKey)?.fieldIds ?? []) {
+      if (fieldId === 'deviceUserId') {
+        if (this.isBiometricCategorySelected()) count++;
+      } else if (fieldMap[fieldId] === 'required') {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  fieldLabel(fieldId: string): string {
+    const map: Record<string, string> = {
+      employeeCode: 'employees.employeeCode',
+      fullName: 'employees.fullName',
+      categoryId: 'employees.category',
+      employmentType: 'employees.employmentType',
+      baseSalary: 'employees.baseSalary',
+      deviceUserId: 'employees.deviceUserId',
+      activeFrom: 'employees.activeFrom',
+      activeTo: 'employees.activeToOptional',
+      active: 'employees.activeCheck',
+    };
+    return this.i18n.t(map[fieldId] ?? fieldId);
+  }
+
+  isFieldVisible(fieldId: string): boolean {
+    if (fieldId === 'baseSalary') return this.auth.canViewSalary();
+    return true;
+  }
+
+  previewFields(groupKey: string): string[] {
+    return (FORM_GROUPS.find((g) => g.key === groupKey)?.fieldIds ?? []).filter((f) =>
+      this.isFieldVisible(f),
+    );
+  }
+
+  // Contracts Workbench State
+  readonly contractsModalOpen = signal(false);
+  readonly selectedEmployeeForContracts = signal<Employee | null>(null);
+  readonly contractsList = signal<import('./employees.models').EmployeeContract[]>([]);
+  readonly loadingContracts = signal(false);
+  readonly contractDrawerOpen = signal(false);
+  readonly contractDrawerMode = signal<'CREATE' | 'AMEND' | 'TERMINATE'>('CREATE');
+  readonly selectedContractForAction = signal<import('./employees.models').EmployeeContract | null>(null);
+
+  readonly contractForm = new FormGroup({
+    contractNumber: new FormControl('', { nonNullable: true }),
+    contractType: new FormControl<import('./employees.models').ContractType>('PERMANENT', { nonNullable: true, validators: [Validators.required] }),
+    startDate: new FormControl(new Date().toISOString().slice(0, 10), { nonNullable: true, validators: [Validators.required] }),
+    endDate: new FormControl('', { nonNullable: true }),
+    probationEndDate: new FormControl('', { nonNullable: true }),
+    noticePeriodDays: new FormControl(30, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    basicSalary: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    housingAllowance: new FormControl(0, { nonNullable: true }),
+    transportationAllowance: new FormControl(0, { nonNullable: true }),
+    otherAllowances: new FormControl(0, { nonNullable: true }),
+    jobTitle: new FormControl('', { nonNullable: true }),
+    notes: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly amendForm = new FormGroup({
+    newContractNumber: new FormControl('', { nonNullable: true }),
+    basicSalary: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    housingAllowance: new FormControl(0, { nonNullable: true }),
+    transportationAllowance: new FormControl(0, { nonNullable: true }),
+    otherAllowances: new FormControl(0, { nonNullable: true }),
+    jobTitle: new FormControl('', { nonNullable: true }),
+    endDate: new FormControl('', { nonNullable: true }),
+    amendmentReason: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+
+  readonly terminateForm = new FormGroup({
+    terminationDate: new FormControl(new Date().toISOString().slice(0, 10), { nonNullable: true, validators: [Validators.required] }),
+    reason: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+
   openEmployeeAdvances(): void {
     void this.router.navigate(['/workforce/advances'], {
       queryParams: { recipientType: 'EMPLOYEE' },
     });
+  }
+
+  // WP-07: manual advance deduction, gated on the resolved MANUAL policy
+  readonly applyDeductionVisible = signal(false);
+  readonly applyDeductionBusy = signal(false);
+  private globalManual = false;
+  private categoryPolicyModes = new Map<string, boolean>();
+
+  private async loadDeductionGate(): Promise<void> {
+    try {
+      const policies = await firstValueFrom(this.workforceService.loadAdvancePolicies());
+      const latestByScope = new Map<string, AdvancePolicy>();
+      for (const policy of policies) {
+        const key = `${policy.scopeType}:${policy.scopeId ?? ''}`;
+        const existing = latestByScope.get(key);
+        if (!existing || policy.version >= existing.version) latestByScope.set(key, policy);
+      }
+      this.globalManual = latestByScope.get('GLOBAL:')?.deductionMode === 'MANUAL';
+      this.categoryPolicyModes = new Map(
+        [...latestByScope.values()]
+          .filter((policy) => policy.scopeType === 'EMPLOYEE_CATEGORY' && policy.scopeId)
+          .map((policy) => [policy.scopeId as string, policy.deductionMode === 'MANUAL']),
+      );
+      this.applyDeductionVisible.set(
+        this.globalManual || [...this.categoryPolicyModes.values()].some((manual) => manual),
+      );
+    } catch {
+      this.applyDeductionVisible.set(false);
+    }
+  }
+
+  affectedEmployees(): Employee[] {
+    return this.store.items().filter((item) =>
+      this.categoryPolicyModes.has(item.categoryId)
+        ? this.categoryPolicyModes.get(item.categoryId) === true
+        : this.globalManual,
+    );
+  }
+
+  openApplyDeduction(): void {
+    if (this.applyDeductionBusy()) return;
+    const targets = this.affectedEmployees();
+    if (!targets.length) {
+      this.notification.info(this.i18n.t('employees.applyDeductionNoTargets'));
+      return;
+    }
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'employees.applyDeductionAction',
+        messageKey: 'employees.applyDeductionConfirmBody',
+        params: { count: targets.length },
+        confirmKey: 'common.confirm',
+      },
+      async () => {
+        this.applyDeductionBusy.set(true);
+        try {
+          const now = new Date();
+          const periodId = `${now.getFullYear()}/${now.getMonth() + 1}`;
+          let applied = 0;
+          let firstError: unknown = null;
+          for (const target of targets) {
+            try {
+              await firstValueFrom(this.workforceService.applyManualDeduction(target.id, periodId));
+              applied++;
+            } catch (error) {
+              if (!firstError) firstError = error;
+            }
+          }
+          if (applied > 0) {
+            this.notification.success(this.i18n.t('employees.applyDeductionSuccess', { count: applied }));
+          }
+          if (firstError) {
+            this.notification.error(apiErrorMessage(firstError));
+          }
+        } finally {
+          this.applyDeductionBusy.set(false);
+        }
+      },
+    );
   }
 
   isBiometricCategorySelected(): boolean {
@@ -102,6 +315,7 @@ export class EmployeesPage {
 
   constructor() {
     void this.reloadAndApplyBiometricPrefill();
+    void this.loadDeductionGate();
     this.form.controls.categoryId.valueChanges.subscribe((catId) => {
       const cat = this.store.categories().find((c) => c.id === catId);
       if (cat?.attendanceMode === 'BIOMETRIC') {
@@ -182,10 +396,20 @@ export class EmployeesPage {
     this.drawerOpen.set(true);
   }
 
+  groupHasInvalidFields(groupKey: string): boolean {
+    const group = FORM_GROUPS.find((g) => g.key === groupKey);
+    if (!group) return false;
+    return group.fieldIds.some((fieldId) => {
+      const control = this.form.get(fieldId);
+      return !!control && control.invalid && (control.touched || this.submitAttempted());
+    });
+  }
+
   async submit() {
     this.submitAttempted.set(true);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.expandInvalidGroups();
       return;
     }
     const raw = this.form.getRawValue();
@@ -319,8 +543,154 @@ export class EmployeesPage {
     }
   }
 
+  // ─── Contracts Workbench Methods ─────────────────────────
+  async openContracts(emp: Employee) {
+    this.selectedEmployeeForContracts.set(emp);
+    this.contractsModalOpen.set(true);
+    await this.loadContracts(emp.id);
+  }
+
+  closeContractsModal() {
+    this.contractsModalOpen.set(false);
+    this.selectedEmployeeForContracts.set(null);
+    this.contractDrawerOpen.set(false);
+  }
+
+  async loadContracts(employeeId: string) {
+    this.loadingContracts.set(true);
+    try {
+      const data = await firstValueFrom(
+        this.http.get<import('./employees.models').EmployeeContract[]>(`/api/v1/employees/${employeeId}/contracts`)
+      );
+      this.contractsList.set(data);
+    } catch {
+      this.contractsList.set([]);
+    } finally {
+      this.loadingContracts.set(false);
+    }
+  }
+
+  openCreateContract() {
+    const emp = this.selectedEmployeeForContracts();
+    this.contractDrawerMode.set('CREATE');
+    this.contractForm.reset({
+      contractNumber: '',
+      contractType: 'PERMANENT',
+      startDate: new Date().toISOString().slice(0, 10),
+      endDate: '',
+      probationEndDate: '',
+      noticePeriodDays: 30,
+      basicSalary: emp?.baseSalary ?? 0,
+      housingAllowance: 0,
+      transportationAllowance: 0,
+      otherAllowances: 0,
+      jobTitle: '',
+      notes: '',
+    });
+    this.contractDrawerOpen.set(true);
+  }
+
+  openAmendContract(cnt: import('./employees.models').EmployeeContract) {
+    this.selectedContractForAction.set(cnt);
+    this.contractDrawerMode.set('AMEND');
+    this.amendForm.reset({
+      newContractNumber: '',
+      basicSalary: cnt.basicSalary,
+      housingAllowance: cnt.housingAllowance,
+      transportationAllowance: cnt.transportationAllowance,
+      otherAllowances: cnt.otherAllowances,
+      jobTitle: cnt.jobTitle ?? '',
+      endDate: cnt.endDate ?? '',
+      amendmentReason: '',
+    });
+    this.contractDrawerOpen.set(true);
+  }
+
+  openTerminateContract(cnt: import('./employees.models').EmployeeContract) {
+    this.selectedContractForAction.set(cnt);
+    this.contractDrawerMode.set('TERMINATE');
+    this.terminateForm.reset({
+      terminationDate: new Date().toISOString().slice(0, 10),
+      reason: '',
+    });
+    this.contractDrawerOpen.set(true);
+  }
+
+  closeContractDrawer() {
+    this.contractDrawerOpen.set(false);
+    this.selectedContractForAction.set(null);
+  }
+
+  async submitContract() {
+    if (this.contractForm.invalid) return;
+    const emp = this.selectedEmployeeForContracts();
+    if (!emp) return;
+    try {
+      const val = this.contractForm.getRawValue();
+      await firstValueFrom(this.http.post(`/api/v1/employees/${emp.id}/contracts`, val));
+      this.notification.success(this.i18n.t('contracts.saved'));
+      this.closeContractDrawer();
+      await this.loadContracts(emp.id);
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async submitAmend() {
+    if (this.amendForm.invalid) return;
+    const cnt = this.selectedContractForAction();
+    const emp = this.selectedEmployeeForContracts();
+    if (!cnt || !emp) return;
+    try {
+      const val = this.amendForm.getRawValue();
+      await firstValueFrom(this.http.post(`/api/v1/employees/contracts/${cnt.id}/amend`, val));
+      this.notification.success(this.i18n.t('contracts.amended'));
+      this.closeContractDrawer();
+      await this.loadContracts(emp.id);
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async submitTerminate() {
+    if (this.terminateForm.invalid) return;
+    const cnt = this.selectedContractForAction();
+    const emp = this.selectedEmployeeForContracts();
+    if (!cnt || !emp) return;
+    try {
+      const val = this.terminateForm.getRawValue();
+      await firstValueFrom(this.http.post(`/api/v1/employees/contracts/${cnt.id}/terminate`, val));
+      this.notification.success(this.i18n.t('contracts.terminated'));
+      this.closeContractDrawer();
+      await this.loadContracts(emp.id);
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
+    }
+  }
+
   typeLabel(value: EmploymentType) {
     return this.i18n.t(value === 'FIXED' ? 'employment.fixed' : 'employment.daily');
+  }
+
+  contractTypeLabel(value: import('./employees.models').ContractType) {
+    switch (value) {
+      case 'PERMANENT': return this.i18n.t('contracts.permanent');
+      case 'FIXED_TERM': return this.i18n.t('contracts.fixedTerm');
+      case 'PROBATIONARY': return this.i18n.t('contracts.probationary');
+      case 'PART_TIME': return this.i18n.t('contracts.partTime');
+      case 'CONSULTANT': return this.i18n.t('contracts.consultant');
+      case 'SEASONAL': return this.i18n.t('contracts.seasonal');
+    }
+  }
+
+  contractStatusLabel(value: import('./employees.models').ContractStatus) {
+    switch (value) {
+      case 'ACTIVE': return this.i18n.t('contracts.statusActive');
+      case 'AMENDED': return this.i18n.t('contracts.statusAmended');
+      case 'EXPIRED': return this.i18n.t('contracts.statusExpired');
+      case 'TERMINATED': return this.i18n.t('contracts.statusTerminated');
+      default: return value;
+    }
   }
 
   date(value: number) {

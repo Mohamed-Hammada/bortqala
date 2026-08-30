@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v373_whatsapp_outbound_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: whatsapp_outbound_log
+      changes:
+        - createTable:
+            tableName: whatsapp_outbound_log
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: recipient_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: recipient_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: phone_number, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: template_key, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: params, type: text }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "QUEUED" }
+              - column: { name: provider_message_id, type: varchar(200) }
+              - column: { name: error_message, type: varchar(1000) }
+              - column: { name: retry_count, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: dedupe_key, type: varchar(200) }
+              - column: { name: sent_at, type: timestamp }
+              - column: { name: delivered_at, type: timestamp }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: whatsapp_outbound_log
+            columnNames: app_id, dedupe_key
+            constraintName: uq_wa_log_app_dedupe
+        - createIndex:
+            tableName: whatsapp_outbound_log
+            indexName: idx_wa_log_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: whatsapp_outbound_log
+            indexName: idx_wa_log_status
+            columns:
+              - column: { name: status }
+      rollback:
+        - dropTable:
+            tableName: whatsapp_outbound_log

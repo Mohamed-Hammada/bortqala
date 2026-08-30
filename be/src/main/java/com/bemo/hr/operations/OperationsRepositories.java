@@ -34,8 +34,14 @@ interface InventoryMovementCostRepository extends JpaRepository<InventoryMovemen
     @Query("select coalesce(sum(c.valueEffect), 0) from InventoryMovementCost c where c.itemId = :itemId")
     BigDecimal inventoryValue(String itemId);
 
+    @Query("select coalesce(sum(c.valueEffect), 0) from InventoryMovementCost c where c.itemId = :itemId and c.occurredAt <= :asOf")
+    BigDecimal inventoryValueAsOf(String itemId, java.time.Instant asOf);
+
     @Query("select coalesce(sum(c.quantityEffect), 0) from InventoryMovementCost c where c.itemId = :itemId")
     BigDecimal valuedQuantity(String itemId);
+
+    @Query("select coalesce(sum(c.quantityEffect), 0) from InventoryMovementCost c where c.itemId = :itemId and c.occurredAt <= :asOf")
+    BigDecimal valuedQuantityAsOf(String itemId, java.time.Instant asOf);
 }
 
 interface InventoryRevaluationRepository extends JpaRepository<InventoryRevaluation, String> {
@@ -45,23 +51,9 @@ interface InventoryRevaluationRepository extends JpaRepository<InventoryRevaluat
 
     @Query("select coalesce(sum(r.valueDifference), 0) from InventoryRevaluation r where r.itemId = :itemId")
     BigDecimal revaluationValue(String itemId);
-}
 
-interface StockMovementRepository extends JpaRepository<StockMovement, String> {
-    List<StockMovement> findAllByOrderByOccurredAtDesc();
-
-    Optional<StockMovement> findFirstByItemIdOrderByOccurredAtDesc(String itemId);
-
-    @Query("select coalesce(sum(m.quantityDelta), 0) from StockMovement m where m.itemId = :itemId")
-    BigDecimal balance(String itemId);
-
-    @Query("select m.itemId, coalesce(sum(m.quantityDelta), 0) from StockMovement m group by m.itemId having coalesce(sum(m.quantityDelta), 0) < 0")
-    List<Object[]> findNegativeBalanceItemIds();
-
-    boolean existsByPartyIdAndInvoiceNoIgnoreCase(String partyId, String invoiceNo);
-
-    List<StockMovement> findByOperationTypeAndReferenceCodeAndItemId(
-            String operationType, String referenceCode, String itemId);
+    @Query("select coalesce(sum(r.valueDifference), 0) from InventoryRevaluation r where r.itemId = :itemId and r.occurredAt <= :asOf")
+    BigDecimal revaluationValueAsOf(String itemId, java.time.Instant asOf);
 }
 
 interface EmployeeAdvanceEntryRepository extends JpaRepository<EmployeeAdvanceEntry, String> {

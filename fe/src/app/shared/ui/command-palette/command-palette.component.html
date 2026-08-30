@@ -1,0 +1,50 @@
+@if (open) {
+  <div class="palette-overlay" (click)="close()">
+    <div class="palette-dialog" (click)="$event.stopPropagation()">
+      <div class="palette-input-row">
+        <span class="palette-icon">🔍</span>
+        <input
+          #searchInput
+          type="text"
+          class="palette-input"
+          [placeholder]="i18n.t('palette.placeholder')"
+          [value]="query()"
+          (input)="onQueryChange($any($event.target).value)"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        @if (loading()) {
+          <span class="palette-spinner"></span>
+        }
+      </div>
+
+      <div class="palette-results">
+        @if (results().length === 0) {
+          <div class="palette-empty">{{ i18n.t('palette.noResults') }}</div>
+        } @else {
+          @for (item of results(); track $index; let i = $index) {
+            <button
+              class="palette-item"
+              [class.selected]="i === selectedIndex()"
+              (click)="executeItem(item)"
+              (mouseenter)="selectedIndex.set(i)"
+            >
+              <span class="palette-item-icon">{{ item.icon || '🔍' }}</span>
+              <div class="palette-item-text">
+                <span class="palette-item-title">{{ item.title }}</span>
+                @if (item.subtitle) {
+                  <span class="palette-item-subtitle">{{ item.subtitle }}</span>
+                }
+              </div>
+            </button>
+          }
+        }
+      </div>
+
+      <div class="palette-footer">
+        <span class="palette-hint">↑↓ {{ i18n.t('palette.navigateHint') }}</span>
+        <span class="palette-hint">{{ i18n.t('palette.escHint') }}</span>
+      </div>
+    </div>
+  </div>
+}

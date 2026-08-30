@@ -1,5 +1,7 @@
 package com.bemo.hr.shared.security;
 
+import com.bemo.hr.access.api.AccessPolicyApi.UserPolicyAssignmentDto;
+import com.bemo.hr.access.api.AccessPolicyApi.UserPolicyAssignmentItem;
 import jakarta.validation.constraints.*;
 
 import java.time.Instant;
@@ -37,7 +39,16 @@ public final class AuthApi {
                                Set<String> allowedMenus, String menuAccessMode, boolean canViewSalary,
                                String categoryId,
                                boolean dashboardCustomizationEnabled, boolean active, long version,
-                               Set<String> activeFeatures) {
+                               Set<String> activeFeatures,
+                               List<UserPolicyAssignmentDto> policyAssignments) {
+        public UserResponse(String id, String username, String displayName, Set<RoleCode> roles,
+                            Set<String> allowedMenus, String menuAccessMode, boolean canViewSalary,
+                            String categoryId,
+                            boolean dashboardCustomizationEnabled, boolean active, long version,
+                            Set<String> activeFeatures) {
+            this(id, username, displayName, roles, allowedMenus, menuAccessMode, canViewSalary,
+                    categoryId, dashboardCustomizationEnabled, active, version, activeFeatures, List.of());
+        }
     }
 
     public record TenantInfo(String id, String code, String name) {
@@ -65,7 +76,16 @@ public final class AuthApi {
             Boolean dashboardCustomizationEnabled,
             boolean active,
             Long version,
-            @Size(max = 1000) String accessChangeReason) {
+            @Size(max = 1000) String accessChangeReason,
+            List<UserPolicyAssignmentItem> policyAssignments) {
+        public UserUpsertRequest(String username, String displayName, String password,
+                                 Set<RoleCode> roles, Set<String> allowedMenus,
+                                 Boolean canViewSalary, String categoryId,
+                                 Boolean dashboardCustomizationEnabled, boolean active,
+                                 Long version, String accessChangeReason) {
+            this(username, displayName, password, roles, allowedMenus, canViewSalary,
+                    categoryId, dashboardCustomizationEnabled, active, version, accessChangeReason, null);
+        }
     }
 
     public record PreferenceResponse(ThemePreference theme, TableDensity tableDensity,

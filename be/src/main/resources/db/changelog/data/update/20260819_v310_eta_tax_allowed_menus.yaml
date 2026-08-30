@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v310_eta_tax_allowed_menus
+      author: wolfn
+      validCheckSum: ANY
+      comment: "Grant the eta-tax screen to existing users for Feature 22 Egyptian E-Invoicing & ETA Compliance."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',eta-tax')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%eta-tax%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(allowed_menus, ',eta-tax', '')
+              WHERE allowed_menus IS NOT NULL;

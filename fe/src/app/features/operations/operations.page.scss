@@ -142,3 +142,19 @@
   max-width: none;
 }
 
+
+// ─── WP-05: valuation report filters + reconciliation ────
+.valuation-asof,
+.valuation-warehouse {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  padding: .35rem .5rem;
+  background: var(--surface, #fff);
+}
+
+.valuation-reconciliation {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .7rem 1rem;
+}

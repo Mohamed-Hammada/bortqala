@@ -20,6 +20,12 @@ public class GoodsReceiptLine {
     private GoodsReceipt goodsReceipt;
     @Column(name = "purchase_order_line_id", length = 36)
     private String purchaseOrderLineId;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
     @Column(name = "item_id", length = 36)
     private String itemId;
     @Column(name = "item_name", nullable = false, length = 255)
@@ -68,20 +74,50 @@ public class GoodsReceiptLine {
         this.qualityReason = qualityReason;
     }
 
-    void attachTo(GoodsReceipt goodsReceipt) {
+    public void setGoodsReceipt(GoodsReceipt goodsReceipt) {
         this.goodsReceipt = goodsReceipt;
+    }
+
+    public void attachTo(GoodsReceipt goodsReceipt) {
+        this.goodsReceipt = goodsReceipt;
+    }
+
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId) {
+        this.projectId = projectId == null || projectId.isBlank() ? null : projectId.strip();
+        this.wbsNodeId = wbsNodeId == null || wbsNodeId.isBlank() ? null : wbsNodeId.strip();
+        this.costCodeId = costCodeId == null || costCodeId.isBlank() ? null : costCodeId.strip();
     }
 
     public String getId() {
         return id;
     }
 
+    public String getAppId() {
+        return appId;
+    }
+
+    public GoodsReceipt getGoodsReceipt() {
+        return goodsReceipt;
+    }
+
     public String getGoodsReceiptId() {
-        return goodsReceipt == null ? null : goodsReceipt.getId();
+        return goodsReceipt != null ? goodsReceipt.getId() : null;
     }
 
     public String getPurchaseOrderLineId() {
         return purchaseOrderLineId;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getWbsNodeId() {
+        return wbsNodeId;
+    }
+
+    public String getCostCodeId() {
+        return costCodeId;
     }
 
     public String getItemId() {

@@ -170,7 +170,7 @@ export class WebPushService {
     this.subscribed.set(true);
   }
 
-  private storedPreferences(): NotificationPreferences {
+  storedPreferences(): NotificationPreferences {
     try {
       const raw = localStorage.getItem('bemo_notification_prefs');
       if (raw) {

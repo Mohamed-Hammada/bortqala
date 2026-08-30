@@ -1,0 +1,148 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819-v274-project-scheduling-schema
+      author: bemo-architect
+      changes:
+        # 1. Project Schedules Table
+        - createTable:
+            tableName: project_schedules
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: project_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: calendar_code, type: VARCHAR(50), defaultValue: "STANDARD_6DAY", constraints: { nullable: false } }
+              - column: { name: start_date, type: DATE }
+              - column: { name: end_date, type: DATE }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "DRAFT", constraints: { nullable: false } }
+              - column: { name: current_baseline_version, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: project_schedules
+            indexName: idx_prj_sched_app_project
+            columns:
+              - column: { name: app_id }
+              - column: { name: project_id }
+
+        # 2. Project Schedule Tasks Table
+        - createTable:
+            tableName: project_schedule_tasks
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: schedule_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: wbs_node_id, type: VARCHAR(36) }
+              - column: { name: parent_task_id, type: VARCHAR(36) }
+              - column: { name: task_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: name_en, type: VARCHAR(255) }
+              - column: { name: duration_days, type: INT, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: planned_start_date, type: DATE }
+              - column: { name: planned_end_date, type: DATE }
+              - column: { name: early_start_date, type: DATE }
+              - column: { name: early_end_date, type: DATE }
+              - column: { name: late_start_date, type: DATE }
+              - column: { name: late_end_date, type: DATE }
+              - column: { name: free_float_days, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: total_float_days, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: is_critical, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: percent_complete, type: "NUMERIC(5, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: is_milestone, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: constraint_type, type: VARCHAR(30), defaultValue: "ASAP", constraints: { nullable: false } }
+              - column: { name: constraint_date, type: DATE }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: project_schedule_tasks
+            indexName: idx_sched_task_app_sched_sort
+            columns:
+              - column: { name: app_id }
+              - column: { name: schedule_id }
+              - column: { name: sort_order }
+
+        # 3. Task Dependencies Table
+        - createTable:
+            tableName: task_dependencies
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: schedule_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: predecessor_task_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: successor_task_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: dependency_type, type: VARCHAR(10), defaultValue: "FS", constraints: { nullable: false } }
+              - column: { name: lag_days, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: task_dependencies
+            columnNames: app_id, schedule_id, predecessor_task_id, successor_task_id
+            constraintName: uq_task_dep_app_sched_pair
+
+        # 4. Schedule Baselines Table
+        - createTable:
+            tableName: schedule_baselines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: schedule_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: version_number, type: INT, constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: approved_by, type: VARCHAR(100) }
+              - column: { name: approved_at, type: BIGINT }
+              - column: { name: notes, type: TEXT }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: schedule_baselines
+            columnNames: app_id, schedule_id, version_number
+            constraintName: uq_sched_base_app_sched_ver
+
+        # 5. Schedule Baseline Tasks Table
+        - createTable:
+            tableName: schedule_baseline_tasks
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: baseline_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: task_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: baseline_start_date, type: DATE, constraints: { nullable: false } }
+              - column: { name: baseline_end_date, type: DATE, constraints: { nullable: false } }
+              - column: { name: duration_days, type: INT, constraints: { nullable: false } }
+              - column: { name: planned_cost, type: "NUMERIC(15, 2)", defaultValueNumeric: 0 }
+
+        - createIndex:
+            tableName: schedule_baseline_tasks
+            indexName: idx_sched_base_task_app_base
+            columns:
+              - column: { name: app_id }
+              - column: { name: baseline_id }
+
+        # 6. Task Resource Assignments Table
+        - createTable:
+            tableName: task_resource_assignments
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: task_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: resource_type, type: VARCHAR(30), defaultValue: "LABOR", constraints: { nullable: false } }
+              - column: { name: resource_name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: party_id, type: VARCHAR(36) }
+              - column: { name: employee_id, type: VARCHAR(36) }
+              - column: { name: quantity_allocated, type: "NUMERIC(10, 2)", defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: start_date, type: DATE }
+              - column: { name: end_date, type: DATE }
+              - column: { name: notes, type: VARCHAR(255) }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: task_resource_assignments
+            indexName: idx_task_res_assign_app_task
+            columns:
+              - column: { name: app_id }
+              - column: { name: task_id }

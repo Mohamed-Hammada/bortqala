@@ -15,33 +15,33 @@ public class ApprovalController {
     private final ApprovalWorkflowService service;
 
     @GetMapping("/approval-workflows")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('workflowDefinitions.read')")
     public List<ApprovalApi.WorkflowDefinitionResponse> listDefinitions() {
         return service.listWorkflowDefinitions();
     }
 
     @GetMapping("/approval-workflows/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('workflowDefinitions.read')")
     public ApprovalApi.WorkflowDefinitionResponse getDefinition(@PathVariable String id) {
         return service.getWorkflowDefinition(id);
     }
 
     @PostMapping("/approval-workflows")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('workflowDefinitions.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApprovalApi.WorkflowDefinitionResponse createDefinition(@Valid @RequestBody ApprovalApi.WorkflowDefinitionRequest request) {
         return service.createWorkflowDefinition(request);
     }
 
     @PutMapping("/approval-workflows/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('workflowDefinitions.manage')")
     public ApprovalApi.WorkflowDefinitionResponse updateDefinition(@PathVariable String id,
                                                                    @Valid @RequestBody ApprovalApi.WorkflowDefinitionRequest request) {
         return service.updateWorkflowDefinition(id, request);
     }
 
     @PostMapping("/approvals/submit")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'PROCUREMENT_MANAGER', 'HR_MANAGER', 'WORKFORCE_REVIEWER', 'ACCOUNTANT', 'PROCUREMENT_USER')")
+    @PreAuthorize("@auth.hasAnyPermission('approvals.read', 'approvals.decide')")
     public ApprovalApi.ApprovalInstanceDetailResponse submitDocument(@Valid @RequestBody ApprovalApi.SubmitDocumentRequest request) {
         return service.submit(request);
     }
@@ -91,14 +91,14 @@ public class ApprovalController {
     }
 
     @PutMapping("/approvals/{instanceId}/reassign")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('workflowDefinitions.manage')")
     public ApprovalApi.ApprovalInstanceDetailResponse reassign(@PathVariable String instanceId,
                                                                @Valid @RequestBody ApprovalApi.ReassignRequest request) {
         return service.reassign(instanceId, request);
     }
 
     @PostMapping("/approvals/escalate-overdue")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('workflowDefinitions.manage')")
     public int escalateOverdue() {
         return service.escalateOverdue();
     }

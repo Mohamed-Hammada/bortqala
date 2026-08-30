@@ -121,7 +121,7 @@ class BudgetServiceTests {
         assertThatThrownBy(() -> budgetService.encumberForOrder("po-1", "PO-100", DEPARTMENT,
                 new BigDecimal("1000.01"), LocalDate.of(2026, 7, 1), "user-a"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("يتجاوز مبلغ أمر الشراء");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("BUDGET_AVAILABILITY_BLOCKED"));
     }
 
     @Test
@@ -211,7 +211,7 @@ class BudgetServiceTests {
 
         assertThatThrownBy(() -> budgetService.createBudget(payload))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("غير موجود");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("BUDGET_DEPARTMENT_NOT_FOUND"));
     }
 
     @Test
@@ -221,7 +221,7 @@ class BudgetServiceTests {
 
         assertThatThrownBy(() -> budgetService.createBudget(payload))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("بين 1 و12");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("BUDGET_PERIOD_MONTH_INVALID"));
     }
 
     @Test
@@ -233,7 +233,7 @@ class BudgetServiceTests {
 
         assertThatThrownBy(() -> budgetService.deleteBudget(BUDGET_ID))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("التزامات نشطة");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("BUDGET_HAS_ACTIVE_ENCUMBRANCES"));
     }
 
     @Test

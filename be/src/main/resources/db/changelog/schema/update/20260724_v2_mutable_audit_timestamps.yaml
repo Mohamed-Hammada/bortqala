@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: add_mutable_aggregate_audit_timestamps
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: apps

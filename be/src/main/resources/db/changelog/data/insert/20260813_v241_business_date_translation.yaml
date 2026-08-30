@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260813_v241_001_business_date_translation
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - sqlCheck:

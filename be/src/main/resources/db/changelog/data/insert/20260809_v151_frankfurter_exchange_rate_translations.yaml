@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260809-v151-frankfurter-exchange-rate-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "Frankfurter informational exchange-rate hints: bilingual UI copy for the tax-currency online reference panel."
       changes:
         - loadData:

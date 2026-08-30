@@ -1,0 +1,118 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v389_helpdesk_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: helpdesk_categories
+      changes:
+        - createTable:
+            tableName: helpdesk_categories
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name_ar, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: name_en, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: sla_first_response_hours, type: int, constraints: { nullable: false }, defaultValueNumeric: 8 }
+              - column: { name: sla_resolution_hours, type: int, constraints: { nullable: false }, defaultValueNumeric: 48 }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: helpdesk_categories
+            indexName: idx_helpdesk_cat_app
+            columns:
+              - column: { name: app_id }
+        - createTable:
+            tableName: tickets
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: ticket_no, type: bigint, constraints: { nullable: false } }
+              - column: { name: requester_user_id, type: varchar(100) }
+              - column: { name: requester_party_id, type: varchar(36) }
+              - column: { name: category_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: title, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: description, type: varchar(4000) }
+              - column: { name: priority, type: varchar(20), constraints: { nullable: false }, defaultValue: "NORMAL" }
+              - column: { name: status, type: varchar(30), constraints: { nullable: false }, defaultValue: "NEW" }
+              - column: { name: assignee_user_id, type: varchar(100) }
+              - column: { name: first_response_at, type: timestamp }
+              - column: { name: resolved_at, type: timestamp }
+              - column: { name: due_first_response, type: timestamp }
+              - column: { name: due_resolution, type: timestamp }
+              - column: { name: sla_breach_first_response, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
+              - column: { name: sla_breach_resolution, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_status
+            columns:
+              - column: { name: status }
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_assignee
+            columns:
+              - column: { name: assignee_user_id }
+        - addUniqueConstraint:
+            tableName: tickets
+            columnNames: app_id, ticket_no
+            constraintName: uq_tickets_app_no
+        - createTable:
+            tableName: ticket_messages
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: ticket_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: author_user_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: body, type: varchar(8000), constraints: { nullable: false } }
+              - column: { name: internal_note, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
+              - column: { name: attachment_name, type: varchar(255) }
+              - column: { name: attachment_type, type: varchar(100) }
+              - column: { name: attachment_size, type: bigint }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+        - createIndex:
+            tableName: ticket_messages
+            indexName: idx_ticket_msg_ticket
+            columns:
+              - column: { name: ticket_id }
+        - createTable:
+            tableName: kb_articles
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: slug, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: title_ar, type: varchar(300), constraints: { nullable: false } }
+              - column: { name: title_en, type: varchar(300), constraints: { nullable: false } }
+              - column: { name: body_ar, type: varchar(20000) }
+              - column: { name: body_en, type: varchar(20000) }
+              - column: { name: tags, type: varchar(500) }
+              - column: { name: published, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
+              - column: { name: views, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: helpful_up, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: helpful_down, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: author_user_id, type: varchar(100) }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: kb_articles
+            indexName: idx_kb_articles_app
+            columns:
+              - column: { name: app_id }
+      rollback:
+        - dropTable: { tableName: ticket_messages }
+        - dropTable: { tableName: tickets }
+        - dropTable: { tableName: kb_articles }
+        - dropTable: { tableName: helpdesk_categories }

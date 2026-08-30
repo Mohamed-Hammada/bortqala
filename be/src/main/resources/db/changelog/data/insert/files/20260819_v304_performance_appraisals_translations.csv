@@ -1,0 +1,81 @@
+id;translation_key;locale;text_value
+v304-001;nav.performance;ar-EG;تقييم الأداء ومؤشرات KPIs
+v304-002;nav.performance;en-US;Performance & KPIs
+v304-003;nav.performanceHint;ar-EG;إدارة دورات تقييم الأداء ومؤشرات الأداء الرئيسية والخطط التطويرية
+v304-004;nav.performanceHint;en-US;Manage performance cycles, KPIs and development plans
+v304-005;performance.title;ar-EG;إدارة تقييم الأداء ومؤشرات KPIs
+v304-006;performance.title;en-US;Performance & KPI Management
+v304-007;performance.tabAppraisals;ar-EG;تقييمات الموظفين
+v304-008;performance.tabAppraisals;en-US;Employee Appraisals
+v304-009;performance.tabCycles;ar-EG;دورات التقييم
+v304-010;performance.tabCycles;en-US;Performance Cycles
+v304-011;performance.tabKpis;ar-EG;مؤشرات الأداء والكفاءات
+v304-012;performance.tabKpis;en-US;KPIs & Competencies
+v304-013;performance.newAppraisal;ar-EG;بدء تقييم جديد
+v304-014;performance.newAppraisal;en-US;New Appraisal
+v304-015;performance.newCycle;ar-EG;إنشاء دورة تقييم
+v304-016;performance.newCycle;en-US;New Evaluation Cycle
+v304-017;performance.newKpi;ar-EG;إضافة مؤشر أداء
+v304-018;performance.newKpi;en-US;Add KPI
+v304-019;performance.cycle;ar-EG;دورة التقييم
+v304-020;performance.cycle;en-US;Evaluation Cycle
+v304-021;performance.employee;ar-EG;الموظف
+v304-022;performance.employee;en-US;Employee
+v304-023;performance.reviewer;ar-EG;المقيم / المدير المباشر
+v304-024;performance.reviewer;en-US;Reviewer / Manager
+v304-025;performance.finalScore;ar-EG;الدرجة النهائية %
+v304-026;performance.finalScore;en-US;Final Score %
+v304-027;performance.ratingBand;ar-EG;مستوى الأداء
+v304-028;performance.ratingBand;en-US;Rating Band
+v304-029;performance.bandOutstanding;ar-EG;أداء متميز واستثنائي (90-100%)
+v304-030;performance.bandOutstanding;en-US;Outstanding (90-100%)
+v304-031;performance.bandExceeds;ar-EG;يتجاوز التوقعات (80-89%)
+v304-032;performance.bandExceeds;en-US;Exceeds Expectations (80-89%)
+v304-033;performance.bandMeets;ar-EG;يحقق التوقعات المطلوبة (65-79%)
+v304-034;performance.bandMeets;en-US;Meets Expectations (65-79%)
+v304-035;performance.bandNeedsImprovement;ar-EG;يحتاج إلى تحسين (50-64%)
+v304-036;performance.bandNeedsImprovement;en-US;Needs Improvement (50-64%)
+v304-037;performance.bandUnsatisfactory;ar-EG;أداء غير مرض (أقل من 50%)
+v304-038;performance.bandUnsatisfactory;en-US;Unsatisfactory (<50%)
+v304-039;performance.feedback;ar-EG;ملاحظات المدير والتوصيات
+v304-040;performance.feedback;en-US;Manager Feedback
+v304-041;performance.devPlan;ar-EG;الخطة التطويرية والتدريبية
+v304-042;performance.devPlan;en-US;Development Plan
+v304-043;performance.weight;ar-EG;الوزن النسبي %
+v304-044;performance.weight;en-US;Weight %
+v304-045;performance.targetValue;ar-EG;المستهدف
+v304-046;performance.targetValue;en-US;Target Value
+v304-047;performance.category;ar-EG;تصنيف المؤشر
+v304-048;performance.category;en-US;KPI Category
+v304-049;performance.finalize;ar-EG;اعتماد التقييم نهائياً
+v304-050;performance.finalize;en-US;Finalize Appraisal
+v304-051;performance.lockCycle;ar-EG;إغلاق وقفل الدورة
+v304-052;performance.lockCycle;en-US;Lock Cycle
+v304-053;performance.appraisalSaved;ar-EG;تم حفظ التقييم بنجاح
+v304-054;performance.appraisalSaved;en-US;Appraisal saved successfully
+v304-055;performance.appraisalFinalized;ar-EG;تم اعتماد وإغلاق التقييم بنجاح
+v304-056;performance.appraisalFinalized;en-US;Appraisal finalized successfully
+v304-057;performance.cycleSaved;ar-EG;تم إنشاء دورة التقييم بنجاح
+v304-058;performance.cycleSaved;en-US;Evaluation cycle created successfully
+v304-059;performance.kpiSaved;ar-EG;تم حفظ مؤشر الأداء بنجاح
+v304-060;performance.kpiSaved;en-US;KPI saved successfully
+v304-061;common.startDate;ar-EG;تاريخ البدء
+v304-062;common.startDate;en-US;Start Date
+v304-063;common.endDate;ar-EG;تاريخ الانتهاء
+v304-064;common.endDate;en-US;End Date
+v304-065;common.year;ar-EG;السنة
+v304-066;common.year;en-US;Year
+v304-067;common.titleAr;ar-EG;العنوان بالعربية
+v304-068;common.titleAr;en-US;Title (Arabic)
+v304-069;common.titleEn;ar-EG;العنوان بالإنجليزية
+v304-070;common.titleEn;en-US;Title (English)
+v304-071;common.view;ar-EG;عرض
+v304-072;common.view;en-US;View
+v304-073;performance.catOperational;ar-EG;تشغيلي
+v304-074;performance.catOperational;en-US;Operational
+v304-075;performance.catStrategic;ar-EG;استراتيجي
+v304-076;performance.catStrategic;en-US;Strategic
+v304-077;performance.catFinancial;ar-EG;مالي
+v304-078;performance.catFinancial;en-US;Financial
+v304-079;performance.catBehavioral;ar-EG;سلوكي وقيادي
+v304-080;performance.catBehavioral;en-US;Behavioral & Leadership

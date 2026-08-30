@@ -1,0 +1,243 @@
+<div class="site-custody-container">
+  <!-- Header Bar -->
+  <div class="custody-header">
+    <div class="titles">
+      <h3>{{ i18n.t('projects.custodyTitle') }}</h3>
+      <p class="subtitle">{{ i18n.t('projects.custodySubtitle') }}</p>
+    </div>
+    <button class="btn btn-primary" (click)="openIssueModal()">
+      + {{ i18n.t('projects.issueCustody') }}
+    </button>
+  </div>
+
+  <!-- Layout: Custodies List + Selected Custody Details -->
+  <div class="custody-grid" *ngIf="custodies().length > 0; else noCustodies">
+    <!-- Custodies Column -->
+    <div class="custody-sidebar">
+      <div
+        class="custody-card card"
+        *ngFor="let c of custodies()"
+        [class.selected]="c.id === selectedCustody()?.id"
+        (click)="selectedCustody.set(c)"
+      >
+        <div class="custody-top-row">
+          <span class="custody-code font-bold">{{ c.custodyCode }}</span>
+          <span class="badge" [class.badge-success]="c.status === 'ACTIVE'" [class.badge-neutral]="c.status === 'SETTLED'">
+            {{ c.status }}
+          </span>
+        </div>
+        <div class="custodian-name">{{ c.custodianName }}</div>
+        <div class="custody-meta">
+          <span class="type-badge">{{ c.custodyType }}</span>
+        </div>
+        <div class="balance-bar-wrapper">
+          <div class="balance-labels">
+            <span>{{ i18n.t('projects.remainingBalance') }}: <strong>{{ c.remainingBalance | number:'1.2-2' }}</strong></span>
+            <span>/ {{ c.initialAmount | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custody Details Panel -->
+    <div class="custody-details card" *ngIf="selectedCustody()">
+      <div class="details-header">
+        <div>
+          <h4>{{ selectedCustody()!.custodyCode }} — {{ selectedCustody()!.custodianName }}</h4>
+          <span class="badge badge-info">{{ selectedCustody()!.custodyType }}</span>
+          <span class="badge" [class.badge-success]="selectedCustody()!.status === 'ACTIVE'" [class.badge-neutral]="selectedCustody()!.status === 'SETTLED'">
+            {{ selectedCustody()!.status }}
+          </span>
+        </div>
+        <div class="details-actions" *ngIf="selectedCustody()!.status === 'ACTIVE'">
+          <button class="btn btn-sm btn-secondary" (click)="openExpenseModal()">
+            + {{ i18n.t('projects.addExpense') }}
+          </button>
+          <button class="btn btn-sm btn-outline-danger" (click)="openSettleModal()">
+            {{ i18n.t('projects.settleCustody') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Financial Metric Pills -->
+      <div class="metric-pills-row">
+        <div class="metric-pill">
+          <span class="label">{{ i18n.t('projects.initialAmount') }}</span>
+          <span class="val">{{ selectedCustody()!.initialAmount | number:'1.2-2' }}</span>
+        </div>
+        <div class="metric-pill">
+          <span class="label">{{ i18n.t('projects.remainingBalance') }}</span>
+          <span class="val highlight">{{ selectedCustody()!.remainingBalance | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Expenses Table -->
+      <div class="expenses-section">
+        <h5>{{ i18n.t('projects.expenses') }}</h5>
+        <table class="data-table" *ngIf="selectedCustody()!.expenses.length > 0; else noExpenses">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.date') }}</th>
+              <th>{{ i18n.t('projects.expenseCategory') }}</th>
+              <th>{{ i18n.t('common.description') }}</th>
+              <th>{{ i18n.t('projects.receiptNumber') }}</th>
+              <th>{{ i18n.t('common.amount') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let exp of selectedCustody()!.expenses">
+              <td>{{ exp.expenseDate | date:'yyyy-MM-dd' }}</td>
+              <td><span class="badge badge-neutral">{{ exp.category }}</span></td>
+              <td>{{ exp.description }}</td>
+              <td>{{ exp.receiptNumber || '—' }}</td>
+              <td class="font-bold">{{ exp.amount | number:'1.2-2' }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-success]="exp.status === 'APPROVED'"
+                  [class.badge-warning]="exp.status === 'SUBMITTED'"
+                  [class.badge-danger]="exp.status === 'REJECTED'"
+                >
+                  {{ exp.status }}
+                </span>
+              </td>
+              <td>
+                <div class="table-actions" *ngIf="exp.status === 'SUBMITTED'">
+                  <button class="btn btn-xs btn-success" (click)="approveExpense(exp)">
+                    ✓ {{ i18n.t('projects.approveExpense') }}
+                  </button>
+                  <button class="btn btn-xs btn-outline-danger" (click)="rejectExpense(exp)">
+                    ✕ {{ i18n.t('projects.rejectExpense') }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noExpenses>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noCustodies>
+    <div class="empty-state card">{{ i18n.t('common.noResults') }}</div>
+  </ng-template>
+
+  <!-- Issue Custody Modal -->
+  <div class="modal-overlay" *ngIf="showIssueModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>{{ i18n.t('projects.issueCustody') }}</h4>
+        <button class="btn-close" (click)="showIssueModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitIssueCustody()">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('projects.custodyCode') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="issueForm.custodyCode" name="custodyCode" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('projects.custodyType') }} *</label>
+            <select class="form-control" [(ngModel)]="issueForm.custodyType" name="custodyType" required>
+              <option value="CASH">{{ i18n.t('projects.cashCustody') }}</option>
+              <option value="MATERIAL">{{ i18n.t('projects.materialCustody') }}</option>
+              <option value="EQUIPMENT">{{ i18n.t('projects.equipmentCustody') }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('projects.custodian') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="issueForm.custodianName" name="custodianName" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('projects.initialAmount') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="issueForm.initialAmount" name="initialAmount" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <textarea class="form-control" [(ngModel)]="issueForm.notes" name="notes" rows="2"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showIssueModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving() || !issueForm.custodianName">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Record Expense Modal -->
+  <div class="modal-overlay" *ngIf="showExpenseModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>{{ i18n.t('projects.addExpense') }}</h4>
+        <button class="btn-close" (click)="showExpenseModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitExpense()">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('projects.expenseCategory') }} *</label>
+            <input type="text" class="form-control" [(ngModel)]="expenseForm.category" name="category" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.amount') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="expenseForm.amount" name="amount" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('projects.receiptNumber') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="expenseForm.receiptNumber" name="receipt" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.description') }} *</label>
+          <textarea class="form-control" [(ngModel)]="expenseForm.description" name="description" rows="3" required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showExpenseModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving() || !expenseForm.description">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Settle Custody Modal -->
+  <div class="modal-overlay" *ngIf="showSettleModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>{{ i18n.t('projects.settleCustody') }}</h4>
+        <button class="btn-close" (click)="showSettleModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitSettle()">
+        <div class="form-group">
+          <label>{{ i18n.t('projects.returnAmount') }} *</label>
+          <input type="number" class="form-control" [(ngModel)]="settleForm.amountReturned" name="returnAmount" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <textarea class="form-control" [(ngModel)]="settleForm.notes" name="notes" rows="3"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showSettleModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

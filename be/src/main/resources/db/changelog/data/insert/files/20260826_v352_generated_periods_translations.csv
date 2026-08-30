@@ -1,0 +1,5 @@
+id;translation_key;locale;text_value
+v352-001-ar;reports.alreadyGenerated;ar-EG;تم إنشاء تقرير معتمد لهذه الفترة
+v352-001-en;reports.alreadyGenerated;en-US;An approved report already exists for this period
+v352-002-ar;reports.viewExisting;ar-EG;عرض التقرير الحالي
+v352-002-en;reports.viewExisting;en-US;View existing report

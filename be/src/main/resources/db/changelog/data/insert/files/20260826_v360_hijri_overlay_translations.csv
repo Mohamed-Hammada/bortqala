@@ -1,0 +1,9 @@
+id;translation_key;locale;text_value
+v360-001-en;settings.calendarOverlay;en-US;Calendar Overlay
+v360-001-ar;settings.calendarOverlay;ar-EG;تقويم هجري
+v360-002-en;settings.calendarOverlayHint;en-US;Show Hijri date alongside Gregorian in report pages
+v360-002-ar;settings.calendarOverlayHint;ar-EG;إظهار التاريخ الهجري بجانب الميلادي في صفحات التقارير
+v360-003-en;settings.hijriOverlay;en-US;Show Hijri Date
+v360-003-ar;settings.hijriOverlay;ar-EG;إظهار التاريخ الهجري
+v360-004-en;settings.hijriOverlayHint;en-US;Display secondary Hijri label next to every Gregorian date
+v360-004-ar;settings.hijriOverlayHint;ar-EG;عرض تسمية جانبية هجرية بجانب كل تاريخ ميلادي

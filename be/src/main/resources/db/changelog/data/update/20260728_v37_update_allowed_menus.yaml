@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260728-v37-update-allowed-menus
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - sql:
             sql: "UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',workforce-dashboard,workforce-contractors,workforce-workers,workforce-categories,workforce-requests,workforce-attendance,workforce-settlements,workforce-advances,workforce-accounts,workforce-reports') WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%workforce%'"

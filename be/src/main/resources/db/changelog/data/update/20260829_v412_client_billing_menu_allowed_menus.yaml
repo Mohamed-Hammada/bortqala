@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829-v412-client-billing-menu-allowed-menus
+      author: bemo-erp
+      comment: "Grant the workforce client-billing screen to existing users (WP-17 manpower client billing menu)."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',workforce-client-billing')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%workforce-client-billing%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(allowed_menus, ',workforce-client-billing', '')
+              WHERE allowed_menus IS NOT NULL;

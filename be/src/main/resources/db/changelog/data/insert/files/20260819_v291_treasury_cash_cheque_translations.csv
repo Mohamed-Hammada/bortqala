@@ -1,0 +1,105 @@
+id;translation_key;locale;text_value
+v291-001;treasury.title;ar-EG;إدارة الخزائن والبنوك والشيكات
+v291-002;treasury.title;en-US;Treasury, Cash & Cheque Management
+v291-003;treasury.tabBanks;ar-EG;الحسابات البنكية والتسويات
+v291-004;treasury.tabBanks;en-US;Bank Accounts & Statements
+v291-005;treasury.tabCashboxes;ar-EG;الخزائن والعهدة النقدية
+v291-006;treasury.tabCashboxes;en-US;Cashboxes & Petty Cash
+v291-007;treasury.tabCheques;ar-EG;حافظة الشيكات (واردة وصادرة)
+v291-008;treasury.tabCheques;en-US;Cheque Portfolio (Received & Issued)
+v291-009;treasury.tabLiquidity;ar-EG;موقف السيولة النقدية الموحد
+v291-010;treasury.tabLiquidity;en-US;Unified Liquidity Position
+v291-011;treasury.addCashbox;ar-EG;إضافة خزينة جديدة
+v291-012;treasury.addCashbox;en-US;Add New Cashbox
+v291-013;treasury.recordCashTransaction;ar-EG;تسجيل حركة نقدية / تسوية
+v291-014;treasury.recordCashTransaction;en-US;Record Cash Movement / Adjustment
+v291-015;treasury.registerCheque;ar-EG;تسجيل شيك جديد
+v291-016;treasury.registerCheque;en-US;Register New Cheque
+v291-017;treasury.cashboxCode;ar-EG;كود الخزينة
+v291-018;treasury.cashboxCode;en-US;Cashbox Code
+v291-019;treasury.cashboxName;ar-EG;اسم الخزينة / العهدة
+v291-020;treasury.cashboxName;en-US;Cashbox Name / Custody
+v291-021;treasury.custodian;ar-EG;أمين الخزينة / العهدة
+v291-022;treasury.custodian;en-US;Custodian / Responsible Person
+v291-023;treasury.currentBalance;ar-EG;الرصيد الحالي
+v291-024;treasury.currentBalance;en-US;Current Balance
+v291-025;treasury.transactionType;ar-EG;نوع الحركة النقدية
+v291-026;treasury.transactionType;en-US;Transaction Type
+v291-027;treasury.voucherNumber;ar-EG;رقم السند / الإيصال
+v291-028;treasury.voucherNumber;en-US;Voucher Number
+v291-029;treasury.chequeNumber;ar-EG;رقم الشيك
+v291-030;treasury.chequeNumber;en-US;Cheque Number
+v291-031;treasury.chequeType;ar-EG;نوع الشيك
+v291-032;treasury.chequeType;en-US;Cheque Type
+v291-033;treasury.drawerPayee;ar-EG;الساحب / المستفيد
+v291-034;treasury.drawerPayee;en-US;Drawer / Payee
+v291-035;treasury.issueDate;ar-EG;تاريخ التحرير
+v291-036;treasury.issueDate;en-US;Issue Date
+v291-037;treasury.dueDate;ar-EG;تاريخ الاستحقاق
+v291-038;treasury.dueDate;en-US;Due Date
+v291-039;treasury.deposit;ar-EG;إيداع بالبنك
+v291-040;treasury.deposit;en-US;Deposit in Bank
+v291-041;treasury.collect;ar-EG;تحصيل / صرف
+v291-042;treasury.collect;en-US;Collect / Clear
+v291-043;treasury.bounce;ar-EG;ارتداد الشيك (رفض)
+v291-044;treasury.bounce;en-US;Bounce Cheque
+v291-045;treasury.cancel;ar-EG;إلغاء الشيك
+v291-046;treasury.cancel;en-US;Cancel Cheque
+v291-047;treasury.bounceReason;ar-EG;سبب الارتداد / الرفض
+v291-048;treasury.bounceReason;en-US;Bounce / Rejection Reason
+v291-049;treasury.statusReceived;ar-EG;مستلم (تحت التحصيل)
+v291-050;treasury.statusReceived;en-US;Received (Pending)
+v291-051;treasury.statusIssued;ar-EG;صادر
+v291-052;treasury.statusIssued;en-US;Issued
+v291-053;treasury.statusDeposited;ar-EG;مودع للتحصيل
+v291-054;treasury.statusDeposited;en-US;Deposited
+v291-055;treasury.statusCollected;ar-EG;محصل / مدفوع
+v291-056;treasury.statusCollected;en-US;Collected / Cleared
+v291-057;treasury.statusBounced;ar-EG;مرتد (مرفوض)
+v291-058;treasury.statusBounced;en-US;Bounced
+v291-059;treasury.statusCancelled;ar-EG;ملغي
+v291-060;treasury.statusCancelled;en-US;Cancelled
+v291-061;treasury.totalBankLiquidity;ar-EG;إجمالي أرصدة البنوك
+v291-062;treasury.totalBankLiquidity;en-US;Total Bank Balances
+v291-063;treasury.totalCashLiquidity;ar-EG;إجمالي النقدية بالخزائن
+v291-064;treasury.totalCashLiquidity;en-US;Total Cash in Hand
+v291-065;treasury.totalChequesUnderCollection;ar-EG;شيكات تحت التحصيل
+v291-066;treasury.totalChequesUnderCollection;en-US;Cheques Under Collection
+v291-067;treasury.totalNetLiquidity;ar-EG;صافي السيولة النقدية والشبه نقدية
+v291-068;treasury.totalNetLiquidity;en-US;Net Liquid Funds Position
+v291-069;treasury.physicalCountAdjustment;ar-EG;تسوية جرد فعلي للخزينة
+v291-070;treasury.physicalCountAdjustment;en-US;Physical Count Adjustment
+v291-071;treasury.pettyCashAdvance;ar-EG;صرف عهدة نقدية
+v291-072;treasury.pettyCashAdvance;en-US;Petty Cash Advance
+v291-073;treasury.pettyCashSettlement;ar-EG;تسوية وتصفية عهدة نقدية
+v291-074;treasury.pettyCashSettlement;en-US;Petty Cash Settlement
+v291-075;treasury.cashReceipt;ar-EG;سند قبض نقدي
+v291-076;treasury.cashReceipt;en-US;Cash Receipt Voucher
+v291-077;treasury.cashPayment;ar-EG;سند صرف نقدي
+v291-078;treasury.cashPayment;en-US;Cash Payment Voucher
+v291-079;treasury.noCashboxes;ar-EG;لا توجد خزائن مسجلة حالياً
+v291-080;treasury.noCashboxes;en-US;No cashboxes registered yet
+v291-081;treasury.noCheques;ar-EG;لا توجد شيكات مسجلة في الحافظة
+v291-082;treasury.noCheques;en-US;No cheques registered in portfolio
+v291-083;banks.edit;ar-EG;تعديل الحساب البنكي
+v291-084;banks.edit;en-US;Edit Bank Account
+v291-085;banks.reconciliation.amount;ar-EG;المبلغ
+v291-086;banks.reconciliation.amount;en-US;Amount
+v291-087;banks.reconciliation.date;ar-EG;التاريخ
+v291-088;banks.reconciliation.date;en-US;Date
+v291-089;banks.reconciliation.description;ar-EG;الوصف والبيان
+v291-090;banks.reconciliation.description;en-US;Description
+v291-091;banks.reconciliation.latestBalance;ar-EG;آخر رصيد مطابق
+v291-092;banks.reconciliation.latestBalance;en-US;Latest Statement Balance
+v291-093;banks.reconciliation.matchedAmount;ar-EG;المبلغ المطابق
+v291-094;banks.reconciliation.matchedAmount;en-US;Matched Amount
+v291-095;banks.reconciliation.noStatements;ar-EG;لا توجد كشوف حساب مسجلة
+v291-096;banks.reconciliation.noStatements;en-US;No statements recorded
+v291-097;banks.reconciliation.postDifference;ar-EG;ترحيل فروق التسوية
+v291-098;banks.reconciliation.postDifference;en-US;Post Reconciliation Differences
+v291-099;banks.reconciliation.statementsTitle;ar-EG;كشوف الحسابات البنكية
+v291-100;banks.reconciliation.statementsTitle;en-US;Bank Statements
+v291-101;banks.reconciliation.status;ar-EG;الحالة
+v291-102;banks.reconciliation.status;en-US;Status
+v291-103;banks.reconciliation.unmatchedCount;ar-EG;معاملات غير مطابقة
+v291-104;banks.reconciliation.unmatchedCount;en-US;Unmatched items

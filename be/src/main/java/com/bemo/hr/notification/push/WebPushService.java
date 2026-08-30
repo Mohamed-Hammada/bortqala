@@ -67,16 +67,31 @@ public class WebPushService {
 
     @Transactional
     public WebPushApi.SubscriptionStatus register(String username, WebPushApi.SubscriptionPayload payload) {
-        requireConfigured();
-        String hash = endpointHash(payload.endpoint());
+        boolean android = payload.isAndroid();
+        if (!android) requireConfigured();
+        String endpoint = resolveEndpoint(payload);
+        String hash = endpointHash(endpoint);
+        String p256dh = payload.keys() == null ? "fcm:p256dh" : orBlankMarker(payload.keys().p256dh());
+        String auth = payload.keys() == null ? "fcm:auth" : orBlankMarker(payload.keys().auth());
         WebPushSubscription subscription = subscriptionRepository.findByEndpointHash(hash)
                 .orElseGet(() -> new WebPushSubscription(
-                        username, payload.endpoint(), hash, payload.keys().p256dh(), payload.keys().auth(),
-                        payload.locale(), payload.pushApprovals(), payload.pushPayroll()));
-        subscription.update(username, payload.endpoint(), hash, payload.keys().p256dh(), payload.keys().auth(),
+                        username, endpoint, hash, p256dh, auth,
+                        payload.locale(), payload.pushApprovals(), payload.pushPayroll(), payload.platform(), payload.fcmToken()));
+        subscription.update(username, endpoint, hash, p256dh, auth,
                 payload.locale(), payload.pushApprovals(), payload.pushPayroll());
+        if (android) subscription.registerFcmToken(payload.fcmToken());
         subscriptionRepository.save(subscription);
         return new WebPushApi.SubscriptionStatus(true);
+    }
+
+    private String orBlankMarker(String value) {
+        return value == null || value.isBlank() ? "fcm:unused" : value.strip();
+    }
+
+    private String resolveEndpoint(WebPushApi.SubscriptionPayload payload) {
+        if (!payload.isAndroid()) return payload.endpoint();
+        if (payload.endpoint() != null && !payload.endpoint().isBlank()) return payload.endpoint();
+        return "android://fcm/" + endpointHash(payload.fcmToken()).substring(0, 32);
     }
 
     @Transactional
@@ -109,7 +124,7 @@ public class WebPushService {
         List<DeliveryTarget> targets = jdbcTemplate.query("""
                 select id, endpoint, p256dh_key, auth_key, locale, push_approvals, push_payroll
                   from web_push_subscriptions
-                 where app_id = ? and lower(username) = lower(?) and enabled = true
+                 where app_id = ? and lower(username) = lower(?) and enabled = true and platform = 'WEB'
                 """, (ResultSet rs, int rowNum) -> new DeliveryTarget(
                 rs.getString("id"), rs.getString("endpoint"), rs.getString("p256dh_key"),
                 rs.getString("auth_key"), rs.getString("locale"), rs.getBoolean("push_approvals"),

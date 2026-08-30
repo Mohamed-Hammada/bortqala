@@ -1,0 +1,77 @@
+id;translation_key;locale;text_value
+v433-001;FAMILY_LINK_ALREADY_EXISTS;ar-EG;تم ربط هذا الفرد بالعائلة بالفعل
+v433-002;FAMILY_LINK_ALREADY_EXISTS;en-US;Family member link already exists
+v433-003;FAMILY_LINK_SELF_REFERENCE;ar-EG;لا يمكن ربط المريض بنفسه كولي أمر أو مرافق
+v433-004;FAMILY_LINK_SELF_REFERENCE;en-US;Cannot link patient to self as guardian
+v433-005;FAMILY_LINK_NOT_FOUND;ar-EG;سجل ربط العائلة غير موجود
+v433-006;FAMILY_LINK_NOT_FOUND;en-US;Family link record not found
+v433-007;TELEMED_SESSION_NOT_FOUND;ar-EG;جلسة الكشف عن بعد غير موجودة
+v433-008;TELEMED_SESSION_NOT_FOUND;en-US;Telemedicine session not found
+v433-009;TELEMED_SESSION_ALREADY_ENDED;ar-EG;تم إنهاء جلسة الكشف عن بعد بالفعل
+v433-010;TELEMED_SESSION_ALREADY_ENDED;en-US;Telemedicine session already ended or cancelled
+v433-011;LICENSE_RECORD_NOT_FOUND;ar-EG;سجل ترخيص مزاولة المهنة غير موجود
+v433-012;LICENSE_RECORD_NOT_FOUND;en-US;Medical license record not found
+v433-013;PATIENT_DRUG_ALLERGY_WARNING;ar-EG;تحذير: المريض يعاني من حساسية مؤكدة تجاه هذا العقار أو مشتقاته
+v433-014;PATIENT_DRUG_ALLERGY_WARNING;en-US;Warning: Patient has a recorded severe allergy to this drug or its class
+v433-015;clinic.familyLinks;ar-EG;أفراد العائلة وأولياء الأمور
+v433-016;clinic.familyLinks;en-US;Family & Guardians
+v433-017;clinic.addFamilyLink;ar-EG;ربط فرد من العائلة
+v433-018;clinic.addFamilyLink;en-US;Link Family Member
+v433-019;clinic.relationshipType;ar-EG;صلة القرابة
+v433-020;clinic.relationshipType;en-US;Relationship
+v433-021;clinic.guardian;ar-EG;ولي الأمر / المرافق
+v433-022;clinic.guardian;en-US;Guardian / Primary Payer
+v433-023;clinic.telemedicine;ar-EG;الاستشارات الطبية عن بعد (Telemedicine)
+v433-024;clinic.telemedicine;en-US;Telemedicine Consultations
+v433-025;clinic.scheduleTelemedicine;ar-EG;حجز استشارة مرئية عن بعد
+v433-026;clinic.scheduleTelemedicine;en-US;Schedule Video Consultation
+v433-027;clinic.meetingLink;ar-EG;رابط غرفة الكشف الافتراضية
+v433-028;clinic.meetingLink;en-US;Virtual Room Link
+v433-029;clinic.startVideo;ar-EG;بدء الكشف المرئي
+v433-030;clinic.startVideo;en-US;Start Video Call
+v433-031;clinic.pediatricDoseCalculator;ar-EG;حاسبة جرعات الأطفال حسب الوزن
+v433-032;clinic.pediatricDoseCalculator;en-US;Pediatric Weight-Based Dose Calculator
+v433-033;clinic.weightKg;ar-EG;وزن الطفل (كجم)
+v433-034;clinic.weightKg;en-US;Child Weight (kg)
+v433-035;clinic.doseMgPerKg;ar-EG;الجرعة (مجم / كجم / يوم)
+v433-036;clinic.doseMgPerKg;en-US;Dose (mg/kg/day)
+v433-037;clinic.frequencyPerDay;ar-EG;عدد الجرعات في اليوم
+v433-038;clinic.frequencyPerDay;en-US;Doses Per Day
+v433-039;clinic.drugConcentration;ar-EG;تركيز الدواء (مجم / 5 مل أو مجم / مل)
+v433-040;clinic.drugConcentration;en-US;Concentration (mg/5ml or mg/ml)
+v433-041;clinic.calculatedDose;ar-EG;الجرعة المحسوبة
+v433-042;clinic.calculatedDose;en-US;Calculated Dose
+v433-043;clinic.singleDose;ar-EG;الجرعة في المرة الواحدة
+v433-044;clinic.singleDose;en-US;Single Dose
+v433-045;clinic.dailyDose;ar-EG;إجمالي الجرعة اليومية
+v433-046;clinic.dailyDose;en-US;Total Daily Dose
+v433-047;clinic.licenseRegistry;ar-EG;سجل تراخيص مزاولة المهنة والجهات الصحية
+v433-048;clinic.licenseRegistry;en-US;Medical Licenses & MOH Registry
+v433-049;clinic.licenseNumber;ar-EG;رقم ترخيص مزاولة المهنة
+v433-050;clinic.licenseNumber;en-US;License Number
+v433-051;clinic.issuingAuthority;ar-EG;جهة الإصدار (وزارة الصحة / النقابة)
+v433-052;clinic.issuingAuthority;en-US;Issuing Authority (MOH / Syndicate)
+v433-053;clinic.licenseExpiry;ar-EG;تاريخ انتهاء الترخيص
+v433-054;clinic.licenseExpiry;en-US;License Expiry Date
+v433-055;clinic.licenseValid;ar-EG;سارٍ
+v433-056;clinic.licenseValid;en-US;Valid
+v433-057;clinic.licenseExpired;ar-EG;منتهٍ
+v433-058;clinic.licenseExpired;en-US;Expired
+v433-059;clinic.licenseExpiringSoon;ar-EG;يقترب من الانتهاء
+v433-060;clinic.licenseExpiringSoon;en-US;Expiring Soon
+v433-061;nav.medicalTools;ar-EG;الأدوات والاستشارات الطبية
+v433-062;nav.medicalTools;en-US;Medical Tools & Telemedicine
+v433-063;nav.medicalToolsHint;ar-EG;حاسبة جرعات الأطفال، الكشف عن بعد، وسجل تراخيص مزاولة المهنة
+v433-064;nav.medicalToolsHint;en-US;Pediatric dose calculator, telemedicine sessions, and license registry
+v433-065;clinic.roomName;ar-EG;اسم الغرفة الافتراضية
+v433-066;clinic.roomName;en-US;Virtual Room Name
+v433-067;common.doctor;ar-EG;الطبيب
+v433-068;common.doctor;en-US;Doctor
+v433-069;common.patient;ar-EG;المريض
+v433-070;common.patient;en-US;Patient
+v433-071;clinic.mg;ar-EG;مجم
+v433-072;clinic.mg;en-US;mg
+v433-073;clinic.ml;ar-EG;مل
+v433-074;clinic.ml;en-US;ml
+v433-075;INVALID_DOSE_FREQUENCY;ar-EG;عدد الجرعات في اليوم يجب أن يكون أكبر من الصفر
+v433-076;INVALID_DOSE_FREQUENCY;en-US;Dose frequency must be greater than zero

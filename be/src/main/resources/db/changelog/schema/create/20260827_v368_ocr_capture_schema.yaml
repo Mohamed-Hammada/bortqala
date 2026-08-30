@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v368_ocr_capture_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: ocr_capture_jobs
+      changes:
+        - createTable:
+            tableName: ocr_capture_jobs
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: uploaded_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: image_original_name, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: image_content_type, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: image_storage_path, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: extracted_payload, type: text }
+              - column: { name: confidence_summary, type: varchar(200) }
+              - column: { name: error_code, type: varchar(100) }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: ocr_capture_jobs
+            indexName: idx_ocr_capture_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: ocr_capture_jobs
+            indexName: idx_ocr_capture_status
+            columns:
+              - column: { name: status }
+      rollback:
+        - dropTable:
+            tableName: ocr_capture_jobs

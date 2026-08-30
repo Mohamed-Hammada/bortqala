@@ -1,0 +1,86 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v371_payment_links_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: payment_links
+      changes:
+        - createTable:
+            tableName: payment_links
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: kind, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: ref_id, type: varchar(36) }
+              - column: { name: amount, type: "numeric(18,2)", constraints: { nullable: false } }
+              - column: { name: currency, type: varchar(3), constraints: { nullable: false }, defaultValue: "EGP" }
+              - column: { name: token, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "PENDING" }
+              - column: { name: gateway_ref, type: varchar(200) }
+              - column: { name: description, type: varchar(500) }
+              - column: { name: company_name, type: varchar(255) }
+              - column: { name: expires_at, type: timestamp }
+              - column: { name: paid_at, type: timestamp }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: payment_links
+            columnNames: app_id, token
+            constraintName: uq_payment_link_app_token
+        - createIndex:
+            tableName: payment_links
+            indexName: idx_payment_link_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: payment_links
+            indexName: idx_payment_link_token
+            columns:
+              - column: { name: token }
+        - createIndex:
+            tableName: payment_links
+            indexName: idx_payment_link_status
+            columns:
+              - column: { name: status }
+      rollback:
+        - dropTable:
+            tableName: payment_links
+
+  - changeSet:
+      id: 20260827_v371_gateway_transactions_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: gateway_transactions
+      changes:
+        - createTable:
+            tableName: gateway_transactions
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: link_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: provider_txn_id, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: raw_payload, type: text }
+              - column: { name: amount, type: "numeric(18,2)", constraints: { nullable: false } }
+              - column: { name: paid_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: gateway_transactions
+            columnNames: app_id, provider_txn_id
+            constraintName: uq_gateway_txn_app_provider
+        - createIndex:
+            tableName: gateway_transactions
+            indexName: idx_gateway_txn_link
+            columns:
+              - column: { name: link_id }
+      rollback:
+        - dropTable:
+            tableName: gateway_transactions

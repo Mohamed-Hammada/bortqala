@@ -1,0 +1,94 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260820-v322-001
+      author: mohamed.hammada
+      changes:
+        - addColumn:
+            tableName: labor_requests
+            columns:
+              - column:
+                  name: project_id
+                  type: VARCHAR(36)
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)
+              - column:
+                  name: site_location
+                  type: VARCHAR(160)
+
+  - changeSet:
+      id: 20260820-v322-002
+      author: mohamed.hammada
+      changes:
+        - addColumn:
+            tableName: labor_dispatches
+            columns:
+              - column:
+                  name: project_id
+                  type: VARCHAR(36)
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)
+              - column:
+                  name: site_location
+                  type: VARCHAR(160)
+
+  - changeSet:
+      id: 20260820-v322-003
+      author: mohamed.hammada
+      changes:
+        - addColumn:
+            tableName: worker_assignments
+            columns:
+              - column:
+                  name: project_id
+                  type: VARCHAR(36)
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)
+              - column:
+                  name: site_location
+                  type: VARCHAR(160)
+
+  - changeSet:
+      id: 20260820-v322-004
+      author: mohamed.hammada
+      changes:
+        - addColumn:
+            tableName: manual_attendance_entries
+            columns:
+              - column:
+                  name: project_id
+                  type: VARCHAR(36)
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)
+
+  - changeSet:
+      id: 20260820-v322-005
+      author: mohamed.hammada
+      changes:
+        - addColumn:
+            tableName: contractor_settlement_lines
+            columns:
+              - column:
+                  name: project_id
+                  type: VARCHAR(36)
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)

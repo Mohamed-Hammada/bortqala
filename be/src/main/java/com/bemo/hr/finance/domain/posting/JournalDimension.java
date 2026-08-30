@@ -28,6 +28,12 @@ public class JournalDimension {
     @Column(name = "department_id", length = 36)
     private String departmentId;
 
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
+
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
@@ -35,11 +41,18 @@ public class JournalDimension {
     }
 
     public JournalDimension(String journalEntryLineId, String costCenterId, String projectId, String departmentId) {
+        this(journalEntryLineId, costCenterId, projectId, departmentId, null, null);
+    }
+
+    public JournalDimension(String journalEntryLineId, String costCenterId, String projectId, String departmentId,
+                            String wbsNodeId, String costCodeId) {
         this.id = UUID.randomUUID().toString();
         this.journalEntryLineId = journalEntryLineId;
         this.costCenterId = costCenterId;
         this.projectId = projectId;
         this.departmentId = departmentId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
     }
 
     @PrePersist
@@ -69,6 +82,14 @@ public class JournalDimension {
 
     public String getDepartmentId() {
         return departmentId;
+    }
+
+    public String getWbsNodeId() {
+        return wbsNodeId;
+    }
+
+    public String getCostCodeId() {
+        return costCodeId;
     }
 
     public long getCreatedAt() {

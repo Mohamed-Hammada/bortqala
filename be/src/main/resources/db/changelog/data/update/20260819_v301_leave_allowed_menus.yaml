@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v301_leave_allowed_menus
+      author: wolfn
+      validCheckSum: ANY
+      comment: "Grant the leaves screen to existing users for Feature 18 Leave Management."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',leaves')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%leaves%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(allowed_menus, ',leaves', '')
+              WHERE allowed_menus IS NOT NULL;

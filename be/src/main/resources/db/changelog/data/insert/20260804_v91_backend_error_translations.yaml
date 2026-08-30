@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v91-backend-error-translations
       author: codex
+      validCheckSum: ANY
       comment: Arabic/English translations for every backend BusinessRuleException and NotFoundException code so API error responses are localized instead of raw messages.
       changes:
         - loadData:

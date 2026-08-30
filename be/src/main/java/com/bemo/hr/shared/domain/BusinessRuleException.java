@@ -13,6 +13,10 @@ public class BusinessRuleException extends RuntimeException {
         this(message, "BUSINESS_CONFLICT", HttpStatus.CONFLICT, List.of());
     }
 
+    public BusinessRuleException(String message, String code) {
+        this(message, code, HttpStatus.BAD_REQUEST, List.of());
+    }
+
     public BusinessRuleException(String message, String code, HttpStatus status) {
         this(message, code, status, List.of());
     }

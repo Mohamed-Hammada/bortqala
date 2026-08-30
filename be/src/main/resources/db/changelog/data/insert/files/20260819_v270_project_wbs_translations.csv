@@ -1,0 +1,353 @@
+id;translation_key;locale;text_value
+v270-001;workspace.projects;ar-EG;إدارة المشاريع والإنشاءات
+v270-002;workspace.projects;en-US;Projects & Construction
+v270-003;nav.projects;ar-EG;سجل المشاريع وهيكل العمل
+v270-004;nav.projects;en-US;Projects & WBS Register
+v270-005;nav.projectsHint;ar-EG;إدارة سجل المشاريع وهيكل تجزئة العمل وجداول الكميات والمقايسات WBS / BOQ
+v270-006;nav.projectsHint;en-US;Manage project register, work breakdown structures, and BOQ items
+v270-007;projects.title;ar-EG;سجل المشاريع وهيكل العمل
+v270-008;projects.title;en-US;Projects & WBS Register
+v270-009;projects.subtitle;ar-EG;إدارة المشاريع والمواقع والعقود ومخطط تجزئة العمل والمقايسة
+v270-010;projects.subtitle;en-US;Manage construction projects, sites, contracts, and BOQ work breakdown
+v270-011;projects.createProject;ar-EG;إضافة مشروع جديد
+v270-012;projects.createProject;en-US;New Project
+v270-013;projects.kpiTotal;ar-EG;إجمالي المشاريع
+v270-014;projects.kpiTotal;en-US;Total Projects
+v270-015;projects.kpiActive;ar-EG;المشاريع النشطة
+v270-016;projects.kpiActive;en-US;Active Projects
+v270-017;projects.kpiOnHold;ar-EG;المتوقفة مؤقتاً
+v270-018;projects.kpiOnHold;en-US;On Hold
+v270-019;projects.kpiCompleted;ar-EG;المشاريع المكتملة
+v270-020;projects.kpiCompleted;en-US;Completed Projects
+v270-021;projects.kpiContractValue;ar-EG;إجمالي قيمة العقود
+v270-022;projects.kpiContractValue;en-US;Total Contract Value
+v270-023;projects.kpiPlannedAmount;ar-EG;إجمالي المخطط (BOQ)
+v270-024;projects.kpiPlannedAmount;en-US;Total Planned (BOQ)
+v270-025;projects.searchPlaceholder;ar-EG;البحث في المشاريع بالكود أو الاسم أو الموقع...
+v270-026;projects.searchPlaceholder;en-US;Search projects by code, name, site...
+v270-027;projects.statusAll;ar-EG;كل الحالات
+v270-028;projects.statusAll;en-US;All Statuses
+v270-029;projects.statusDraft;ar-EG;مسودة
+v270-030;projects.statusDraft;en-US;Draft
+v270-031;projects.statusActive;ar-EG;نشط / جاري
+v270-032;projects.statusActive;en-US;Active
+v270-033;projects.statusOnHold;ar-EG;متوقف مؤقتاً
+v270-034;projects.statusOnHold;en-US;On Hold
+v270-035;projects.statusCompleted;ar-EG;مكتمل
+v270-036;projects.statusCompleted;en-US;Completed
+v270-037;projects.statusClosed;ar-EG;مغلق
+v270-038;projects.statusClosed;en-US;Closed
+v270-039;projects.code;ar-EG;كود المشروع
+v270-040;projects.code;en-US;Project Code
+v270-041;projects.name;ar-EG;اسم المشروع
+v270-042;projects.name;en-US;Project Name
+v270-043;projects.siteAddress;ar-EG;الموقع / العنوان
+v270-044;projects.siteAddress;en-US;Site Address
+v270-045;projects.contractValue;ar-EG;قيمة العقد
+v270-046;projects.contractValue;en-US;Contract Value
+v270-047;projects.plannedAmount;ar-EG;المبلغ المخطط (BOQ)
+v270-048;projects.plannedAmount;en-US;Planned Amount (BOQ)
+v270-049;projects.duration;ar-EG;مدة المشروع
+v270-050;projects.duration;en-US;Duration
+v270-051;projects.status;ar-EG;الحالة
+v270-052;projects.status;en-US;Status
+v270-053;projects.actions;ar-EG;الإجراءات
+v270-054;projects.actions;en-US;Actions
+v270-055;projects.openWorkbench;ar-EG;فتح منصة عمل المشروع
+v270-056;projects.openWorkbench;en-US;Open Project Workbench
+v270-057;projects.delete;ar-EG;حذف
+v270-058;projects.delete;en-US;Delete
+v270-059;projects.deleteConfirmTitle;ar-EG;تأكيد حذف المشروع
+v270-060;projects.deleteConfirmTitle;en-US;Confirm Project Deletion
+v270-061;projects.deleteConfirmMessage;ar-EG;هل أنت متأكد من حذف هذا المشروع المسودة؟ سيتم حذف جميع بنود هيكل العمل المرتبطة به نهائياً.
+v270-062;projects.deleteConfirmMessage;en-US;Are you sure you want to delete this draft project? All associated WBS nodes will be permanently removed.
+v270-063;projects.createTitle;ar-EG;إنشاء مشروع جديد
+v270-064;projects.createTitle;en-US;Create New Project
+v270-065;projects.formCode;ar-EG;كود المشروع
+v270-066;projects.formCode;en-US;Project Code
+v270-067;projects.formCodePlaceholder;ar-EG;مثال: PRJ-2026-001
+v270-068;projects.formCodePlaceholder;en-US;e.g. PRJ-2026-001
+v270-069;projects.formName;ar-EG;اسم المشروع بالعربية
+v270-070;projects.formName;en-US;Project Name (Arabic)
+v270-071;projects.formNamePlaceholder;ar-EG;مثال: إنشاء برج الأعمال الإداري
+v270-072;projects.formNamePlaceholder;en-US;e.g. Business Tower Construction
+v270-073;projects.formNameEn;ar-EG;اسم المشروع بالإنجليزية
+v270-074;projects.formNameEn;en-US;Project Name (English)
+v270-075;projects.formNameEnPlaceholder;ar-EG;e.g. Business Tower Construction
+v270-076;projects.formNameEnPlaceholder;en-US;e.g. Business Tower Construction
+v270-077;projects.formSiteAddress;ar-EG;موقع المشروع
+v270-078;projects.formSiteAddress;en-US;Site Address
+v270-079;projects.formSiteAddressPlaceholder;ar-EG;مثال: القطعة 14، الحي المالي، العاصمة الإدارية
+v270-080;projects.formSiteAddressPlaceholder;en-US;e.g. Plot 14, Financial District
+v270-081;projects.formContractNumber;ar-EG;رقم العقد
+v270-082;projects.formContractNumber;en-US;Contract Number
+v270-083;projects.formContractNumberPlaceholder;ar-EG;مثال: CNT-2026-089
+v270-084;projects.formContractNumberPlaceholder;en-US;e.g. CNT-2026-089
+v270-085;projects.formContractValue;ar-EG;قيمة العقد
+v270-086;projects.formContractValue;en-US;Contract Value
+v270-087;projects.formCurrency;ar-EG;العملة
+v270-088;projects.formCurrency;en-US;Currency
+v270-089;projects.formStartDate;ar-EG;تاريخ البدء
+v270-090;projects.formStartDate;en-US;Start Date
+v270-091;projects.formEndDate;ar-EG;تاريخ الانتهاء
+v270-092;projects.formEndDate;en-US;End Date
+v270-093;projects.formDescription;ar-EG;الوصف ونطاق العمل
+v270-094;projects.formDescription;en-US;Description & Scope
+v270-095;projects.formDescriptionPlaceholder;ar-EG;اكتب وصفاً مختصراً لنطاق عمل المشروع...
+v270-096;projects.formDescriptionPlaceholder;en-US;Enter a brief description of the project scope...
+v270-097;projects.formBudgetBlocking;ar-EG;إلزام مالي بالميزانية (منع التجاوز الصارم)
+v270-098;projects.formBudgetBlocking;en-US;Budget Blocking (Strict Overspend Prevention)
+v270-099;projects.loadError;ar-EG;تعذر تحميل بيانات المشاريع
+v270-100;projects.loadError;en-US;Failed to load project data
+v270-101;projects.createdSuccess;ar-EG;تم إنشاء المشروع بنجاح
+v270-102;projects.createdSuccess;en-US;Project created successfully
+v270-103;projects.createError;ar-EG;تعذر إنشاء المشروع
+v270-104;projects.createError;en-US;Failed to create project
+v270-105;projects.deletedSuccess;ar-EG;تم حذف المشروع بنجاح
+v270-106;projects.deletedSuccess;en-US;Project deleted successfully
+v270-107;projects.deleteError;ar-EG;تعذر حذف المشروع
+v270-108;projects.deleteError;en-US;Failed to delete project
+v270-109;projects.emptyTitle;ar-EG;لا توجد مشاريع مسجلة
+v270-110;projects.emptyTitle;en-US;No projects registered
+v270-111;projects.emptyDesc;ar-EG;ابدأ بإنشاء أول مشروع لإدارة هيكل العمل ومقايسات الكميات
+v270-112;projects.emptyDesc;en-US;Start by creating your first project to manage WBS and BOQ items
+v270-113;projects.loading;ar-EG;جارٍ تحميل بيانات المشروع...
+v270-114;projects.loading;en-US;Loading project data...
+v270-115;projects.backToProjects;ar-EG;العودة إلى سجل المشاريع
+v270-116;projects.backToProjects;en-US;Back to Projects
+v270-117;projects.actionActivate;ar-EG;تفعيل المشروع
+v270-118;projects.actionActivate;en-US;Activate Project
+v270-119;projects.actionHold;ar-EG;إيقاف مؤقت
+v270-120;projects.actionHold;en-US;Hold Project
+v270-121;projects.actionComplete;ar-EG;إكمال المشروع
+v270-122;projects.actionComplete;en-US;Complete Project
+v270-123;projects.actionClose;ar-EG;إغلاق المشروع
+v270-124;projects.actionClose;en-US;Close Project
+v270-125;projects.actionReopen;ar-EG;إعادة فتح المشروع
+v270-126;projects.actionReopen;en-US;Reopen Project
+v270-127;projects.tabWbs;ar-EG;هيكل العمل والمقايسة (WBS / BOQ)
+v270-128;projects.tabWbs;en-US;WBS / BOQ Tree
+v270-129;projects.tabOverview;ar-EG;نظرة عامة وبيانات العقد
+v270-130;projects.tabOverview;en-US;Overview & Contract
+v270-131;projects.tabCostCodes;ar-EG;أكواد التكلفة
+v270-132;projects.tabCostCodes;en-US;Cost Codes
+v270-133;projects.tabRoles;ar-EG;أطراف المشروع والشركاء
+v270-134;projects.tabRoles;en-US;Stakeholders & Roles
+v270-135;projects.overviewContractInfo;ar-EG;بيانات العقد والموقع
+v270-136;projects.overviewContractInfo;en-US;Contract & Site Information
+v270-137;projects.editProjectTitle;ar-EG;تعديل بيانات المشروع
+v270-138;projects.editProjectTitle;en-US;Edit Project Details
+v270-139;projects.activatedSuccess;ar-EG;تم تفعيل المشروع بنجاح
+v270-140;projects.activatedSuccess;en-US;Project activated successfully
+v270-141;projects.heldSuccess;ar-EG;تم إيقاف المشروع مؤقتاً
+v270-142;projects.heldSuccess;en-US;Project placed on hold
+v270-143;projects.completedSuccess;ar-EG;تم تحديد المشروع كمكتمل
+v270-144;projects.completedSuccess;en-US;Project marked as completed
+v270-145;projects.closeConfirmTitle;ar-EG;تأكيد إغلاق المشروع
+v270-146;projects.closeConfirmTitle;en-US;Confirm Project Closure
+v270-147;projects.closeConfirmMessage;ar-EG;إغلاق المشروع سيمنع أي تعديلات إضافية على هيكل العمل وبنود المقايسة. هل تريد المتابعة؟
+v270-148;projects.closeConfirmMessage;en-US;Closing the project will lock all WBS and BOQ modifications. Do you want to proceed?
+v270-149;projects.closedSuccess;ar-EG;تم إغلاق المشروع بنجاح
+v270-150;projects.closedSuccess;en-US;Project closed successfully
+v270-151;projects.reopenedSuccess;ar-EG;تمت إعادة فتح المشروع بنجاح
+v270-152;projects.reopenedSuccess;en-US;Project reopened successfully
+v270-153;projects.updatedSuccess;ar-EG;تم تحديث بيانات المشروع بنجاح
+v270-154;projects.updatedSuccess;en-US;Project updated successfully
+v270-155;projects.updateError;ar-EG;تعذر تحديث بيانات المشروع
+v270-156;projects.updateError;en-US;Failed to update project
+v270-157;projects.transitionError;ar-EG;تعذر تغيير حالة المشروع
+v270-158;projects.transitionError;en-US;Failed to transition project status
+v270-159;wbs.treeExpandAll;ar-EG;توسيع الكل
+v270-160;wbs.treeExpandAll;en-US;Expand All
+v270-161;wbs.treeCollapseAll;ar-EG;طي الكل
+v270-162;wbs.treeCollapseAll;en-US;Collapse All
+v270-163;wbs.noNodesTitle;ar-EG;لا توجد بنود في هيكل العمل
+v270-164;wbs.noNodesTitle;en-US;No WBS nodes defined
+v270-165;wbs.noNodesDesc;ar-EG;ابدأ بإضافة أول مرحلة رئيسية أو بند مقايسة في هذا المشروع
+v270-166;wbs.noNodesDesc;en-US;Start by adding a root phase or BOQ item for this project
+v270-167;wbs.code;ar-EG;كود البند
+v270-168;wbs.code;en-US;WBS Code
+v270-169;wbs.name;ar-EG;اسم البند
+v270-170;wbs.name;en-US;Item Name
+v270-171;wbs.nodeType;ar-EG;نوع البند
+v270-172;wbs.nodeType;en-US;Item Type
+v270-173;wbs.unitOfMeasure;ar-EG;الوحدة
+v270-174;wbs.unitOfMeasure;en-US;UoM
+v270-175;wbs.plannedQuantity;ar-EG;الكمية المخططة
+v270-176;wbs.plannedQuantity;en-US;Planned Qty
+v270-177;wbs.unitRate;ar-EG;سعر الوحدة
+v270-178;wbs.unitRate;en-US;Unit Rate
+v270-179;wbs.plannedAmount;ar-EG;المبلغ المخطط
+v270-180;wbs.plannedAmount;en-US;Planned Amount
+v270-181;wbs.status;ar-EG;حالة البند
+v270-182;wbs.status;en-US;Item Status
+v270-183;wbs.actions;ar-EG;إجراءات
+v270-184;wbs.actions;en-US;Actions
+v270-185;wbs.addChild;ar-EG;إضافة بند فرعي
+v270-186;wbs.addChild;en-US;Add Child Node
+v270-187;wbs.editNode;ar-EG;تعديل البند
+v270-188;wbs.editNode;en-US;Edit Node
+v270-189;wbs.repositionNode;ar-EG;نقل وتغيير المستوى
+v270-190;wbs.repositionNode;en-US;Reposition Node
+v270-191;wbs.deleteNode;ar-EG;حذف البند
+v270-192;wbs.deleteNode;en-US;Delete Node
+v270-193;wbs.addRootNode;ar-EG;إضافة مرحلة رئيسية
+v270-194;wbs.addRootNode;en-US;Add Root Phase
+v270-195;wbs.createNodeTitle;ar-EG;إضافة بند في هيكل العمل
+v270-196;wbs.createNodeTitle;en-US;Create WBS Node
+v270-197;wbs.editNodeTitle;ar-EG;تعديل بند هيكل العمل
+v270-198;wbs.editNodeTitle;en-US;Edit WBS Node
+v270-199;wbs.repositionTitle;ar-EG;إعادة تموضع البند في الهيكل الشجري
+v270-200;wbs.repositionTitle;en-US;Reposition WBS Node
+v270-201;wbs.repositionHint;ar-EG;اختر البند الأب الجديد لنقل هذا البند وجميع بنوده الفرعية تحته، مع مراعاة عدم إحداث تكرار حلقي.
+v270-202;wbs.repositionHint;en-US;Select the target parent node to move this item and all its children under it without cycles.
+v270-203;wbs.targetParent;ar-EG;البند الأب الجديد
+v270-204;wbs.targetParent;en-US;Target Parent Node
+v270-205;wbs.rootLevel;ar-EG;-- مستوى رئيسي أول (جذر) --
+v270-206;wbs.rootLevel;en-US;-- Root Level Phase --
+v270-207;wbs.confirmMove;ar-EG;تأكيد النقل
+v270-208;wbs.confirmMove;en-US;Confirm Move
+v270-209;wbs.deleteConfirmTitle;ar-EG;تأكيد حذف بند هيكل العمل
+v270-210;wbs.deleteConfirmTitle;en-US;Confirm WBS Node Deletion
+v270-211;wbs.deleteConfirmMessage;ar-EG;هل أنت متأكد من حذف هذا البند من هيكل العمل؟
+v270-212;wbs.deleteConfirmMessage;en-US;Are you sure you want to delete this WBS node?
+v270-213;wbs.deletedSuccess;ar-EG;تم حذف بند هيكل العمل بنجاح
+v270-214;wbs.deletedSuccess;en-US;WBS node deleted successfully
+v270-215;wbs.deleteError;ar-EG;تعذر حذف بند هيكل العمل
+v270-216;wbs.deleteError;en-US;Failed to delete WBS node
+v270-217;wbs.nodeCreatedSuccess;ar-EG;تم إنشاء بند هيكل العمل بنجاح
+v270-218;wbs.nodeCreatedSuccess;en-US;WBS node created successfully
+v270-219;wbs.nodeUpdatedSuccess;ar-EG;تم تحديث بند هيكل العمل بنجاح
+v270-220;wbs.nodeUpdatedSuccess;en-US;WBS node updated successfully
+v270-221;wbs.saveError;ar-EG;تعذر حفظ بند هيكل العمل
+v270-222;wbs.saveError;en-US;Failed to save WBS node
+v270-223;wbs.repositionSuccess;ar-EG;تم تغيير موضع البند بنجاح
+v270-224;wbs.repositionSuccess;en-US;WBS node repositioned successfully
+v270-225;wbs.repositionError;ar-EG;تعذر تغيير موضع البند
+v270-226;wbs.repositionError;en-US;Failed to reposition WBS node
+v270-227;wbs.costCode;ar-EG;كود التكلفة
+v270-228;wbs.costCode;en-US;Cost Code
+v270-229;wbs.selectCostCode;ar-EG;-- اختر كود التكلفة --
+v270-230;wbs.selectCostCode;en-US;-- Select Cost Code --
+v270-231;wbs.formCodePlaceholder;ar-EG;مثال: 1 أو 1.1 أو 1.1.2
+v270-232;wbs.formCodePlaceholder;en-US;e.g. 1 or 1.1 or 1.1.2
+v270-233;wbs.formNamePlaceholder;ar-EG;اسم البند بالعربية
+v270-234;wbs.formNamePlaceholder;en-US;Item Name (Arabic)
+v270-235;wbs.formNameEn;ar-EG;اسم البند بالإنجليزية
+v270-236;wbs.formNameEn;en-US;Item Name (English)
+v270-237;wbs.formNameEnPlaceholder;ar-EG;e.g. Excavation & Earthworks
+v270-238;wbs.formNameEnPlaceholder;en-US;e.g. Excavation & Earthworks
+v270-239;wbs.formUomPlaceholder;ar-EG;م3، م2، م.ط، كجم، طن، عدد...
+v270-240;wbs.formUomPlaceholder;en-US;m3, m2, m, kg, ton, pcs...
+v270-241;wbs.formStartDate;ar-EG;تاريخ بدء التنفيذ المخطط
+v270-242;wbs.formStartDate;en-US;Planned Start Date
+v270-243;wbs.formEndDate;ar-EG;تاريخ انتهاء التنفيذ المخطط
+v270-244;wbs.formEndDate;en-US;Planned End Date
+v270-245;wbs.formDescription;ar-EG;المواصفات الفنية وملاحظات التنفيذ
+v270-246;wbs.formDescription;en-US;Technical Specs & Notes
+v270-247;wbs.formDescriptionPlaceholder;ar-EG;اكتب المواصفات الفنية الخاصة بهذا البند...
+v270-248;wbs.formDescriptionPlaceholder;en-US;Enter technical specifications for this item...
+v270-249;wbs.type.phase;ar-EG;مرحلة رئيسية (Phase)
+v270-250;wbs.type.phase;en-US;Main Phase
+v270-251;wbs.type.subPhase;ar-EG;مرحلة فرعية (Sub-Phase)
+v270-252;wbs.type.subPhase;en-US;Sub Phase
+v270-253;wbs.type.workPackage;ar-EG;حزمة عمل (Work Package)
+v270-254;wbs.type.workPackage;en-US;Work Package
+v270-255;wbs.type.boqItem;ar-EG;بند مقايسة كميات (BOQ Item)
+v270-256;wbs.type.boqItem;en-US;BOQ Item
+v270-257;wbs.type.milestone;ar-EG;نقطة علامة فارقة (Milestone)
+v270-258;wbs.type.milestone;en-US;Milestone
+v270-259;wbs.status.planned;ar-EG;مخطط
+v270-260;wbs.status.planned;en-US;Planned
+v270-261;wbs.status.inProgress;ar-EG;قيد التنفيذ
+v270-262;wbs.status.inProgress;en-US;In Progress
+v270-263;wbs.status.completed;ar-EG;مكتمل
+v270-264;wbs.status.completed;en-US;Completed
+v270-265;wbs.status.onHold;ar-EG;متوقف مؤقتاً
+v270-266;wbs.status.onHold;en-US;On Hold
+v270-267;wbs.status.cancelled;ar-EG;ملغي
+v270-268;wbs.status.cancelled;en-US;Cancelled
+v270-269;costCode.title;ar-EG;دليل أكواد التكلفة للمشاريع
+v270-270;costCode.title;en-US;Project Cost Codes
+v270-271;costCode.create;ar-EG;إضافة كود تكلفة
+v270-272;costCode.create;en-US;Add Cost Code
+v270-273;costCode.code;ar-EG;كود التكلفة
+v270-274;costCode.code;en-US;Cost Code
+v270-275;costCode.name;ar-EG;اسم الكود
+v270-276;costCode.name;en-US;Cost Code Name
+v270-277;costCode.nameEn;ar-EG;الاسم بالإنجليزية
+v270-278;costCode.nameEn;en-US;Name (English)
+v270-279;costCode.category;ar-EG;التصنيف
+v270-280;costCode.category;en-US;Category
+v270-281;costCode.description;ar-EG;الوصف
+v270-282;costCode.description;en-US;Description
+v270-283;costCode.status;ar-EG;الحالة
+v270-284;costCode.status;en-US;Status
+v270-285;costCode.createTitle;ar-EG;إضافة كود تكلفة جديد
+v270-286;costCode.createTitle;en-US;Create New Cost Code
+v270-287;costCode.codePlaceholder;ar-EG;مثال: CC-LAB-01
+v270-288;costCode.codePlaceholder;en-US;e.g. CC-LAB-01
+v270-289;costCode.namePlaceholder;ar-EG;مثال: أجور عمالة خرسانات
+v270-290;costCode.namePlaceholder;en-US;e.g. Concrete Labor Wages
+v270-291;costCode.nameEnPlaceholder;ar-EG;e.g. Concrete Labor Wages
+v270-292;costCode.nameEnPlaceholder;en-US;e.g. Concrete Labor Wages
+v270-293;costCode.category.labor;ar-EG;عمالة (Labor)
+v270-294;costCode.category.labor;en-US;Labor
+v270-295;costCode.category.material;ar-EG;مواد وتوريدات (Material)
+v270-296;costCode.category.material;en-US;Material
+v270-297;costCode.category.equipment;ar-EG;معدات وآليات (Equipment)
+v270-298;costCode.category.equipment;en-US;Equipment
+v270-299;costCode.category.subcontractor;ar-EG;مقاولي باطن (Subcontractor)
+v270-300;costCode.category.subcontractor;en-US;Subcontractor
+v270-301;costCode.category.overhead;ar-EG;مصاريف موقع وعمومية (Overhead)
+v270-302;costCode.category.overhead;en-US;Overhead
+v270-303;costCode.createdSuccess;ar-EG;تم إنشاء كود التكلفة بنجاح
+v270-304;costCode.createdSuccess;en-US;Cost code created successfully
+v270-305;costCode.createError;ar-EG;تعذر إنشاء كود التكلفة
+v270-306;costCode.createError;en-US;Failed to create cost code
+v270-307;projectRoles.title;ar-EG;أطراف وشركاء المشروع
+v270-308;projectRoles.title;en-US;Project Stakeholders & Roles
+v270-309;projectRoles.assignRole;ar-EG;تعيين جهة / طرف
+v270-310;projectRoles.assignRole;en-US;Assign Stakeholder
+v270-311;projectRoles.partyId;ar-EG;معرف الجهة
+v270-312;projectRoles.partyId;en-US;Party ID
+v270-313;projectRoles.roleType;ar-EG;الصفة في المشروع
+v270-314;projectRoles.roleType;en-US;Project Role
+v270-315;projectRoles.notes;ar-EG;ملاحظات
+v270-316;projectRoles.notes;en-US;Notes
+v270-317;projectRoles.assignRoleTitle;ar-EG;تعيين دور شريك في المشروع
+v270-318;projectRoles.assignRoleTitle;en-US;Assign Project Party Role
+v270-319;projectRoles.partyIdPlaceholder;ar-EG;مثال: party-client-1
+v270-320;projectRoles.partyIdPlaceholder;en-US;e.g. party-client-1
+v270-321;projectRoles.roleClientOwner;ar-EG;المالك / العميل (Client Owner)
+v270-322;projectRoles.roleClientOwner;en-US;Client Owner
+v270-323;projectRoles.roleMainContractor;ar-EG;المقاول العام الرئيسي (Main Contractor)
+v270-324;projectRoles.roleMainContractor;en-US;Main Contractor
+v270-325;projectRoles.roleSubcontractor;ar-EG;مقاول باطن (Subcontractor)
+v270-326;projectRoles.roleSubcontractor;en-US;Subcontractor
+v270-327;projectRoles.roleConsultant;ar-EG;استشاري هندسي / إشراف (Consultant)
+v270-328;projectRoles.roleConsultant;en-US;Consultant
+v270-329;projectRoles.roleSupplier;ar-EG;مورد مواد (Supplier)
+v270-330;projectRoles.roleSupplier;en-US;Supplier
+v270-331;projectRoles.assignedSuccess;ar-EG;تم تعيين دور الطرف بنجاح
+v270-332;projectRoles.assignedSuccess;en-US;Party role assigned successfully
+v270-333;projectRoles.assignError;ar-EG;تعذر تعيين دور الطرف
+v270-334;projectRoles.assignError;en-US;Failed to assign party role
+v270-335;projectRoles.removeConfirmTitle;ar-EG;تأكيد إزالة دور الطرف
+v270-336;projectRoles.removeConfirmTitle;en-US;Confirm Party Role Removal
+v270-337;projectRoles.removeConfirmMessage;ar-EG;هل أنت متأكد من إزالة هذا الطرف من المشروع؟
+v270-338;projectRoles.removeConfirmMessage;en-US;Are you sure you want to remove this party from the project?
+v270-339;projectRoles.removedSuccess;ar-EG;تمت إزالة دور الطرف بنجاح
+v270-340;projectRoles.removedSuccess;en-US;Party role removed successfully
+v270-341;projectRoles.removeError;ar-EG;تعذر إزالة دور الطرف
+v270-342;projectRoles.removeError;en-US;Failed to remove party role
+v270-343;projectRoles.noRolesTitle;ar-EG;لا توجد أطراف معينة لهذا المشروع
+v270-344;projectRoles.noRolesTitle;en-US;No stakeholders assigned
+v270-345;projectRoles.noRolesDesc;ar-EG;قم بتعيين المالك والمقاولين والاستشاريين والموردين المرتبطين بهذا المشروع
+v270-346;projectRoles.noRolesDesc;en-US;Assign the client, contractors, consultants, and suppliers for this project
+v270-347;common.enabled;ar-EG;مفعل
+v270-348;common.enabled;en-US;Enabled
+v270-349;common.disabled;ar-EG;معطل
+v270-350;common.disabled;en-US;Disabled
+v270-351;wbs.nameEn;ar-EG;اسم البند بالإنجليزية
+v270-352;wbs.nameEn;en-US;Item Name (English)

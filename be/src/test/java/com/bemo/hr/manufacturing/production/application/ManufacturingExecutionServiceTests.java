@@ -53,4 +53,17 @@ class ManufacturingExecutionServiceTests {
         assertThat(receipt).isNotNull();
         assertThat(receipt.getReceivedQuantity()).isEqualByComparingTo(new BigDecimal("10.00"));
     }
+
+    @Test
+    void listsWorkCentersAndRoutings() {
+        when(workCenterRepository.findAll()).thenReturn(java.util.List.of(
+                new WorkCenter("WC-01", "Assembly", new BigDecimal("100.00"), new BigDecimal("8.00"))
+        ));
+        when(routingHeaderRepository.findAll()).thenReturn(java.util.List.of(
+                new RoutingHeader("RT-01", "Assembly Line 1", "item-1")
+        ));
+
+        assertThat(manufacturingExecutionService.listWorkCenters()).hasSize(1);
+        assertThat(manufacturingExecutionService.listRoutings()).hasSize(1);
+    }
 }

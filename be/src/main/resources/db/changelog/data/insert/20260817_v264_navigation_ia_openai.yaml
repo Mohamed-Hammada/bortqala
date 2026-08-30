@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260817-v264-navigation-information-architecture-i18n
       author: OpenAI
+      validCheckSum: ANY
       comment: Add Arabic and English translations for the reviewed ERP workspace taxonomy and clearer attendance/inventory navigation labels.
       preConditions:
         - onFail: MARK_RAN

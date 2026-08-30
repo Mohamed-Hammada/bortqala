@@ -1,0 +1,250 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.filter-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #e2ded9);
+  padding: 12px 16px;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted, #666);
+  }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.kpi-card {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #e2ded9);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  &.highlight {
+    border-color: var(--gold, #c5a059);
+    background: linear-gradient(135deg, var(--surface, #fff) 0%, rgba(197, 160, 89, 0.08) 100%);
+  }
+
+  &.warning {
+    border-color: var(--warning, #e67e22);
+    background: linear-gradient(135deg, var(--surface, #fff) 0%, rgba(230, 126, 34, 0.08) 100%);
+  }
+
+  &.success {
+    border-color: var(--success, #27ae60);
+    background: linear-gradient(135deg, var(--surface, #fff) 0%, rgba(39, 174, 96, 0.08) 100%);
+  }
+
+  &.info {
+    border-color: var(--primary, #2c3e50);
+    background: linear-gradient(135deg, var(--surface, #fff) 0%, rgba(44, 62, 80, 0.05) 100%);
+  }
+}
+
+.kpi-label {
+  font-size: 0.85rem;
+  color: var(--text-muted, #666);
+  font-weight: 500;
+}
+
+.kpi-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ink, #1a1a1a);
+
+  small {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--text-muted, #777);
+  }
+}
+
+.modules-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.module-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.module-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+
+  small {
+    font-size: 0.85rem;
+    color: var(--text-muted, #777);
+    font-weight: 400;
+  }
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.metric-box {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #e2ded9);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metric-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.trend-badge {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-muted, #f5f3ef);
+  font-weight: 600;
+
+  &.up {
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+  }
+
+  &.down {
+    background: rgba(231, 76, 60, 0.15);
+    color: #c0392b;
+  }
+}
+
+.metric-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.actual-val {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.status-chip {
+  font-size: 0.75rem;
+  color: var(--text-muted, #777);
+  background: var(--surface-muted, #f5f3ef);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.trends-control {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pills-group {
+  display: flex;
+  gap: 6px;
+}
+
+.pill-btn {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #e2ded9);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.active {
+    background: var(--gold, #c5a059);
+    color: #ffffff;
+    border-color: var(--gold, #c5a059);
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--surface-muted, #f5f3ef);
+
+  &.info {
+    background: rgba(52, 152, 219, 0.15);
+    color: #2980b9;
+  }
+
+  &.success {
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+  }
+}
+
+.text-muted {
+  color: var(--text-muted, #8c857b);
+}
+
+.text-success {
+  color: #27ae60;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.modal-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}

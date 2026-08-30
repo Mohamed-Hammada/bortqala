@@ -9,6 +9,32 @@ import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
+export interface FxRevaluationPost {
+  id: string;
+  currencyCode: string;
+  yearMonth: string;
+  totalUnrealizedGain: number;
+  totalUnrealizedLoss: number;
+  journalEntryId: string;
+  postedBy: string;
+  postedAt: number;
+  createdAt: number;
+}
+
+export interface FxRevaluationRunResponse {
+  currenciesProcessed: number;
+  journalsPosted: number;
+  results: {
+    currencyCode: string;
+    netBalance: number;
+    currentRate: number;
+    bookValueInEgp: number;
+    unrealizedGainLoss: number;
+    journalEntryId: string;
+    skippedReason?: string | null;
+  }[];
+}
+
 export interface TaxRate {
   id: string;
   code: string;
@@ -69,7 +95,7 @@ export class TaxCurrencyPage {
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
-  readonly activeTab = signal<'taxes' | 'currencies'>('taxes');
+  readonly activeTab = signal<'taxes' | 'currencies' | 'fx-revaluation'>('taxes');
   readonly taxes = signal<TaxRate[]>([]);
   readonly currencies = signal<Currency[]>([]);
   readonly drawerOpen = signal(false);
@@ -78,6 +104,10 @@ export class TaxCurrencyPage {
   readonly hintError = signal<string | null>(null);
   readonly hintSettingsSaving = signal(false);
   readonly hintsRefreshing = signal(false);
+
+  readonly fxRevaluationPosts = signal<FxRevaluationPost[]>([]);
+  readonly fxRunning = signal(false);
+  readonly fxLoading = signal(false);
 
   readonly baseCurrencyCode = computed(
     () => this.currencies().find((currency) => currency.active && currency.isBase)?.code ?? '—',
@@ -260,5 +290,65 @@ export class TaxCurrencyPage {
     } catch (error) {
       this.notification.error(apiErrorMessage(error, this.i18n));
     }
+  }
+
+  async loadFxHistory(): Promise<void> {
+    this.fxLoading.set(true);
+    try {
+      const posts = await firstValueFrom(
+        this.http.get<FxRevaluationPost[]>('/api/v1/finance/fx-revaluation/history'),
+      );
+      this.fxRevaluationPosts.set(posts);
+    } catch (error) {
+      this.notification.error(apiErrorMessage(error, this.i18n));
+    } finally {
+      this.fxLoading.set(false);
+    }
+  }
+
+  async runFxRevaluation(): Promise<void> {
+    if (this.fxRunning()) return;
+    this.fxRunning.set(true);
+    try {
+      const asOf = Date.now();
+      const result = await firstValueFrom(
+        this.http.post<FxRevaluationRunResponse>(
+          `/api/v1/finance/fx-revaluation/run?asOf=${asOf}`,
+          {},
+        ),
+      );
+      if (result.currenciesProcessed === 0) {
+        this.notification.warning(this.i18n.t('taxCurrency.fxRevaluationZeroResult'));
+      } else {
+        this.notification.success(this.i18n.t('taxCurrency.fxRevaluationSuccess'));
+      }
+      const skipped = (result.results ?? []).filter((r) => r.skippedReason).length;
+      if (skipped > 0) {
+        this.notification.warning(this.i18n.t('taxCurrency.fxRevaluationSkippedAccount', { count: String(skipped) }));
+      }
+      await this.loadFxHistory();
+    } catch (error) {
+      this.notification.error(apiErrorMessage(error, this.i18n));
+    } finally {
+      this.fxRunning.set(false);
+    }
+  }
+
+  canRunFxRevaluation(): boolean {
+    return this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER']);
+  }
+
+  fxGainDisplay(post: FxRevaluationPost): string {
+    if (post.totalUnrealizedGain > 0) {
+      return '+' + post.totalUnrealizedGain.toLocaleString();
+    }
+    return '—';
+  }
+
+  fxLossDisplay(post: FxRevaluationPost): string {
+    if (post.totalUnrealizedLoss > 0) {
+      return '-' + post.totalUnrealizedLoss.toLocaleString();
+    }
+    return '—';
   }
 }

@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/trade/sales")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'HR_MANAGER')")
+@PreAuthorize("@auth.hasPermission('sales.read')")
 @RequiredArgsConstructor
 public class SalesController {
     private final SalesOrderFullService salesOrderFullService;
@@ -27,19 +27,19 @@ public class SalesController {
     }
 
     @PostMapping("/orders")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('sales.manage')")
     public SalesApi.SalesOrderResponse createSalesOrder(@Valid @RequestBody SalesApi.SalesOrderPayload payload, Authentication auth) {
         return salesOrderFullService.createOrder(payload, auth.getName());
     }
 
     @PostMapping("/orders/{id}/confirm")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('sales.manage')")
     public SalesApi.SalesOrderResponse confirmSalesOrder(@PathVariable String id, Authentication auth) {
         return salesOrderFullService.confirmOrder(id, auth.getName());
     }
 
     @PostMapping("/orders/{id}/cancel")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('sales.manage')")
     public SalesApi.SalesOrderResponse cancelSalesOrder(@PathVariable String id, Authentication auth) {
         return salesOrderFullService.cancelOrder(id, auth.getName());
     }
@@ -50,13 +50,13 @@ public class SalesController {
     }
 
     @PostMapping("/receivables/invoices")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('sales.manage')")
     public SalesApi.InvoiceResponse createInvoice(@Valid @RequestBody SalesApi.InvoiceRequest request, Authentication auth) {
         return receivablesService.createInvoice(request, auth.getName());
     }
 
     @PostMapping("/receivables/invoices/{id}/issue")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('sales.manage')")
     public SalesApi.InvoiceResponse issueInvoice(@PathVariable String id, Authentication auth) {
         return receivablesService.issueInvoice(id, auth.getName());
     }
@@ -67,7 +67,7 @@ public class SalesController {
     }
 
     @PostMapping("/receivables/receipts")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('sales.manage')")
     public SalesApi.ReceiptResponse receipt(@Valid @RequestBody SalesApi.ReceiptRequest request, Authentication auth) {
         return receivablesService.recordReceipt(request, auth.getName());
     }
@@ -83,7 +83,7 @@ public class SalesController {
     }
 
     @PutMapping("/customers/{customerId}/credit")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('sales.manage')")
     public SalesApi.CreditProfileResponse updateCredit(@PathVariable String customerId, @Valid @RequestBody SalesApi.CreditProfileRequest request, Authentication auth) {
         return receivablesService.updateCredit(customerId, request, auth.getName());
     }
@@ -95,7 +95,7 @@ public class SalesController {
     }
 
     @PutMapping("/receivables/collections/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('sales.manage')")
     public SalesApi.CollectionTaskResponse updateCollection(@PathVariable String id, @Valid @RequestBody SalesApi.CollectionTaskRequest request, Authentication auth) {
         return receivablesService.updateTask(id, request, auth.getName());
     }

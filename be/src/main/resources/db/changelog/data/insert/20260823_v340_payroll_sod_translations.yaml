@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260823-v340-payroll-sod-translations
+      author: Mohamed-Hammada
+      validCheckSum: ANY
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260823_v340_payroll_sod_translations.csv
+            separator: ";"
+            tableName: translations
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v340-%'" }

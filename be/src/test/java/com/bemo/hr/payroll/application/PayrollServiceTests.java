@@ -24,6 +24,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -90,6 +94,48 @@ class PayrollServiceTests {
     @AfterEach
     void tearDown() {
         TenantContext.clear();
+        SecurityContextHolder.clearContext();
+    }
+
+    private SalaryPayment postedPayment(Employee employee, PayrollRunHeader run) {
+        SalaryPayment payment = new SalaryPayment(employee.getId(), "report-1", 2026, 8, "FULL_MONTH",
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), new BigDecimal("5000"),
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("5000"),
+                PaymentStatus.DRAFT, null, null, null, null, "maker");
+        payment.transitionTo(PaymentStatus.CALCULATED);
+        payment.transitionTo(PaymentStatus.REVIEWED);
+        payment.transitionTo(PaymentStatus.APPROVED);
+        payment.transitionTo(PaymentStatus.POSTED);
+        payment.attachCalculationEvidence(run.getId(), "snapshot-1");
+        return payment;
+    }
+
+    private PayrollRunHeader postedRun(String approvedBy) {
+        PayrollRunHeader run = new PayrollRunHeader("PAY-2026-08", "2026-08:FULL_MONTH", LocalDate.of(2026, 8, 31));
+        run.updateTotals(new BigDecimal("5000"), BigDecimal.ZERO, new BigDecimal("5000"));
+        run.transitionTo(PayrollRunHeader.Status.REVIEWED);
+        run.transitionTo(PayrollRunHeader.Status.APPROVED);
+        run.transitionTo(PayrollRunHeader.Status.POSTED);
+        run.markCalculatedBy("preparer");
+        if (approvedBy != null) {
+            run.markApprovedBy(approvedBy);
+        }
+        return run;
+    }
+
+    /** Stubs the happy-path collaborators and blocks the flow at the attendance gate so tests
+     *  can assert which guard fired before it. */
+    private void stubPaymentFlowAtAttendanceGate(Employee employee, SalaryPayment payment,
+                                                 AttendanceReport report, PayrollRunHeader run) {
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+        when(salaryPaymentRepository.findForUpdate(employee.getId(), 2026, 8, "FULL_MONTH"))
+                .thenReturn(Optional.of(payment));
+        lenient().when(payrollSnapshotService.findById("snapshot-1")).thenReturn(Optional.of(mock(PayrollInputSnapshot.class)));
+        when(payrollRunHeaderRepository.findByIdForUpdate(run.getId())).thenReturn(Optional.of(run));
+        lenient().when(attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(PayCycle.MONTHLY,
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31))).thenReturn(Optional.of(report));
+        lenient().doThrow(new BusinessRuleException("blocked by gate", "PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN", HttpStatus.CONFLICT))
+                .when(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());
     }
 
     @Test
@@ -97,6 +143,39 @@ class PayrollServiceTests {
         when(employeeRepository.findAllByOrderByFullNameAsc()).thenReturn(Collections.emptyList());
         var response = payrollService.getSheet(2026, 8, null);
         assertThat(response.rows()).isEmpty();
+    }
+
+    @Test
+    void getSheet_skipsAdvanceDeductionAndKeepsZeroWhenPolicyIsManual() {
+        Employee employee = new Employee("E-M", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        when(employeeRepository.findAllByOrderByFullNameAsc()).thenReturn(List.of(employee));
+        when(attendanceCategoryRepository.findAll()).thenReturn(List.of());
+        when(operationsService.getAdvanceBalance(employee.getId())).thenReturn(new BigDecimal("800"));
+        when(workforceAdvanceService.isManualDeductionPolicy(eq(employee.getId()), any())).thenReturn(true);
+
+        var sheet = payrollService.getSheet(2026, 8, null);
+
+        assertThat(sheet.rows()).hasSize(1);
+        assertThat(sheet.rows().get(0).advancesDeducted()).isEqualByComparingTo("0");
+        assertThat(sheet.rows().get(0).activeAdvancesBalance()).isEqualByComparingTo("800");
+        verify(workforceAdvanceService, never()).calculateEmployeePayrollDeduction(any(), any(), any(), any());
+    }
+
+    @Test
+    void getSheet_stillAutoDeductsAdvancesWhenPolicyIsAuto() {
+        Employee employee = new Employee("E-A", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        when(employeeRepository.findAllByOrderByFullNameAsc()).thenReturn(List.of(employee));
+        when(attendanceCategoryRepository.findAll()).thenReturn(List.of());
+        when(operationsService.getAdvanceBalance(employee.getId())).thenReturn(new BigDecimal("800"));
+        when(workforceAdvanceService.calculateEmployeePayrollDeduction(eq(employee.getId()), any(),
+                any(), any())).thenReturn(new BigDecimal("250"));
+
+        var sheet = payrollService.getSheet(2026, 8, null);
+
+        assertThat(sheet.rows().get(0).advancesDeducted()).isEqualByComparingTo("250");
+        verify(workforceAdvanceService).calculateEmployeePayrollDeduction(eq(employee.getId()), any(), any(), any());
     }
 
 
@@ -108,7 +187,7 @@ class PayrollServiceTests {
         when(salaryPaymentRepository.findByIdForUpdate("missing-id")).thenReturn(Optional.empty());
         assertThatThrownBy(() -> payrollService.reversePayment(req, "admin"))
                 .isInstanceOf(com.bemo.hr.shared.domain.NotFoundException.class)
-                .hasMessageContaining("قيد الراتب غير موجود.");
+                .satisfies(ex -> assertThat(((com.bemo.hr.shared.domain.NotFoundException) ex).getCode()).isEqualTo("PAYROLL_ENTRY_NOT_FOUND"));
     }
 
     @Test
@@ -185,6 +264,108 @@ class PayrollServiceTests {
                         "\"overtimeMultiplier\":1.25");
         assertThat(explanations.get(0).calculatedAmount()).isEqualByComparingTo(payment.getGrossAmount());
         assertThat(explanations.get(1).calculatedAmount()).isEqualByComparingTo(payment.getNetAmount());
+    }
+
+    @Test
+    void recordPayment_blockedWhenDisburserApprovedTheRun() {
+        Employee employee = new Employee("E-1", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        AttendanceReport report = new AttendanceReport(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                PayCycle.MONTHLY, "cfg", "admin");
+        report.startReview(0);
+        report.approve("admin");
+        PayrollRunHeader run = postedRun("approver");
+        SalaryPayment payment = postedPayment(employee, run);
+        stubPaymentFlowAtAttendanceGate(employee, payment, report, run);
+
+        PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(employee.getId(), 2026, 8, "FULL_MONTH",
+                null, null, null, null, 0L);
+        assertThatThrownBy(() -> payrollService.recordPayment(request, "approver"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("PAYROLL_SOD_DISBURSEMENT_CONFLICT"));
+        verify(salaryPaymentRepository, never()).save(any());
+    }
+
+    @Test
+    void recordPayment_allowsIndependentDisburser() {
+        Employee employee = new Employee("E-1", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        AttendanceReport report = new AttendanceReport(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                PayCycle.MONTHLY, "cfg", "admin");
+        report.startReview(0);
+        report.approve("admin");
+        PayrollRunHeader run = postedRun("approver");
+        SalaryPayment payment = postedPayment(employee, run);
+        stubPaymentFlowAtAttendanceGate(employee, payment, report, run);
+
+        PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(employee.getId(), 2026, 8, "FULL_MONTH",
+                null, null, null, null, 0L);
+        assertThatThrownBy(() -> payrollService.recordPayment(request, "disburser"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN"));
+    }
+
+    @Test
+    void recordPayment_superAdminBypassesDisbursementSeparation() {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "approver", "n/a", List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+        Employee employee = new Employee("E-1", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        AttendanceReport report = new AttendanceReport(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                PayCycle.MONTHLY, "cfg", "admin");
+        report.startReview(0);
+        report.approve("admin");
+        PayrollRunHeader run = postedRun("approver");
+        SalaryPayment payment = postedPayment(employee, run);
+        stubPaymentFlowAtAttendanceGate(employee, payment, report, run);
+
+        PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(employee.getId(), 2026, 8, "FULL_MONTH",
+                null, null, null, null, 0L);
+        assertThatThrownBy(() -> payrollService.recordPayment(request, "approver"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN"));
+    }
+
+    @Test
+    void recordPayment_sodDisabledAllowsSameActorToDisburse() {
+        ReflectionTestUtils.setField(payrollService, "sodEnabled", "false");
+        Employee employee = new Employee("E-1", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        AttendanceReport report = new AttendanceReport(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                PayCycle.MONTHLY, "cfg", "admin");
+        report.startReview(0);
+        report.approve("admin");
+        PayrollRunHeader run = postedRun("approver");
+        SalaryPayment payment = postedPayment(employee, run);
+        stubPaymentFlowAtAttendanceGate(employee, payment, report, run);
+
+        PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(employee.getId(), 2026, 8, "FULL_MONTH",
+                null, null, null, null, 0L);
+        assertThatThrownBy(() -> payrollService.recordPayment(request, "approver"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN"));
+        ReflectionTestUtils.setField(payrollService, "sodEnabled", null);
+    }
+
+    @Test
+    void transitionStatus_blockedWhenPreparerApprovesOwnRun() {
+        PayrollRunHeader run = new PayrollRunHeader("PAY-2026-08", "2026-08:FULL_MONTH", LocalDate.of(2026, 8, 31));
+        run.updateTotals(new BigDecimal("5000"), BigDecimal.ZERO, new BigDecimal("5000"));
+        run.transitionTo(PayrollRunHeader.Status.REVIEWED);
+        run.markCalculatedBy("preparer");
+        when(payrollRunHeaderRepository.findFirstByPeriodIdOrderByCreatedAtDesc("2026-08:FULL_MONTH"))
+                .thenReturn(Optional.of(run));
+        when(payrollRunHeaderRepository.findByIdForUpdate(run.getId())).thenReturn(Optional.of(run));
+        var request = new PayrollApi.StatusTransitionRequest(2026, 8, PaymentStatus.APPROVED);
+        assertThatThrownBy(() -> payrollService.transitionStatus(request, "preparer"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("PAYROLL_SOD_SELF_APPROVAL"));
+        assertThat(run.getStatus()).isEqualTo(PayrollRunHeader.Status.REVIEWED);
     }
 
     // A golden example for 8-hour category should ideally be a fully verified test using actual logic.

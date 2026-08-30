@@ -344,7 +344,7 @@
       <div class="batches">
 <!-- BORTQALA_RUNTIME_20260816_V2_IMPORT_HISTORY -->
       <div class="batch-history-toolbar">
-        <a class="button secondary" href="/imports/history">{{ i18n.locale().toLowerCase().startsWith('ar') ? 'عرض سجل الاستيراد بالكامل' : 'View full import history' }}</a>
+        <a class="button secondary" href="/imports/history">{{ i18n.t('imports.viewFullHistory') }}</a>
       </div>
       @for (item of store.batches().slice(0, 2); track item.id) {
           <article class="card batch-card">

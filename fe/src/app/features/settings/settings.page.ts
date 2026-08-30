@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth/auth.service';
@@ -12,6 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ShortcutSettingsComponent } from './shortcuts/shortcut-settings.component';
 import { MOVED_SETTINGS_TAB_ROUTES, SettingsTab, isSettingsTab } from './settings-navigation';
 import { SettingsSubmenuComponent } from './settings-submenu.component';
+import { formatDate } from '../../core/date';
 
 
 const NOTIFICATION_KEY = 'bemo_notification_prefs';
@@ -28,10 +30,23 @@ function saveNotificationPrefs(prefs: NotificationPreferences): void {
   localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(prefs));
 }
 
+import { BusinessVerticalSetupComponent } from './business-vertical-setup/business-vertical-setup.component';
+import { AdvancesPolicySettingsComponent } from './advances-policy-settings/advances-policy-settings.component';
+import { IntegrationsSettingsComponent } from './integrations-settings.component';
+import { SecuritySettingsComponent } from './security/security-settings.component';
+
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [ReactiveFormsModule, ShortcutSettingsComponent, SettingsSubmenuComponent],
+  imports: [
+    ReactiveFormsModule,
+    ShortcutSettingsComponent,
+    SettingsSubmenuComponent,
+    BusinessVerticalSetupComponent,
+    AdvancesPolicySettingsComponent,
+    IntegrationsSettingsComponent,
+    SecuritySettingsComponent,
+  ],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,6 +72,20 @@ export class SettingsPage {
   readonly confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
   readonly desktop = typeof window !== 'undefined' && '__TAURI__' in window;
   readonly licenseMessage = signal<string | null>(null);
+  private readonly http = inject(HttpClient);
+
+  readonly ssoConfigs = signal<any[]>([]);
+  readonly showSsoForm = signal(false);
+  readonly privacyRequests = signal<any[]>([]);
+  readonly formatDate = formatDate;
+
+  readonly ssoForm = this.formBuilder.nonNullable.group({
+    provider: ['GOOGLE', Validators.required],
+    clientId: ['', Validators.required],
+    clientSecret: ['', Validators.required],
+    autoProvision: [false],
+    defaultRole: ['VIEWER'],
+  });
 
   readonly showFavorites = signal(this.authService.preferences().showFavorites);
   readonly showRecentlyUsed = signal(this.authService.preferences().showRecentlyUsed);
@@ -130,6 +159,7 @@ export class SettingsPage {
       Validators.required,
     ],
     defaultPage: [this.authService.preferences().defaultPage ?? '/dashboard', Validators.required],
+    hijriOverlay: [localStorage.getItem('calendar.hijriOverlay') === 'true'],
   });
 
   readonly appSettingsForm = this.formBuilder.nonNullable.group({
@@ -216,6 +246,7 @@ export class SettingsPage {
     this.saving.set(true);
     try {
       await firstValueFrom(this.authService.updatePreferences(this.form.getRawValue()));
+      localStorage.setItem('calendar.hijriOverlay', String(this.form.controls.hijriOverlay.value));
       saveNotificationPrefs(this.notificationPrefs());
       await this.webPush.syncPreferences(this.notificationPrefs());
       this.form.markAsPristine();
@@ -322,6 +353,48 @@ export class SettingsPage {
       this.showFavorites.set(current.showFavorites);
       this.showRecentlyUsed.set(current.showRecentlyUsed);
       this.maxRecentlyUsed.set(current.maxRecentlyUsed);
+    }
+  }
+
+  async loadSsoConfigs(): Promise<void> {
+    try {
+      const configs = await firstValueFrom(this.http.get<any[]>('/api/v1/auth/sso/configs'));
+      this.ssoConfigs.set(configs ?? []);
+    } catch { /* ignore */ }
+  }
+
+  async saveSsoConfig(): Promise<void> {
+    if (this.ssoForm.invalid) return;
+    try {
+      await firstValueFrom(this.http.post('/api/v1/auth/sso/configs', this.ssoForm.getRawValue()));
+      this.showSsoForm.set(false);
+      this.ssoForm.reset({ provider: 'GOOGLE', autoProvision: false, defaultRole: 'VIEWER' });
+      this.notification.success(this.i18n.t('sso.configSaved'));
+      await this.loadSsoConfigs();
+    } catch (error) {
+      this.notification.error(apiErrorMessage(error, this.i18n));
+    }
+  }
+
+  async loadPrivacyRequests(): Promise<void> {
+    try {
+      const requests = await firstValueFrom(this.http.get<any[]>('/api/v1/privacy/requests'));
+      this.privacyRequests.set(requests ?? []);
+    } catch { /* ignore */ }
+  }
+
+  async downloadExport(requestId: string): Promise<void> {
+    try {
+      const data = await firstValueFrom(this.http.get(`/api/v1/privacy/requests/${requestId}`, { responseType: 'text' }));
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `privacy-export-${requestId}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      this.notification.error(apiErrorMessage(error, this.i18n));
     }
   }
 }

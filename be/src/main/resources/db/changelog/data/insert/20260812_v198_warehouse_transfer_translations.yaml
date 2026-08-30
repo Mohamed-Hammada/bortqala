@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260812-v198-warehouse-transfer-translations
       author: codex
+      validCheckSum: ANY
       changes:
         - loadData:
             file: db/changelog/data/insert/files/20260812_v198_warehouse_transfer_translations.csv

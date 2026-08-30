@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v103-procurement-i18n-translations
       author: codex
+      validCheckSum: ANY
       comment: "Bilingual translations for the QA remediation batch: unsaved-changes confirm dialog (drawer dirty-check + route guard), journal entry line validators, invoice non-negative adjustments and discount-exceeds-total guard, PO issue/cancel confirmations, and the procurement page hardcoded-text audit (zero-static-labels policy)."
       changes:
         - loadData:

@@ -36,6 +36,16 @@ public class InventoryItem {
     private BigDecimal reorderPoint = BigDecimal.ZERO;
     @Column(name = "reorder_quantity", nullable = false, precision = 15, scale = 4)
     private BigDecimal reorderQuantity = BigDecimal.ZERO;
+    @Column(length = 100)
+    private String barcode;
+    @Column(name = "barcode_aliases", length = 500)
+    private String barcodeAliases;
+    @Column(name = "tracking_type", length = 30)
+    private String trackingType = "NONE";
+    @Column(name = "shelf_life_days")
+    private Integer shelfLifeDays;
+    @Column(name = "is_dead_stock", nullable = false)
+    private boolean isDeadStock = false;
     @Version
     private long version;
     @Column(name = "created_at", nullable = false)
@@ -48,6 +58,8 @@ public class InventoryItem {
 
     public InventoryItem(String code, String name, String itemType, String unitCode) {
         this.id = UUID.randomUUID().toString();
+        this.createdAt = Instant.now();
+        this.updatedAt = this.createdAt;
         update(code, name, itemType, unitCode, true);
     }
 
@@ -67,6 +79,14 @@ public class InventoryItem {
     public void configureReorder(BigDecimal reorderPoint, BigDecimal reorderQuantity) {
         this.reorderPoint = nonNegative(reorderPoint);
         this.reorderQuantity = nonNegative(reorderQuantity);
+    }
+
+    public void configureTracking(String barcode, String barcodeAliases, String trackingType, Integer shelfLifeDays, boolean isDeadStock) {
+        this.barcode = barcode == null || barcode.isBlank() ? null : barcode.strip();
+        this.barcodeAliases = barcodeAliases == null || barcodeAliases.isBlank() ? null : barcodeAliases.strip();
+        this.trackingType = trackingType == null || trackingType.isBlank() ? "NONE" : trackingType.strip().toUpperCase(Locale.ROOT);
+        this.shelfLifeDays = shelfLifeDays != null && shelfLifeDays > 0 ? shelfLifeDays : null;
+        this.isDeadStock = isDeadStock;
     }
 
     @PrePersist

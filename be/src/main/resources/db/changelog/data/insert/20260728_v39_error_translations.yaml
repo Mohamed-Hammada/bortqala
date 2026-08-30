@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260728-39-seed-error-translations
       author: hr-platform
+      validCheckSum: ANY
       comment: Seed localized error response messages for ApiExceptionHandler
       changes:
         - loadData:

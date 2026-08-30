@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: seed_manufacturing_translations
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v189-%'" }

@@ -1,0 +1,245 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v299_leave_management_schema
+      author: wolfn
+      changes:
+        - createTable:
+            tableName: leave_types
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name_ar
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name_en
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_paid
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requires_attachment
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: max_consecutive_days
+                  type: INT
+                  defaultValueNumeric: 30
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: leave_balance_accounts
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: employee_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: leave_type_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: year
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entitled_days
+                  type: NUMERIC(6, 2)
+                  defaultValueNumeric: 21.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: carried_over_days
+                  type: NUMERIC(6, 2)
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: used_days
+                  type: NUMERIC(6, 2)
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pending_days
+                  type: NUMERIC(6, 2)
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: remaining_days
+                  type: NUMERIC(6, 2)
+                  defaultValueNumeric: 21.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: leave_requests
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: request_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: employee_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: leave_type_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_days
+                  type: NUMERIC(6, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: VARCHAR(1000)
+              - column:
+                  name: rejection_reason
+                  type: VARCHAR(1000)
+              - column:
+                  name: approver_user_id
+                  type: VARCHAR(36)
+              - column:
+                  name: approved_at
+                  type: BIGINT
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_leave_types_app_code
+            tableName: leave_types
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: code
+
+        - createIndex:
+            indexName: idx_leave_bal_app_emp_yr
+            tableName: leave_balance_accounts
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: employee_id
+              - column:
+                  name: year
+
+        - createIndex:
+            indexName: idx_leave_req_app_emp
+            tableName: leave_requests
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: employee_id

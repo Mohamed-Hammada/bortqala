@@ -49,7 +49,7 @@ class SystemStatusService {
     private SystemSetting requireCacheSetting() {
         return systemSettingRepository.findById(SystemSetting.CLIENT_CACHE_VERSION)
                 .orElseThrow(() -> new BusinessRuleException(
-                        "إعداد إصدار ذاكرة التخزين المؤقت غير موجود. راجع ترحيلات قاعدة البيانات.",
+                        "Cache version setting not found. Check database migrations.",
                         "SYS_CACHE_VERSION_SETTING_MISSING", HttpStatus.CONFLICT));
     }
 

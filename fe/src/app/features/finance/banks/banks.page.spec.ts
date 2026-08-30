@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DomSanitizer } from '@angular/platform-browser';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { BanksPage } from './banks.page';
@@ -57,11 +58,38 @@ describe('BanksPage reconciliation', () => {
     expect(component.matchForm.controls.amount.value).toBe(100);
   });
 
+  it('fetches cheque print HTML and opens print dialog', async () => {
+    const chq = { id: 'chq-1', chequeNumber: 'CHQ-001', chequeType: 'ISSUED', drawerPayeeName: 'Test Payee', amount: 5000, currency: 'EGP', issueDate: 1, dueDate: 1, status: 'ISSUED', createdAt: 1 };
+    component.cheques.set([chq] as never);
+    const promise = component.printCheque(chq as never);
+    expect(component.chequePrintOpen()).toBe(true);
+    expect(component.chequePrintLoading()).toBe(true);
+    const req = http.expectOne('/api/v1/finance/treasury/cheques/chq-1/print');
+    expect(req.request.responseType).toBe('text');
+    req.flush('<html><body> cheque print view </body></html>');
+    await promise;
+    expect(component.chequePrintLoading()).toBe(false);
+  });
+
+  it('handles cheque print error gracefully', async () => {
+    const chq = { id: 'chq-err', chequeNumber: 'CHQ-ERR', chequeType: 'ISSUED', drawerPayeeName: 'Test', amount: 100, currency: 'EGP', issueDate: 1, dueDate: 1, status: 'ISSUED', createdAt: 1 };
+    const promise = component.printCheque(chq as never);
+    const req = http.expectOne('/api/v1/finance/treasury/cheques/chq-err/print');
+    req.flush('Not Found', { status: 404, statusText: 'Not Found' });
+    await promise;
+    expect(component.chequePrintLoading()).toBe(false);
+    expect(component.error()).toBeTruthy();
+  });
+
   function flushLoad(): void {
     http.expectOne('/api/v1/finance/banks').flush([{ id: 'bank-1', bankName: 'Bank', accountNumber: '123', currencyCode: 'EGP', active: true }]);
     http.expectOne('/api/v1/finance/accounts').flush([]);
     http.expectOne('/api/v1/finance/bank-reconciliation/statements').flush([workbench().statement]);
     http.expectOne('/api/v1/finance/bank-reconciliation/cash-position').flush({ accounts: [], totalsByCurrency: { EGP: 895 } });
+    http.expectOne('/api/v1/finance/treasury/cashboxes').flush([]);
+    http.expectOne('/api/v1/finance/treasury/cheques').flush([]);
+    http.expectOne('/api/v1/finance/treasury/liquidity-summary').flush(null);
+    http.expectOne('/api/v1/finance/bank-reconciliation/aging').flush([]);
   }
 
   function workbench() {

@@ -93,7 +93,7 @@ class WorkforceEmployeeAdvanceServiceTests {
                 1, new BigDecimal("500"), "MONTHLY", new BigDecimal("50"), null,
                 "2026-08-01", "AUTO", 0), "admin"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("لا تسمح");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("ADVANCE_CATEGORY_NOT_ALLOWED"));
         verify(advanceRepository, never()).save(any());
     }
 
@@ -112,6 +112,171 @@ class WorkforceEmployeeAdvanceServiceTests {
                 employee.getId(), LocalDate.of(2026, 8, 31), new BigDecimal("1000"), new BigDecimal("1200"));
 
         assertThat(deduction).isEqualByComparingTo("450");
+    }
+
+    @Test
+    void resolvedPolicyFallsBackToDefaultsWhenNoPoliciesExist() {
+        when(policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc()).thenReturn(List.of());
+
+        WorkforceApi.ResolvedDeductionPolicyResponse resolved =
+                service.resolveDeductionPolicy("emp-any", null, LocalDate.now());
+
+        assertThat(resolved.mode()).isEqualTo("AUTO");
+        assertThat(resolved.cadence()).isEqualTo("MONTHLY");
+        assertThat(resolved.source()).isEqualTo("DEFAULTS");
+        assertThat(resolved.manual()).isFalse();
+    }
+
+    @Test
+    void categoryManualPolicyOverridesGlobalAutoAndGatesPayrollDeduction() {
+        Employee employee = employee("EMP-M");
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+        WorkforceAdvancePolicy categoryManual = policy("EMPLOYEE_CATEGORY", "employee-category",
+                "MANUAL_BUTTON", "MID_MONTH_SPLIT", 2);
+        WorkforceAdvancePolicy globalAuto = policy("GLOBAL", null, "AUTO", "MONTHLY", 1);
+        when(policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc())
+                .thenReturn(List.of(globalAuto, categoryManual));
+
+        WorkforceApi.ResolvedDeductionPolicyResponse resolved =
+                service.resolveDeductionPolicy(employee.getId(), null, LocalDate.now());
+
+        assertThat(resolved.mode()).isEqualTo("MANUAL");
+        assertThat(resolved.cadence()).isEqualTo("MID_MONTH_SPLIT");
+        assertThat(resolved.source()).isEqualTo("CATEGORY");
+        assertThat(resolved.manual()).isTrue();
+        assertThat(service.isManualDeductionPolicy(employee.getId(), LocalDate.now())).isTrue();
+    }
+
+    @Test
+    void globalPolicyWinsWhenCategoryHasNoOverride() {
+        Employee employee = employee("EMP-G");
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+        WorkforceAdvancePolicy globalManual = policy("GLOBAL", null, "MANUAL", "HALF_MONTH", 1);
+        when(policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc()).thenReturn(List.of(globalManual));
+
+        WorkforceApi.ResolvedDeductionPolicyResponse resolved =
+                service.resolveDeductionPolicy(employee.getId(), null, LocalDate.now());
+
+        assertThat(resolved.manual()).isTrue();
+        assertThat(resolved.source()).isEqualTo("GLOBAL");
+        assertThat(resolved.cadence()).isEqualTo("MID_MONTH_SPLIT");
+    }
+
+    @Test
+    void manualApplyIsRejectedWhenResolvedPolicyIsAuto() {
+        Employee employee = employee("EMP-A");
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+        when(policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc()).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.applyManualDeduction(
+                new WorkforceApi.ManualDeductionRequest(employee.getId(), "2026/8"), "finance"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("ADVANCE_MANUAL_NOT_DUE"));
+        verify(auditService, never()).record(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void manualApplyRejectsBlankPeriodReference() {
+        Employee employee = employee("EMP-P");
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+
+        assertThatThrownBy(() -> service.applyManualDeduction(
+                new WorkforceApi.ManualDeductionRequest(employee.getId(), " "), "finance"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("ADVANCE_POLICY_INVALID"));
+    }
+
+    @Test
+    void manualApplyCollectsOnlyOverdueInstallmentsAndReplaysIdempotentlyPerPeriod() {
+        Employee employee = employee("EMP-B");
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+        when(policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc())
+                .thenReturn(List.of(policy("EMPLOYEE_CATEGORY", "employee-category", "MANUAL_BUTTON", "MONTHLY", 1)));
+        WorkforceAdvance advance = new WorkforceAdvance("EMPLOYEE", null, null, employee.getId(),
+                new BigDecimal("1000"), "LONG_TERM", 4, new BigDecimal("250"),
+                "MONTHLY", new BigDecimal("50"), null, "2026-08-01", "AUTO", 0);
+        advance.prePersist();
+        when(advanceRepository.findByEmployeeIdOrderByCreatedAtAsc(employee.getId())).thenReturn(List.of(advance));
+        WorkforceAdvanceInstallment overdue = new WorkforceAdvanceInstallment(
+                advance.getId(), 1, "2026-01-01", new BigDecimal("250"));
+        WorkforceAdvanceInstallment future = new WorkforceAdvanceInstallment(
+                advance.getId(), 2, "2099-01-01", new BigDecimal("250"));
+        when(installmentRepository.findByAdvanceId(advance.getId())).thenReturn(List.of(overdue, future));
+        when(ledgerRepository.findByAdvanceId(advance.getId())).thenReturn(List.of());
+
+        WorkforceApi.ManualDeductionResult result = service.applyManualDeduction(
+                new WorkforceApi.ManualDeductionRequest(employee.getId(), "2026/8"), "finance");
+
+        assertThat(result.duplicate()).isFalse();
+        assertThat(result.appliedAmount()).isEqualByComparingTo("250");
+        assertThat(result.lines()).hasSize(1);
+        assertThat(result.lines().get(0).advanceId()).isEqualTo(advance.getId());
+        verify(auditService).record(eq("APPLY_MANUAL_DEDUCTION"), eq("ADVANCE"), eq(employee.getId()),
+                eq("finance"), any(), any());
+
+        when(ledgerRepository.findByAdvanceId(advance.getId())).thenReturn(List.of(
+                new WorkforceAdvanceLedgerEntry(advance.getId(), "PAYROLL_DEDUCTION",
+                        new BigDecimal("250"), new BigDecimal("750"), "Salary deduction 2026/8", "finance")));
+        WorkforceApi.ManualDeductionResult replay = service.applyManualDeduction(
+                new WorkforceApi.ManualDeductionRequest(employee.getId(), "2026/8"), "finance");
+
+        assertThat(replay.duplicate()).isTrue();
+        assertThat(replay.appliedAmount()).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void manualApplyWithNothingDueThrowsAdvanceNothingDue() {
+        Employee employee = employee("EMP-N");
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+        when(policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc())
+                .thenReturn(List.of(policy("EMPLOYEE_CATEGORY", "employee-category", "MANUAL_BUTTON", "MONTHLY", 1)));
+        WorkforceAdvance advance = new WorkforceAdvance("EMPLOYEE", null, null, employee.getId(),
+                new BigDecimal("1000"), "LONG_TERM", 4, new BigDecimal("250"),
+                "MONTHLY", new BigDecimal("50"), null, "2026-08-01", "AUTO", 0);
+        advance.prePersist();
+        when(advanceRepository.findByEmployeeIdOrderByCreatedAtAsc(employee.getId())).thenReturn(List.of(advance));
+        WorkforceAdvanceInstallment future = new WorkforceAdvanceInstallment(
+                advance.getId(), 1, "2099-01-01", new BigDecimal("250"));
+        when(installmentRepository.findByAdvanceId(advance.getId())).thenReturn(List.of(future));
+        when(ledgerRepository.findByAdvanceId(advance.getId())).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.applyManualDeduction(
+                new WorkforceApi.ManualDeductionRequest(employee.getId(), "2026/8"), "finance"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("ADVANCE_NOTHING_DUE"));
+    }
+
+    @Test
+    void savePolicyRejectsUnknownDeductionModeWithAdvancePolicyInvalid() {
+        assertThatThrownBy(() -> service.savePolicy(new WorkforceApi.AdvancePolicyRequest(
+                null, "GLOBAL", null, "SOMETING_ELSE", "MONTHLY", new BigDecimal("50"),
+                1, 0, "2026-08-01", "", true), "admin"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("ADVANCE_POLICY_INVALID"));
+    }
+
+    @Test
+    void savePolicyRejectsOverlappingLaterOpenVersionWithAdvancePolicyExists() {
+        WorkforceAdvancePolicy laterOpen = new WorkforceAdvancePolicy("GLOBAL", null, "AUTO", "MONTHLY",
+                new BigDecimal("50"), 1, 0, true, 1, LocalDate.of(2026, 12, 1), null);
+        when(policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc()).thenReturn(List.of(laterOpen));
+
+        assertThatThrownBy(() -> service.savePolicy(new WorkforceApi.AdvancePolicyRequest(
+                null, "GLOBAL", null, "AUTO", "MONTHLY", new BigDecimal("50"),
+                1, 0, "2026-08-01", "", true), "admin"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("ADVANCE_POLICY_EXISTS"));
+    }
+
+    private WorkforceAdvancePolicy policy(String scopeType, String scopeId, String mode,
+                                          String frequency, int version) {
+        return new WorkforceAdvancePolicy(scopeType, scopeId, mode, frequency,
+                new BigDecimal("50"), 1, 0, true, version, LocalDate.of(2026, 1, 1), null);
     }
 
     private Employee employee(String code) {

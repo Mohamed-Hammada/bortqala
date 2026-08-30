@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: payroll_run_header_sod_actor_evidence
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: payroll_run_headers }
+        - not: { columnExists: { tableName: payroll_run_headers, columnName: calculated_by } }
+      changes:
+        - addColumn:
+            tableName: payroll_run_headers
+            columns:
+              - column: { name: calculated_by, type: varchar(100) }
+              - column: { name: approved_by, type: varchar(100) }
+      rollback:
+        - dropColumn: { tableName: payroll_run_headers, columnName: calculated_by }
+        - dropColumn: { tableName: payroll_run_headers, columnName: approved_by }

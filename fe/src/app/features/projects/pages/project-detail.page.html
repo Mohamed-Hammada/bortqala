@@ -1,0 +1,731 @@
+<div class="workbench-container">
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>{{ i18n.t('projects.loading') }}</p>
+    </div>
+  } @else if (projectService.currentProject(); as project) {
+    <!-- Workbench Header -->
+    <div class="workbench-header">
+      <div class="header-left">
+        <a [routerLink]="['/projects']" class="btn btn-secondary btn-sm">
+          <span>← {{ i18n.t('projects.backToProjects') }}</span>
+        </a>
+        <div class="project-title-group">
+          <div class="code-badge font-mono">{{ project.code }}</div>
+          <h1 class="project-title">{{ project.name }}</h1>
+          @if (project.nameEn) {
+            <span class="project-subtitle text-muted">({{ project.nameEn }})</span>
+          }
+          <span class="status-pill" [ngClass]="getStatusClass(project.status)">
+            @switch (project.status) {
+              @case ('DRAFT') { {{ i18n.t('projects.statusDraft') }} }
+              @case ('ACTIVE') { {{ i18n.t('projects.statusActive') }} }
+              @case ('ON_HOLD') { {{ i18n.t('projects.statusOnHold') }} }
+              @case ('COMPLETED') { {{ i18n.t('projects.statusCompleted') }} }
+              @case ('CLOSED') { {{ i18n.t('projects.statusClosed') }} }
+              @default { {{ project.status }} }
+            }
+          </span>
+        </div>
+      </div>
+
+      <!-- Lifecycle Transition Actions -->
+      <div class="header-actions">
+        @switch (project.status) {
+          @case ('DRAFT') {
+            <button type="button" class="btn btn-primary" (click)="activateProject()">
+              <span>🚀 {{ i18n.t('projects.actionActivate') }}</span>
+            </button>
+          }
+          @case ('ACTIVE') {
+            <button type="button" class="btn btn-warning" (click)="holdProject()">
+              <span>⏸ {{ i18n.t('projects.actionHold') }}</span>
+            </button>
+            <button type="button" class="btn btn-success" (click)="completeProject()">
+              <span>✅ {{ i18n.t('projects.actionComplete') }}</span>
+            </button>
+          }
+          @case ('ON_HOLD') {
+            <button type="button" class="btn btn-primary" (click)="activateProject()">
+              <span>▶ {{ i18n.t('projects.actionActivate') }}</span>
+            </button>
+          }
+          @case ('COMPLETED') {
+            <button type="button" class="btn btn-secondary" (click)="closeProject()">
+              <span>🔒 {{ i18n.t('projects.actionClose') }}</span>
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="reopenProject()">
+              <span>🔄 {{ i18n.t('projects.actionReopen') }}</span>
+            </button>
+          }
+          @case ('CLOSED') {
+            <button type="button" class="btn btn-secondary" (click)="reopenProject()">
+              <span>🔄 {{ i18n.t('projects.actionReopen') }}</span>
+            </button>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'wbs'"
+        (click)="activeTab.set('wbs')"
+      >
+        <span>📑 {{ i18n.t('projects.tabWbs') }}</span>
+        <span class="tab-count font-mono">{{ projectService.flatWbs().length }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'overview'"
+        (click)="activeTab.set('overview')"
+      >
+        <span>ℹ️ {{ i18n.t('projects.tabOverview') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'costCodes'"
+        (click)="activeTab.set('costCodes')"
+      >
+        <span>🏷️ {{ i18n.t('projects.tabCostCodes') }}</span>
+        <span class="tab-count font-mono">{{ projectService.costCodes().length }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'roles'"
+        (click)="activeTab.set('roles')"
+      >
+        <span>👥 {{ i18n.t('projects.tabRoles') }}</span>
+        <span class="tab-count font-mono">{{ projectService.projectRoles().length }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'dpr'"
+        (click)="activeTab.set('dpr')"
+      >
+        <span>📑 {{ i18n.t('dpr.tabTitle') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'schedule'"
+        (click)="activeTab.set('schedule')"
+      >
+        <span>📊 {{ i18n.t('schedule.tabTitle') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'tenders'"
+        (click)="activeTab.set('tenders')"
+      >
+        <span>🏛️ {{ i18n.t('tenders.navTenders') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'claims'"
+        (click)="activeTab.set('claims')"
+      >
+        <span>📜 {{ i18n.t('claims.navClaims') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'costControl'"
+        (click)="activeTab.set('costControl')"
+      >
+        <span>💰 {{ i18n.t('costControl.navCostControl') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'custodies'"
+        (click)="activeTab.set('custodies')"
+      >
+        <span>💼 {{ i18n.t('projects.custodyTitle') }}</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: WBS / BOQ Tree -->
+    @if (activeTab() === 'wbs') {
+      <div class="tab-content">
+        <div class="tab-toolbar">
+          <div class="summary-pills">
+            <div class="pill">
+              <span class="pill-label">{{ i18n.t('projects.kpiContractValue') }}:</span>
+              <span class="pill-val font-mono font-bold">{{ project.contractValue | number:'1.2-2' }} {{ project.currencyCode }}</span>
+            </div>
+            <div class="pill">
+              <span class="pill-label">{{ i18n.t('projects.kpiPlannedAmount') }}:</span>
+              <span class="pill-val font-mono font-bold">{{ project.totalPlannedAmount | number:'1.2-2' }} {{ project.currencyCode }}</span>
+            </div>
+          </div>
+          @if (project.status !== 'CLOSED') {
+            <button type="button" class="btn btn-primary" (click)="openAddRootWbs()">
+              <span>➕ {{ i18n.t('wbs.addRootNode') }}</span>
+            </button>
+          }
+        </div>
+
+        <app-wbs-tree-grid
+          [nodes]="projectService.wbsTree()"
+          [readOnly]="project.status === 'CLOSED'"
+          (addChild)="openAddChildWbs($event)"
+          (editNode)="openEditWbs($event)"
+          (repositionNode)="openRepositionWbs($event)"
+          (deleteNode)="deleteWbs($event)"
+        ></app-wbs-tree-grid>
+      </div>
+    }
+
+    <!-- Tab 2: Project Overview -->
+    @if (activeTab() === 'overview') {
+      <div class="tab-content">
+        <div class="overview-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">{{ i18n.t('projects.overviewContractInfo') }}</h3>
+              @if (project.status !== 'CLOSED') {
+                <button type="button" class="btn btn-secondary btn-sm" (click)="openEditProject()">
+                  <span>✏️ {{ i18n.t('common.edit') }}</span>
+                </button>
+              }
+            </div>
+            <div class="card-body">
+              <div class="info-row">
+                <span class="info-label">{{ i18n.t('projects.formContractNumber') }}:</span>
+                <span class="info-val font-mono">{{ project.contractNumber || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ i18n.t('projects.formContractValue') }}:</span>
+                <span class="info-val font-mono font-bold">{{ project.contractValue | number:'1.2-2' }} {{ project.currencyCode }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ i18n.t('projects.formSiteAddress') }}:</span>
+                <span class="info-val">{{ project.siteAddress || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ i18n.t('projects.formStartDate') }}:</span>
+                <span class="info-val font-mono">{{ formatEpoch(project.startDate) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ i18n.t('projects.formEndDate') }}:</span>
+                <span class="info-val font-mono">{{ formatEpoch(project.endDate) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ i18n.t('projects.formBudgetBlocking') }}:</span>
+                <span class="info-val font-bold">
+                  {{ project.budgetBlocking ? i18n.t('common.enabled') : i18n.t('common.disabled') }}
+                </span>
+              </div>
+              @if (project.description) {
+                <div class="info-row full-width">
+                  <span class="info-label">{{ i18n.t('projects.formDescription') }}:</span>
+                  <p class="desc-text">{{ project.description }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Tab 3: Cost Codes -->
+    @if (activeTab() === 'costCodes') {
+      <div class="tab-content">
+        <div class="tab-toolbar">
+          <h3 class="tab-title">{{ i18n.t('costCode.title') }}</h3>
+          <button type="button" class="btn btn-primary" (click)="openAddCostCode()">
+            <span>➕ {{ i18n.t('costCode.create') }}</span>
+          </button>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('costCode.code') }}</th>
+              <th>{{ i18n.t('costCode.name') }}</th>
+              <th>{{ i18n.t('costCode.category') }}</th>
+              <th>{{ i18n.t('costCode.description') }}</th>
+              <th class="text-center">{{ i18n.t('costCode.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cc of projectService.costCodes(); track cc.id) {
+              <tr>
+                <td class="font-mono font-bold">{{ cc.code }}</td>
+                <td>
+                  <span>{{ cc.name }}</span>
+                  @if (cc.nameEn) {
+                    <span class="text-muted font-sm">({{ cc.nameEn }})</span>
+                  }
+                </td>
+                <td>
+                  <span class="badge badge-wp">{{ cc.category }}</span>
+                </td>
+                <td>{{ cc.description || '—' }}</td>
+                <td class="text-center">
+                  <span class="status-pill" [class.status-completed]="cc.active" [class.status-hold]="!cc.active">
+                    {{ cc.active ? i18n.t('common.active') : i18n.t('common.inactive') }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Tab 4: Roles / Stakeholders -->
+    @if (activeTab() === 'roles') {
+      <div class="tab-content">
+        <div class="tab-toolbar">
+          <h3 class="tab-title">{{ i18n.t('projectRoles.title') }}</h3>
+          @if (project.status !== 'CLOSED') {
+            <button type="button" class="btn btn-primary" (click)="openAddRole()">
+              <span>➕ {{ i18n.t('projectRoles.assignRole') }}</span>
+            </button>
+          }
+        </div>
+
+        @if (projectService.projectRoles().length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <h3>{{ i18n.t('projectRoles.noRolesTitle') }}</h3>
+            <p>{{ i18n.t('projectRoles.noRolesDesc') }}</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('projectRoles.partyId') }}</th>
+                <th>{{ i18n.t('projectRoles.roleType') }}</th>
+                <th>{{ i18n.t('projectRoles.notes') }}</th>
+                <th class="text-center">{{ i18n.t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (role of projectService.projectRoles(); track role.id) {
+                <tr>
+                  <td class="font-mono font-medium">{{ role.partyId }}</td>
+                  <td>
+                    <span class="badge badge-phase">{{ role.roleType }}</span>
+                  </td>
+                  <td>{{ role.notes || '—' }}</td>
+                  <td class="text-center">
+                    @if (project.status !== 'CLOSED') {
+                      <button type="button" class="btn-action-icon btn-action-danger" (click)="removeRole(role)">
+                        🗑️
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    }
+
+    <!-- Tab 5: Daily Site Progress Reports (DPR) -->
+    @if (activeTab() === 'dpr') {
+      <div class="tab-content">
+        <app-daily-reports-list
+          [projectId]="project.id"
+          [availableWbsNodes]="projectService.flatWbs()"
+          (reportChanged)="onReportChanged()"
+        ></app-daily-reports-list>
+      </div>
+    }
+
+    <!-- Tab 6: Schedule & Gantt -->
+    @if (activeTab() === 'schedule') {
+      <div class="tab-content">
+        <app-project-schedule-gantt
+          [projectId]="project.id"
+        ></app-project-schedule-gantt>
+      </div>
+    }
+
+    <!-- Tab 7: Tenders & Competitions -->
+    @if (activeTab() === 'tenders') {
+      <div class="tab-content">
+        <app-tenders-list
+          [projectId]="project.id"
+        ></app-tenders-list>
+      </div>
+    }
+
+    <!-- Tab 8: Owner & Subcontractor Progress Claims (IPC) -->
+    @if (activeTab() === 'claims') {
+      <div class="tab-content">
+        <app-claims-list
+          [projectId]="project.id"
+          [projectName]="project.name"
+        ></app-claims-list>
+      </div>
+    }
+
+    <!-- Tab 9: Project Budget, Cost Control & Profitability -->
+    @if (activeTab() === 'costControl') {
+      <div class="tab-content">
+        <app-project-cost-control
+          [projectId]="project.id"
+          [project]="project"
+          [wbsNodes]="projectService.flatWbs()"
+        ></app-project-cost-control>
+      </div>
+    }
+
+    <!-- Tab 10: Site Custody Register -->
+    @if (activeTab() === 'custodies') {
+      <div class="tab-content">
+        <app-site-custody-list
+          [projectId]="project.id"
+        ></app-site-custody-list>
+      </div>
+    }
+  }
+
+  <!-- Edit Project Modal -->
+  <app-modal-dialog
+    [isOpen]="editProjectOpen()"
+    [title]="i18n.t('projects.editProjectTitle')"
+    size="wide"
+    (close)="editProjectOpen.set(false)"
+    (closeModal)="editProjectOpen.set(false)"
+  >
+    <form [formGroup]="projectForm" (ngSubmit)="saveEditProject()" class="project-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('projects.formName') }}</label>
+          <input type="text" class="form-control" formControlName="name" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formNameEn') }}</label>
+          <input type="text" class="form-control" formControlName="nameEn" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formSiteAddress') }}</label>
+          <input type="text" class="form-control" formControlName="siteAddress" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formContractNumber') }}</label>
+          <input type="text" class="form-control" formControlName="contractNumber" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formContractValue') }}</label>
+          <input type="number" step="0.01" class="form-control" formControlName="contractValue" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('projects.formCurrency') }}</label>
+          <input type="text" class="form-control" formControlName="currencyCode" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formStartDate') }}</label>
+          <input type="date" class="form-control" formControlName="startDate" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formEndDate') }}</label>
+          <input type="date" class="form-control" formControlName="endDate" />
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">{{ i18n.t('projects.formDescription') }}</label>
+          <textarea class="form-control" formControlName="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group full-width checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="budgetBlocking" />
+            <span>{{ i18n.t('projects.formBudgetBlocking') }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" (click)="editProjectOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-sm"></span>
+          }
+          <span>{{ i18n.t('common.save') }}</span>
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Add / Edit WBS Node Modal -->
+  <app-modal-dialog
+    [isOpen]="wbsModalOpen()"
+    [title]="isEditingWbs() ? i18n.t('wbs.editNodeTitle') : i18n.t('wbs.createNodeTitle')"
+    size="wide"
+    (close)="wbsModalOpen.set(false)"
+    (closeModal)="wbsModalOpen.set(false)"
+  >
+    <form [formGroup]="wbsForm" (ngSubmit)="saveWbsNode()" class="project-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('wbs.code') }}</label>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="wbsCode"
+            [readonly]="isEditingWbs()"
+            [placeholder]="i18n.t('wbs.formCodePlaceholder')"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('wbs.name') }}</label>
+          <input type="text" class="form-control" formControlName="name" [placeholder]="i18n.t('wbs.formNamePlaceholder')" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('wbs.nameEn') }}</label>
+          <input type="text" class="form-control" formControlName="nameEn" [placeholder]="i18n.t('wbs.formNameEnPlaceholder')" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('wbs.nodeType') }}</label>
+          <select class="form-select" formControlName="nodeType">
+            <option value="PHASE">{{ i18n.t('wbs.type.phase') }}</option>
+            <option value="SUB_PHASE">{{ i18n.t('wbs.type.subPhase') }}</option>
+            <option value="WORK_PACKAGE">{{ i18n.t('wbs.type.workPackage') }}</option>
+            <option value="BOQ_ITEM">{{ i18n.t('wbs.type.boqItem') }}</option>
+            <option value="MILESTONE">{{ i18n.t('wbs.type.milestone') }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('wbs.unitOfMeasure') }}</label>
+          <input type="text" class="form-control" formControlName="unitOfMeasure" [placeholder]="i18n.t('wbs.formUomPlaceholder')" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('wbs.plannedQuantity') }}</label>
+          <input type="number" step="0.01" class="form-control" formControlName="plannedQuantity" placeholder="0.00" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('wbs.unitRate') }}</label>
+          <input type="number" step="0.01" class="form-control" formControlName="unitRate" placeholder="0.00" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('wbs.costCode') }}</label>
+          <select class="form-select" formControlName="costCodeId">
+            <option [ngValue]="null">{{ i18n.t('wbs.selectCostCode') }}</option>
+            @for (cc of projectService.costCodes(); track cc.id) {
+              <option [value]="cc.id">{{ cc.code }} - {{ cc.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('wbs.formStartDate') }}</label>
+          <input type="date" class="form-control" formControlName="startDate" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('wbs.formEndDate') }}</label>
+          <input type="date" class="form-control" formControlName="endDate" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('wbs.status') }}</label>
+          <select class="form-select" formControlName="status">
+            <option value="PLANNED">{{ i18n.t('wbs.status.planned') }}</option>
+            <option value="IN_PROGRESS">{{ i18n.t('wbs.status.inProgress') }}</option>
+            <option value="COMPLETED">{{ i18n.t('wbs.status.completed') }}</option>
+            <option value="ON_HOLD">{{ i18n.t('wbs.status.onHold') }}</option>
+            <option value="CANCELLED">{{ i18n.t('wbs.status.cancelled') }}</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">{{ i18n.t('wbs.formDescription') }}</label>
+          <textarea class="form-control" formControlName="description" rows="2" [placeholder]="i18n.t('wbs.formDescriptionPlaceholder')"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" (click)="wbsModalOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-sm"></span>
+          }
+          <span>{{ i18n.t('common.save') }}</span>
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Reposition WBS Modal -->
+  <app-modal-dialog
+    [isOpen]="repositionModalOpen()"
+    [title]="i18n.t('wbs.repositionTitle')"
+    size="normal"
+    (close)="repositionModalOpen.set(false)"
+    (closeModal)="repositionModalOpen.set(false)"
+  >
+    <div class="reposition-form">
+      <p class="reposition-hint">{{ i18n.t('wbs.repositionHint') }}</p>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('wbs.targetParent') }}</label>
+        <select
+          class="form-select"
+          [value]="repositionParentId()"
+          (change)="repositionParentId.set($any($event.target).value)"
+        >
+          <option value="">{{ i18n.t('wbs.rootLevel') }}</option>
+          @for (item of projectService.flatWbs(); track item.id) {
+            @if (repositionNodeTarget() && item.id !== repositionNodeTarget()!.id) {
+              <option [value]="item.id">{{ item.wbsPath }} - {{ item.name }}</option>
+            }
+          }
+        </select>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" (click)="repositionModalOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="button" class="btn btn-primary" (click)="saveRepositionWbs()" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-sm"></span>
+          }
+          <span>{{ i18n.t('wbs.confirmMove') }}</span>
+        </button>
+      </div>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Add Cost Code Modal -->
+  <app-modal-dialog
+    [isOpen]="costCodeModalOpen()"
+    [title]="i18n.t('costCode.createTitle')"
+    size="normal"
+    (close)="costCodeModalOpen.set(false)"
+    (closeModal)="costCodeModalOpen.set(false)"
+  >
+    <form [formGroup]="costCodeForm" (ngSubmit)="saveCostCode()" class="project-form">
+      <div class="form-group">
+        <label class="form-label required">{{ i18n.t('costCode.code') }}</label>
+        <input type="text" class="form-control" formControlName="code" [placeholder]="i18n.t('costCode.codePlaceholder')" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">{{ i18n.t('costCode.name') }}</label>
+        <input type="text" class="form-control" formControlName="name" [placeholder]="i18n.t('costCode.namePlaceholder')" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('costCode.nameEn') }}</label>
+        <input type="text" class="form-control" formControlName="nameEn" [placeholder]="i18n.t('costCode.nameEnPlaceholder')" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">{{ i18n.t('costCode.category') }}</label>
+        <select class="form-select" formControlName="category">
+          <option value="LABOR">{{ i18n.t('costCode.category.labor') }}</option>
+          <option value="MATERIAL">{{ i18n.t('costCode.category.material') }}</option>
+          <option value="EQUIPMENT">{{ i18n.t('costCode.category.equipment') }}</option>
+          <option value="SUBCONTRACTOR">{{ i18n.t('costCode.category.subcontractor') }}</option>
+          <option value="OVERHEAD">{{ i18n.t('costCode.category.overhead') }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('costCode.description') }}</label>
+        <textarea class="form-control" formControlName="description" rows="2"></textarea>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" (click)="costCodeModalOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-sm"></span>
+          }
+          <span>{{ i18n.t('common.save') }}</span>
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Add Party Role Modal -->
+  <app-modal-dialog
+    [isOpen]="roleModalOpen()"
+    [title]="i18n.t('projectRoles.assignRoleTitle')"
+    size="normal"
+    (close)="roleModalOpen.set(false)"
+    (closeModal)="roleModalOpen.set(false)"
+  >
+    <form [formGroup]="roleForm" (ngSubmit)="saveRole()" class="project-form">
+      <div class="form-group">
+        <label class="form-label required">{{ i18n.t('projectRoles.partyId') }}</label>
+        <input type="text" class="form-control" formControlName="partyId" [placeholder]="i18n.t('projectRoles.partyIdPlaceholder')" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">{{ i18n.t('projectRoles.roleType') }}</label>
+        <select class="form-select" formControlName="roleType">
+          <option value="CLIENT_OWNER">{{ i18n.t('projectRoles.roleClientOwner') }}</option>
+          <option value="MAIN_CONTRACTOR">{{ i18n.t('projectRoles.roleMainContractor') }}</option>
+          <option value="SUBCONTRACTOR">{{ i18n.t('projectRoles.roleSubcontractor') }}</option>
+          <option value="CONSULTANT">{{ i18n.t('projectRoles.roleConsultant') }}</option>
+          <option value="SUPPLIER">{{ i18n.t('projectRoles.roleSupplier') }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('projectRoles.notes') }}</label>
+        <textarea class="form-control" formControlName="notes" rows="2"></textarea>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" (click)="roleModalOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-sm"></span>
+          }
+          <span>{{ i18n.t('common.save') }}</span>
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+</div>

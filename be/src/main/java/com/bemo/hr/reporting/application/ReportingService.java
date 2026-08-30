@@ -149,6 +149,18 @@ public class ReportingService {
         return List.copyOf(options);
     }
 
+    public List<ReportingApi.GeneratedPeriod> generatedPeriods(Integer year) {
+        if (year == null || year < 2000 || year > 2200)
+            return List.of();
+        var finalized = attendanceReportRepository.findByPeriodStartBetweenAndStatusIn(
+                LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31),
+                java.util.List.of(ReportStatus.APPROVED, ReportStatus.EXPORTED));
+        return finalized.stream()
+                .map(report -> new ReportingApi.GeneratedPeriod(
+                        report.getPeriodStart(), report.getPeriodEnd(), report.getPayCycle(), report.getId()))
+                .toList();
+    }
+
     public ReportingApi.PreviewResponse preview(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle) {
         validatePeriod(periodStart, periodEnd);
         var categories = employeeCategories().stream()
@@ -212,7 +224,7 @@ public class ReportingService {
             if (!schedules.containsKey(category.getId()) || schedules.get(category.getId()).isEmpty()) {
                 var defaultSchedule = scheduleRuleRepository.save(new ScheduleRule(
                         category.getId(),
-                        "الدوام الافتراضي",
+                        "Default Schedule",
                         LocalDate.of(2000, 1, 1),
                         null,
                         LocalTime.of(8, 0),
@@ -313,7 +325,7 @@ public class ReportingService {
             if (!schedules.containsKey(category.getId()) || schedules.get(category.getId()).isEmpty()) {
                 var defaultSchedule = scheduleRuleRepository.save(new ScheduleRule(
                         category.getId(),
-                        "الدوام الافتراضي",
+                        "Default Schedule",
                         LocalDate.of(2000, 1, 1),
                         null,
                         LocalTime.of(8, 0),
@@ -461,7 +473,7 @@ public class ReportingService {
             worked = result.getExpectedMinutes();
         if (worked == null && request.decision() != AttendanceDecision.NORMAL_DAY) worked = 0;
         if (request.expectedVersion() != null && result.getVersion() != request.expectedVersion()) {
-            throw new BusinessRuleException("تم تعديل السجل بواسطة مراجع آخر. أعد التحميل وحاول مجددًا.", "RPT_VERSION_CONFLICT", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Record was modified by another reviewer. Reload and try again.", "RPT_VERSION_CONFLICT", HttpStatus.CONFLICT);
         }
         var before = result.decisionState();
         result.decide(request.decision(), worked, request.note(), actor);
@@ -480,7 +492,7 @@ public class ReportingService {
         try {
             date = LocalDate.parse(request.date());
         } catch (Exception e) {
-            throw new BusinessRuleException("تاريخ غير صالح: " + request.date());
+            throw new BusinessRuleException("Invalid date: " + request.date());
         }
         String categoryId = request.categoryId() != null && !request.categoryId().isBlank() ? request.categoryId() : "ALL";
         var results = categoryId.equals("ALL")
@@ -496,13 +508,13 @@ public class ReportingService {
             var before = result.decisionState();
             switch (decision) {
                 case "NORMAL_DAY" -> result.decide(AttendanceDecision.NORMAL_DAY, result.getExpectedMinutes(),
-                        "جهاز/كهرباء - يوم عمل عادي: " + note + " [" + actor + "]", actor);
+                        "Device/power - normal workday: " + note + " [" + actor + "]", actor);
                 case "ABSENT" -> result.decide(AttendanceDecision.ABSENCE, 0,
-                        "جهاز/كهرباء - غياب: " + note + " [" + actor + "]", actor);
+                        "Device/power - absence: " + note + " [" + actor + "]", actor);
                 case "HOLIDAY" -> result.decide(AttendanceDecision.OFFICIAL_HOLIDAY, result.getExpectedMinutes(),
-                        "جهاز/كهرباء - إجازة رسمية: " + note + " [" + actor + "]", actor);
+                        "Device/power - official holiday: " + note + " [" + actor + "]", actor);
                 case "DEVICE_FAILURE" -> result.decide(AttendanceDecision.NORMAL_DAY, result.getExpectedMinutes(),
-                        "عطل جهاز: " + note + " [" + actor + "]", actor);
+                        "Device malfunction: " + note + " [" + actor + "]", actor);
                 case "INDIVIDUAL_REVIEW" -> { /* leave for individual review */ }
             }
             recordDecision(reportId, result, downtimeOperationId, "DOWNTIME_DECISION", before, actor);
@@ -531,7 +543,7 @@ public class ReportingService {
         var anomaly = requireAnomaly(reportId, anomalyId);
         if (anomaly.isReplay(request.operationId())) {
             if (anomaly.getDecision() != request.decision()) {
-                throw new BusinessRuleException("معرّف العملية مستخدم لقرار شذوذ مختلف.", "ANOM_OPERATION_ID_CONFLICT", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Operation ID is already used for a different anomaly decision.", "ANOM_OPERATION_ID_CONFLICT", HttpStatus.CONFLICT);
             }
             return new ReportingApi.DayAnomalyActionResponse(details(report), anomaly.getAffectedCount(), 0, 0);
         }
@@ -581,7 +593,7 @@ public class ReportingService {
         var report = requireEditable(reportId);
         var anomaly = requireAnomaly(reportId, anomalyId);
         if (anomaly.getStatus() != DayAnomalyStatus.RESOLVED) {
-            throw new BusinessRuleException("لا يمكن التراجع إلا عن حالة شذوذ معالجة.", "ANOM_REVERSE_RESOLVED_ONLY", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Only resolved anomalies can be reversed.", "ANOM_REVERSE_RESOLVED_ONLY", HttpStatus.CONFLICT);
         }
         var snapshots = dayAnomalyResultSnapshotRepository.findByAnomalyId(anomalyId);
         var byId = dailyAttendanceResultRepository.findAllById(
@@ -640,7 +652,7 @@ public class ReportingService {
         if (request.status() == HolidayProposalStatus.CONFIRMED) {
             confirmedHolidayRepository.findByCategoryIdAndWorkDate(proposal.getCategoryId(), proposal.getWorkDate())
                     .orElseGet(() -> confirmedHolidayRepository.save(new ConfirmedHoliday(proposal.getCategoryId(), proposal.getWorkDate(),
-                            request.holidayName() == null || request.holidayName().isBlank() ? "إجازة مؤكدة" : request.holidayName(), actor)));
+                            request.holidayName() == null || request.holidayName().isBlank() ? "Confirmed holiday" : request.holidayName(), actor)));
             dailyAttendanceResultRepository.findByReportIdAndCategoryIdAndWorkDate(reportId, proposal.getCategoryId(), proposal.getWorkDate())
                     .forEach(item -> {
                         var before = item.decisionState();
@@ -812,7 +824,7 @@ public class ReportingService {
 
     private DayAnomaly requireAnomaly(String reportId, String anomalyId) {
         return dayAnomalyRepository.findById(anomalyId).filter(item -> item.getReportId().equals(reportId))
-                .orElseThrow(() -> new NotFoundException("حالة الشذوذ غير موجودة داخل هذا التقرير.", "ANOM_NOT_FOUND_IN_REPORT"));
+                .orElseThrow(() -> new NotFoundException("Day anomaly not found in this report.", "ANOM_NOT_FOUND_IN_REPORT"));
     }
 
     private ReportingApi.Summary summary(AttendanceReport report) {

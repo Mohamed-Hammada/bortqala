@@ -1,0 +1,183 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('nav.marketing') }}</p>
+      <h1>{{ i18n.t('marketing.campaigns') }}</h1>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab() === 'campaigns'" (click)="activeTab.set('campaigns'); loadAll()">{{ i18n.t('marketing.campaigns') }}</button>
+    <button class="tab" [class.active]="activeTab() === 'surveys'" (click)="activeTab.set('surveys'); loadAll()">{{ i18n.t('marketing.surveys') }}</button>
+    <button class="tab" [class.active]="activeTab() === 'builder'" (click)="activeTab.set('builder'); loadDatasets()">{{ i18n.t('reportBuilder.title') }}</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  }
+
+  @if (activeTab() === 'campaigns') {
+    <div class="actions-bar">
+      <button class="button" (click)="showCreateCampaign.set(true)">{{ i18n.t('marketing.createCampaign') }}</button>
+    </div>
+    @if (campaigns().length === 0) {
+      <div class="empty-state">{{ i18n.t('marketing.noCampaigns') }}</div>
+    } @else {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr><th>{{ i18n.t('marketing.campaignName') }}</th><th>{{ i18n.t('marketing.channel') }}</th><th>{{ i18n.t('marketing.status') }}</th><th>{{ i18n.t('marketing.sentCount') }}</th><th>{{ i18n.t('marketing.failedCount') }}</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (c of campaigns(); track c.id) {
+              <tr>
+                <td>{{ c.name }}</td>
+                <td>{{ c.channel }}</td>
+                <td><span class="status-badge" [style.color]="statusColor(c.status)">{{ c.status }}</span></td>
+                <td>{{ c.sentCount }}</td>
+                <td>{{ c.failedCount }}</td>
+                <td class="actions">
+                  @if (c.status === 'DRAFT') {
+                    <button class="button small" (click)="sendCampaign(c.id)" [disabled]="sendingCampaignId() === c.id">{{ i18n.t('marketing.sendNow') }}</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  @if (activeTab() === 'surveys') {
+    <div class="actions-bar">
+      <button class="button" (click)="showCreateSurvey.set(true)">{{ i18n.t('marketing.createSurvey') }}</button>
+    </div>
+    @if (surveys().length === 0) {
+      <div class="empty-state">{{ i18n.t('marketing.noSurveys') }}</div>
+    } @else {
+      <div class="surveys-list">
+        @for (s of surveys(); track s.id) {
+          <div class="survey-card">
+            <h3>{{ s.title }}</h3>
+            <p>{{ s.description }}</p>
+            <span class="badge" [class.active]="s.active">{{ s.active ? 'Active' : 'Inactive' }}</span>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  @if (activeTab() === 'builder') {
+    <div class="builder-panel">
+      <div class="field-selector">
+        <label>{{ i18n.t('reportBuilder.datasets') }}
+          <select [value]="selectedDataset()" (change)="selectDataset($any($event.target).value)">
+            <option value="">—</option>
+            @for (ds of datasets(); track ds.code) {
+              <option [value]="ds.code">{{ i18n.locale() === 'ar-EG' ? ds.labelAr : ds.labelEn }}</option>
+            }
+          </select>
+        </label>
+        @if (datasetFields().length > 0) {
+          <div class="fields-grid">
+            <div>
+              <h4>{{ i18n.t('reportBuilder.dimensions') }}</h4>
+              @for (f of datasetFields(); track f.name) {
+                @if (f.dimension) {
+                  <label class="field-toggle"><input type="checkbox" [checked]="dimensions().includes(f.name)" (change)="toggleField(f.name, true)"> {{ i18n.locale() === 'ar-EG' ? f.labelAr : f.labelEn }}</label>
+                }
+              }
+            </div>
+            <div>
+              <h4>{{ i18n.t('reportBuilder.measures') }}</h4>
+              @for (f of datasetFields(); track f.name) {
+                @if (!f.dimension) {
+                  <label class="field-toggle"><input type="checkbox" [checked]="measures().includes(f.name)" (change)="toggleField(f.name, false)"> {{ i18n.locale() === 'ar-EG' ? f.labelAr : f.labelEn }}</label>
+                }
+              }
+            </div>
+          </div>
+          <button class="button" (click)="runQuery()" [disabled]="!dimensions().length && !measures().length">{{ i18n.t('reportBuilder.runQuery') }}</button>
+        }
+      </div>
+
+      @if (queryResult()) {
+        <div class="result-panel">
+          <div class="result-header">
+            <span>{{ i18n.t('reportBuilder.totalRows') }}: {{ queryResult()!.totalRows }}</span>
+            <div class="save-form">
+              <input [value]="reportName()" (input)="reportName.set($any($event.target).value)" [placeholder]="i18n.t('reportBuilder.reportName')">
+              <button class="button" (click)="saveReport()" [disabled]="savingReport()">{{ i18n.t('reportBuilder.saveReport') }}</button>
+            </div>
+          </div>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  @for (col of queryResult()!.columns; track col.name) {
+                    <th>{{ i18n.locale() === 'ar-EG' ? col.labelAr : col.label }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of queryResult()!.rows; track $index) {
+                  <tr>
+                    @for (col of queryResult()!.columns; track col.name) {
+                      <td>{{ row[col.name] }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      @if (savedReports().length > 0) {
+        <div class="saved-reports">
+          <h3>{{ i18n.t('reportBuilder.myReports') }}</h3>
+          @for (r of savedReports(); track r.id) {
+            <div class="saved-report-item">{{ r.name }} ({{ r.datasetCode }})</div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  @if (showCreateCampaign()) {
+    <div class="modal-overlay" (click)="showCreateCampaign.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2>{{ i18n.t('marketing.createCampaign') }}</h2>
+        <label>{{ i18n.t('marketing.campaignName') }}<input [value]="newCampaignName()" (input)="newCampaignName.set($any($event.target).value)"></label>
+        <label>{{ i18n.t('marketing.channel') }}
+          <select [value]="newCampaignChannel()" (change)="newCampaignChannel.set($any($event.target).value)">
+            <option value="EMAIL">{{ i18n.t('marketing.email') }}</option>
+            <option value="SMS">{{ i18n.t('marketing.sms') }}</option>
+          </select>
+        </label>
+        <label>{{ i18n.t('marketing.subject') }}<input [value]="newCampaignSubject()" (input)="newCampaignSubject.set($any($event.target).value)"></label>
+        <label>{{ i18n.t('marketing.bodyAr') }}<textarea [value]="newCampaignBodyAr()" (input)="newCampaignBodyAr.set($any($event.target).value)"></textarea></label>
+        <label>{{ i18n.t('marketing.bodyEn') }}<textarea [value]="newCampaignBodyEn()" (input)="newCampaignBodyEn.set($any($event.target).value)"></textarea></label>
+        <div class="modal-actions">
+          <button class="button secondary" (click)="showCreateCampaign.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="button" (click)="createCampaign()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showCreateSurvey()) {
+    <div class="modal-overlay" (click)="showCreateSurvey.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2>{{ i18n.t('marketing.createSurvey') }}</h2>
+        <label>{{ i18n.t('marketing.surveyTitle') }}<input [value]="newSurveyTitle()" (input)="newSurveyTitle.set($any($event.target).value)"></label>
+        <label>{{ i18n.t('marketing.surveyDesc') }}<textarea [value]="newSurveyDesc()" (input)="newSurveyDesc.set($any($event.target).value)"></textarea></label>
+        <div class="modal-actions">
+          <button class="button secondary" (click)="showCreateSurvey.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="button" (click)="createSurvey()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

@@ -2,42 +2,42 @@
     <!-- BORTQALA_WORKFORCE_UI_20260816_COMPACT_IMPORT -->
     <button class="button secondary workforce-import-trigger" type="button" (click)="openDialog()" [disabled]="busy()">
       <span class="action-icon" aria-hidden="true">⇧</span>
-      <span>{{ busy() ? (ar() ? 'جارٍ الاستيراد…' : 'Importing…') : (ar() ? 'استيراد Excel' : 'Import Excel') }}</span>
+      <span>{{ busy() ? i18n.t('workforceImport.importing') : i18n.t('workforceImport.importExcel') }}</span>
     </button>
 
     @if (open()) {
       <div class="import-backdrop" role="presentation" (click)="closeDialog()">
         <section class="import-dialog" role="dialog" aria-modal="true"
-                 [attr.aria-label]="ar() ? 'استيراد Excel' : 'Excel import'"
+                 [attr.aria-label]="i18n.t('workforceImport.ariaLabel')"
                  (click)="$event.stopPropagation()">
           <header class="dialog-header">
             <div class="dialog-copy">
-              <h3>{{ ar() ? 'استيراد من Excel' : 'Import from Excel' }}</h3>
-              <p>{{ ar() ? 'حمّل القالب المعتمد، اختر طريقة المطابقة، ثم ارفع الملف.' : 'Download the approved template, choose the matching method, then upload the file.' }}</p>
+              <h3>{{ i18n.t('workforceImport.dialogTitle') }}</h3>
+              <p>{{ i18n.t('workforceImport.dialogHint') }}</p>
             </div>
-            <button class="dialog-close" type="button" (click)="closeDialog()" [disabled]="busy()" aria-label="Close">×</button>
+            <button class="dialog-close" type="button" (click)="closeDialog()" [disabled]="busy()" [attr.aria-label]="i18n.t('common.close')">×</button>
           </header>
 
           <div class="dialog-body">
             <button class="button secondary dialog-action" type="button" (click)="downloadTemplate()" [disabled]="busy()">
               <span aria-hidden="true">⇩</span>
-              <span>{{ ar() ? 'تحميل قالب Excel' : 'Download Excel template' }}</span>
+              <span>{{ i18n.t('workforceImport.downloadTemplate') }}</span>
             </button>
 
             <label class="identity-mode">
-              <span>{{ ar() ? 'طريقة المطابقة' : 'Matching method' }}</span>
+              <span>{{ i18n.t('workforceImport.matchingMethod') }}</span>
               <select [value]="identityMode()" (change)="setMode($event)" [disabled]="busy()">
-                <option value="USER_CODE">{{ ar() ? 'بكود المستخدم / العامل' : 'User / worker code' }}</option>
-                <option value="AUTO">{{ ar() ? 'تلقائي (الكود ثم الهوية)' : 'Automatic (code, then identity)' }}</option>
+                <option value="USER_CODE">{{ i18n.t('workforceImport.modeUserCode') }}</option>
+                <option value="AUTO">{{ i18n.t('workforceImport.modeAuto') }}</option>
               </select>
             </label>
 
-            <p class="template-hint">{{ ar() ? 'ابدأ بالقالب لتجنب أخطاء أسماء الأعمدة والحقول المطلوبة.' : 'Start from the template to avoid header and required-field errors.' }}</p>
+            <p class="template-hint">{{ i18n.t('workforceImport.templateHint') }}</p>
 
             <input #excelInput class="hidden-file" type="file" accept=".xlsx,.xls"
                    (change)="upload($event)" [disabled]="busy()" />
             <button class="button gold dialog-action" type="button" (click)="excelInput.click()" [disabled]="busy()">
-              {{ busy() ? (ar() ? 'جارٍ الاستيراد…' : 'Importing…') : (ar() ? 'اختيار الملف وبدء الاستيراد' : 'Choose file and import') }}
+              {{ busy() ? i18n.t('workforceImport.importing') : i18n.t('workforceImport.chooseFile') }}
             </button>
 
             @if (message()) {
@@ -45,14 +45,14 @@
             }
             @if (errors().length) {
               <details class="row-errors" open>
-                <summary>{{ ar() ? 'أخطاء الصفوف' : 'Row errors' }} ({{ errors().length }})</summary>
+                <summary>{{ i18n.t('workforceImport.rowErrors') }} ({{ errors().length }})</summary>
                 <ul>
                   @for (item of errors().slice(0, 20); track item.rowNumber) {
-                    <li><strong>{{ ar() ? 'صف' : 'Row' }} {{ item.rowNumber }}:</strong> {{ item.message }}</li>
+                    <li><strong>{{ i18n.t('workforceImport.row') }} {{ item.rowNumber }}:</strong> {{ item.message }}</li>
                   }
                 </ul>
                 @if (errors().length > 20) {
-                  <small>{{ ar() ? 'يتم عرض أول 20 خطأ فقط.' : 'Showing the first 20 errors.' }}</small>
+                  <small>{{ i18n.t('workforceImport.showingFirst20') }}</small>
                 }
               </details>
             }

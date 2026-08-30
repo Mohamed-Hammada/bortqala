@@ -19,5 +19,7 @@ public interface AttendanceReportRepository extends JpaRepository<AttendanceRepo
 
     List<AttendanceReport> findByPeriodStartBetween(LocalDate start, LocalDate end);
 
+    List<AttendanceReport> findByPeriodStartBetweenAndStatusIn(LocalDate start, LocalDate end, List<ReportStatus> statuses);
+
     Optional<AttendanceReport> findFirstByPeriodStartAndPeriodEndAndStatusIn(LocalDate start, LocalDate end, List<ReportStatus> statuses);
 }

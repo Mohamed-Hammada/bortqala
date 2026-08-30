@@ -1,16 +1,16 @@
 <section class="page import-history-page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">{{ i18n.locale().startsWith('ar') ? 'الاستيراد' : 'Imports' }}</p>
-      <h1>{{ i18n.locale().startsWith('ar') ? 'سجل دفعات الاستيراد' : 'Import batch history' }}</h1>
-      <p>{{ i18n.locale().startsWith('ar') ? 'شاشة مستقلة لمراجعة كامل سجل دفعات الاستيراد دون إطالة شاشة الاستيراد الرئيسية.' : 'A dedicated screen for the complete import history without making the main import screen too long.' }}</p>
+      <p class="eyebrow">{{ i18n.t('importHistory.eyebrow') }}</p>
+      <h1>{{ i18n.t('importHistory.title') }}</h1>
+      <p>{{ i18n.t('importHistory.description') }}</p>
     </div>
-    <a class="button secondary" routerLink="/imports">← {{ i18n.locale().startsWith('ar') ? 'العودة للاستيراد' : 'Back to imports' }}</a>
+    <a class="button secondary" routerLink="/imports">← {{ i18n.t('importHistory.backToImports') }}</a>
   </header>
 
   <section class="card toolbar-card">
-    <label class="search-field"><span>{{ i18n.locale().startsWith('ar') ? 'بحث في السجل' : 'Search history' }}</span><input type="search" [value]="query()" (input)="setQuery($event)" [placeholder]="i18n.locale().startsWith('ar') ? 'المصدر، الحالة، رقم الدفعة…' : 'Source, status, batch id…'" /></label>
-    <div class="history-count"><strong>{{ filtered().length }}</strong><span>{{ i18n.locale().startsWith('ar') ? 'دفعة' : 'batches' }}</span></div>
+    <label class="search-field"><span>{{ i18n.t('importHistory.searchLabel') }}</span><input type="search" [value]="query()" (input)="setQuery($event)" [placeholder]="i18n.t('importHistory.searchPlaceholder')" /></label>
+    <div class="history-count"><strong>{{ filtered().length }}</strong><span>{{ i18n.t('importHistory.batches') }}</span></div>
   </section>
 
   @if (error()) { <div class="alert error">{{ error() }}</div> }
@@ -19,7 +19,7 @@
   @if (!loading() && !error()) {
     <section class="card table-card">
       <table>
-        <thead><tr><th>{{ i18n.locale().startsWith('ar') ? 'التاريخ' : 'Date' }}</th><th>{{ i18n.locale().startsWith('ar') ? 'المصدر' : 'Source' }}</th><th>{{ i18n.locale().startsWith('ar') ? 'الملف / الدفعة' : 'File / batch' }}</th><th>{{ i18n.locale().startsWith('ar') ? 'الحالة' : 'Status' }}</th><th>{{ i18n.locale().startsWith('ar') ? 'السجلات' : 'Rows' }}</th></tr></thead>
+        <thead><tr><th>{{ i18n.t('importHistory.colDate') }}</th><th>{{ i18n.t('importHistory.colSource') }}</th><th>{{ i18n.t('importHistory.colFileBatch') }}</th><th>{{ i18n.t('importHistory.colStatus') }}</th><th>{{ i18n.t('importHistory.colRows') }}</th></tr></thead>
         <tbody>
           @for (item of visible(); track value(item, 'id')) {
             <tr>
@@ -29,14 +29,14 @@
               <td><span class="status-pill">{{ value(item, 'status') }}</span></td>
               <td>{{ value(item, 'rowCount', 'totalRows', 'insertedRows', 'punchCount') }}</td>
             </tr>
-          } @empty { <tr><td colspan="5" class="empty-cell">{{ i18n.locale().startsWith('ar') ? 'لا توجد دفعات مطابقة.' : 'No matching import batches.' }}</td></tr> }
+          } @empty { <tr><td colspan="5" class="empty-cell">{{ i18n.t('importHistory.noResults') }}</td></tr> }
         </tbody>
       </table>
     </section>
     <footer class="pager">
-      <button class="button secondary" type="button" (click)="previous()" [disabled]="page() <= 1">{{ i18n.locale().startsWith('ar') ? 'السابق' : 'Previous' }}</button>
+      <button class="button secondary" type="button" (click)="previous()" [disabled]="page() <= 1">{{ i18n.t('importHistory.previous') }}</button>
       <span>{{ page() }} / {{ pageCount() }}</span>
-      <button class="button secondary" type="button" (click)="next()" [disabled]="page() >= pageCount()">{{ i18n.locale().startsWith('ar') ? 'التالي' : 'Next' }}</button>
+      <button class="button secondary" type="button" (click)="next()" [disabled]="page() >= pageCount()">{{ i18n.t('importHistory.next') }}</button>
     </footer>
   }
 </section>

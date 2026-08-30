@@ -182,4 +182,29 @@ describe('ReportReviewPage', () => {
     expect(page.exceptionPreview()?.editable).toBe(1);
     expect(page.store.details()?.dailyResults[0].decision).toBe(before);
   });
+
+  it('renders the rule-state chip for blocking exceptions and auto-attended rows', () => {
+    const blockingRow: DailyResult = { ...row, id: 'row-single', status: 'SINGLE_PUNCH', punchCount: 1, warning: 'One punch is incomplete and requires review.' };
+    const autoRow: DailyResult = { ...row, id: 'row-auto', status: 'PRESENT', punchCount: 1, warning: 'Presence counted from one punch by category policy.' };
+    expect(page.ruleState(blockingRow)).toBe('BLOCKING');
+    expect(page.ruleState(autoRow)).toBe('AUTO');
+    expect(page.ruleState(row)).toBeNull();
+
+    const fixture = TestBed.createComponent(ReportReviewPage);
+    const fixturePage = fixture.componentInstance;
+    httpMock.expectOne('/api/v1/reports/report-1').flush(details());
+    httpMock.expectOne('/api/v1/reports/report-1/attendance-exceptions').flush(emptyWorkbench);
+    fixturePage.store.details.set(details());
+    fixture.detectChanges();
+    fixturePage.filter.set('ALL');
+    fixturePage.store.details.set({ ...details(), dailyResults: [blockingRow, autoRow] });
+    fixture.detectChanges();
+
+    const chips = Array.from(fixture.nativeElement.querySelectorAll('.rule-chip')) as HTMLElement[];
+    expect(chips).toHaveLength(2);
+    expect(chips[0].classList.contains('warning')).toBe(true);
+    expect(chips[0].textContent?.trim()).toBe('review.ruleBlocking');
+    expect(chips[1].classList.contains('success')).toBe(true);
+    expect(chips[1].textContent?.trim()).toBe('review.ruleAutoAttended');
+  });
 });

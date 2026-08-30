@@ -1,5 +1,7 @@
 package com.bemo.hr.shared.security;
 
+import com.bemo.hr.access.api.AccessTemplateApi;
+import com.bemo.hr.access.application.UserRoleTemplateService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,17 +28,20 @@ public class AuthController {
     private final AuthService authService;
     private final RefreshCookieCodec refreshCookieCodec;
     private final ClientIpResolver clientIpResolver;
+    private final UserRoleTemplateService userRoleTemplateService;
     private final String refreshCookieName;
     private final boolean refreshCookieSecure;
 
     public AuthController(AuthService authService,
                           RefreshCookieCodec refreshCookieCodec,
                           ClientIpResolver clientIpResolver,
+                          UserRoleTemplateService userRoleTemplateService,
                           @Value("${hr.security.refresh-cookie-name:bemo_refresh}") String refreshCookieName,
                           @Value("${hr.security.refresh-cookie-secure:true}") boolean refreshCookieSecure) {
         this.authService = authService;
         this.refreshCookieCodec = refreshCookieCodec;
         this.clientIpResolver = clientIpResolver;
+        this.userRoleTemplateService = userRoleTemplateService;
         this.refreshCookieName = refreshCookieName;
         this.refreshCookieSecure = refreshCookieSecure;
     }
@@ -46,9 +51,12 @@ public class AuthController {
                                                 HttpServletRequest servletRequest,
                                                 HttpServletResponse servletResponse,
                                                 @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
-        AuthService.LoginResult result = authService.login(request, deviceId, clientIpResolver.resolve(servletRequest));
-        setRefreshCookie(servletResponse, refreshCookieCodec.encode(result.appId(), result.refreshToken()),
-                result.refreshExpiresAt());
+        String userAgent = servletRequest.getHeader(HttpHeaders.USER_AGENT);
+        AuthService.LoginResult result = authService.login(request, deviceId, clientIpResolver.resolve(servletRequest), userAgent);
+        if (result.refreshToken() != null) {
+            setRefreshCookie(servletResponse, refreshCookieCodec.encode(result.appId(), result.refreshToken()),
+                    result.refreshExpiresAt());
+        }
         return ResponseEntity.ok(result.response());
     }
 
@@ -99,14 +107,14 @@ public class AuthController {
     }
 
     @PostMapping("/users/{id}/revoke-sessions")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.manage')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void revokeSessions(@PathVariable String id, Authentication authentication) {
         authService.revokeSessions(id, authentication.getName());
     }
 
     @PostMapping("/users/{id}/unlock")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.manage')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void unlock(@PathVariable String id, Authentication authentication) {
         authService.unlock(id, authentication.getName());
@@ -146,13 +154,13 @@ public class AuthController {
     }
 
     @GetMapping("/admin/app-settings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('settings.read')")
     AuthApi.AppSettingsResponse appSettings() {
         return authService.currentAppSettings();
     }
 
     @PutMapping("/admin/app-settings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('settings.manage')")
     AuthApi.AppSettingsResponse updateAppSettings(@Valid @RequestBody AuthApi.AppSettingsRequest request,
                                                   Authentication authentication) {
         return authService.updateAppSettings(request, authentication.getName());
@@ -164,13 +172,26 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.read')")
     List<AuthApi.UserResponse> users() {
         return authService.listUsers();
     }
 
+    @GetMapping("/users/menu-options")
+    @PreAuthorize("@auth.hasPermission('users.read')")
+    List<AccessTemplateApi.MenuOptionResponse> menuOptions() {
+        return userRoleTemplateService.menuOptions();
+    }
+
+    @GetMapping("/users/role-templates")
+    @PreAuthorize("@auth.hasPermission('users.read')")
+    List<AccessTemplateApi.RoleTemplateResponse> roleTemplates(
+            @RequestParam(name = "vertical", required = false) String vertical) {
+        return userRoleTemplateService.roleTemplates(vertical);
+    }
+
     @PostMapping("/users")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     AuthApi.UserResponse create(@Valid @RequestBody AuthApi.UserUpsertRequest request,
                                 Authentication authentication) {
@@ -178,7 +199,7 @@ public class AuthController {
     }
 
     @PutMapping("/users/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.manage')")
     AuthApi.UserResponse update(@PathVariable String id, @Valid @RequestBody AuthApi.UserUpsertRequest request,
                                 Authentication authentication) {
         return authService.update(id, request, authentication.getName());

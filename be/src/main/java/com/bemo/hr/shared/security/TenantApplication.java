@@ -141,7 +141,7 @@ public class TenantApplication {
 
     public void updateAttendanceAnomalyThreshold(int attendanceAnomalyThresholdPercent) {
         if (attendanceAnomalyThresholdPercent < 1 || attendanceAnomalyThresholdPercent > 100) {
-            throw new com.bemo.hr.shared.domain.BusinessRuleException("نسبة اكتشاف شذوذ البصمة يجب أن تكون بين 1 و100.");
+            throw new com.bemo.hr.shared.domain.BusinessRuleException("Attendance anomaly detection threshold must be between 1 and 100.");
         }
         this.attendanceAnomalyThresholdPercent = attendanceAnomalyThresholdPercent;
     }

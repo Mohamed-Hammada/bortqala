@@ -6,6 +6,7 @@ import {
   EmployeeOption, ItemCategory, NegativeBalance, OperationsSnapshot,
   AccountOption, PartyOption, StockMovement, UnitOfMeasure, ValuationPolicy, ValuationReport,
   CycleCount, ReorderAlert, StockTransfer, WarehouseBin, WarehouseOption,
+  StockAgingSummary, DeadStockItem, ReorderAlertItem, BarcodeLookupResult,
 } from './operations.models';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
@@ -31,13 +32,16 @@ export class OperationsStore {
   readonly warehouses = signal<WarehouseOption[]>([]);
   readonly bins = signal<WarehouseBin[]>([]);
   readonly transfers = signal<StockTransfer[]>([]);
+  readonly agingSummary = signal<StockAgingSummary | null>(null);
+  readonly deadStockItems = signal<DeadStockItem[]>([]);
+  readonly reorderAlertItems = signal<ReorderAlertItem[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   async load(): Promise<void> {
     this.loading.set(true); this.error.set(null);
     try {
-      const [snapshot, parties, employees, categories, uoms, negativeBalances, valuation, accounts, reorderAlerts, cycleCounts, warehouses, transfers] = await Promise.all([
+      const [snapshot, parties, employees, categories, uoms, negativeBalances, valuation, accounts, reorderAlerts, cycleCounts, warehouses, transfers, agingSummary, deadStock, reorderItems] = await Promise.all([
         firstValueFrom(this.http.get<OperationsSnapshot>('/api/v1/operations')),
         firstValueFrom(this.http.get<PartyOption[]>('/api/v1/parties')),
         firstValueFrom(this.http.get<EmployeeOption[]>('/api/v1/employees')),
@@ -50,6 +54,9 @@ export class OperationsStore {
         firstValueFrom(this.http.get<CycleCount[]>('/api/v1/operations/cycle-counts')),
         firstValueFrom(this.http.get<WarehouseOption[]>('/api/v1/inventory/warehouses')),
         firstValueFrom(this.http.get<StockTransfer[]>('/api/v1/operations/transfers')),
+        firstValueFrom(this.http.get<StockAgingSummary>('/api/v1/operations/analytics/aging')).catch(() => null),
+        firstValueFrom(this.http.get<DeadStockItem[]>('/api/v1/operations/analytics/dead-stock')).catch(() => []),
+        firstValueFrom(this.http.get<ReorderAlertItem[]>('/api/v1/operations/analytics/reorder-alerts')).catch(() => []),
       ]);
       this.snapshot.set(this.normalizeSnapshot(snapshot));
       this.parties.set(parties); this.employees.set(employees); this.categories.set(categories);
@@ -57,6 +64,9 @@ export class OperationsStore {
       this.valuation.set(valuation); this.accounts.set(accounts.filter((account) => account.active && !account.isHeader));
       this.reorderAlerts.set(reorderAlerts); this.cycleCounts.set(cycleCounts);
       this.warehouses.set(warehouses);
+      this.agingSummary.set(agingSummary);
+      this.deadStockItems.set(deadStock || []);
+      this.reorderAlertItems.set(reorderItems || []);
       const bins = await Promise.all(warehouses.map((warehouse) => firstValueFrom(
         this.http.get<WarehouseBin[]>(`/api/v1/operations/warehouses/${warehouse.id}/bins`),
       )));
@@ -100,10 +110,38 @@ export class OperationsStore {
     return (await this.transferPost(`/api/v1/operations/transfers/${id}/${action}`, {})) !== null;
   }
 
+  async lookupBarcode(barcode: string): Promise<BarcodeLookupResult | null> {
+    try {
+      return await firstValueFrom(this.http.get<BarcodeLookupResult>(`/api/v1/operations/analytics/barcode-lookup?barcode=${encodeURIComponent(barcode)}`));
+    } catch {
+      return null;
+    }
+  }
+
   async export(): Promise<void> {
     try {
       downloadBlob(await firstValueFrom(this.http.get('/api/v1/operations/export.xlsx', { responseType: 'blob' })),
-        timestampedExcelFileName('المخزون-والحسابات', 'inventory-and-ledgers', this.i18n.locale()));
+        timestampedExcelFileName(this.i18n.t('export.file.inventory-and-ledgers'), 'inventory-and-ledgers', this.i18n.locale()));
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
+  }
+
+  async loadValuation(filters?: { asOf?: number; warehouseId?: string; itemId?: string }): Promise<void> {
+    try {
+      const params = new URLSearchParams();
+      if (filters?.asOf) params.set('asOf', String(filters.asOf));
+      if (filters?.warehouseId) params.set('warehouseId', filters.warehouseId);
+      if (filters?.itemId) params.set('itemId', filters.itemId);
+      const query = params.toString();
+      const report = await firstValueFrom(this.http.get<ValuationReport>(
+        '/api/v1/operations/valuation/report' + (query ? `?${query}` : '')));
+      this.valuation.set(report);
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
+  }
+
+  async exportValuation(): Promise<void> {
+    try {
+      downloadBlob(await firstValueFrom(this.http.get('/api/v1/exports/inventory-valuation.xlsx', { responseType: 'blob' })),
+        timestampedExcelFileName(this.i18n.t('export.file.inventory-valuation'), 'inventory-valuation', this.i18n.locale()));
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
   }
 

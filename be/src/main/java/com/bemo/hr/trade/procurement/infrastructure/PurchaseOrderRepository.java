@@ -10,6 +10,8 @@ import java.util.List;
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, String> {
     List<PurchaseOrder> findAllByOrderByPoDateDescCreatedAtDesc();
 
+    List<PurchaseOrder> findBySupplierId(String supplierId);
+
     boolean existsByPoNumberIgnoreCase(String poNumber);
 
     boolean existsByPoNumberIgnoreCaseAndIdNot(String poNumber, String id);

@@ -2,27 +2,27 @@
     <section class="approvals-container" dir="rtl">
       <header class="page-header">
         <div>
-          <span class="eyebrow">مُحرك الاعتمادات المتعددة</span>
-          <h1>مسارات الاعتماد وتحديد الصلاحيات</h1>
-          <p>تحديد وإدارة خطوات الاعتماد لكل نوع مستند داخل النظام.</p>
+          <span class="eyebrow">{{ i18n.t('approvals.engineEyebrow') }}</span>
+          <h1>{{ i18n.t('approvals.engineHeading') }}</h1>
+          <p>{{ i18n.t('approvals.engineDescription') }}</p>
         </div>
-        <button type="button" class="btn primary" (click)="openCreateModal()">＋ إنشاء مسار جديد</button>
+        <button type="button" class="btn primary" (click)="openCreateModal()">{{ i18n.t('approvals.createNewPath') }}</button>
       </header>
 
       @if (pageError()) { <div class="alert error">{{ pageError() }}</div> }
-      @if (approvalService.loading()) { <div class="alert">جارٍ تحميل مسارات الاعتماد…</div> }
+      @if (approvalService.loading()) { <div class="alert">{{ i18n.t('approvals.loadingPaths') }}</div> }
 
       <div class="card table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>المستند</th>
-              <th>اسم المسار</th>
-              <th>عدد الخطوات</th>
-              <th>الإصدار</th>
-              <th>الحالة</th>
-              <th>تاريخ التحديث</th>
-              <th>الإجراءات</th>
+              <th>{{ i18n.t('approvals.colDocument') }}</th>
+              <th>{{ i18n.t('approvals.colPathName') }}</th>
+              <th>{{ i18n.t('approvals.colStepCount') }}</th>
+              <th>{{ i18n.t('approvals.colVersion') }}</th>
+              <th>{{ i18n.t('approvals.colStatus') }}</th>
+              <th>{{ i18n.t('approvals.colLastUpdated') }}</th>
+              <th>{{ i18n.t('approvals.colActions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -30,63 +30,78 @@
               <tr>
                 <td><strong>{{ documentTypeLabel(def.documentType) }}</strong></td>
                 <td>{{ def.name }}</td>
-                <td><span class="step-count">{{ def.steps?.length || 0 }} خطوات</span></td>
+                <td><span class="step-count">{{ def.steps?.length || 0 }} {{ i18n.t('approvals.stepsSuffix') }}</span></td>
                 <td>v{{ def.version }}</td>
-                <td><span class="badge" [class.active]="def.active">{{ def.active ? 'مفعل' : 'معطل' }}</span></td>
+                <td><span class="badge" [class.active]="def.active">{{ def.active ? i18n.t('approvals.activeBadge') : i18n.t('approvals.inactiveBadge') }}</span></td>
                 <td>{{ def.updatedAt | date:'yyyy-MM-dd HH:mm' }}</td>
                 <td class="actions">
-                  <button type="button" class="btn secondary" (click)="openEditModal(def)">✏ تعديل الخطوات</button>
+                  <button type="button" class="btn secondary" (click)="openEditModal(def)">{{ i18n.t('approvals.editSteps') }}</button>
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="7" class="empty">لا توجد مسارات اعتماد معرفة حتى الآن.</td></tr>
+              <tr><td colspan="7" class="empty">{{ i18n.t('approvals.noPathsYet') }}</td></tr>
             }
           </tbody>
         </table>
       </div>
 
       <!-- Create / Edit Workflow Modal -->
-      <app-modal-dialog [isOpen]="formModalOpen()" [title]="editingId() ? 'تعديل مسار الاعتماد' : 'إنشاء مسار اعتماد جديد'" size="wide" (close)="formModalOpen.set(false)">
+      <app-modal-dialog [isOpen]="formModalOpen()" [title]="editingId() ? i18n.t('approvals.editPathTitle') : i18n.t('approvals.createPathTitle')" size="wide" (close)="formModalOpen.set(false)">
         <form class="form-grid" dir="rtl">
           <label>
-            نوع المستند *
+            {{ i18n.t('approvals.docTypeLabel') }} *
             <select [(ngModel)]="form.documentType" name="docType" [disabled]="!!editingId()" required>
-              <option value="PURCHASE_ORDER">أمر شراء (PURCHASE_ORDER)</option>
-              <option value="CONTRACTOR_SETTLEMENT">تسوية مقاول (CONTRACTOR_SETTLEMENT)</option>
-              <option value="PAYROLL_RUN">مسير رواتب (PAYROLL_RUN)</option>
-              <option value="SUPPLIER_INVOICE">فاتورة مورد (SUPPLIER_INVOICE)</option>
-              <option value="SUPPLIER_PAYMENT">سداد مورد (SUPPLIER_PAYMENT)</option>
-              <option value="JOURNAL_ENTRY">قيد محاسبي (JOURNAL_ENTRY)</option>
-              <option value="LABOR_REQUEST">طلب عمالة (LABOR_REQUEST)</option>
-              <option value="ADVANCE">سلفة عمالة (ADVANCE)</option>
+              <option value="PURCHASE_ORDER">{{ i18n.t('approvals.docTypePO') }}</option>
+              <option value="CONTRACTOR_SETTLEMENT">{{ i18n.t('approvals.docTypeCS') }}</option>
+              <option value="PAYROLL_RUN">{{ i18n.t('approvals.docTypePR') }}</option>
+              <option value="SUPPLIER_INVOICE">{{ i18n.t('approvals.docTypeSI') }}</option>
+              <option value="SUPPLIER_PAYMENT">{{ i18n.t('approvals.docTypeSP') }}</option>
+              <option value="JOURNAL_ENTRY">{{ i18n.t('approvals.docTypeJE') }}</option>
+              <option value="LABOR_REQUEST">{{ i18n.t('approvals.docTypeLR') }}</option>
+              <option value="ADVANCE">{{ i18n.t('approvals.docTypeADV') }}</option>
+              <option value="PROJECT_LIFECYCLE">{{ i18n.t('approvals.docTypeProjectLifecycle') }}</option>
+              <option value="WBS_BASELINE">{{ i18n.t('approvals.docTypeWbsBaseline') }}</option>
+              <option value="BUDGET_REVISION">{{ i18n.t('approvals.docTypeBudgetRevision') }}</option>
+              <option value="TENDER_AWARD">{{ i18n.t('approvals.docTypeTenderAward') }}</option>
+              <option value="VARIATION_ORDER">{{ i18n.t('approvals.docTypeVariationOrder') }}</option>
+              <option value="OWNER_CLAIM">{{ i18n.t('approvals.docTypeOwnerClaim') }}</option>
+              <option value="SUBCONTRACT_CLAIM">{{ i18n.t('approvals.docTypeSubcontractClaim') }}</option>
+              <option value="FORECAST_REVISION">{{ i18n.t('approvals.docTypeForecastRevision') }}</option>
+              <option value="INTERCOMPANY_TRANSACTION">{{ i18n.t('approvals.docTypeIntercompany') }}</option>
+              <option value="ETA_TAX_SUBMISSION">{{ i18n.t('approvals.docTypeEtaTax') }}</option>
             </select>
           </label>
 
           <label>
-            اسم المسار *
-            <input [(ngModel)]="form.name" name="wfName" required placeholder="مثال: مسار اعتمادات أوامر الشراء" />
+            {{ i18n.t('approvals.pathNameLabel') }} *
+            <input [(ngModel)]="form.name" name="wfName" required [placeholder]="i18n.t('approvals.pathNamePlaceholder')" />
           </label>
 
           <label class="checkbox-label">
             <input type="checkbox" [(ngModel)]="form.active" name="active" />
-            تفعيل المسار مباشرة
+            {{ i18n.t('approvals.activateImmediately') }}
           </label>
 
           <div class="steps-builder">
             <div class="builder-header">
-              <h3>خطوات الاعتماد المتتابعة</h3>
-              <button type="button" class="btn secondary" (click)="addStep()">＋ إضافة خطوة</button>
+              <h3>{{ i18n.t('approvals.sequentialSteps') }}</h3>
+              <button type="button" class="btn secondary" (click)="addStep()">{{ i18n.t('approvals.addStep') }}</button>
             </div>
 
             @for (step of form.steps; track $index) {
               <div class="step-card">
                 <span class="step-num">#{{ step.stepOrder }}</span>
                 <div class="step-fields">
-                  <input [(ngModel)]="step.name" [name]="'stepName_' + $index" placeholder="اسم الخطوة (مثال: اعتماد المدير المالي)" required />
+                  <input [(ngModel)]="step.name" [name]="'stepName_' + $index" [placeholder]="i18n.t('approvals.stepNamePlaceholder')" required />
                   <select [(ngModel)]="step.requiredRole" [name]="'stepRole_' + $index">
-                    <option value="">اختر الدور المطلوب…</option>
+                    <option value="">{{ i18n.t('approvals.selectRole') }}</option>
                     <option value="SUPER_ADMIN">SUPER_ADMIN</option>
                     <option value="ADMIN">ADMIN</option>
+                    <option value="PROJECT_MANAGER">PROJECT_MANAGER</option>
+                    <option value="COMMERCIAL_MANAGER">COMMERCIAL_MANAGER</option>
+                    <option value="COST_ENGINEER">COST_ENGINEER</option>
+                    <option value="SITE_ENGINEER">SITE_ENGINEER</option>
+                    <option value="GENERAL_MANAGER">GENERAL_MANAGER</option>
                     <option value="WORKFORCE_MANAGER">WORKFORCE_MANAGER</option>
                     <option value="WORKFORCE_FINANCE">WORKFORCE_FINANCE</option>
                     <option value="FINANCE_MANAGER">FINANCE_MANAGER</option>
@@ -100,16 +115,16 @@
                 <button type="button" class="btn danger" (click)="removeStep($index)">🗑</button>
               </div>
             } @empty {
-              <p class="empty">اضغط إضافة خطوة لبناء مسار الاعتماد المتتابع.</p>
+              <p class="empty">{{ i18n.t('approvals.addStepHint') }}</p>
             }
           </div>
         </form>
 
         <div modal-actions>
           <button type="button" class="btn primary" [disabled]="submitting()" (click)="saveWorkflow()">
-            {{ submitting() ? 'جارٍ الحفظ…' : 'حفظ المسار' }}
+            {{ submitting() ? i18n.t('approvals.saving') : i18n.t('approvals.savePath') }}
           </button>
-          <button type="button" class="btn secondary" (click)="formModalOpen.set(false)">إلغاء</button>
+          <button type="button" class="btn secondary" (click)="formModalOpen.set(false)">{{ i18n.t('approvals.cancel') }}</button>
         </div>
       </app-modal-dialog>
     </section>

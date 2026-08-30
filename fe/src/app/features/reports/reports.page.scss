@@ -47,6 +47,16 @@
   color: var(--muted);
   font-size: 12px;
 }
+.preview-range {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.preview-range .hijri {
+  font-size: 11px;
+  opacity: 0.8;
+}
 .preview-stats {
   display: flex;
   flex-wrap: wrap;
@@ -130,6 +140,25 @@
   background: #efebe3;
   color: #999;
   cursor: not-allowed;
+}
+.preset-item.generated button:disabled {
+  border-style: dashed;
+  opacity: 0.75;
+}
+.preset-item .generated-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-style: normal;
+  color: var(--warning-text, #8a6d1a);
+}
+.preset-item a.view-existing {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  text-decoration: underline;
 }
 .periods button:disabled small {
   color: #999;
@@ -217,4 +246,63 @@ td small {
   .period-form {
     grid-template-columns: 1fr;
   }
+}
+
+.schedule-card {
+  margin-top: 1.5rem;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.schedule-form {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line, #e0e0e0);
+  margin-bottom: 1rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  .field {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+.schedule-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.small {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.error-tooltip {
+  cursor: help;
+  color: var(--danger, #dc3545);
+  margin-left: 4px;
+}
+
+.muted {
+  opacity: 0.6;
+}
+
+.warning {
+  color: var(--warning, #ffc107);
 }

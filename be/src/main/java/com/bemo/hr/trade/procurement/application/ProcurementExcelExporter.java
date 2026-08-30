@@ -8,8 +8,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class ProcurementExcelExporter {
@@ -62,8 +65,13 @@ public class ProcurementExcelExporter {
             var invoiceSheet = workbook.createSheet(arabic ? "فواتير الموردين" : "Supplier Invoices");
             invoiceSheet.setRightToLeft(arabic);
             metadata(invoiceSheet, arabic, actor);
-            row(invoiceSheet, 2, header, arabic ? new String[]{"رقم الفاتورة", "المرجع الداخلي", "التاريخ", "المورد", "العملة", "الأصلي", "الخصم", "الضريبة", "الصافي", "المدفوع", "المتبقي", "الحالة"}
-                    : new String[]{"Invoice", "Internal Reference", "Date", "Supplier", "Currency", "Original", "Discount", "Tax", "Net", "Paid", "Outstanding", "Status"});
+            Map<String, BigDecimal> discountsByInvoice = new HashMap<>();
+            for (var payment : payments) {
+                if (payment.settlementDiscount() == null) continue;
+                discountsByInvoice.merge(payment.supplierInvoiceId(), payment.settlementDiscount(), BigDecimal::add);
+            }
+            row(invoiceSheet, 2, header, arabic ? new String[]{"رقم الفاتورة", "المرجع الداخلي", "التاريخ", "المورد", "العملة", "الأصلي", "الخصم", "الضريبة", "الصافي", "المدفوع", "خصومات التسوية", "المتبقي", "الحالة"}
+                    : new String[]{"Invoice", "Internal Reference", "Date", "Supplier", "Currency", "Original", "Discount", "Tax", "Net", "Paid", "Settlement Discounts", "Outstanding", "Status"});
             index = 3;
             for (var value : invoices) {
                 var row = invoiceSheet.createRow(index++);
@@ -77,16 +85,17 @@ public class ProcurementExcelExporter {
                 number(row, 7, value.taxAmount());
                 number(row, 8, value.netAmount());
                 number(row, 9, value.paidAmount());
-                number(row, 10, value.outstandingAmount());
-                text(row, 11, value.status());
+                number(row, 10, discountsByInvoice.getOrDefault(value.id(), BigDecimal.ZERO));
+                number(row, 11, value.outstandingAmount());
+                text(row, 12, value.status());
             }
-            finish(invoiceSheet, 12);
+            finish(invoiceSheet, 13);
 
             var paymentSheet = workbook.createSheet(arabic ? "مدفوعات الموردين" : "Supplier Payments");
             paymentSheet.setRightToLeft(arabic);
             metadata(paymentSheet, arabic, actor);
-            row(paymentSheet, 2, header, arabic ? new String[]{"رقم الدفعة", "التاريخ", "المورد", "الفاتورة", "المبلغ", "العملة", "الطريقة", "الحالة"}
-                    : new String[]{"Payment", "Date", "Supplier", "Invoice", "Amount", "Currency", "Method", "Status"});
+            row(paymentSheet, 2, header, arabic ? new String[]{"رقم الدفعة", "التاريخ", "المورد", "الفاتورة", "المبلغ", "الاستحقاق الأصلي", "خصم التسوية", "العملة", "الطريقة", "الحالة"}
+                    : new String[]{"Payment", "Date", "Supplier", "Invoice", "Amount", "Original Due", "Settlement Discount", "Currency", "Method", "Status"});
             index = 3;
             for (var value : payments) {
                 var row = paymentSheet.createRow(index++);
@@ -95,11 +104,13 @@ public class ProcurementExcelExporter {
                 text(row, 2, value.supplierName());
                 text(row, 3, value.supplierInvoiceId());
                 number(row, 4, value.amount());
-                text(row, 5, value.currencyCode());
-                text(row, 6, value.paymentMethod());
-                text(row, 7, value.status());
+                number(row, 5, value.originalDue());
+                number(row, 6, value.settlementDiscount());
+                text(row, 7, value.currencyCode());
+                text(row, 8, value.paymentMethod());
+                text(row, 9, value.status());
             }
-            finish(paymentSheet, 8);
+            finish(paymentSheet, 10);
             workbook.write(output);
             return output.toByteArray();
         } catch (Exception exception) {

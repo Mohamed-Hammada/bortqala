@@ -1,0 +1,23 @@
+id;translation_key;locale;text_value
+v406-001-en;recruitment.cvLabel;en-US;CV Attachment
+v406-001-ar;recruitment.cvLabel;ar-EG;مرفق السيرة الذاتية
+v406-002-en;recruitment.cvHint;en-US;PDF, images or Excel workbooks up to 5 MB
+v406-002-ar;recruitment.cvHint;ar-EG;ملفات PDF أو صور أو Excel بحجم أقصى 5 ميجابايت
+v406-003-en;recruitment.cvTooLarge;en-US;CV exceeds the 5 MB limit
+v406-003-ar;recruitment.cvTooLarge;ar-EG;السيرة الذاتية تتجاوز الحد الأقصى 5 ميجابايت
+v406-004-en;recruitment.cvUnsupportedType;en-US;Unsupported CV format - use PDF, images or Excel
+v406-004-ar;recruitment.cvUnsupportedType;ar-EG;صيغة غير مدعومة - استخدم PDF أو صور أو Excel
+v406-005-en;recruitment.cvRemove;en-US;Remove
+v406-005-ar;recruitment.cvRemove;ar-EG;إزالة
+v406-006-en;recruitment.cvAttached;en-US;CV attached
+v406-006-ar;recruitment.cvAttached;ar-EG;تم إرفاق السيرة الذاتية
+v406-007-en;RECR_CV_REQUIRED;en-US;A CV file is required
+v406-007-ar;RECR_CV_REQUIRED;ar-EG;ملف السيرة الذاتية مطلوب
+v406-008-en;RECR_CV_TOO_LARGE;en-US;CV exceeds the 5 MB limit
+v406-008-ar;RECR_CV_TOO_LARGE;ar-EG;السيرة الذاتية تتجاوز الحد الأقصى 5 ميجابايت
+v406-009-en;RECR_CV_UNSUPPORTED_TYPE;en-US;Unsupported CV format
+v406-009-ar;RECR_CV_UNSUPPORTED_TYPE;ar-EG;صيغة السيرة الذاتية غير مدعومة
+v406-010-en;RECR_CV_NOT_FOUND;en-US;CV not found
+v406-010-ar;RECR_CV_NOT_FOUND;ar-EG;السيرة الذاتية غير موجودة
+v406-011-en;RECR_CV_READ_ERROR;en-US;Could not read the CV file
+v406-011-ar;RECR_CV_READ_ERROR;ar-EG;تعذر قراءة ملف السيرة الذاتية

@@ -1,0 +1,129 @@
+<div class="policy-groups-page">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('policy.title') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('policy.subtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary" (click)="openCreateDrawer()">
+        {{ i18n.t('policy.createGroup') }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="successMessage()" class="alert alert-success">
+    {{ successMessage() }}
+  </div>
+  <div *ngIf="errorMessage()" class="alert alert-danger">
+    {{ errorMessage() }}
+  </div>
+
+  <div class="groups-table-container">
+    <table class="table data-table">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('policy.groupName') }}</th>
+          <th>{{ i18n.t('policy.description') }}</th>
+          <th>{{ i18n.t('policy.permissionsCount') }}</th>
+          <th>{{ i18n.t('policy.assignedUsers') }}</th>
+          <th class="text-end">{{ i18n.t('common.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let g of groups()">
+          <td class="fw-bold">
+            {{ g.groupName }}
+            <span *ngIf="g.isSystem" class="badge badge-secondary">{{ i18n.t('policy.systemGroupHint') }}</span>
+          </td>
+          <td>{{ g.description || '—' }}</td>
+          <td>
+            <span class="badge badge-gold">{{ g.permissionsCount }}</span>
+          </td>
+          <td>{{ g.assignedUsersCount }}</td>
+          <td class="text-end">
+            <button
+              type="button"
+              class="btn btn-outline btn-sm"
+              (click)="openEditDrawer(g)"
+            >
+              {{ i18n.t('common.edit') }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger-outline btn-sm ms-1"
+              *ngIf="!g.isSystem"
+              (click)="deleteGroup(g)"
+            >
+              {{ i18n.t('common.delete') }}
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="!loading() && groups().length === 0">
+          <td colspan="5" class="text-center py-4 text-muted">
+            {{ i18n.t('policy.noGroups') }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Drawer Editor -->
+  <div class="drawer-backdrop" *ngIf="drawerOpen()" (click)="closeDrawer()">
+    <div class="drawer-panel" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <h3>{{ editingGroupId() ? i18n.t('policy.editGroup') : i18n.t('policy.createGroup') }}</h3>
+        <button type="button" class="btn-close" (click)="closeDrawer()">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="form-group mb-3">
+          <label>{{ i18n.t('policy.groupName') }} *</label>
+          <input
+            type="text"
+            [ngModel]="editingGroupName()"
+            (ngModelChange)="editingGroupName.set($event)"
+            [disabled]="editingIsSystem()"
+            class="form-control"
+          />
+        </div>
+
+        <div class="form-group mb-3">
+          <label>{{ i18n.t('policy.description') }}</label>
+          <textarea
+            [ngModel]="editingDescription()"
+            (ngModelChange)="editingDescription.set($event)"
+            [disabled]="editingIsSystem()"
+            rows="2"
+            class="form-control"
+          ></textarea>
+        </div>
+
+        <div class="matrix-section">
+          <h4>{{ i18n.t('policy.matrixTitle') }}</h4>
+          <app-policy-matrix
+            [catalog]="catalog()"
+            [selectedPermissionKeys]="editingPermissionKeys()"
+            [readOnly]="editingIsSystem()"
+            (selectedPermissionKeysChange)="editingPermissionKeys.set($event)"
+          ></app-policy-matrix>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-outline" (click)="closeDrawer()" [disabled]="saving()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          *ngIf="!editingIsSystem()"
+          (click)="saveGroup()"
+          [disabled]="saving() || !editingGroupName().trim()"
+        >
+          <span *ngIf="saving()">...</span>
+          <span *ngIf="!saving()">{{ i18n.t('common.save') }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

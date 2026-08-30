@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v358_sales_target_translations
+      author: wolfn
+      validCheckSum: ANY
+      comment: "WP-12: sales targets + commission rules translation keys"
+      changes:
+        - loadData:
+            tableName: translations
+            comment: "WP-12: sales target translation keys"
+            file: db/changelog/data/insert/files/20260826_v358_sales_target_translations.csv
+            separator: ";"
+            quotChar: '"'
+            columns:
+              - column:
+                  header: id
+                  name: id
+                  type: STRING
+              - column:
+                  header: translation_key
+                  name: translation_key
+                  type: STRING
+              - column:
+                  header: locale
+                  name: locale
+                  type: STRING
+              - column:
+                  header: text_value
+                  name: text_value
+                  type: STRING

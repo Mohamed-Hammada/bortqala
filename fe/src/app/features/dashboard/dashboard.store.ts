@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
-import { Dashboard, AttendanceChartPoint, PayrollSummary, DepartmentMetric, TrendPoint } from './dashboard.models';
+import { Dashboard, AttendanceChartPoint, PayrollSummary, DepartmentMetric, TrendPoint, ClockInBucket } from './dashboard.models';
 import { I18nService } from '../../core/i18n.service';
 
 @Injectable()
@@ -15,6 +15,8 @@ export class DashboardStore {
   readonly departmentMetrics = signal<DepartmentMetric[]>([]);
   readonly trends = signal<TrendPoint[]>([]);
   readonly trendsLoading = signal(false);
+  readonly clockInBuckets = signal<ClockInBucket[]>([]);
+  readonly clockInLoading = signal(false);
   readonly loading = signal(true);
   readonly chartLoading = signal(false);
   readonly error = signal<string | null>(null);
@@ -94,9 +96,35 @@ export class DashboardStore {
     }
   }
 
+  /** WP-08: peak clock-in histogram from the dashboard API. */
+  async loadClockInHistogram(months: number, categoryId?: string): Promise<void> {
+    this.clockInLoading.set(true);
+    try {
+      const params: Record<string, string> = { months: String(months) };
+      if (categoryId) params['categoryId'] = categoryId;
+      const res = await firstValueFrom(
+        this.httpClient.get<ClockInBucket[]>('/api/v1/dashboard/clock-in-histogram', { params }),
+      );
+      this.clockInBuckets.set(res ?? []);
+    } catch {
+      this.clockInBuckets.set([]);
+    } finally {
+      this.clockInLoading.set(false);
+    }
+  }
+
   downloadTrends(months: number, year: number, month: number): Promise<Blob> {
     return firstValueFrom(
       this.httpClient.get('/api/v1/exports/trends.xlsx', { params: { months, year, month }, responseType: 'blob' }),
+    );
+  }
+
+  /** WP-08: Excel export of the peak clock-in histogram (honors the category filter). */
+  downloadClockInHistogram(months: number, categoryId?: string): Promise<Blob> {
+    const params: Record<string, string | number> = { months };
+    if (categoryId) params['categoryId'] = categoryId;
+    return firstValueFrom(
+      this.httpClient.get('/api/v1/exports/clock-in-histogram.xlsx', { params, responseType: 'blob' }),
     );
   }
 

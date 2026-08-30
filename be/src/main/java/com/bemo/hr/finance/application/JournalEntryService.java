@@ -80,15 +80,23 @@ public class JournalEntryService {
                 payload.reference(), payload.fiscalPeriodId());
         entry.assignCreator(username);
         entry.setCurrency(normalizeCurrency(payload.currency()));
+        entry.assignProject(payload.projectId(), payload.wbsNodeId(), payload.costCodeId());
         entry = journalEntryRepository.save(entry);
         log.info("JournalEntry {} created by user {}", entry.getId(), username);
 
         for (var linePayload : payload.lines()) {
             JournalEntryLine line = new JournalEntryLine(entry.getId(), linePayload.accountId(),
                     linePayload.partyId(), linePayload.debit(), linePayload.credit(), linePayload.memo());
+            String proj = linePayload.projectId() != null ? linePayload.projectId() : payload.projectId();
+            String wbs = linePayload.wbsNodeId() != null ? linePayload.wbsNodeId() : payload.wbsNodeId();
+            String costCode = linePayload.costCodeId() != null ? linePayload.costCodeId() : payload.costCodeId();
+            line.assignProject(proj, wbs, costCode);
             line = journalEntryLineRepository.save(line);
-            if (hasDimension(linePayload)) journalDimensionRepository.save(new JournalDimension(line.getId(),
-                    blank(linePayload.costCenterId()), blank(linePayload.projectId()), blank(linePayload.departmentId())));
+            if (hasDimension(linePayload) || hasDimension(payload)) {
+                journalDimensionRepository.save(new JournalDimension(line.getId(),
+                        blank(linePayload.costCenterId()), blank(proj), blank(linePayload.departmentId()),
+                        blank(wbs), blank(costCode)));
+            }
         }
         var amountsByAccount = payload.lines().stream().collect(java.util.stream.Collectors.toMap(
                 AccountingApi.JournalEntryLinePayload::accountId,
@@ -115,14 +123,14 @@ public class JournalEntryService {
         }
         String value = requireManualEntryNumber(requested);
         if (journalEntryRepository.existsByAppIdAndEntryNumber(appId, value)) {
-            throw new BusinessRuleException("رقم القيد مستخدم بالفعل في هذه الشركة.", "JOURNAL_NUMBER_DUPLICATE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Journal entry number already exists in this company.", "JOURNAL_NUMBER_DUPLICATE", HttpStatus.CONFLICT);
         }
         return value;
     }
 
     private String requireManualEntryNumber(String requested) {
         if (requested == null || requested.isBlank()) {
-            throw new BusinessRuleException("رقم القيد مطلوب عند اختيار الترقيم اليدوي.", "JOURNAL_NUMBER_REQUIRED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Journal entry number is required when manual numbering is selected.", "JOURNAL_NUMBER_REQUIRED", HttpStatus.BAD_REQUEST);
         }
         return requested.strip();
     }
@@ -209,7 +217,7 @@ public class JournalEntryService {
         requireVersion(entry, request.expectedVersion());
         if (entry.getStatus() != JournalEntry.Status.POSTED) {
             throw new BusinessRuleException(
-                    "لا يمكن عكس قيد في حالة " + entry.getStatus() + ". العكس مسموح فقط للقيد المُرحَّل.",
+                    "Cannot reverse an entry in " + entry.getStatus() + " status. Only posted entries can be reversed.",
                     "JOURNAL_STATE_INVALID", HttpStatus.CONFLICT);
         }
         fiscalPeriodGuard.requireOpen(entry.getEntryDate());
@@ -217,7 +225,7 @@ public class JournalEntryService {
         List<JournalEntryLine> originalLines = journalEntryLineRepository.findByJournalEntryId(entry.getId());
         String reversalNumber = entry.getEntryNumber() + "-R";
         JournalEntry reversal = new JournalEntry(reversalNumber, entry.getEntryDate(),
-                "عكس القيد " + entry.getEntryNumber()
+                "Reversal of entry " + entry.getEntryNumber()
                         + (request.reason() == null || request.reason().isBlank() ? "" : " — " + request.reason().strip()),
                 entry.getReference(), entry.getFiscalPeriodId());
         reversal.setCurrency(entry.getCurrency());
@@ -244,24 +252,24 @@ public class JournalEntryService {
     private void validateStructure(AccountingApi.JournalEntryPayload payload, String appId, String entryNumber) {
         if (payload.lines() == null || payload.lines().size() < 2) {
             log.warn("Validation failed: journal entry must have at least 2 lines");
-            throw new BusinessRuleException("يجب أن يحتوي القيد على سطرين على الأقل.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("A journal entry must have at least two lines.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
         }
         Set<String> accountIds = payload.lines().stream().map(AccountingApi.JournalEntryLinePayload::accountId).collect(java.util.stream.Collectors.toSet());
         List<Account> accounts = accountRepository.findAllById(accountIds);
         Set<String> found = accounts.stream().map(Account::getId).collect(java.util.stream.Collectors.toSet());
         if (found.size() != accountIds.size()) {
-            throw new BusinessRuleException("أحد الحسابات في القيد غير موجود.", "ACCOUNT_NOT_FOUND", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("One of the accounts in the entry was not found.", "ACCOUNT_NOT_FOUND", HttpStatus.BAD_REQUEST);
         }
         for (var account : accounts) {
             if (account.isHeader() || !account.isActive()) {
-                throw new BusinessRuleException("لا يمكن الترحيل على حساب رئيسي أو غير نشط: " + account.getCode(),
+                throw new BusinessRuleException("Cannot post to a header or inactive account: " + account.getCode(),
                         "ACCOUNT_NOT_POSTING", HttpStatus.BAD_REQUEST);
             }
             String accountCurrency = account.getCurrency();
             String entryCurrency = normalizeCurrency(payload.currency());
             if (accountCurrency != null && !accountCurrency.isBlank()
                     && entryCurrency != null && !entryCurrency.equalsIgnoreCase(accountCurrency)) {
-                throw new BusinessRuleException("عملة الحساب " + account.getCode() + " لا تطابق عملة القيد.",
+                throw new BusinessRuleException("Account currency " + account.getCode() + " does not match the entry currency.",
                         "CURRENCY_MISMATCH", HttpStatus.BAD_REQUEST);
             }
         }
@@ -272,14 +280,14 @@ public class JournalEntryService {
             BigDecimal debit = line.debit() == null ? BigDecimal.ZERO : line.debit();
             BigDecimal credit = line.credit() == null ? BigDecimal.ZERO : line.credit();
             if (debit.signum() < 0 || credit.signum() < 0) {
-                throw new BusinessRuleException("لا يجوز أن تكون قيمة المدين أو الدائن سالبة.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
+                throw new BusinessRuleException("Debit or credit amount cannot be negative.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
             }
             if (debit.signum() > 0 && credit.signum() > 0) {
-                throw new BusinessRuleException("يجب أن يكون لكل سطر جانب واحد موجب فقط (مدين أو دائن).",
+                throw new BusinessRuleException("Each line must have only one positive side (debit or credit).",
                         "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
             }
             if (debit.signum() == 0 && credit.signum() == 0) {
-                throw new BusinessRuleException("كل سطر يجب أن يحتوي على قيمة مدين أو دائن.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
+                throw new BusinessRuleException("Each line must contain a debit or credit amount.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
             }
             Account lineAccount = accounts.stream().filter(a -> a.getId().equals(line.accountId())).findFirst().orElseThrow();
             if ((lineAccount.getType() == Account.Type.EXPENSE || lineAccount.getType() == Account.Type.REVENUE)
@@ -291,7 +299,7 @@ public class JournalEntryService {
             totalCredit = totalCredit.add(credit);
         }
         if (totalDebit.compareTo(totalCredit) != 0) {
-            throw new BusinessRuleException("القيد غير متوازن! مجموع المدين (" + totalDebit + ") يجب أن يساوي مجموع الدائن (" + totalCredit + ")",
+            throw new BusinessRuleException("Entry is not balanced! Total debit (" + totalDebit + ") must equal total credit (" + totalCredit + ")",
                     "JOURNAL_UNBALANCED", HttpStatus.BAD_REQUEST);
         }
     }
@@ -299,12 +307,12 @@ public class JournalEntryService {
     private JournalEntry requireEntry(String appId, String id) {
         return journalEntryRepository.findById(id)
                 .filter(entry -> entry.getAppId().equals(appId))
-                .orElseThrow(() -> new BusinessRuleException("قيد اليومية غير موجود.", "JOURNAL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Journal entry not found.", "JOURNAL_NOT_FOUND", HttpStatus.NOT_FOUND));
     }
 
     private void requireVersion(JournalEntry entry, Long expectedVersion) {
         if (expectedVersion != null && expectedVersion != entry.getVersion()) {
-            throw new BusinessRuleException("تم تعديل السجل بواسطة مستخدم آخر.", "RECORD_ALREADY_MODIFIED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Record was modified by another user.", "RECORD_ALREADY_MODIFIED", HttpStatus.CONFLICT);
         }
     }
 
@@ -330,8 +338,12 @@ public class JournalEntryService {
                 .map(l -> {
                     var d = dimensions.get(l.getId());
                     return new AccountingApi.JournalEntryLineResponse(l.getId(), l.getJournalEntryId(), l.getAccountId(),
-                            l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(), d == null ? null : d.getCostCenterId(),
-                            d == null ? null : d.getProjectId(), d == null ? null : d.getDepartmentId());
+                            l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(),
+                            d == null ? null : d.getCostCenterId(),
+                            d == null ? (l.getProjectId() != null ? l.getProjectId() : null) : d.getProjectId(),
+                            d == null ? null : d.getDepartmentId(),
+                            d == null ? (l.getWbsNodeId() != null ? l.getWbsNodeId() : null) : d.getWbsNodeId(),
+                            d == null ? (l.getCostCodeId() != null ? l.getCostCodeId() : null) : d.getCostCodeId());
                 })
                 .toList();
         BigDecimal totalDebit = lines.stream().map(AccountingApi.JournalEntryLineResponse::debit).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -342,12 +354,17 @@ public class JournalEntryService {
                 e.getStatus().name(), e.getFiscalPeriodId(), e.getCurrency(),
                 e.getPostedBy(), e.getPostedAt(),
                 e.getReversalEntryId(), e.getReversedEntryId(), e.getReversalReason(), e.getReversedBy(), e.getReversedAt(),
-                e.getOperationId(), e.getVersion(),
+                e.getOperationId(), e.getProjectId(), e.getWbsNodeId(), e.getCostCodeId(), e.getVersion(),
                 lines, totalDebit, totalCredit, e.getCreatedAt(), e.getUpdatedAt());
     }
 
     private boolean hasDimension(AccountingApi.JournalEntryLinePayload line) {
-        return blank(line.costCenterId()) != null || blank(line.projectId()) != null || blank(line.departmentId()) != null;
+        return blank(line.costCenterId()) != null || blank(line.projectId()) != null || blank(line.departmentId()) != null
+                || blank(line.wbsNodeId()) != null || blank(line.costCodeId()) != null;
+    }
+
+    private boolean hasDimension(AccountingApi.JournalEntryPayload payload) {
+        return blank(payload.projectId()) != null || blank(payload.wbsNodeId()) != null || blank(payload.costCodeId()) != null;
     }
 
     private String blank(String value) {

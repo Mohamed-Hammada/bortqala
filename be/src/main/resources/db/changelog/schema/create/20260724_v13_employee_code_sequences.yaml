@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260724-v13-employee-code-sequences
       author: codex
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

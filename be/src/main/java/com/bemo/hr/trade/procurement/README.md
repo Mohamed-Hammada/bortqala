@@ -31,6 +31,12 @@
 **EN:** Supplier payments are idempotent by operation ID. The backend rejects cross-supplier invoices, closed invoices, non-positive amounts, and amounts above the live outstanding balance. These checks remain authoritative even when the API is called outside the UI.
 
 **AR:** دفعات الموردين محمية من التكرار بمعرّف العملية. ويرفض الخادم الفاتورة التابعة لمورد آخر، والفاتورة المغلقة، والمبلغ غير الموجب، وأي مبلغ يتجاوز الرصيد المتبقي الفعلي، حتى عند استدعاء الواجهة البرمجية مباشرةً.
+
+## Installment plans / خطط الأقساط
+
+**EN:** V344 adds one optional installment plan per supplier invoice (`supplier_payment_plans`). `POST /api/v1/supplier-invoices/{id}/payment-plan {installmentCount ≥ 2, firstDueDate}` splits the live outstanding balance into N equal monthly installments (the last row absorbs the rounding remainder) starting at the requested due date. A second plan for the same invoice is rejected with `PROC_PAYMENT_PLAN_ALREADY_EXISTS`. Paying through the normal payment flow marks scheduled installments paid in order once cumulative posted payments cover their amounts; `GET /api/v1/supplier-invoices/{id}/payment-plan` lists rows with epoch-milli due dates and `paidAt` stamps.
+
+**AR:** يضيف V344 خطة أقساط واحدة اختيارية لكل فاتورة مورد (`supplier_payment_plans`). يقسم `POST /api/v1/supplier-invoices/{id}/payment-plan` الرصيد المتبقي الفعلي إلى N قسط شهري متساوٍ (يمتص القسط الأخير كسور التقريب) ابتداءً من تاريخ الاستحقاق المطلوب، مع رفض خطة ثانية لنفس الفاتورة برمز `PROC_PAYMENT_PLAN_ALREADY_EXISTS`. وعند السداد عبر مسار الدفع الطبيعي تُعلَّم الأقساط مجدولة السداد بالترتيب حالما تغطي المدفوعات المرحلة التراكمية مبالغها، ويعيد `GET /api/v1/supplier-invoices/{id}/payment-plan` الصفوف بتواريخ استحقاق بأجزاء المللي ووقت السداد.
 # Exchange-rate snapshots / لقطات سعر الصرف
 
 **EN:** Purchase orders and supplier invoices store transaction/base currencies, rate, rate date, source, manual override reason, and base-currency totals. Supplier ledger postings use the frozen base amount.

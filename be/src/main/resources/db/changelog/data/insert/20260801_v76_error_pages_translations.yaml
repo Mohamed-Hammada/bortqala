@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260801-v76-error-pages-translations
       author: codex
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

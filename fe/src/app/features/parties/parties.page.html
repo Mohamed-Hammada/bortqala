@@ -51,7 +51,12 @@
                 item.partyType === 'SUPPLIER' ? statusLabel(item.onboardingStatus) : i18n.t(item.active ? 'parties.active' : 'parties.inactive')
               }}</span>
             </td>
-            <td><button class="row-action" (click)="openSupplier360(item)">✎</button></td>
+            <td>
+              <div class="row-actions">
+                <button class="row-action" (click)="openFinancialPosition(item)">📊</button>
+                <button class="row-action" (click)="openSupplier360(item)">✎</button>
+              </div>
+            </td>
           </tr>
         } @empty {
           <tr>
@@ -290,6 +295,98 @@
           @if (view.supplier.onboardingStatus === 'ACTIVE') { <button class="button secondary" (click)="supplierTransition('suspend')">{{ i18n.t('parties.suspendSupplier') }}</button> }
           @if (view.supplier.onboardingStatus !== 'BLACKLISTED' && view.supplier.onboardingStatus !== 'CLOSED') { <button class="button danger" (click)="supplierTransition('blacklist')">{{ i18n.t('parties.blacklistSupplier') }}</button> }
         </div>
+      </div>
+    </app-modal-dialog>
+  }
+
+  @if (statementModalOpen()) {
+    <app-modal-dialog
+      [isOpen]="true"
+      [title]="i18n.t('parties.financialPositionTitle') + ' — ' + (selectedParty()?.name ?? '')"
+      (close)="statementModalOpen.set(false)"
+    >
+      <div class="statement-workbench">
+        @if (partyFinancialPosition(); as pos) {
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-title">{{ i18n.t('parties.totalDebits') }}</span>
+              <span class="kpi-value ltr">{{ pos.totalDebits | number:'1.2-2' }} <small>{{ pos.currencyCode }}</small></span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-title">{{ i18n.t('parties.totalCredits') }}</span>
+              <span class="kpi-value ltr">{{ pos.totalCredits | number:'1.2-2' }} <small>{{ pos.currencyCode }}</small></span>
+            </div>
+            <div class="kpi-card highlight">
+              <span class="kpi-title">{{ i18n.t('parties.netBalance') }}</span>
+              <span class="kpi-value ltr">{{ pos.netClosingBalance | number:'1.2-2' }} <small>{{ pos.currencyCode }}</small></span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-title">{{ i18n.t('parties.totalOverdue') }}</span>
+              <span class="kpi-value ltr" [class.danger-text]="pos.overdueAmount > 0">{{ pos.overdueAmount | number:'1.2-2' }} <small>{{ pos.currencyCode }}</small></span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-title">{{ i18n.t('parties.creditLimit') }}</span>
+              <span class="kpi-value ltr">{{ pos.creditLimit | number:'1.2-2' }} <small>{{ pos.currencyCode }}</small></span>
+            </div>
+          </div>
+
+          <!-- Aging Grid -->
+          <div class="aging-bar">
+            <h4>{{ i18n.t('parties.agingTitle') }}</h4>
+            <div class="aging-chips">
+              <span class="chip not-due">{{ i18n.t('parties.currentNotDue') }}: <strong>{{ pos.aging.currentNotDue | number:'1.2-2' }}</strong></span>
+              <span class="chip b1">{{ i18n.t('parties.bucket1To30') }}: <strong>{{ pos.aging.bucket1To30 | number:'1.2-2' }}</strong></span>
+              <span class="chip b2">{{ i18n.t('parties.bucket31To60') }}: <strong>{{ pos.aging.bucket31To60 | number:'1.2-2' }}</strong></span>
+              <span class="chip b3">{{ i18n.t('parties.bucket61To90') }}: <strong>{{ pos.aging.bucket61To90 | number:'1.2-2' }}</strong></span>
+              <span class="chip b4">{{ i18n.t('parties.bucket90Plus') }}: <strong>{{ pos.aging.bucket90Plus | number:'1.2-2' }}</strong></span>
+            </div>
+          </div>
+        }
+
+        <!-- Statement Filter & Export -->
+        <div class="statement-filter-bar">
+          <div class="filter-inputs">
+            <input type="date" [value]="statementFromDate()" (input)="statementFromDate.set($any($event.target).value)" />
+            <input type="date" [value]="statementToDate()" (input)="statementToDate.set($any($event.target).value)" />
+            <button class="button secondary btn-sm" (click)="filterStatement()">🔍 {{ i18n.t('common.search') }}</button>
+          </div>
+          <button class="button secondary btn-sm" (click)="exportStatementCsv()">📥 {{ i18n.t('common.export') }}</button>
+        </div>
+
+        <!-- Statement Lines Table -->
+        <div class="statement-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ i18n.t('common.date') }}</th>
+                <th>{{ i18n.t('parties.documentType') }}</th>
+                <th>{{ i18n.t('parties.documentNumber') }}</th>
+                <th>{{ i18n.t('common.description') }}</th>
+                <th>{{ i18n.t('parties.totalDebits') }}</th>
+                <th>{{ i18n.t('parties.totalCredits') }}</th>
+                <th>{{ i18n.t('parties.runningBalance') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of partyStatement()?.lines ?? []; track line.sourceEntityId) {
+                <tr>
+                  <td class="ltr">{{ date(line.transactionDate) }}</td>
+                  <td><span class="status info">{{ line.documentType }}</span></td>
+                  <td class="ltr"><strong>{{ line.documentNumber }}</strong></td>
+                  <td>{{ line.description }}</td>
+                  <td class="ltr">{{ line.debit > 0 ? (line.debit | number:'1.2-2') : '—' }}</td>
+                  <td class="ltr">{{ line.credit > 0 ? (line.credit | number:'1.2-2') : '—' }}</td>
+                  <td class="ltr"><strong>{{ line.runningBalance | number:'1.2-2' }}</strong></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7"><div class="empty-state">{{ i18n.t('common.noResults') }}</div></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div modal-actions>
+        <button class="button secondary" type="button" (click)="statementModalOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
       </div>
     </app-modal-dialog>
   }

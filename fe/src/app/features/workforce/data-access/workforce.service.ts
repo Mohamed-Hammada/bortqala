@@ -14,6 +14,8 @@ import {
   ManualAttendanceEntry,
   BatchAttendanceResponse,
   AdvancePolicy,
+  ResolvedDeductionPolicy,
+  ManualDeductionResult,
   SettlementIssue,
   WorkforceImportBatch,
   WorkforceImportValidation,
@@ -29,6 +31,11 @@ import {
   CreateLaborDispatchPayload,
   CreateWorkerAssignmentPayload,
   CreateWorkforceDisputePayload,
+  ClientBillingRate,
+  CreateClientBillingRatePayload,
+  ClientBillingReview,
+  ClientBillingMargin,
+  ClientBillingConfirm,
 } from '../models/workforce.models';
 
 @Injectable({ providedIn: 'root' })
@@ -233,6 +240,20 @@ export class WorkforceService {
     );
   }
 
+  loadResolvedDeductionPolicy(employeeId?: string, categoryId?: string): Observable<ResolvedDeductionPolicy> {
+    const params: Record<string, string> = {};
+    if (employeeId) params['employeeId'] = employeeId;
+    if (categoryId) params['categoryId'] = categoryId;
+    return this.http.get<ResolvedDeductionPolicy>('/api/v1/workforce/advances/resolved-policy', { params });
+  }
+
+  applyManualDeduction(employeeId: string, periodId: string): Observable<ManualDeductionResult> {
+    return this.http.post<ManualDeductionResult>('/api/v1/workforce/advances/apply-deduction', {
+      employeeId,
+      periodId,
+    });
+  }
+
   loadEffectiveAdvancePolicy(recipientType: 'WORKER' | 'EMPLOYEE', recipientId: string, date: string): Observable<AdvancePolicy> {
     return this.http.get<AdvancePolicy>('/api/v1/workforce/advances/policies/effective', {
       params: recipientType === 'EMPLOYEE'
@@ -341,5 +362,64 @@ export class WorkforceService {
   transitionDispute(id: string, action: 'submit' | 'resolve' | 'reject', notes?: string): Observable<WorkforceDispute> {
     const payload = action === 'resolve' ? { resolutionNotes: notes } : action === 'reject' ? { reason: notes } : {};
     return this.http.post<WorkforceDispute>(`/api/v1/workforce/disputes/${id}/${action}`, payload);
+  }
+
+  getProjectLaborCostReport(projectId: string, periodId?: string): Observable<import('../models/workforce.models').ProjectLaborCostReport> {
+    const params: Record<string, string> = {};
+    if (periodId) params['periodId'] = periodId;
+    return this.http.get<import('../models/workforce.models').ProjectLaborCostReport>(
+      `/api/v1/workforce/settlements/projects/${projectId}/labor-cost-report`,
+      { params }
+    );
+  }
+
+  // Client billing (manpower billing for client parties)
+  clients = signal<{ id: string; code: string; name: string; partyType: string; active: boolean }[]>([]);
+  clientRates = signal<ClientBillingRate[]>([]);
+
+  loadClients(): Observable<{ id: string; code: string; name: string; partyType: string; active: boolean }[]> {
+    return this.http.get<{ id: string; code: string; name: string; partyType: string; active: boolean }[]>('/api/v1/parties').pipe(
+      tap(res => this.clients.set(res.filter(c => c.partyType !== 'SUPPLIER' && c.active)))
+    );
+  }
+
+  loadClientRates(clientPartyId?: string): Observable<ClientBillingRate[]> {
+    const params: Record<string, string> = {};
+    if (clientPartyId) params['clientPartyId'] = clientPartyId;
+    return this.http.get<ClientBillingRate[]>('/api/v1/workforce/client-billing/rates', { params }).pipe(
+      tap(res => this.clientRates.set(res))
+    );
+  }
+
+  addClientRate(payload: CreateClientBillingRatePayload): Observable<ClientBillingRate> {
+    return this.http.post<ClientBillingRate>('/api/v1/workforce/client-billing/rates', payload).pipe(
+      tap(() => this.loadClientRates(payload.clientPartyId).subscribe())
+    );
+  }
+
+  deleteClientRate(id: string, clientPartyId?: string): Observable<void> {
+    return this.http.delete<void>(`/api/v1/workforce/client-billing/rates/${id}`).pipe(
+      tap(() => this.loadClientRates(clientPartyId).subscribe())
+    );
+  }
+
+  generateClientBilling(clientPartyId: string, period: string): Observable<ClientBillingReview> {
+    return this.http.post<ClientBillingReview>('/api/v1/workforce/client-billing/generate', { clientPartyId, period });
+  }
+
+  reviewClientBilling(clientPartyId: string, period: string): Observable<ClientBillingReview> {
+    return this.http.get<ClientBillingReview>(`/api/v1/workforce/client-billing/${clientPartyId}/${period}`);
+  }
+
+  confirmClientBilling(clientPartyId: string, period: string): Observable<ClientBillingConfirm> {
+    return this.http.post<ClientBillingConfirm>(`/api/v1/workforce/client-billing/${clientPartyId}/${period}/confirm`, {});
+  }
+
+  getClientBillingMargin(clientPartyId: string, period: string): Observable<ClientBillingMargin> {
+    return this.http.get<ClientBillingMargin>(`/api/v1/workforce/client-billing/${clientPartyId}/${period}/margin`);
+  }
+
+  exportClientBillingMargin(clientPartyId: string, period: string): Observable<Blob> {
+    return this.http.get(`/api/v1/workforce/client-billing/${clientPartyId}/${period}/margin/export.xlsx`, { responseType: 'blob' });
   }
 }

@@ -83,3 +83,9 @@ export interface TrendPoint {
   totalGross: number;
   totalPaid: number;
 }
+
+/** WP-08: first-punch hour-of-day histogram bucket (counts keyed by categoryId). */
+export interface ClockInBucket {
+  hour: number;
+  countsByCategory: Record<string, number>;
+}

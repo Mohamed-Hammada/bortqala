@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260824-v344-supplier-payment-plans-table
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-01: installment plan rows for supplier invoices."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: supplier_payment_plans
+      changes:
+        - createTable:
+            tableName: supplier_payment_plans
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invoice_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_supplier_payment_plan_invoice
+                    references: supplier_invoices(id)
+              - column:
+                  name: installment_no
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: NUMERIC(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: paid_at
+                  type: BIGINT
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: supplier_payment_plans
+            columnNames: app_id, invoice_id, installment_no
+            constraintName: uq_supplier_payment_plans_invoice_installment
+      rollback:
+        - dropTable:
+            tableName: supplier_payment_plans

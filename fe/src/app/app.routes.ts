@@ -5,14 +5,53 @@ import { WORKFORCE_BASE_ROLES } from './core/auth/workforce-role.guard';
 
 export const routes: Routes = [
   {
+    // WP-14 AC-1: native first-launch server picker — deliberately outside the auth guard.
+    path: 'server-setup',
+    loadComponent: () => import('./features/server-setup/server-setup.page').then((module) => module.ServerSetupPage),
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/login/login.page').then((module) => module.LoginPage),
+  },
+  {
+    // WP-14 AC-3: employee selfie punch — any authenticated user, no menu row required.
+    path: 'selfie-punch',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/selfie-punch/selfie-punch.page').then((module) => module.SelfiePunchPage),
   },
   {
     path: 'change-password',
     canActivate: [mustChangePasswordGuard],
     loadComponent: () =>
       import('./features/change-password/change-password.page').then((module) => module.ChangePasswordPage),
+  },
+  {
+    // WP-29: public payment page — no auth required
+    path: 'p/:token',
+    loadComponent: () =>
+      import('./features/public/pay/pay.page').then((module) => module.PublicPayPage),
+  },
+  {
+    // P1-01: Public storefront product catalog browsing
+    path: 'products',
+    loadComponent: () =>
+      import('./features/public/catalog/public-catalog.page').then((module) => module.PublicCatalogPage),
+  },
+  {
+    path: 'products/:slug',
+    loadComponent: () =>
+      import('./features/public/catalog/public-product-detail.page').then((module) => module.PublicProductDetailPage),
+  },
+  {
+    path: 'categories/:slug',
+    loadComponent: () =>
+      import('./features/public/catalog/public-catalog.page').then((module) => module.PublicCatalogPage),
+  },
+  {
+    path: 'brands/:slug',
+    loadComponent: () =>
+      import('./features/public/catalog/public-catalog.page').then((module) => module.PublicCatalogPage),
   },
   {
     path: '',
@@ -28,6 +67,16 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.page').then((module) => module.DashboardPage),
       },
       {
+        path: 'projects',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          roles: ['SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'],
+          menuId: 'projects',
+        },
+        loadChildren: () =>
+          import('./features/projects/projects.routes').then((module) => module.PROJECT_ROUTES),
+      },
+      {
         path: 'categories',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'categories' },
@@ -41,6 +90,20 @@ export const routes: Routes = [
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'employees' },
         loadComponent: () =>
           import('./features/employees/employees.page').then((module) => module.EmployeesPage),
+      },
+      {
+        path: 'leaves',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'leaves' },
+        loadComponent: () =>
+          import('./features/leaves/leaves.page').then((module) => module.LeavesPage),
+      },
+      {
+        path: 'performance',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'performance' },
+        loadComponent: () =>
+          import('./features/performance/performance.page').then((module) => module.PerformancePage),
       },
       {
         path: 'imports',
@@ -108,6 +171,15 @@ export const routes: Routes = [
           import('./features/smart-import/smart-import.page').then((module) => module.SmartImportPage),
       },
       {
+        path: 'migration',
+        canActivate: [roleGuard],
+        data: {
+          roles: ['SUPER_ADMIN', 'ADMIN'],
+        },
+        loadComponent: () =>
+          import('./features/migration/data-migration.component').then((module) => module.DataMigrationComponent),
+      },
+      {
         path: 'parties',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'parties' },
@@ -123,6 +195,16 @@ export const routes: Routes = [
         },
         loadComponent: () =>
           import('./features/partner-risk/partner-risk.page').then((module) => module.PartnerRiskPage),
+      },
+      {
+        path: 'analytics/executive',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          roles: ['SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'],
+          menuId: 'executive-analytics',
+        },
+        loadComponent: () =>
+          import('./features/analytics/executive/executive-analytics.page').then((m) => m.ExecutiveAnalyticsPage),
       },
       {
         path: 'reports',
@@ -180,6 +262,37 @@ export const routes: Routes = [
         data: { roles: ['SALES_MANAGER'], menuId: 'sales' },
         loadComponent: () =>
           import('./features/trade/sales/sales.page').then((module) => module.SalesPage),
+      },
+      {
+        path: 'trade/export-shipments',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'export-shipments',
+          roles: ['PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'SALES_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'],
+        },
+        loadComponent: () =>
+          import('./features/trade/export-shipments/export-shipments.page').then((module) => module.ExportShipmentsPage),
+      },
+      {
+        path: 'trade/pos',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SALES_MANAGER'], menuId: 'pos' },
+        loadComponent: () =>
+          import('./features/trade/pos/pos.page').then((module) => module.PosPage),
+      },
+      {
+        path: 'crm',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SALES_MANAGER'], menuId: 'crm' },
+        loadComponent: () =>
+          import('./features/crm/crm.page').then((module) => module.CrmPage),
+      },
+      {
+        path: 'verticals/specialized',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'specialized-verticals' },
+        loadComponent: () =>
+          import('./features/verticals/verticals.page').then((m) => m.VerticalsPage),
       },
       {
         path: 'manufacturing/production',
@@ -253,6 +366,72 @@ export const routes: Routes = [
           import('./features/finance/budgets/budgets.page').then((module) => module.BudgetsPage),
       },
       {
+        path: 'finance/fixed-assets',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'fixed-assets',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+        },
+        loadComponent: () =>
+          import('./features/finance/fixed-assets/fixed-assets.page').then((module) => module.FixedAssetsPage),
+      },
+      {
+        path: 'finance/payment-links',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'payment-links',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR', 'ADMIN', 'SUPER_ADMIN'],
+        },
+        loadComponent: () =>
+          import('./features/finance/payment-links/payment-links.page').then((module) => module.PaymentLinksPage),
+      },
+      {
+        path: 'finance/reconciliation',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'accounts',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR', 'ADMIN', 'SUPER_ADMIN'],
+        },
+        loadComponent: () =>
+          import('./features/finance/reconciliation-center/reconciliation-center.component').then(
+            (module) => module.ReconciliationCenterComponent,
+          ),
+      },
+      {
+        path: 'whatsapp',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN'], menuId: 'settings' },
+        loadComponent: () =>
+          import('./features/whatsapp/whatsapp.page').then((module) => module.WhatsAppPage),
+      },
+      {
+        path: 'automation',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN'], menuId: 'settings' },
+        loadComponent: () =>
+          import('./features/automation/automation.page').then((module) => module.AutomationPage),
+      },
+      {
+        path: 'expenses',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'expenses',
+          roles: ['HR_MANAGER', 'ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+        },
+        loadComponent: () =>
+          import('./features/expenses/expenses.page').then((module) => module.ExpensesPage),
+      },
+      {
+        path: 'compliance/eta-tax',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'eta-tax',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+        },
+        loadComponent: () =>
+          import('./features/compliance/eta-tax/eta-tax.page').then((module) => module.EtaTaxPage),
+      },
+      {
         path: 'organization',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'organization' },
@@ -307,9 +486,16 @@ export const routes: Routes = [
       {
         path: 'platform-admin',
         canActivate: [superAdminGuard, menuAccessGuard],
-        data: { menuId: 'settings' },
+        data: { roles: ['SUPER_ADMIN'], menuId: 'settings' },
         loadComponent: () =>
           import('./features/platform-admin/platform-admin.page').then((module) => module.PlatformAdminPage),
+      },
+      {
+        path: 'platform-admin/outbox',
+        canActivate: [superAdminGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () =>
+          import('./features/platform-admin/pages/outbox/system-outbox.page').then((module) => module.SystemOutboxPage),
       },
       {
         path: 'settings',
@@ -325,6 +511,41 @@ export const routes: Routes = [
           import('./features/support/support.page').then((module) => module.SupportPage),
       },
       {
+        path: 'retail/laptops',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], menuId: 'pos' },
+        loadComponent: () =>
+          import('./features/retail/laptop-retail.page').then((module) => module.LaptopRetailPage),
+      },
+      {
+        path: 'helpdesk',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'helpdesk' },
+        loadComponent: () =>
+          import('./features/helpdesk/helpdesk.page').then((module) => module.HelpdeskPage),
+      },
+      {
+        path: 'kb',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'kb' },
+        loadComponent: () =>
+          import('./features/knowledge-base/kb.page').then((module) => module.KbPage),
+      },
+      {
+        path: 'marketing',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], menuId: 'marketing' },
+        loadComponent: () =>
+          import('./features/marketing/marketing.page').then((module) => module.MarketingPage),
+      },
+      {
+        path: 'report-builder',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER', 'VIEWER'], menuId: 'report-builder' },
+        loadComponent: () =>
+          import('./features/report-builder/report-builder.page').then((module) => module.ReportBuilderPage),
+      },
+      {
         path: 'about',
         loadComponent: () =>
           import('./features/about/about.page').then((module) => module.AboutPage),
@@ -337,6 +558,13 @@ export const routes: Routes = [
           import('./features/users/users.page').then((module) => module.UsersPage),
       },
       {
+        path: 'access/policy-groups',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'users' },
+        loadComponent: () =>
+          import('./features/users/pages/policy-groups/policy-groups.page').then((m) => m.PolicyGroupsPageComponent),
+      },
+      {
         path: 'workforce',
         canActivate: [roleGuard],
         data: {
@@ -346,7 +574,152 @@ export const routes: Routes = [
           import('./features/workforce/workforce.routes').then((module) => module.WORKFORCE_ROUTES),
       },
       {
+        path: 'growth',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'growth', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER', 'HR_MANAGER', 'FINANCE_MANAGER'] },
+        loadComponent: () =>
+          import('./features/growth/growth.page').then((module) => module.GrowthPage),
+      },
+      {
+        path: 'recruitment',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'recruitment',
+          roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+        },
+        loadComponent: () =>
+          import('./features/recruitment/recruitment.page').then((module) => module.RecruitmentPage),
+      },
+      {
+        path: 'documents',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'documents',
+          roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+        },
+        loadComponent: () =>
+          import('./features/documents/documents.page').then((module) => module.DocumentsPage),
+      },
+      {
+        path: 'esign',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'esign',
+          roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+        },
+        loadComponent: () =>
+          import('./features/esign/esign.page').then((module) => module.ESignPage),
+      },
+      {
+        path: 'clinic/patients',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-patients' },
+        loadComponent: () =>
+          import('./features/clinic/patients.page').then((m) => m.PatientsPageComponent),
+      },
+      {
+        path: 'clinic/patients/:id/chart',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-patients' },
+        loadComponent: () =>
+          import('./features/clinic/patient-chart.page').then((m) => m.PatientChartPageComponent),
+      },
+      {
+        path: 'clinic/queue',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-queue' },
+        loadComponent: () =>
+          import('./features/clinic/clinic-queue.page').then((m) => m.ClinicQueuePageComponent),
+      },
+      {
+        path: 'clinic/commissions',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-commissions' },
+        loadComponent: () =>
+          import('./features/clinic/clinic-commissions.page').then((m) => m.ClinicCommissionsPageComponent),
+      },
+      {
+        path: 'clinic/appointments',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-appointments' },
+        loadComponent: () =>
+          import('./features/clinic/appointments.page').then((m) => m.AppointmentsPageComponent),
+      },
+      {
+        path: 'clinic/pharmacy',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-pharmacy' },
+        loadComponent: () =>
+          import('./features/clinic/pharmacy.page').then((m) => m.PharmacyPageComponent),
+      },
+      {
+        path: 'clinic/lab',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-lab' },
+        loadComponent: () =>
+          import('./features/clinic/lab-orders.page').then((m) => m.LabOrdersPageComponent),
+      },
+      {
+        path: 'clinic/insurance',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'clinic-insurance' },
+        loadComponent: () =>
+          import('./features/clinic/insurance.page').then((m) => m.InsurancePageComponent),
+      },
+      {
+        path: 'clinic/hospital',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'hospital-ops' },
+        loadComponent: () =>
+          import('./features/clinic/hospital-ops.page').then((m) => m.HospitalOpsPageComponent),
+      },
+      {
+        path: 'clinic/dental',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'dental-charting' },
+        loadComponent: () =>
+          import('./features/clinic/dental-charting.page').then((m) => m.DentalChartingPageComponent),
+      },
+      {
+        path: 'clinic/tools',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'medical-tools' },
+        loadComponent: () =>
+          import('./features/clinic/medical-tools.page').then((m) => m.MedicalToolsPageComponent),
+      },
+      {
+        path: 'service-ops',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'service-ops' },
+        loadComponent: () =>
+          import('./features/service-ops/service-ops.page').then((m) => m.ServiceOpsPageComponent),
+      },
+      {
+        path: 'fleet',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'fleet' },
+        loadComponent: () =>
+          import('./features/fleet/fleet.page').then((m) => m.FleetPageComponent),
+      },
+      {
+        path: 'self-service',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'self-service' },
+        loadComponent: () =>
+          import('./features/self-service/ess.page').then((m) => m.EssPageComponent),
+      },
+      {
+        path: 'ai-intelligence',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'ai-intelligence' },
+        loadComponent: () =>
+          import('./features/ai-intelligence/ai-intelligence.page').then((m) => m.AiIntelligencePageComponent),
+      },
+      {
         path: 'forbidden',
+
+
+
         loadComponent: () =>
           import('./features/errors/forbidden.page').then((module) => module.ForbiddenPage),
       },

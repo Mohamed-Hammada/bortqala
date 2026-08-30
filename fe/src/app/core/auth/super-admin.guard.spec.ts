@@ -21,7 +21,7 @@ describe('superAdminGuard', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   it('allows SUPER_ADMIN', () => {
-    expect(run(true)).toBeTrue();
+    expect(run(true)).toBe(true);
   });
 
   it('rejects a normal tenant ADMIN', () => {

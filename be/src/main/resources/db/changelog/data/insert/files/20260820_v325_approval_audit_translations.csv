@@ -1,0 +1,53 @@
+id;translation_key;locale;text_value
+v325-001;approvals.docTypeProjectLifecycle;ar-EG;دورة حياة المشروع / الاعتماد
+v325-002;approvals.docTypeProjectLifecycle;en-US;Project Lifecycle / Charter
+v325-003;approvals.docTypeWbsBaseline;ar-EG;اعتماد خط الأساس وجدول WBS
+v325-004;approvals.docTypeWbsBaseline;en-US;WBS Baseline & Schedule
+v325-005;approvals.docTypeBudgetRevision;ar-EG;اعتماد تعديل موازنة المشروع
+v325-006;approvals.docTypeBudgetRevision;en-US;Project Budget Revision
+v325-007;approvals.docTypeTenderAward;ar-EG;اعتماد ترسية المناقصة
+v325-008;approvals.docTypeTenderAward;en-US;Tender Bid Award
+v325-009;approvals.docTypeVariationOrder;ar-EG;اعتماد أمر التغيير والملحق
+v325-010;approvals.docTypeVariationOrder;en-US;Variation Order
+v325-011;approvals.docTypeOwnerClaim;ar-EG;اعتماد مستخلص المالك (IPC)
+v325-012;approvals.docTypeOwnerClaim;en-US;Owner Progress Claim (IPC)
+v325-013;approvals.docTypeSubcontractClaim;ar-EG;اعتماد مستخلص مقاول الباطن
+v325-014;approvals.docTypeSubcontractClaim;en-US;Subcontractor Progress Claim
+v325-015;approvals.docTypeForecastRevision;ar-EG;اعتماد تعديل التقدير حتى الاكتمال (EAC)
+v325-016;approvals.docTypeForecastRevision;en-US;Forecast Revision (EAC)
+v325-017;approvals.docTypeIntercompany;ar-EG;اعتماد تسوية المعاملات بين الشركات
+v325-018;approvals.docTypeIntercompany;en-US;Intercompany Settlement
+v325-019;approvals.docTypeEtaTax;ar-EG;اعتماد إرسال الفاتورة الإلكترونية (ETA)
+v325-020;approvals.docTypeEtaTax;en-US;ETA E-Invoice Submission
+v325-021;approvals.documentType.PROJECT_LIFECYCLE;ar-EG;دورة حياة المشروع
+v325-022;approvals.documentType.PROJECT_LIFECYCLE;en-US;Project Lifecycle
+v325-023;approvals.documentType.WBS_BASELINE;ar-EG;خط أساس WBS
+v325-024;approvals.documentType.WBS_BASELINE;en-US;WBS Baseline
+v325-025;approvals.documentType.BUDGET_REVISION;ar-EG;تعديل الموازنة
+v325-026;approvals.documentType.BUDGET_REVISION;en-US;Budget Revision
+v325-027;approvals.documentType.TENDER_AWARD;ar-EG;ترسية المناقصة
+v325-028;approvals.documentType.TENDER_AWARD;en-US;Tender Award
+v325-029;approvals.documentType.VARIATION_ORDER;ar-EG;أمر تغيير
+v325-030;approvals.documentType.VARIATION_ORDER;en-US;Variation Order
+v325-031;approvals.documentType.OWNER_CLAIM;ar-EG;مستخلص المالك
+v325-032;approvals.documentType.OWNER_CLAIM;en-US;Owner Claim
+v325-033;approvals.documentType.SUBCONTRACT_CLAIM;ar-EG;مستخلص مقاول الباطن
+v325-034;approvals.documentType.SUBCONTRACT_CLAIM;en-US;Subcontractor Claim
+v325-035;approvals.documentType.FORECAST_REVISION;ar-EG;تعديل التوقع
+v325-036;approvals.documentType.FORECAST_REVISION;en-US;Forecast Revision
+v325-037;approvals.documentType.INTERCOMPANY_TRANSACTION;ar-EG;معاملة بين الشركات
+v325-038;approvals.documentType.INTERCOMPANY_TRANSACTION;en-US;Intercompany Transaction
+v325-039;approvals.documentType.ETA_TAX_SUBMISSION;ar-EG;إرسال الضرائب الإلكترونية
+v325-040;approvals.documentType.ETA_TAX_SUBMISSION;en-US;ETA Tax Submission
+v325-041;approvals.openDocument;ar-EG;فتح المستند
+v325-042;approvals.openDocument;en-US;Open Document
+v325-043;audit.reason;ar-EG;سبب العملية
+v325-044;audit.reason;en-US;Reason / Justification
+v325-045;audit.breakGlass;ar-EG;إجراء طوارئ استثنائي
+v325-046;audit.breakGlass;en-US;Break-Glass Emergency
+v325-047;audit.breakGlassBadge;ar-EG;طوارئ
+v325-048;audit.breakGlassBadge;en-US;Break-Glass
+v325-049;audit.userAgent;ar-EG;بيئة المتصفح / العميل
+v325-050;audit.userAgent;en-US;User Agent
+v325-051;audit.filterBreakGlass;ar-EG;عمليات الطوارئ فقط
+v325-052;audit.filterBreakGlass;en-US;Break-Glass Only

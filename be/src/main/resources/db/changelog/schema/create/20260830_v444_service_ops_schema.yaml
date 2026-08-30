@@ -1,0 +1,538 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260830-v444-001
+      author: bemo-team
+      changes:
+        - createTable:
+            tableName: srv_rental_items
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name_en
+                  type: VARCHAR(255)
+              - column:
+                  name: category
+                  type: VARCHAR(100)
+              - column:
+                  name: rate_daily
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: rate_weekly
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: rate_monthly
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: deposit_amount
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  defaultValue: AVAILABLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260830-v444-002
+      author: bemo-team
+      changes:
+        - createTable:
+            tableName: srv_rental_contracts
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: contract_no
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_party_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expected_end_date
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actual_end_date
+                  type: VARCHAR(20)
+              - column:
+                  name: rate_unit
+                  type: VARCHAR(20)
+                  defaultValue: DAY
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rate_amount
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: deposit_amount
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: damage_fee
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: total_amount
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  defaultValue: DRAFT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invoice_id
+                  type: VARCHAR(36)
+              - column:
+                  name: notes
+                  type: VARCHAR(1000)
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260830-v444-003
+      author: bemo-team
+      changes:
+        - createTable:
+            tableName: srv_rental_contract_lines
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: contract_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rental_item_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: DECIMAL(12,2)
+                  defaultValueNumeric: 1.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_rate
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_amount
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260830-v444-004
+      author: bemo-team
+      changes:
+        - createTable:
+            tableName: srv_work_orders
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ticket_no
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_party_id
+                  type: VARCHAR(36)
+              - column:
+                  name: customer_name
+                  type: VARCHAR(255)
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(2000)
+              - column:
+                  name: assigned_employee_id
+                  type: VARCHAR(36)
+              - column:
+                  name: priority
+                  type: VARCHAR(20)
+                  defaultValue: NORMAL
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  defaultValue: OPEN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: promised_at
+                  type: VARCHAR(30)
+              - column:
+                  name: labor_total
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: parts_total
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: grand_total
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: invoice_id
+                  type: VARCHAR(36)
+              - column:
+                  name: override_note
+                  type: VARCHAR(1000)
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260830-v444-005
+      author: bemo-team
+      changes:
+        - createTable:
+            tableName: srv_work_order_labor_lines
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: work_order_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hours
+                  type: DECIMAL(8,2)
+                  defaultValueNumeric: 1.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hourly_rate
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_amount
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260830-v444-006
+      author: bemo-team
+      changes:
+        - createTable:
+            tableName: srv_work_order_parts_lines
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: work_order_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: DECIMAL(12,2)
+                  defaultValueNumeric: 1.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_price
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_amount
+                  type: DECIMAL(14,2)
+                  defaultValueNumeric: 0.00
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260830-v444-007
+      author: bemo-team
+      changes:
+        - createTable:
+            tableName: srv_bookable_resources
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name_en
+                  type: VARCHAR(255)
+              - column:
+                  name: kind
+                  type: VARCHAR(30)
+                  defaultValue: ROOM
+                  constraints:
+                    nullable: false
+              - column:
+                  name: capacity
+                  type: INT
+                  defaultValueNumeric: 1
+              - column:
+                  name: location
+                  type: VARCHAR(255)
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260830-v444-008
+      author: bemo-team
+      changes:
+        - createTable:
+            tableName: srv_resource_bookings
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resource_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_party_id
+                  type: VARCHAR(36)
+              - column:
+                  name: customer_name
+                  type: VARCHAR(255)
+              - column:
+                  name: start_time
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_time
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  defaultValue: CONFIRMED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: VARCHAR(1000)
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false

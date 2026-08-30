@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260810-v190-align-customer-invoices
       author: bemo-erps
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - and:

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: version_workforce_advance_policies
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - dropUniqueConstraint:
             tableName: workforce_advance_policies
@@ -43,6 +44,7 @@ databaseChangeLog:
   - changeSet:
       id: snapshot_advance_policy_on_transactions
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: workforce_advances

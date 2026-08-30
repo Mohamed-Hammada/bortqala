@@ -1,0 +1,89 @@
+id;translation_key;locale;text_value
+v399-001-en;workspace.recruitment;en-US;Recruitment
+v399-001-ar;workspace.recruitment;ar-EG;التوظيف
+v399-002-en;nav.recruitment;en-US;Recruitment (ATS)
+v399-002-ar;nav.recruitment;ar-EG;التوظيف (نظام تتبع المتقدمين)
+v399-003-en;nav.recruitmentHint;en-US;Job openings and applicant tracking
+v399-003-ar;nav.recruitmentHint;ar-EG;الوظائف المطروحة ومتابعة المتقدمين
+v399-004-en;recruitment.openings;en-US;Job Openings
+v399-004-ar;recruitment.openings;ar-EG;الوظائف المطروحة
+v399-005-en;recruitment.applications;en-US;Applications
+v399-005-ar;recruitment.applications;ar-EG;الطلبات
+v399-006-en;recruitment.createOpening;en-US;Create Opening
+v399-006-ar;recruitment.createOpening;ar-EG;إنشاء وظيفة
+v399-007-en;recruitment.titleAr;en-US;Title (Arabic)
+v399-007-ar;recruitment.titleAr;ar-EG;العنوان (عربي)
+v399-008-en;recruitment.titleEn;en-US;Title (English)
+v399-008-ar;recruitment.titleEn;ar-EG;العنوان (إنجليزي)
+v399-009-en;recruitment.department;en-US;Department
+v399-009-ar;recruitment.department;ar-EG;القسم
+v399-010-en;recruitment.headcount;en-US;Headcount
+v399-010-ar;recruitment.headcount;ar-EG;عدد الوظائف
+v399-011-en;recruitment.description;en-US;Description
+v399-011-ar;recruitment.description;ar-EG;الوصف
+v399-012-en;recruitment.published;en-US;Published
+v399-012-ar;recruitment.published;ar-EG;منشور
+v399-013-en;recruitment.closeOpening;en-US;Close Opening
+v399-013-ar;recruitment.closeOpening;ar-EG;إغلاق الوظيفة
+v399-014-en;recruitment.addApplication;en-US;Add Applicant
+v399-014-ar;recruitment.addApplication;ar-EG;إضافة متقدم
+v399-015-en;recruitment.fullName;en-US;Full Name
+v399-015-ar;recruitment.fullName;ar-EG;الاسم الكامل
+v399-016-en;recruitment.phone;en-US;Phone
+v399-016-ar;recruitment.phone;ar-EG;الهاتف
+v399-017-en;recruitment.email;en-US;Email
+v399-017-ar;recruitment.email;ar-EG;البريد الإلكتروني
+v399-018-en;recruitment.source;en-US;Source
+v399-018-ar;recruitment.source;ar-EG;المصدر
+v399-019-en;recruitment.stage;en-US;Stage
+v399-019-ar;recruitment.stage;ar-EG;المرحلة
+v399-020-en;recruitment.moveStage;en-US;Move to Stage
+v399-020-ar;recruitment.moveStage;ar-EG;نقل إلى مرحلة
+v399-021-en;recruitment.rating;en-US;Rating
+v399-021-ar;recruitment.rating;ar-EG;التقييم
+v399-022-en;recruitment.notes;en-US;Notes
+v399-022-ar;recruitment.notes;ar-EG;ملاحظات
+v399-023-en;recruitment.convert;en-US;Convert to Employee
+v399-023-ar;recruitment.convert;ar-EG;تحويل إلى موظف
+v399-024-en;recruitment.converted;en-US;Converted
+v399-024-ar;recruitment.converted;ar-EG;محوّل
+v399-025-en;recruitment.duplicateWarning;en-US;Duplicate applicant detected
+v399-025-ar;recruitment.duplicateWarning;ar-EG;يوجد متقدم مشابه مسجل مسبقاً
+v399-026-en;recruitment.timeline;en-US;Stage History
+v399-026-ar;recruitment.timeline;ar-EG;سجل المراحل
+v399-027-en;recruitment.status;en-US;Status
+v399-027-ar;recruitment.status;ar-EG;الحالة
+v399-028-en;RECR_OPENING_NOT_FOUND;en-US;Job opening not found
+v399-028-ar;RECR_OPENING_NOT_FOUND;ar-EG;الوظيفة غير موجودة
+v399-029-en;RECR_APP_NOT_FOUND;en-US;Application not found
+v399-029-ar;RECR_APP_NOT_FOUND;ar-EG;الطلب غير موجود
+v399-030-en;RECR_INVALID_TRANSITION;en-US;Invalid stage transition
+v399-030-ar;RECR_INVALID_TRANSITION;ar-EG;انتقال مرحلة غير صالح
+v399-031-en;RECR_OPENING_CLOSED;en-US;Opening is closed
+v399-031-ar;RECR_OPENING_CLOSED;ar-EG;الوظيفة مغلقة
+v399-032-en;RECR_ALREADY_CONVERTED;en-US;Application already converted to employee
+v399-032-ar;RECR_ALREADY_CONVERTED;ar-EG;تم تحويل الطلب إلى موظف مسبقاً
+v399-033-en;RECR_CONVERT_STAGE_INVALID;en-US;Application must be in OFFER or HIRED stage to convert
+v399-033-ar;RECR_CONVERT_STAGE_INVALID;ar-EG;يجب أن يكون الطلب في مرحلة العرض أو التعيين للتحويل
+v399-034-en;recruitment.saved;en-US;Opening saved
+v399-034-ar;recruitment.saved;ar-EG;تم حفظ الوظيفة
+v399-035-en;recruitment.closed;en-US;Opening closed
+v399-035-ar;recruitment.closed;ar-EG;تم إغلاق الوظيفة
+v399-036-en;recruitment.applicationAdded;en-US;Applicant added
+v399-036-ar;recruitment.applicationAdded;ar-EG;تمت إضافة المتقدم
+v399-037-en;recruitment.stageMoved;en-US;Stage updated
+v399-037-ar;recruitment.stageMoved;ar-EG;تم تحديث المرحلة
+v399-038-en;recruitment.stage.NEW;en-US;New
+v399-038-ar;recruitment.stage.NEW;ar-EG;جديد
+v399-039-en;recruitment.stage.SCREENING;en-US;Screening
+v399-039-ar;recruitment.stage.SCREENING;ar-EG;فحص أولي
+v399-040-en;recruitment.stage.INTERVIEW;en-US;Interview
+v399-040-ar;recruitment.stage.INTERVIEW;ar-EG;مقابلة
+v399-041-en;recruitment.stage.OFFER;en-US;Offer
+v399-041-ar;recruitment.stage.OFFER;ar-EG;عرض التوظيف
+v399-042-en;recruitment.stage.HIRED;en-US;Hired
+v399-042-ar;recruitment.stage.HIRED;ar-EG;تم التعيين
+v399-043-en;recruitment.stage.REJECTED;en-US;Rejected
+v399-043-ar;recruitment.stage.REJECTED;ar-EG;مرفوض
+v399-044-en;recruitment.opening;en-US;Opening
+v399-044-ar;recruitment.opening;ar-EG;الوظيفة

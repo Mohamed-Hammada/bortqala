@@ -3,6 +3,10 @@ package com.bemo.hr.workforce;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
+import com.bemo.hr.project.domain.CostCategory;
+import com.bemo.hr.project.domain.CostLedgerEntryType;
+import com.bemo.hr.project.domain.ProjectCostLedgerEntry;
+import com.bemo.hr.project.infrastructure.ProjectCostLedgerEntryRepository;
 import com.bemo.hr.shared.api.TransitionResponse;
 import com.bemo.hr.shared.api.WorkflowTransitions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
@@ -21,6 +25,7 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,7 +36,7 @@ public class WorkforceSettlementService {
     private static final Map<String, List<String>> SETTLEMENT_PERIOD_WORKFLOW = Map.of(
             "DRAFT", List.of("CALCULATE", "DELETE"),
             "CALCULATED", List.of("REVIEW", "RECALCULATE"),
-            "REVIEWED", List.of("APPROVE", "RECALCULATE"),
+            "REVIEWED", List.of("APPROVE", "RECALCULATE", "EXPORT"),
             "APPROVED", List.of("LOCK", "EXPORT"),
             "LOCKED", List.of("EXPORT"));
 
@@ -42,11 +47,13 @@ public class WorkforceSettlementService {
     private final ContractorSettlementAdjustmentRepository contractorSettlementAdjustmentRepository;
     private final WorkforceSettlementIssueRepository issueRepository;
     private final ManualAttendanceEntryRepository attendanceRepository;
+    private final WorkerAssignmentRepository assignmentRepository;
     private final WorkerRepository workerRepository;
     private final ContractorRepository contractorRepository;
     private final WorkforceAdvanceRepository advanceRepository;
     private final WorkforceAdvancePolicyRepository advancePolicyRepository;
     private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
+    private final ProjectCostLedgerEntryRepository projectCostLedgerEntryRepository;
     private final IdempotencyService idempotencyService;
     private final WorkforceExcelExportService excelExportService;
     private final AuditService auditService;
@@ -57,7 +64,7 @@ public class WorkforceSettlementService {
         try {
             return excelExportService.generatePeriodExcel(periodId);
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر إنشاء ملف Excel لفترة التسوية: " + exception.getMessage());
+            throw new BusinessRuleException("Failed to generate settlement Excel file: " + exception.getMessage(), "SETTLEMENT_EXPORT_FAILED", HttpStatus.CONFLICT);
         }
     }
 
@@ -76,21 +83,21 @@ public class WorkforceSettlementService {
     @Transactional(readOnly = true)
     public List<WorkforceApi.ContractorSettlementDetailResponse> listContractorSettlementsForPeriod(String periodId) {
         return contractorSettlementRepository.findByPeriodId(periodId).stream()
-                .map(cs -> mapContractorSettlementToDetail(cs))
+                .map(this::mapContractorSettlementToDetail)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public WorkforceApi.ContractorSettlementDetailResponse getContractorSettlement(String settlementId) {
         ContractorSettlement settlement = contractorSettlementRepository.findById(settlementId)
-                .orElseThrow(() -> new BusinessRuleException("تسوية المقاول غير موجودة: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Contractor settlement not found: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
         return mapContractorSettlementToDetail(settlement);
     }
 
     @Transactional
     public WorkforceApi.SettlementPeriodResponse createPeriod(WorkforceApi.SettlementPeriodRequest request) {
         if (request.startDate().compareTo(request.endDate()) > 0) {
-            throw new BusinessRuleException("تاريخ بداية فترة التسوية يجب ألا يتجاوز تاريخ النهاية.", "SETTL_START_AFTER_END", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Settlement period start date must not be after end date.", "SETTL_START_AFTER_END", HttpStatus.CONFLICT);
         }
         WorkforceSettlementPeriod period = new WorkforceSettlementPeriod(
                 request.periodCode(), request.startDate(), request.endDate(), request.cycleType(), "DRAFT");
@@ -118,85 +125,95 @@ public class WorkforceSettlementService {
     private WorkforceApi.SettlementCalculationSummary calculateInTransaction(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
         if ("LOCKED".equals(period.getStatus()) || "APPROVED".equals(period.getStatus())) {
-            throw new BusinessRuleException("لا يمكن إعادة احتساب فترة معتمدة أو مقفلة.", "SETTL_RECALCULATE_APPROVED_LOCKED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot recalculate a locked or approved settlement period.", "SETTL_ALREADY_LOCKED", HttpStatus.CONFLICT);
         }
 
-        List<ManualAttendanceEntry> entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
-        Map<String, List<ManualAttendanceEntry>> workerEntries = entries.stream()
-                .collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
+        var attendanceEntries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
+        var attendanceByWorker = attendanceEntries.stream().collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
 
-        List<Worker> allWorkers = workerRepository.findAll().stream()
-                .filter(w -> "ACTIVE".equalsIgnoreCase(w.getStatus()) || workerEntries.containsKey(w.getId()))
-                .toList();
+        List<Worker> allWorkers = workerRepository.findAll();
+        List<Contractor> allContractors = contractorRepository.findAll();
+        List<WorkforceAdvance> allAdvances = advanceRepository.findAll();
+        WorkforceAdvancePolicy policy = advancePolicyRepository.findAll().stream().findFirst().orElse(null);
 
-        var contractorIds = allWorkers.stream().map(Worker::getContractorId).filter(java.util.Objects::nonNull).collect(Collectors.toSet());
-        List<Contractor> contractors = contractorIds.isEmpty() ? java.util.Collections.emptyList() : contractorRepository.findAllById(contractorIds);
-        String fingerprint = inputFingerprint(entries, allWorkers);
-        int nextVersion = period.getCalculationVersion() + 1;
+        String fingerprint = inputFingerprint(attendanceEntries, allWorkers);
+
+        workerSettlementRepository.deleteAll(workerSettlementRepository.findByPeriodId(periodId));
+        List<ContractorSettlement> existingCs = contractorSettlementRepository.findByPeriodId(periodId);
+        for (ContractorSettlement cs : existingCs) {
+            contractorSettlementLineRepository.deleteBySettlementId(cs.getId());
+            contractorSettlementAdjustmentRepository.deleteBySettlementId(cs.getId());
+        }
+        contractorSettlementRepository.deleteAll(existingCs);
+
         List<WorkforceSettlementIssue> issues = new ArrayList<>();
-
+        int calculatedWorkers = 0;
+        int calculatedContractors = 0;
         BigDecimal totalAttendanceUnits = BigDecimal.ZERO;
         BigDecimal grossWorkersAmount = BigDecimal.ZERO;
         BigDecimal totalDeductions = BigDecimal.ZERO;
         BigDecimal totalAdvanceDeductions = BigDecimal.ZERO;
         BigDecimal netWorkersAmount = BigDecimal.ZERO;
+        BigDecimal netContractorsPayable = BigDecimal.ZERO;
 
-        workerSettlementRepository.deleteAll(workerSettlementRepository.findByPeriodId(periodId));
-        List<ContractorSettlement> existingContractorSettlements = contractorSettlementRepository.findByPeriodId(periodId);
-        for (ContractorSettlement cs : existingContractorSettlements) {
-            contractorSettlementLineRepository.deleteBySettlementId(cs.getId());
-            contractorSettlementAdjustmentRepository.deleteBySettlementId(cs.getId());
-        }
-        contractorSettlementRepository.deleteAll(existingContractorSettlements);
-
-        int calculatedWorkers = 0;
         for (Worker worker : allWorkers) {
-            List<ManualAttendanceEntry> list = workerEntries.get(worker.getId());
-            if (list == null || list.isEmpty()) {
-                if ("ACTIVE".equalsIgnoreCase(worker.getStatus())) {
-                    issues.add(new WorkforceSettlementIssue(periodId, nextVersion, worker.getId(), worker.getFullName(),
-                            "WARNING", "NO_ATTENDANCE", "لا توجد سجلات حضور للعامل داخل الفترة."));
-                }
+            List<ManualAttendanceEntry> workerEntries = attendanceByWorker.getOrDefault(worker.getId(), List.of());
+            if (workerEntries.isEmpty() && !"ACTIVE".equalsIgnoreCase(worker.getStatus())) {
                 continue;
             }
-            if (worker.getDefaultDailyRate() == null || worker.getDefaultDailyRate().signum() <= 0) {
-                issues.add(new WorkforceSettlementIssue(periodId, nextVersion, worker.getId(), worker.getFullName(),
-                        "ERROR", "MISSING_DAILY_RATE", "سعر اليومية غير صالح ويجب تصحيحه قبل الاعتماد."));
-            }
-            calculatedWorkers++;
-            BigDecimal units = list.stream().map(ManualAttendanceEntry::getAttendanceValue)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            totalAttendanceUnits = totalAttendanceUnits.add(units);
-            BigDecimal dailyRate = worker.getDefaultDailyRate() == null ? BigDecimal.ZERO : worker.getDefaultDailyRate();
-            BigDecimal gross = units.multiply(dailyRate).setScale(2, RoundingMode.HALF_UP);
-            grossWorkersAmount = grossWorkersAmount.add(gross);
 
-            BigDecimal advanceDeduction = BigDecimal.ZERO;
-            List<WorkforceAdvance> activeAdvances = advanceRepository.findByWorkerId(worker.getId()).stream()
-                    .filter(item -> "ACTIVE".equalsIgnoreCase(item.getStatus())).toList();
-            for (WorkforceAdvance advance : activeAdvances) {
-                BigDecimal maxAllowed = gross.multiply(advance.getMaxDeductionPercent())
-                        .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-                BigDecimal actual = advance.getInstallmentAmount().min(maxAllowed).min(advance.getRemainingBalance());
-                advanceDeduction = advanceDeduction.add(actual);
+            BigDecimal units = workerEntries.stream().map(ManualAttendanceEntry::getAttendanceValue).reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (units.compareTo(BigDecimal.ZERO) == 0 && !"ACTIVE".equalsIgnoreCase(worker.getStatus())) {
+                continue;
             }
-            totalAdvanceDeductions = totalAdvanceDeductions.add(advanceDeduction);
-            BigDecimal net = gross.subtract(advanceDeduction).setScale(2, RoundingMode.HALF_UP);
+
+            calculatedWorkers++;
+            totalAttendanceUnits = totalAttendanceUnits.add(units);
+
+            BigDecimal dailyRate = worker.getDefaultDailyRate() == null ? BigDecimal.ZERO : worker.getDefaultDailyRate();
+            if (!workerEntries.isEmpty() && workerEntries.get(0).getEffectiveDailyRate() != null && workerEntries.get(0).getEffectiveDailyRate().compareTo(BigDecimal.ZERO) > 0) {
+                dailyRate = workerEntries.get(0).getEffectiveDailyRate();
+            }
+
+            BigDecimal gross = units.multiply(dailyRate).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal overtime = workerEntries.stream().map(e -> e.getOvertimeHours() == null ? BigDecimal.ZERO : e.getOvertimeHours())
+                    .reduce(BigDecimal.ZERO, BigDecimal::add).multiply(dailyRate.divide(new BigDecimal("8"), 2, RoundingMode.HALF_UP));
+            gross = gross.add(overtime);
+
+            BigDecimal deductions = workerEntries.stream().map(e -> e.getDeductionHours() == null ? BigDecimal.ZERO : e.getDeductionHours())
+                    .reduce(BigDecimal.ZERO, BigDecimal::add).multiply(dailyRate.divide(new BigDecimal("8"), 2, RoundingMode.HALF_UP));
+
+            BigDecimal advancesDeducted = BigDecimal.ZERO;
+            Optional<WorkforceAdvance> activeAdvance = allAdvances.stream()
+                    .filter(a -> a.getWorkerId().equals(worker.getId()) && a.getRemainingBalance().compareTo(BigDecimal.ZERO) > 0)
+                    .findFirst();
+
+            if (activeAdvance.isPresent()) {
+                WorkforceAdvance adv = activeAdvance.get();
+                BigDecimal maxDeductible = gross.subtract(deductions);
+                if (policy != null && policy.getMaxDeductionPercent() != null) {
+                    maxDeductible = maxDeductible.multiply(policy.getMaxDeductionPercent()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                }
+                advancesDeducted = adv.getRemainingBalance().min(maxDeductible).max(BigDecimal.ZERO);
+            }
+
+            BigDecimal net = gross.subtract(deductions).subtract(advancesDeducted).max(BigDecimal.ZERO);
+
+            grossWorkersAmount = grossWorkersAmount.add(gross);
+            totalDeductions = totalDeductions.add(deductions);
+            totalAdvanceDeductions = totalAdvanceDeductions.add(advancesDeducted);
             netWorkersAmount = netWorkersAmount.add(net);
-            WorkerSettlement settlement = new WorkerSettlement(periodId, worker.getId(), worker.getContractorId(),
-                    units, dailyRate, gross, BigDecimal.ZERO, BigDecimal.ZERO, advanceDeduction, net);
-            settlement.applyAdvancePolicySnapshot(activeAdvances.stream().map(advance -> advance.getId() + ":"
-                    + (advance.getAppliedPolicyId() == null ? "DIRECT" : advance.getAppliedPolicyId()) + ":v"
-                    + (advance.getAppliedPolicyVersion() == null ? 0 : advance.getAppliedPolicyVersion()) + ":"
-                    + advance.getMaxDeductionPercent()).collect(Collectors.joining(";")));
-            workerSettlementRepository.save(settlement);
+
+            WorkerSettlement ws = new WorkerSettlement(
+                    periodId, worker.getId(), worker.getContractorId(),
+                    units, dailyRate, gross, overtime, deductions, advancesDeducted, net
+            );
+            workerSettlementRepository.save(ws);
         }
 
-        BigDecimal netContractorsPayable = BigDecimal.ZERO;
-        int calculatedContractors = 0;
-        for (Contractor contractor : contractors) {
-            List<WorkerSettlement> workerSettlements = workerSettlementRepository
-                    .findByPeriodIdAndContractorId(periodId, contractor.getId());
+        // Group by Contractor
+        for (Contractor contractor : allContractors) {
+            List<WorkerSettlement> workerSettlements = workerSettlementRepository.findByPeriodIdAndContractorId(periodId, contractor.getId());
             if (workerSettlements.isEmpty() && !"fixed_period_amount".equalsIgnoreCase(contractor.getAccountingModel()))
                 continue;
             calculatedContractors++;
@@ -241,9 +258,38 @@ public class WorkforceSettlementService {
 
             for (WorkerSettlement ws : workerSettlements) {
                 Worker workerObj = allWorkers.stream().filter(w -> w.getId().equals(ws.getWorkerId())).findFirst().orElse(null);
+
+                // Derive project / wbs / costCode from attendance entries or assignments
+                String lineProjectId = null;
+                String lineWbsNodeId = null;
+                String lineCostCodeId = null;
+                List<ManualAttendanceEntry> workerAttendance = attendanceByWorker.getOrDefault(ws.getWorkerId(), List.of());
+                for (ManualAttendanceEntry mae : workerAttendance) {
+                    if (mae.getProjectId() != null) {
+                        lineProjectId = mae.getProjectId();
+                        lineWbsNodeId = mae.getWbsNodeId();
+                        lineCostCodeId = mae.getCostCodeId();
+                        break;
+                    }
+                }
+                if (lineProjectId == null) {
+                    List<WorkerAssignment> assignments = assignmentRepository.findByWorkerId(ws.getWorkerId());
+                    for (WorkerAssignment wa : assignments) {
+                        if (wa.getProjectId() != null) {
+                            lineProjectId = wa.getProjectId();
+                            lineWbsNodeId = wa.getWbsNodeId();
+                            lineCostCodeId = wa.getCostCodeId();
+                            break;
+                        }
+                    }
+                }
+
                 ContractorSettlementLine line = new ContractorSettlementLine(
                         cs.getId(),
                         ws.getWorkerId(),
+                        lineProjectId,
+                        lineWbsNodeId,
+                        lineCostCodeId,
                         ws.getTotalAttendanceUnits(),
                         ws.getDailyRate(),
                         ws.getGrossAmount(),
@@ -296,7 +342,7 @@ public class WorkforceSettlementService {
     public TransitionResponse approvePeriod(String periodId) {
         WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "REVIEWED");
         if (period.getResultErrorCount() > 0)
-            throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.", "SETTL_ERRORS_MUST_BE_RESOLVED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Settlement errors must be resolved before approval.", "SETTL_ERRORS_MUST_BE_RESOLVED", HttpStatus.CONFLICT);
         period.setStatus("APPROVED");
         auditService.record("APPROVE", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
@@ -312,7 +358,7 @@ public class WorkforceSettlementService {
     public TransitionResponse lockPeriod(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
         if (!"APPROVED".equals(period.getStatus()))
-            throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.", "SETTL_LOCK_BEFORE_APPROVAL", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot lock the period before it is approved.", "SETTL_LOCK_BEFORE_APPROVAL", HttpStatus.CONFLICT);
         period.setStatus("LOCKED");
         auditService.record("LOCK", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
@@ -331,17 +377,17 @@ public class WorkforceSettlementService {
 
     private WorkforceApi.ContractorSettlementDetailResponse postSettlementTransaction(String settlementId, WorkforceApi.SettlementPostingRequest request) {
         ContractorSettlement settlement = contractorSettlementRepository.findById(settlementId)
-                .orElseThrow(() -> new BusinessRuleException("تسوية المقاول غير موجودة: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Contractor settlement not found: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         WorkforceSettlementPeriod period = periodRepository.findById(settlement.getPeriodId())
-                .orElseThrow(() -> new BusinessRuleException("فترة التسوية غير موجودة", "SETTL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Settlement period not found", "SETTL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (!"APPROVED".equals(period.getStatus()) && !"LOCKED".equals(period.getStatus())) {
-            throw new BusinessRuleException("يجب اعتماد تسوية المقاول قبل الترحيل.", "SETTL_NOT_APPROVED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Contractor settlement must be approved before posting.", "SETTL_NOT_APPROVED", HttpStatus.CONFLICT);
         }
 
         if ("POSTED".equals(settlement.getStatus()) || settlement.getPostedJournalEntryId() != null) {
-            throw new BusinessRuleException("تم ترحيل هذه التسوية بالفعل للمالية.", "SETTL_ALREADY_POSTED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("This settlement has already been posted to finance.", "SETTL_ALREADY_POSTED", HttpStatus.CONFLICT);
         }
 
         String currentActor = actor();
@@ -350,11 +396,35 @@ public class WorkforceSettlementService {
                 "CREDIT",
                 settlement.getNetPayable(),
                 "SETTL-" + period.getPeriodCode(),
-                "ترحيل مستحقات تسوية المقاول عن الفترة " + period.getPeriodCode(),
+                "Settlement liability posting for period " + period.getPeriodCode(),
                 Instant.now(),
                 currentActor
         );
         partnerLedgerEntryRepository.save(ledgerEntry);
+
+        // Record Project Cost Ledger Entries for any project-attributed settlement lines
+        List<ContractorSettlementLine> lines = contractorSettlementLineRepository.findBySettlementId(settlementId);
+        for (ContractorSettlementLine line : lines) {
+            if (line.getProjectId() != null && line.getGrossWage() != null && line.getGrossWage().compareTo(BigDecimal.ZERO) > 0) {
+                ProjectCostLedgerEntry costEntry = new ProjectCostLedgerEntry(
+                        line.getProjectId(),
+                        line.getWbsNodeId(),
+                        line.getCostCodeId(),
+                        CostCategory.LABOR,
+                        CostLedgerEntryType.ACTUAL,
+                        "WORKFORCE",
+                        settlement.getId(),
+                        "SETTL-" + period.getPeriodCode(),
+                        LocalDate.now(),
+                        "Contractor labor settlement: " + settlement.getAccountingModel() + " - Worker " + line.getWorkerId(),
+                        line.getAttendanceDays(),
+                        line.getDailyWage(),
+                        line.getGrossWage(),
+                        "EGP"
+                );
+                projectCostLedgerEntryRepository.save(costEntry);
+            }
+        }
 
         settlement.markPosted("JR-SETTL-" + settlement.getId().substring(0, 8).toUpperCase());
         contractorSettlementRepository.save(settlement);
@@ -368,114 +438,134 @@ public class WorkforceSettlementService {
     @Transactional
     public WorkforceApi.ContractorSettlementDetailResponse linkInvoice(String settlementId, WorkforceApi.LinkInvoiceRequest request) {
         ContractorSettlement settlement = contractorSettlementRepository.findById(settlementId)
-                .orElseThrow(() -> new BusinessRuleException("تسوية المقاول غير موجودة: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Contractor settlement not found: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (request.invoiceAmount() != null && request.invoiceAmount().subtract(settlement.getNetPayable()).abs().compareTo(new BigDecimal("100.00")) > 0) {
-            throw new BusinessRuleException("قيمة الفاتورة تتجاوز المبلغ المعتمد بالتسوية خارج حد التسامح.", "SETTL_INVOICE_VARIANCE_EXCEEDED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Invoice amount exceeds approved settlement amount outside tolerance.", "SETTL_INVOICE_VARIANCE_EXCEEDED", HttpStatus.CONFLICT);
         }
 
         settlement.linkInvoice(request.invoiceNumber(), Instant.ofEpochMilli(request.invoiceDate()));
         contractorSettlementRepository.save(settlement);
 
         auditService.record("LINK_INVOICE", "CONTRACTOR_SETTLEMENT", settlementId, actor(),
-                "{\"invoiceNumber\":\"" + request.invoiceNumber() + "\"}", null);
+                "{\"invoice\":\"" + request.invoiceNumber() + "\"}", null);
 
         return getContractorSettlement(settlementId);
     }
 
     @Transactional
-    public WorkforceApi.ContractorSettlementDetailResponse markPaid(String settlementId, WorkforceApi.RecordSettlementPaymentRequest request) {
-        String requestHash = IdempotencyService.hash(settlementId + "|MARK_PAID|" + request.amount());
-        return idempotencyService.execute("SETTLEMENT_PAYMENT", request.operationId(), requestHash,
-                () -> markPaidTransaction(settlementId, request),
-                response -> response.id(),
-                id -> getContractorSettlement(settlementId));
-    }
-
-    private WorkforceApi.ContractorSettlementDetailResponse markPaidTransaction(String settlementId, WorkforceApi.RecordSettlementPaymentRequest request) {
+    public WorkforceApi.ContractorSettlementDetailResponse recordPayment(String settlementId, WorkforceApi.RecordSettlementPaymentRequest request) {
         ContractorSettlement settlement = contractorSettlementRepository.findById(settlementId)
-                .orElseThrow(() -> new BusinessRuleException("تسوية المقاول غير موجودة: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Contractor settlement not found: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
 
-        BigDecimal remainingPayable = settlement.getNetPayable().subtract(settlement.getPaidAmount());
-        if (request.amount().compareTo(remainingPayable) > 0) {
-            throw new BusinessRuleException("مبلغ الصرف يجاوز رصيد التسوية المستحق.", "PROC_PAYMENT_AMOUNT_EXCEEDED", HttpStatus.CONFLICT);
+        if (!"POSTED".equals(settlement.getStatus())) {
+            throw new BusinessRuleException("Settlement must be posted to finance before recording payment.", "SETTL_PAYMENT_BEFORE_POST", HttpStatus.CONFLICT);
+        }
+
+        BigDecimal newPaid = settlement.getPaidAmount().add(request.amount());
+        if (newPaid.compareTo(settlement.getNetPayable()) > 0) {
+            throw new BusinessRuleException("Total payments exceed settlement net payable.", "SETTL_PAYMENT_EXCEEDS_NET", HttpStatus.CONFLICT);
         }
 
         String currentActor = actor();
-        settlement.updatePaidAmount(request.amount());
-        contractorSettlementRepository.save(settlement);
-
-        PartnerLedgerEntry ledgerEntry = new PartnerLedgerEntry(
+        PartnerLedgerEntry paymentLedgerEntry = new PartnerLedgerEntry(
                 settlement.getContractorId(),
                 "DEBIT",
                 request.amount(),
-                request.paymentReference() != null ? request.paymentReference() : "PAY-" + settlementId.substring(0, 8),
-                "صرف دفعة من مستحقات تسوية المقاول",
+                "PMT-SETTL-" + settlement.getId().substring(0, 8).toUpperCase(),
+                "Cash payment settlement disbursement",
                 request.paymentDate() != null ? Instant.ofEpochMilli(request.paymentDate()) : Instant.now(),
                 currentActor
         );
-        partnerLedgerEntryRepository.save(ledgerEntry);
+        partnerLedgerEntryRepository.save(paymentLedgerEntry);
 
-        auditService.record("PAYMENT", "CONTRACTOR_SETTLEMENT", settlementId, currentActor,
-                "{\"amount\":" + request.amount() + "}", null);
+        settlement.updatePaidAmount(newPaid);
+        contractorSettlementRepository.save(settlement);
+
+        auditService.record("RECORD_PAYMENT", "CONTRACTOR_SETTLEMENT", settlementId, currentActor,
+                "{\"amount\":" + request.amount() + ",\"newPaid\":" + newPaid + "}", null);
 
         return getContractorSettlement(settlementId);
     }
 
-    private TransitionResponse transition(String targetStatus, WorkforceSettlementPeriod period) {
-        List<String> actions = new ArrayList<>(WorkflowTransitions.allowedActions(targetStatus, SETTLEMENT_PERIOD_WORKFLOW));
-        if ("REVIEWED".equals(targetStatus)) {
-            actions.add("EXPORT");
+    @Transactional(readOnly = true)
+    public WorkforceApi.ProjectLaborCostReportResponse getProjectLaborCostReport(String projectId, String periodId) {
+        List<ContractorSettlementLine> lines = contractorSettlementLineRepository.findByProjectId(projectId);
+        if (periodId != null && !periodId.isBlank()) {
+            List<ContractorSettlement> settlements = contractorSettlementRepository.findByPeriodId(periodId);
+            Set<String> settlementIds = settlements.stream().map(ContractorSettlement::getId).collect(Collectors.toSet());
+            lines = lines.stream().filter(l -> settlementIds.contains(l.getSettlementId())).toList();
         }
-        if ("APPROVED".equals(targetStatus) && period.getResultErrorCount() > 0) {
-            actions.remove("LOCK");
+
+        int totalWorkers = (int) lines.stream().map(ContractorSettlementLine::getWorkerId).distinct().count();
+        BigDecimal totalDays = BigDecimal.ZERO;
+        BigDecimal totalGross = BigDecimal.ZERO;
+        BigDecimal totalOvertime = BigDecimal.ZERO;
+        BigDecimal totalNet = BigDecimal.ZERO;
+
+        List<WorkforceApi.ProjectLaborCostItem> items = new ArrayList<>();
+        for (ContractorSettlementLine l : lines) {
+            if (l.getAttendanceDays() != null) totalDays = totalDays.add(l.getAttendanceDays());
+            if (l.getGrossWage() != null) totalGross = totalGross.add(l.getGrossWage());
+            if (l.getOvertimeAmount() != null) totalOvertime = totalOvertime.add(l.getOvertimeAmount());
+            if (l.getNetWage() != null) totalNet = totalNet.add(l.getNetWage());
+
+            Worker w = workerRepository.findById(l.getWorkerId()).orElse(null);
+            String wCode = w != null ? w.getCode() : "";
+            String wName = w != null ? w.getFullName() : "Worker " + l.getWorkerId();
+            String cId = w != null ? w.getContractorId() : "";
+            String cName = contractorRepository.findById(cId).map(Contractor::getName).orElse("—");
+
+            items.add(new WorkforceApi.ProjectLaborCostItem(
+                    l.getWorkerId(), wCode, wName, cId, cName,
+                    l.getWbsNodeId(), l.getCostCodeId(),
+                    l.getAttendanceDays(), l.getDailyWage(),
+                    l.getGrossWage(), l.getOvertimeAmount(), l.getNetWage()
+            ));
         }
-        return new TransitionResponse(targetStatus, period.getCalculationVersion(), actions);
+
+        return new WorkforceApi.ProjectLaborCostReportResponse(
+                projectId,
+                "Project Labor Report",
+                periodId,
+                totalWorkers,
+                totalDays,
+                totalGross,
+                totalOvertime,
+                totalNet,
+                items
+        );
     }
 
-    private WorkforceSettlementPeriod requireFreshCalculated(String periodId, String requiredStatus) {
-        WorkforceSettlementPeriod period = requirePeriod(periodId);
-        if (!requiredStatus.equals(period.getStatus())) {
-            throw new BusinessRuleException("الحالة الحالية لا تسمح بهذا الإجراء. الحالة المطلوبة: " + requiredStatus);
-        }
-        if (needsRecalculation(period))
-            throw new BusinessRuleException("تغيرت بيانات الحضور أو الأسعار أو السياسات؛ أعد الاحتساب أولاً.", "SETTL_STALE_RECALCULATION_REQUIRED", HttpStatus.CONFLICT);
-        return period;
-    }
-
-    private WorkforceSettlementPeriod requirePeriod(String periodId) {
-        return periodRepository.findById(periodId)
-                .orElseThrow(() -> new BusinessRuleException("فترة التسوية غير موجودة: " + periodId));
-    }
-
-    private WorkforceApi.SettlementPeriodResponse mapPeriodToResponse(WorkforceSettlementPeriod period) {
-        return new WorkforceApi.SettlementPeriodResponse(period.getId(), period.getPeriodCode(), period.getStartDate(),
-                period.getEndDate(), period.getCycleType(), period.getStatus(), period.getCalculationVersion(),
-                epoch(period.getLastCalculatedAt()), period.getLastCalculatedBy(), epoch(period.getLastCalculationFailedAt()),
-                period.getLastCalculationError(), needsRecalculation(period), period.getResultRecordCount(),
-                period.getResultGrossAmount(), period.getResultDeductions(), period.getResultAdvances(),
-                period.getResultNetAmount(), period.getResultWarningCount(), period.getResultErrorCount(),
-                period.getCreatedAt().toEpochMilli(), period.getUpdatedAt().toEpochMilli());
+    private WorkforceApi.SettlementPeriodResponse mapPeriodToResponse(WorkforceSettlementPeriod p) {
+        return new WorkforceApi.SettlementPeriodResponse(
+                p.getId(), p.getPeriodCode(), p.getStartDate(), p.getEndDate(), p.getCycleType(), p.getStatus(),
+                p.getCalculationVersion(), epoch(p.getLastCalculatedAt()), p.getLastCalculatedBy(),
+                epoch(p.getLastCalculationFailedAt()), p.getLastCalculationError(),
+                needsRecalculation(p), p.getResultRecordCount(), p.getResultGrossAmount(), p.getResultDeductions(),
+                p.getResultAdvances(), p.getResultNetAmount(), p.getResultWarningCount(), p.getResultErrorCount(),
+                p.getCreatedAt().toEpochMilli(), p.getUpdatedAt().toEpochMilli()
+        );
     }
 
     private WorkforceApi.ContractorSettlementDetailResponse mapContractorSettlementToDetail(ContractorSettlement cs) {
-        Contractor contractor = contractorRepository.findById(cs.getContractorId()).orElse(null);
-        String contractorName = contractor != null ? contractor.getName() : cs.getContractorId();
-
-        List<WorkforceApi.ContractorSettlementLineResponse> lines = contractorSettlementLineRepository.findBySettlementId(cs.getId()).stream()
-                .map(line -> {
-                    Worker worker = workerRepository.findById(line.getWorkerId()).orElse(null);
+        String contractorName = contractorRepository.findById(cs.getContractorId())
+                .map(Contractor::getName).orElse("—");
+        List<WorkforceApi.ContractorSettlementLineResponse> lines = contractorSettlementLineRepository.findBySettlementId(cs.getId())
+                .stream().map(line -> {
+                    String workerName = workerRepository.findById(line.getWorkerId())
+                            .map(Worker::getFullName).orElse("—");
                     return new WorkforceApi.ContractorSettlementLineResponse(
-                            line.getId(), line.getSettlementId(), line.getWorkerId(),
-                            worker != null ? worker.getFullName() : line.getWorkerId(),
+                            line.getId(), line.getSettlementId(), line.getWorkerId(), workerName,
+                            line.getProjectId(), line.getWbsNodeId(), line.getCostCodeId(),
                             line.getAttendanceDays(), line.getDailyWage(), line.getGrossWage(),
                             line.getOvertimeAmount(), line.getDeductionsAmount(), line.getAdvanceInstallments(),
                             line.getNetWage()
                     );
                 }).toList();
 
-        List<WorkforceApi.ContractorSettlementAdjustmentResponse> adjustments = contractorSettlementAdjustmentRepository.findBySettlementId(cs.getId()).stream()
-                .map(adj -> new WorkforceApi.ContractorSettlementAdjustmentResponse(
+        List<WorkforceApi.ContractorSettlementAdjustmentResponse> adjustments = contractorSettlementAdjustmentRepository.findBySettlementId(cs.getId())
+                .stream().map(adj -> new WorkforceApi.ContractorSettlementAdjustmentResponse(
                         adj.getId(), adj.getSettlementId(), adj.getAdjustmentType(), adj.getDescription(),
                         adj.getAmount(), adj.getReason(), adj.getCreatedBy(), adj.getCreatedAt().toEpochMilli()
                 )).toList();
@@ -525,7 +615,7 @@ public class WorkforceSettlementService {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                     .digest(source.toString().getBytes(StandardCharsets.UTF_8)));
         } catch (Exception exception) {
-            throw new IllegalStateException("تعذر تكوين بصمة مدخلات التسوية.", exception);
+            throw new IllegalStateException("Failed to build settlement input fingerprint.", exception);
         }
     }
 
@@ -541,10 +631,31 @@ public class WorkforceSettlementService {
     private String rootMessage(Throwable throwable) {
         Throwable current = throwable;
         while (current.getCause() != null) current = current.getCause();
-        return current.getMessage() == null ? "خطأ غير متوقع أثناء الاحتساب." : current.getMessage();
+        return current.getMessage() == null ? "Unexpected error during calculation." : current.getMessage();
     }
 
     private String json(String value) {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private WorkforceSettlementPeriod requirePeriod(String periodId) {
+        return periodRepository.findById(periodId)
+                .orElseThrow(() -> new BusinessRuleException("Settlement period not found: " + periodId, "SETTL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND));
+    }
+
+    private WorkforceSettlementPeriod requireFreshCalculated(String periodId, String expectedStatus) {
+        WorkforceSettlementPeriod period = requirePeriod(periodId);
+        if (!expectedStatus.equals(period.getStatus())) {
+            throw new BusinessRuleException("Settlement period status does not match the required stage: " + period.getStatus(), "SETTL_INVALID_STATUS", HttpStatus.CONFLICT);
+        }
+        if (needsRecalculation(period)) {
+            throw new BusinessRuleException("Attendance or worker data changed since last calculation; recalculate the period first.", "SETTL_RECALCULATION_REQUIRED", HttpStatus.CONFLICT);
+        }
+        return period;
+    }
+
+    private TransitionResponse transition(String targetStatus, WorkforceSettlementPeriod period) {
+        List<String> allowed = SETTLEMENT_PERIOD_WORKFLOW.getOrDefault(targetStatus, List.of());
+        return new TransitionResponse(targetStatus, period.getCalculationVersion(), allowed);
     }
 }

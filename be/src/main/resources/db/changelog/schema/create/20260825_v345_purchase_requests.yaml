@@ -1,0 +1,165 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260825-v345-purchase-requests-table
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-03: purchase requests (PRQ) header with status lifecycle and PO conversion link."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: purchase_requests
+      changes:
+        - createTable:
+            tableName: purchase_requests
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: request_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requested_by
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: department_id
+                  type: VARCHAR(36)
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: needed_by
+                  type: DATE
+              - column:
+                  name: notes
+                  type: VARCHAR(500)
+              - column:
+                  name: converted_po_id
+                  type: VARCHAR(36)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: purchase_requests
+            columnNames: app_id, request_number
+            constraintName: uq_purchase_requests_app_number
+        - createIndex:
+            indexName: idx_purchase_requests_status
+            tableName: purchase_requests
+            columns:
+              - column:
+                  name: status
+        - createIndex:
+            indexName: idx_purchase_requests_department
+            tableName: purchase_requests
+            columns:
+              - column:
+                  name: department_id
+      rollback:
+        - dropTable:
+            tableName: purchase_requests
+
+  - changeSet:
+      id: 20260825-v345-purchase-request-lines-table
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-03: purchase request lines with item snapshots and conversion tracking."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: purchase_request_lines
+      changes:
+        - createTable:
+            tableName: purchase_request_lines
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: request_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_purchase_request_line_request
+                    references: purchase_requests(id)
+              - column:
+                  name: item_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: NUMERIC(15, 3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_of_measure
+                  type: VARCHAR(30)
+              - column:
+                  name: estimated_unit_price
+                  type: NUMERIC(15, 2)
+              - column:
+                  name: converted_quantity
+                  type: NUMERIC(15, 3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_purchase_request_lines_request
+            tableName: purchase_request_lines
+            columns:
+              - column:
+                  name: request_id
+      rollback:
+        - dropTable:
+            tableName: purchase_request_lines

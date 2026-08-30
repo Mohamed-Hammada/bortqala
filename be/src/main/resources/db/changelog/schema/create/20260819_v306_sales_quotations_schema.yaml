@@ -1,0 +1,106 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v306_sales_quotations_schema
+      author: wolfn
+      changes:
+        - addColumn:
+            tableName: sales_quotations
+            columns:
+              - column:
+                  name: valid_until
+                  type: DATE
+              - column:
+                  name: subtotal
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: discount_amount
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: tax_amount
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: terms_and_conditions
+                  type: VARCHAR(2000)
+              - column:
+                  name: sales_order_id
+                  type: VARCHAR(36)
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+
+        - createTable:
+            tableName: sales_quotation_lines
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quotation_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: NUMERIC(12, 3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_price
+                  type: NUMERIC(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: discount_amount
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tax_amount
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_total
+                  type: NUMERIC(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: VARCHAR(500)
+
+        - createIndex:
+            indexName: idx_sq_app_cust
+            tableName: sales_quotations
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: customer_id
+
+        - createIndex:
+            indexName: idx_sql_app_quo
+            tableName: sales_quotation_lines
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: quotation_id

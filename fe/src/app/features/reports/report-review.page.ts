@@ -277,6 +277,11 @@ export class ReportReviewPage {
       ['NO_PUNCH', 'SINGLE_PUNCH', 'MANUAL_ENTRY', 'MISSING_SCHEDULE'].includes(row.status)
     );
   }
+  ruleState(row: DailyResult): 'AUTO' | 'BLOCKING' | null {
+    if (row.status === 'SINGLE_PUNCH' && !row.decision) return 'BLOCKING';
+    if (row.warning === 'Presence counted from one punch by category policy.') return 'AUTO';
+    return null;
+  }
   async bulkDecide(decision: AttendanceDecision, statusType: DailyStatus) {
     const allResults = this.filteredResults();
     const reportStatus = this.store.details()?.report.status;

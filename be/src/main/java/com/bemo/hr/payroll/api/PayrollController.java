@@ -19,13 +19,13 @@ import java.time.format.DateTimeFormatter;
 @RequestMapping("/api/v1/payroll")
 @RequiredArgsConstructor
 @PreAuthorize("""
-        hasAnyRole(
+        (hasAnyRole(
             'SUPER_ADMIN',
             'ADMIN',
             'HR_MANAGER',
             'HR_REVIEWER',
             'PAYROLL_MANAGER'
-        )
+        ) or @auth.hasAnyPermission('hr:payroll:read', 'payroll:run:calculate', 'payroll:run:approve', 'payroll:run:disburse'))
         and @salaryAuthorization.canView(authentication)
         """)
 public class PayrollController {
@@ -43,7 +43,7 @@ public class PayrollController {
     }
 
     @PostMapping("/pay")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') "
+    @PreAuthorize("(hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') or @auth.hasPermission('payroll:run:disburse')) "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse recordPayment(
             @Valid @RequestBody PayrollApi.PaymentRequest request,
@@ -52,7 +52,7 @@ public class PayrollController {
     }
 
     @PostMapping("/pay-bulk")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') "
+    @PreAuthorize("(hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') or @auth.hasPermission('payroll:run:disburse')) "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse payBulk(
             @Valid @RequestBody PayrollApi.BulkPaymentRequest request,
@@ -62,9 +62,9 @@ public class PayrollController {
 
     @PostMapping("/transition")
     @PreAuthorize("(((#request.targetStatus.name() == 'CALCULATED' or #request.targetStatus.name() == 'REVIEWED') "
-            + "and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER')) "
-            + "or (#request.targetStatus.name() == 'APPROVED' and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER')) "
-            + "or (#request.targetStatus.name() == 'POSTED' and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER'))) "
+            + "and (hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER') or @auth.hasPermission('payroll:run:calculate'))) "
+            + "or (#request.targetStatus.name() == 'APPROVED' and (hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') or @auth.hasPermission('payroll:run:approve'))) "
+            + "or (#request.targetStatus.name() == 'POSTED' and (hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') or @auth.hasPermission('finance:journal:post')))) "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse transitionStatus(
             @Valid @RequestBody PayrollApi.StatusTransitionRequest request,

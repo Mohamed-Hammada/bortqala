@@ -1,0 +1,49 @@
+id;translation_key;locale;text_value
+v368-001-en;procurement.ocrScan;en-US;Scan Invoice
+v368-001-ar;procurement.ocrScan;ar-EG;مسح الفاتورة
+v368-002-en;procurement.ocrScanHint;en-US;Upload a photo of a supplier invoice to extract data automatically
+v368-002-ar;procurement.ocrScanHint;ar-EG;ارفع صورة فاتورة مورد لاستخراج البيانات تلقائياً
+v368-003-en;procurement.ocrUploadTitle;en-US;Upload Invoice Image
+v368-003-ar;procurement.ocrUploadTitle;ar-EG;رفع صورة الفاتورة
+v368-004-en;procurement.ocrSelectFile;en-US;Select Image
+v368-004-ar;procurement.ocrSelectFile;ar-EG;اختر الصورة
+v368-005-en;procurement.ocrReviewTitle;en-US;Review Extracted Data
+v368-005-ar;procurement.ocrReviewTitle;ar-EG;مراجعة البيانات المستخرجة
+v368-006-en;procurement.ocrSupplierSuggestion;en-US;Suggested Supplier
+v368-006-ar;procurement.ocrSupplierSuggestion;ar-EG;المورد المقترح
+v368-007-en;procurement.ocrInvoiceNo;en-US;Invoice Number
+v368-007-ar;procurement.ocrInvoiceNo;ar-EG;رقم الفاتورة
+v368-008-en;procurement.ocrDate;en-US;Invoice Date
+v368-008-ar;procurement.ocrDate;ar-EG;تاريخ الفاتورة
+v368-009-en;procurement.ocrLineItem;en-US;Item
+v368-009-ar;procurement.ocrLineItem;ar-EG;الصنف
+v368-010-en;procurement.ocrLineQty;en-US;Quantity
+v368-010-ar;procurement.ocrLineQty;ar-EG;الكمية
+v368-011-en;procurement.ocrLinePrice;en-US;Unit Price
+v368-011-ar;procurement.ocrLinePrice;ar-EG;سعر الوحدة
+v368-012-en;procurement.ocrConfidenceHigh;en-US;High
+v368-012-ar;procurement.ocrConfidenceHigh;ar-EG;عالي
+v368-013-en;procurement.ocrConfidenceLow;en-US;Low
+v368-013-ar;procurement.ocrConfidenceLow;ar-EG;منخفض
+v368-014-en;procurement.ocrConvertToGrn;en-US;Convert to Draft GRN
+v368-014-ar;procurement.ocrConvertToGrn;ar-EG;تحويل إلى مسودة استلام
+v368-015-en;procurement.ocrSelectSupplier;en-US;Select Supplier
+v368-015-ar;procurement.ocrSelectSupplier;ar-EG;اختر المورد
+v368-016-en;procurement.ocrNotConfigured;en-US;OCR not configured
+v368-016-ar;procurement.ocrNotConfigured;ar-EG;المسح الضوئي غير مُعد
+v368-017-en;procurement.ocrUploadFailed;en-US;Upload failed
+v368-017-ar;procurement.ocrUploadFailed;ar-EG;فشل الرفع
+v368-018-en;procurement.ocrConverted;en-US;Converted to draft GRN
+v368-018-ar;procurement.ocrConverted;ar-EG;تم التحويل إلى مسودة استلام
+v368-019-en;OCR_NOT_CONFIGURED;en-US;OCR provider is not configured. Contact your administrator to enable OCR.
+v368-019-ar;OCR_NOT_CONFIGURED;ar-EG;مزود المسح الضوئي غير مُعد. تواصل مع المسؤول لتفعيل المسح الضوئي.
+v368-020-en;OCR_PROVIDER_FAILED;en-US;OCR extraction failed. Please try again.
+v368-020-ar;OCR_PROVIDER_FAILED;ar-EG;فشل استخراج البيانات. يرجى المحاولة مرة أخرى.
+v368-021-en;OCR_IMAGE_INVALID;en-US;Invalid image. Only images under 5 MB are accepted.
+v368-021-ar;OCR_IMAGE_INVALID;ar-EG;صورة غير صالحة. يُقبل فقط صور أقل من 5 ميجا.
+v368-022-en;OCR_JOB_NOT_FOUND;en-US;OCR capture job not found.
+v368-022-ar;OCR_JOB_NOT_FOUND;ar-EG;عملية المسح غير موجودة.
+v368-023-en;OCR_INVALID_STATE;en-US;Only jobs in REVIEW status can be converted.
+v368-023-ar;OCR_INVALID_STATE;ar-EG;يمكن التحويل فقط للعمليات في حالة مراجعة.
+v368-024-en;OCR_SUPPLIER_NOT_FOUND;en-US;Selected supplier not found.
+v368-024-ar;OCR_SUPPLIER_NOT_FOUND;ar-EG;المورد المحدد غير موجود.

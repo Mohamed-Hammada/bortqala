@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: add_attendance_anomaly_threshold_to_apps
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: apps
@@ -17,6 +18,7 @@ databaseChangeLog:
   - changeSet:
       id: create_attendance_day_anomalies_table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: attendance_day_anomalies
@@ -80,6 +82,7 @@ databaseChangeLog:
   - changeSet:
       id: create_attendance_day_anomaly_results_table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: attendance_day_anomaly_results

@@ -1,0 +1,34 @@
+# WP-40 — Public API + Webhooks + API Keys
+**Priority:** 🟡 · **Owner:** Backend dev H · **Depends on:** — · **Effort:** ~7 days
+**Read first:** `_GLOBAL-RULES.md` + `missing-todo.md` §17G
+
+## Business goal
+Integrators/accountants want programmatic access (read invoices, create customers) and event pushes (invoice.paid, employee.created) instead of scraping. Daftra runs a whole developer portal on this — table stakes for "platform".
+
+## Design decisions
+- Scope v1: READ across core resources + CREATE for 2 low-risk resources (customer, journal note). Webhooks out: `invoice.paid`, `payment.recorded`, `employee.created`, `stock.low`.
+- Auth: per-key (`bk_…`) with tenant binding + scoped permission set; keys NEVER grant more than their linked user role.
+
+## Backend steps
+1. Tables: `api_keys` (id, app_id, name, key_hash (only hash stored — full key shown once at creation), scopes text[], rate_limit_per_min default 120, active, last_used_at, created_by) · `webhook_endpoints` (app_id, url, secret, events[], active) · `webhook_deliveries` (endpoint FK, event, payload JSONB, status, attempts, last_error).
+2. Key auth filter: `X-Api-Key` → resolve hash → bind TenantContext + authority scope map → per-minute bucket check (429 with Retry-After).
+3. Event dispatcher: domain services publish to outbox → delivery worker POSTs signed payload (`X-Signature` HMAC of body+secret), retries backoff 5 tries then dead.
+4. Docs: OpenAPI yaml generated from controllers (springdoc if present, else hand-maintained `/api/v1/docs` static page) — README explains.
+5. Codes `APIKEY_*`, `WEBHOOK_*`.
+
+## Frontend steps
+1. Settings→Integrations: keys list (create-once reveal dialog with copy), scopes multiselect, revoke; webhook endpoints CRUD + recent deliveries viewer (status, response code, redrive button).
+2. Keys ~14.
+
+## Acceptance Criteria (QA sign-off)
+- [x] AC-1 Key with `invoices:read` reads invoices but 403s creating customer without scope; wrong key → generic 401 (no enumeration).
+- [x] AC-2 Rate limit trips at configured N/min returning 429+Retry-After; counter resets next minute (fake clock).
+- [x] AC-3 invoice.paid delivery body matches published schema snapshot; invalid-signature receiver documented test shows rejection guidance; 5 failures → dead status visible in UI.
+- [x] AC-4 Full key displayed exactly once; only hash persisted (DB inspection test); revocation effective immediately.
+- [x] AC-5 Tenant isolation: key from app A cannot read app B even with same key string replayed (context binding test).
+
+## Deliverables Summary
+- **Database Schema**: `api_keys`, `webhook_endpoints`, `webhook_deliveries` (Liquibase `v377`, `v378`).
+- **Backend Architecture**: Package `com.bemo.hr.platform` (`ApiKeyAuthenticationFilter`, `ApiKeyRateLimiter`, `ApiKeyAuthentication`, `ApiKeyService`, `WebhookService`, `PlatformController`).
+- **Frontend Architecture**: Integrations Settings Component (`fe/src/app/features/settings/integrations-settings.component.ts`), API key generation dialog, webhook endpoints CRUD, and webhook deliveries viewer with redrive.
+

@@ -29,6 +29,34 @@ describe('DashboardStore', () => {
     expect(store).toBeTruthy();
   });
 
+  it('downloads the clock-in histogram export honoring the category filter (WP-08)', async () => {
+    const promise = store.downloadClockInHistogram(12, 'SECURITY');
+    const request = httpMock.expectOne(
+      (req) => req.url === '/api/v1/exports/clock-in-histogram.xlsx'
+        && req.params.get('months') === '12'
+        && req.params.get('categoryId') === 'SECURITY');
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['xlsx']));
+    expect(await promise).toBeInstanceOf(Blob);
+  });
+
+  it('loads the peak clock-in histogram and clears it on failure (WP-08)', async () => {
+    const promise = store.loadClockInHistogram(6);
+    const request = httpMock.expectOne('/api/v1/dashboard/clock-in-histogram?months=6');
+    request.flush([
+      { hour: 7, countsByCategory: { SECURITY: 2 } },
+      { hour: 8, countsByCategory: { ADMIN: 1, SECURITY: 1 } },
+    ]);
+    await promise;
+    expect(store.clockInBuckets().length).toBe(2);
+    expect(store.clockInBuckets()[0].countsByCategory['SECURITY']).toBe(2);
+
+    const failPromise = store.loadClockInHistogram(3, 'SECURITY');
+    httpMock.expectOne('/api/v1/dashboard/clock-in-histogram?months=3&categoryId=SECURITY').flush('boom', { status: 500, statusText: 'Server Error' });
+    await failPromise;
+    expect(store.clockInBuckets()).toEqual([]);
+  });
+
   it('loads multi-period trends into the trends signal', async () => {
     const payload = [
       { label: '2026-07', year: 2026, month: 7, scheduledEmployeeDays: 2, presentEmployeeDays: 1,

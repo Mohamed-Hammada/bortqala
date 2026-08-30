@@ -214,11 +214,47 @@ public class BankReconciliationService {
         return new BankReconciliationApi.CashPositionResponse(result, totals);
     }
 
+    public List<BankReconciliationApi.AgingResponse> unmatchedAging() {
+        log.debug("unmatchedAging called");
+        return bankAccountRepository.findAllByOrderByBankNameAsc().stream()
+                .filter(BankAccount::isActive).map(bank -> {
+                    Optional<BankStatement> latest = bankStatementRepository.findFirstByBankAccountIdOrderByPeriodEndDesc(bank.getId());
+                    if (latest.isEmpty())
+                        return new BankReconciliationApi.AgingResponse(bank.getId(), bank.getBankName(), bank.getCurrencyCode(),
+                                BigDecimal.ZERO, List.of(), BigDecimal.ZERO);
+                    BankStatement stmt = latest.get();
+                    List<BankStatementLine> lines = bankStatementLineRepository.findByStatementIdOrderByLineNumberAsc(stmt.getId()).stream()
+                            .filter(l -> l.getStatus() == BankStatementLine.Status.UNMATCHED || l.getStatus() == BankStatementLine.Status.PARTIAL)
+                            .toList();
+                    LocalDate today = LocalDate.now();
+                    List<BankReconciliationApi.AgingBucket> buckets = List.of(
+                            bucket("0-7d", 0, 7, lines, today),
+                            bucket("8-30d", 8, 30, lines, today),
+                            bucket("31-60d", 31, 60, lines, today),
+                            bucket("61-90d", 61, 90, lines, today),
+                            bucket("90d+", 91, 9999, lines, today));
+                    BigDecimal total = buckets.stream().map(BankReconciliationApi.AgingBucket::totalRemaining)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    return new BankReconciliationApi.AgingResponse(bank.getId(), bank.getBankName(), bank.getCurrencyCode(),
+                            stmt.getClosingBalance(), buckets, total);
+                }).toList();
+    }
+
+    private BankReconciliationApi.AgingBucket bucket(String label, long minDays, long maxDays,
+                                                      List<BankStatementLine> lines, LocalDate today) {
+        List<BankStatementLine> matched = lines.stream().filter(l -> {
+            long days = ChronoUnit.DAYS.between(l.getTransactionDate(), today);
+            return days >= minDays && days <= maxDays;
+        }).toList();
+        BigDecimal total = matched.stream().map(BankStatementLine::remainingAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new BankReconciliationApi.AgingBucket(label, minDays, maxDays, matched.size(), total);
+    }
+
     private List<Candidate> candidates(BankStatementLine line, BankAccount bank) {
         if (bank.getAccountId() == null) return List.of();
         return journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED).stream()
-                .filter(e -> Math.abs(ChronoUnit.DAYS.between(e.getEntryDate(), line.getTransactionDate())) <= 3)
-                .map(e -> new Candidate(e, availableBankAmount(e, bank, line.getAmount().signum()), score(e, line)))
+                .filter(e -> Math.abs(ChronoUnit.DAYS.between(e.getEntryDate(), line.getTransactionDate())) <= 5)
+                .map(e -> new Candidate(e, availableBankAmount(e, bank, line.getAmount().signum()), score(e, line, availableBankAmount(e, bank, line.getAmount().signum()))))
                 .filter(c -> c.availableAmount().signum() > 0)
                 .sorted(Comparator.comparingInt(Candidate::score).reversed()).toList();
     }
@@ -233,8 +269,9 @@ public class BankReconciliationService {
         return effect.abs().subtract(used).max(BigDecimal.ZERO);
     }
 
-    private int score(JournalEntry entry, BankStatementLine line) {
+    private int score(JournalEntry entry, BankStatementLine line, BigDecimal availableAmount) {
         int score = entry.getEntryDate().equals(line.getTransactionDate()) ? 50 : 30;
+        if (line.getAmount().abs().compareTo(availableAmount) == 0) score += 20;
         String reference = line.getBankReference() == null ? "" : line.getBankReference().toLowerCase();
         if (!reference.isBlank() && ((entry.getReference() != null && entry.getReference().toLowerCase().contains(reference))
                 || entry.getDescription().toLowerCase().contains(reference))) score += 30;
@@ -292,7 +329,7 @@ public class BankReconciliationService {
         List<BankReconciliationApi.CandidateResponse> suggestions = includeCandidates && line.getStatus() != BankStatementLine.Status.MATCHED
                 ? candidates(line, bank).stream().map(c -> new BankReconciliationApi.CandidateResponse(c.entry().getId(),
                 c.entry().getEntryNumber(), epoch(c.entry().getEntryDate()), c.entry().getDescription(), c.entry().getReference(),
-                signedBankAmount(c.entry(), bank), c.availableAmount(), c.score(), c.score() >= 80 ? "AMOUNT_DATE_REFERENCE" : "AMOUNT_DATE")).toList()
+                signedBankAmount(c.entry(), bank), c.availableAmount(), c.score(), c.score() >= 90 ? "AMOUNT_DATE_REFERENCE" : "AMOUNT_DATE")).toList()
                 : List.of();
         return new BankReconciliationApi.LineResponse(line.getId(), line.getLineNumber(), epoch(line.getTransactionDate()),
                 line.getValueDate() == null ? null : epoch(line.getValueDate()), line.getDescription(), line.getBankReference(),

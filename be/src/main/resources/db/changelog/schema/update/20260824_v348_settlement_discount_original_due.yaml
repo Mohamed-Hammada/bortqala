@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260824-v348-settlement-discount-original-due
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-02: persist the original outstanding balance on supplier payments at settlement time."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: supplier_payments
+              columnName: original_due
+      changes:
+        - addColumn:
+            tableName: supplier_payments
+            columns:
+              - column:
+                  name: original_due
+                  type: NUMERIC(15, 2)
+      rollback:
+        - dropColumn:
+            tableName: supplier_payments
+            columnName: original_due

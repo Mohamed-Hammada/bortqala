@@ -12,6 +12,9 @@ public class AuditLogApi {
             String username,
             String detailsJson,
             String ipAddress,
+            String reason,
+            boolean isBreakGlass,
+            String userAgent,
             long occurredAt
     ) {
     }
@@ -22,6 +25,15 @@ public class AuditLogApi {
             int pageSize,
             long totalElements,
             int totalPages
+    ) {
+    }
+
+    public record BreakGlassRequest(
+            String action,
+            String entityType,
+            String entityId,
+            String reason,
+            String detailsJson
     ) {
     }
 }

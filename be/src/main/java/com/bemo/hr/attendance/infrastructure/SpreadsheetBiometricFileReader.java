@@ -208,8 +208,7 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         var structuredKeys = Set.of("employeeCode", "day", "officialIn", "officialOut", "actualIn", "actualOut");
         if (!result.keySet().containsAll(structuredKeys)) {
             throw new BusinessRuleException(
-                    "Required columns: Employee code, Day, Official check-in, Official check-out, Actual check-in, Actual check-out. "
-                            + "/ الأعمدة المطلوبة: كود الموظف، اليوم، الحضور الرسمي، الانصراف الرسمي، الحضور الفعلي، الانصراف الفعلي.",
+                            "Required columns: Employee code, Day, Official check-in, Official check-out, Actual check-in, Actual check-out.",
                     "BIO_REQUIRED_COLUMNS_MISSING", HttpStatus.CONFLICT);
         }
         return result;
@@ -328,7 +327,7 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
             } catch (DateTimeParseException ignored) {
             }
         }
-        throw new IllegalArgumentException("قيمة التاريخ غير صحيحة. استخدم تاريخ Excel أو صيغة يوم/شهر/سنة.");
+        throw new IllegalArgumentException("Invalid date value. Use an Excel date or day/month/year format.");
     }
 
     private LocalTime parseTime(String value, boolean required) {

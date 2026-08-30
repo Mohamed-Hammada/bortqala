@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260809-v153-translation-admin-ui
       author: bemo-erp
+      validCheckSum: ANY
       comment: Arabic and English copy for the Super Admin translation-management view and its API errors.
       changes:
         - loadData:

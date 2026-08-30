@@ -1,0 +1,75 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('kb.helpCenter') }}</p>
+      <h1>{{ i18n.t('kb.articles') }}</h1>
+    </div>
+    <button class="button" (click)="showCreate.set(true)">{{ i18n.t('kb.createArticle') }}</button>
+  </header>
+
+  <div class="search-bar">
+    <input [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)"
+           (keyup.enter)="search()" [placeholder]="i18n.t('kb.searchHint')">
+    <button class="button secondary" (click)="search()">{{ i18n.t('kb.search') }}</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  } @else if (articles().length === 0) {
+    <div class="empty-state">{{ i18n.t('kb.noArticles') }}</div>
+  } @else {
+    <div class="articles-grid">
+      @for (a of articles(); track a.id) {
+        <div class="article-card" (click)="viewArticle(a)">
+          <div class="article-header">
+            <span class="badge" [class.published]="a.published" [class.draft]="!a.published">
+              {{ a.published ? i18n.t('kb.published') : i18n.t('kb.draft') }}
+            </span>
+            <span class="views">{{ a.views }} {{ i18n.t('kb.views') }}</span>
+          </div>
+          @if (a.tags) {
+            <p class="tags">{{ a.tags }}</p>
+          }
+          <div class="article-actions" (click)="$event.stopPropagation()">
+            @if (!a.published) {
+              <button class="button small" (click)="publishArticle(a.id)">{{ i18n.t('kb.publish') }}</button>
+            }
+            <button class="btn-vote" (click)="vote(a.id, true)">👍 {{ a.helpfulUp }}</button>
+            <button class="btn-vote" (click)="vote(a.id, false)">👎 {{ a.helpfulDown }}</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (showCreate()) {
+    <div class="modal-overlay" (click)="showCreate.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2>{{ i18n.t('kb.createArticle') }}</h2>
+        <label>{{ i18n.t('kb.titleAr') }}<input [value]="newTitleAr()" (input)="newTitleAr.set($any($event.target).value)"></label>
+        <label>{{ i18n.t('kb.titleEn') }}<input [value]="newTitleEn()" (input)="newTitleEn.set($any($event.target).value)"></label>
+        <label>{{ i18n.t('kb.bodyAr') }}<textarea [value]="newBodyAr()" (input)="newBodyAr.set($any($event.target).value)"></textarea></label>
+        <label>{{ i18n.t('kb.bodyEn') }}<textarea [value]="newBodyEn()" (input)="newBodyEn.set($any($event.target).value)"></textarea></label>
+        <label>{{ i18n.t('kb.tags') }}<input [value]="newTags()" (input)="newTags.set($any($event.target).value)"></label>
+        <div class="modal-actions">
+          <button class="button secondary" (click)="showCreate.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="button" (click)="createArticle()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (viewingArticle()) {
+    <div class="modal-overlay" (click)="viewingArticle.set(null)">
+      <div class="modal wide" (click)="$event.stopPropagation()">
+        <h2>{{ i18n.locale() === 'ar-EG' ? viewingArticle()!.titleAr : viewingArticle()!.titleEn }}</h2>
+        <div [innerHTML]="i18n.locale() === 'ar-EG' ? viewingArticle()!.bodyAr : viewingArticle()!.bodyEn"></div>
+        <div class="article-meta">
+          <span>{{ viewingArticle()!.views }} {{ i18n.t('kb.views') }}</span>
+          <span>👍 {{ viewingArticle()!.helpfulUp }}</span>
+          <span>👎 {{ viewingArticle()!.helpfulDown }}</span>
+        </div>
+      </div>
+    </div>
+  }
+</section>

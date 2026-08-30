@@ -1,0 +1,242 @@
+<div class="pharmacy-page">
+  <!-- Top Bar -->
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('clinic.pharmacyTitle') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('clinic.pharmacySubtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" *ngIf="activeTab() === 'NARCOTICS'" (click)="exportNarcoticsMOH()">
+        📥 {{ i18n.t('clinic.narcoticsMOHExport') }}
+      </button>
+      <button class="btn btn-primary" *ngIf="activeTab() === 'CATALOG'" (click)="openAddDrugModal()">
+        + {{ i18n.t('common.add') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-bar">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'CATALOG'"
+      (click)="setTab('CATALOG')"
+    >
+      💊 {{ i18n.t('clinic.tabDrugCatalog') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'DISPENSE'"
+      (click)="setTab('DISPENSE')"
+    >
+      📋 {{ i18n.t('clinic.tabDispense') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'NARCOTICS'"
+      (click)="setTab('NARCOTICS')"
+    >
+      🔒 {{ i18n.t('clinic.tabNarcotics') }}
+    </button>
+  </div>
+
+  <!-- TAB 1: DRUG CATALOG -->
+  <div class="tab-content card" *ngIf="activeTab() === 'CATALOG'">
+    <table class="data-table" *ngIf="pharmacyItems().length > 0; else noItems">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('clinic.tradeName') }}</th>
+          <th>{{ i18n.t('clinic.genericName') }}</th>
+          <th>{{ i18n.t('clinic.dosageForm') }}</th>
+          <th>{{ i18n.t('clinic.strength') }}</th>
+          <th>{{ i18n.t('clinic.isControlled') }}</th>
+          <th>{{ i18n.t('clinic.controlSchedule') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of pharmacyItems()">
+          <td class="font-bold">{{ item.tradeName }}</td>
+          <td>{{ item.genericName || '—' }}</td>
+          <td><span class="badge badge-neutral">{{ item.dosageForm }}</span></td>
+          <td>{{ item.strengthText || '—' }}</td>
+          <td>
+            <span class="badge" [class.badge-danger]="item.controlled" [class.badge-success]="!item.controlled">
+              {{ item.controlled ? i18n.t('common.yes') : i18n.t('common.no') }}
+            </span>
+          </td>
+          <td>
+            <span *ngIf="item.controlSchedule" class="badge badge-warning">
+              {{ item.controlSchedule }}
+            </span>
+            <span *ngIf="!item.controlSchedule">—</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noItems>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- TAB 2: DISPENSE PRESCRIPTIONS -->
+  <div class="tab-content card" *ngIf="activeTab() === 'DISPENSE'">
+    <div class="dispense-search-row">
+      <input
+        type="text"
+        class="form-control"
+        [placeholder]="i18n.t('clinic.searchPlaceholder')"
+        [ngModel]="prescriptionSearchId()"
+        (ngModelChange)="prescriptionSearchId.set($event)"
+      />
+      <button class="btn btn-primary" (click)="loadPrescriptionForDispense()">
+        🔍 {{ i18n.t('common.search') }}
+      </button>
+    </div>
+
+    <!-- Dispense Lines Table -->
+    <div *ngIf="dispenseLines().length > 0" class="dispense-form-container">
+      <h4>{{ i18n.t('clinic.tabDispense') }}</h4>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('clinic.tradeName') }}</th>
+            <th>{{ i18n.t('clinic.batchNumber') }}</th>
+            <th>{{ i18n.t('clinic.expiryDate') }}</th>
+            <th>{{ i18n.t('clinic.prescribedQty') }}</th>
+            <th>{{ i18n.t('clinic.fefoBatch') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let l of dispenseLines()">
+            <td class="font-bold">{{ l.pharmacyItemId }}</td>
+            <td>
+              <input type="text" class="form-control" [(ngModel)]="l.batchNumber" />
+            </td>
+            <td>
+              <input type="date" class="form-control" [(ngModel)]="l.expiryDate" />
+            </td>
+            <td>
+              <input type="number" class="form-control qty-input" [(ngModel)]="l.quantity" min="1" />
+            </td>
+            <td>
+              <span class="badge badge-info">{{ l.batchNumber }} ({{ l.expiryDate }})</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Second Signer Row for Controlled Drugs -->
+      <div *ngIf="isControlledPrescription()" class="controlled-warning-box">
+        <span class="warning-icon">⚠️</span>
+        <div class="warning-text">
+          <strong>{{ i18n.t('clinic.isControlled') }}</strong>
+          <p>{{ i18n.t('clinic.pendingApproval') }}</p>
+        </div>
+        <div class="form-group signer-group">
+          <label>{{ i18n.t('clinic.secondSigner') }}</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="secondSignerId()"
+            (ngModelChange)="secondSignerId.set($event)"
+            [placeholder]="i18n.t('clinic.secondSigner')"
+          />
+        </div>
+      </div>
+
+      <div class="dispense-actions">
+        <button class="btn btn-success" (click)="executeDispense()" [disabled]="saving()">
+          ✓ {{ i18n.t('clinic.dispenseAction') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: NARCOTICS REGISTER -->
+  <div class="tab-content card" *ngIf="activeTab() === 'NARCOTICS'">
+    <table class="data-table" *ngIf="narcoticsEntries().length > 0; else noNarcotics">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('common.date') }}</th>
+          <th>{{ i18n.t('clinic.tradeName') }}</th>
+          <th>{{ i18n.t('clinic.mrn') }}</th>
+          <th>{{ i18n.t('clinic.fullName') }}</th>
+          <th>{{ i18n.t('clinic.doctor') }}</th>
+          <th>{{ i18n.t('clinic.secondSigner') }}</th>
+          <th>{{ i18n.t('clinic.batchNumber') }}</th>
+          <th>{{ i18n.t('clinic.prescribedQty') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let n of narcoticsEntries()">
+          <td>{{ n.signedAt | date:'yyyy-MM-dd HH:mm' }}</td>
+          <td class="font-bold text-danger">{{ n.tradeName }}</td>
+          <td><span class="badge badge-info">{{ n.patientMrn }}</span></td>
+          <td>{{ n.patientName }}</td>
+          <td>{{ n.prescriberDoctorName }}</td>
+          <td><span class="badge badge-success">{{ n.secondSignerName }}</span></td>
+          <td>{{ n.batchNumber || '—' }}</td>
+          <td class="font-bold">{{ n.quantity }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noNarcotics>
+      <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+    </ng-template>
+  </div>
+
+  <!-- Add Drug Item Modal -->
+  <div class="modal-overlay" *ngIf="showDrugModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.tabDrugCatalog') }}</h3>
+        <button class="btn-close" (click)="showDrugModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveDrugItem()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.tradeName') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="drugForm.tradeName" name="tradeName" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.genericName') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="drugForm.genericName" name="genericName" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.dosageForm') }}</label>
+            <select class="form-control" [(ngModel)]="drugForm.dosageForm" name="dosageForm">
+              <option *ngFor="let f of dosageForms" [value]="f">{{ f }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.strength') }}</label>
+            <input type="text" class="form-control" [(ngModel)]="drugForm.strengthText" name="strengthText" />
+          </div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="drugForm.controlled" name="controlled" />
+            {{ i18n.t('clinic.isControlled') }}
+          </label>
+        </div>
+
+        <div class="form-group" *ngIf="drugForm.controlled">
+          <label>{{ i18n.t('clinic.controlSchedule') }}</label>
+          <select class="form-control" [(ngModel)]="drugForm.controlSchedule" name="controlSchedule">
+            <option *ngFor="let s of controlSchedules" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showDrugModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!drugForm.tradeName || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

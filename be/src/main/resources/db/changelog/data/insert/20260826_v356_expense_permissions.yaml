@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v356_expense_permissions_seed
+      author: wolfn
+      validCheckSum: ANY
+      comment: "WP-11: expense permission seed for PBAC policy engine"
+      changes:
+        - loadData:
+            tableName: sec_permissions
+            comment: "WP-11: expense permission seed"
+            file: db/changelog/data/insert/files/20260826_v356_expense_permissions.csv
+            separator: ";"
+            quotChar: '"'
+            columns:
+              - column:
+                  header: id
+                  name: id
+                  type: STRING
+              - column:
+                  header: permission_key
+                  name: permission_key
+                  type: STRING
+              - column:
+                  header: module
+                  name: module
+                  type: STRING
+              - column:
+                  header: submodule
+                  name: submodule
+                  type: STRING
+              - column:
+                  header: description_key
+                  name: description_key
+                  type: STRING
+              - column:
+                  header: action
+                  name: action
+                  type: STRING
+              - column:
+                  header: is_system
+                  name: is_system
+                  type: BOOLEAN
+              - column:
+                  header: created_at
+                  name: created_at
+                  type: NUMERIC
+
+  - changeSet:
+      id: 20260826_v356_expense_permission_translations
+      author: wolfn
+      validCheckSum: ANY
+      comment: "WP-11: bilingual translations for expense permissions"
+      changes:
+        - loadData:
+            tableName: translations
+            comment: "WP-11: expense permission descriptions"
+            file: db/changelog/data/insert/files/20260826_v356_expense_permission_translations.csv
+            separator: ";"
+            quotChar: '"'
+            columns:
+              - column:
+                  header: id
+                  name: id
+                  type: STRING
+              - column:
+                  header: translation_key
+                  name: translation_key
+                  type: STRING
+              - column:
+                  header: locale
+                  name: locale
+                  type: STRING
+              - column:
+                  header: text_value
+                  name: text_value
+                  type: STRING

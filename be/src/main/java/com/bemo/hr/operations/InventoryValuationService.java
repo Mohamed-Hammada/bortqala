@@ -115,15 +115,49 @@ public class InventoryValuationService {
     }
 
     public OperationsApi.ValuationReport report() {
-        log.debug("report called");
-        List<InventoryItem> items = inventoryItemRepository.findAllByOrderByNameAsc();
+        return report(null, null, null);
+    }
+
+    public OperationsApi.ValuationReport report(Long asOfEpochMs, String warehouseId, String itemId) {
+        log.debug("report called with asOfEpochMs={}, warehouseId={}, itemId={}", asOfEpochMs, warehouseId, itemId);
+        Instant asOf = asOfEpochMs == null ? null : Instant.ofEpochMilli(asOfEpochMs);
+        String normalizedWarehouse = warehouseId == null || warehouseId.isBlank() ? null : warehouseId.strip();
+        OperationsApi.ValuationPolicyView policyView = policy();
+        String method = policyView.valuationMethod() == null
+                ? InventoryValuationPolicy.Method.WEIGHTED_AVERAGE.name()
+                : policyView.valuationMethod().name();
+        BigDecimal glBalance = glInventoryAccountBalance(policyView.inventoryAccountId());
+        List<InventoryItem> items = itemId == null || itemId.isBlank()
+                ? inventoryItemRepository.findAllByOrderByNameAsc()
+                : List.of(inventoryItemRepository.findById(itemId.strip())
+                        .orElseThrow(() -> new BusinessRuleException("Inventory item not found.",
+                                "OPS_ITEM_NOT_FOUND", org.springframework.http.HttpStatus.NOT_FOUND)));
         Map<String, InventoryItem> itemMap = items.stream().collect(Collectors.toMap(InventoryItem::getId, Function.identity()));
-        List<OperationsApi.ItemValuationView> itemViews = items.stream().map(item -> itemValuation(item)).toList();
+        List<OperationsApi.ItemValuationView> itemViews = items.stream()
+                .map(item -> itemValuation(item, method, asOf, normalizedWarehouse)).toList();
         List<OperationsApi.MovementCostView> costs = inventoryMovementCostRepository.findAllByOrderByOccurredAtDesc().stream()
                 .map(cost -> toMovementCost(cost, itemMap.get(cost.getItemId()))).toList();
         BigDecimal total = itemViews.stream().map(OperationsApi.ItemValuationView::inventoryValue)
                 .reduce(ZERO_MONEY, BigDecimal::add);
-        return new OperationsApi.ValuationReport(policy(), total, itemViews, costs);
+        BigDecimal variance = glBalance == null ? null : total.subtract(glBalance);
+        return new OperationsApi.ValuationReport(policyView, total, itemViews, costs, glBalance, variance);
+    }
+
+    private BigDecimal glInventoryAccountBalance(String accountId) {
+        if (accountId == null || accountId.isBlank())
+            return null;
+        List<String> postedIds = journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED)
+                .stream().map(JournalEntry::getId).toList();
+        if (postedIds.isEmpty())
+            return ZERO_MONEY;
+        return journalEntryLineRepository.findByJournalEntryIdIn(postedIds).stream()
+                .filter(line -> accountId.equals(line.getAccountId()))
+                .map(line -> nz(line.getDebit()).subtract(nz(line.getCredit())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private static BigDecimal nz(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 
     public OperationsApi.MovementCostView movementCost(String movementId) {
@@ -232,6 +266,11 @@ public class InventoryValuationService {
                 .add(inventoryRevaluationRepository.revaluationValue(itemId));
     }
 
+    private BigDecimal inventoryValueAsOf(String itemId, Instant asOf) {
+        return inventoryMovementCostRepository.inventoryValueAsOf(itemId, asOf)
+                .add(inventoryRevaluationRepository.revaluationValueAsOf(itemId, asOf));
+    }
+
     private String postMovementJournal(InventoryValuationPolicy policy, StockMovement movement, BigDecimal valueEffect,
                                        FiscalPeriod period, String actor) {
         String offset = movement.getOperationType().contains("ADJUSTMENT")
@@ -287,13 +326,38 @@ public class InventoryValuationService {
         return account;
     }
 
-    private OperationsApi.ItemValuationView itemValuation(InventoryItem item) {
-        BigDecimal onHand = stockMovementRepository.balance(item.getId());
-        BigDecimal valuedQuantity = inventoryMovementCostRepository.valuedQuantity(item.getId());
-        BigDecimal value = inventoryValue(item.getId());
-        BigDecimal average = onHand.signum() == 0 ? BigDecimal.ZERO : value.divide(onHand, 6, RoundingMode.HALF_UP);
+    private OperationsApi.ItemValuationView itemValuation(InventoryItem item, String method, Instant asOf, String warehouseId) {
+        boolean filteredWarehouse = warehouseId != null;
+        BigDecimal onHand;
+        if (asOf != null && filteredWarehouse)
+            onHand = stockMovementRepository.balanceAsOfAndWarehouse(item.getId(), warehouseId, asOf);
+        else if (asOf != null)
+            onHand = stockMovementRepository.balanceAsOf(item.getId(), asOf);
+        else if (filteredWarehouse)
+            onHand = stockMovementRepository.balanceByWarehouse(item.getId(), warehouseId);
+        else
+            onHand = stockMovementRepository.balance(item.getId());
+
+        BigDecimal value;
+        if (asOf == null && !filteredWarehouse) {
+            value = inventoryValue(item.getId());
+        } else if (filteredWarehouse) {
+            // movement costs are not warehouse-stamped: approximate with the item's global average unit cost
+            BigDecimal globalQty = asOf == null ? stockMovementRepository.balance(item.getId())
+                    : stockMovementRepository.balanceAsOf(item.getId(), asOf);
+            BigDecimal globalValue = asOf == null ? inventoryValue(item.getId()) : inventoryValueAsOf(item.getId(), asOf);
+            BigDecimal avg = globalQty.signum() == 0 ? ZERO_MONEY : globalValue.divide(globalQty, 6, RoundingMode.HALF_UP);
+            value = avg.multiply(onHand).setScale(2, RoundingMode.HALF_UP);
+        } else {
+            value = inventoryValueAsOf(item.getId(), asOf);
+        }
+
+        BigDecimal valuedQuantity = asOf == null
+                ? inventoryMovementCostRepository.valuedQuantity(item.getId())
+                : inventoryMovementCostRepository.valuedQuantityAsOf(item.getId(), asOf);
+        BigDecimal average = onHand.signum() == 0 ? ZERO_MONEY : value.divide(onHand, 6, RoundingMode.HALF_UP);
         return new OperationsApi.ItemValuationView(item.getId(), item.getCode(), item.getName(), onHand,
-                valuedQuantity, value, average, onHand.subtract(valuedQuantity));
+                valuedQuantity, value, average, onHand.subtract(valuedQuantity), method);
     }
 
     private OperationsApi.MovementCostView toMovementCost(InventoryMovementCost cost, InventoryItem item) {

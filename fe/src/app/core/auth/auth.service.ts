@@ -87,7 +87,21 @@ export class AuthService {
   login(appCode: string, username: string, password: string) {
     return this.httpClient
       .post<LoginResponse>('/api/v1/auth/login', { appCode, username, password }, { withCredentials: true })
-      .pipe(tap((session) => { this.session.set(session); this.persistStoredSession(session); }));
+      .pipe(tap((session) => {
+        if (session.tokenType !== '2FA_REQUIRED') {
+          this.session.set(session);
+          this.persistStoredSession(session);
+        }
+      }));
+  }
+
+  verify2fa(challengeToken: string, code: string) {
+    return this.httpClient
+      .post<LoginResponse>('/api/v1/auth/2fa/verify', { challengeToken, code }, { withCredentials: true })
+      .pipe(tap((session) => {
+        this.session.set(session);
+        this.persistStoredSession(session);
+      }));
   }
 
   demoLogin(secret: string) {
@@ -192,6 +206,61 @@ export class AuthService {
     return u.canViewSalary ?? true;
   });
 
+  readonly permissions = signal<Set<string>>(new Set());
+  readonly branchScopes = signal<Set<string>>(new Set());
+  readonly costCenterScopes = signal<Set<string>>(new Set());
+
+  loadMyPermissions(): void {
+    if (!this.authenticated()) {
+      this.permissions.set(new Set());
+      this.branchScopes.set(new Set());
+      this.costCenterScopes.set(new Set());
+      return;
+    }
+    this.httpClient.get<{ permissions: string[]; branchScopes: string[]; costCenterScopes: string[] }>('/api/v1/access/me/permissions')
+      .subscribe({
+        next: (res) => {
+          this.permissions.set(new Set(res.permissions || []));
+          this.branchScopes.set(new Set(res.branchScopes || []));
+          this.costCenterScopes.set(new Set(res.costCenterScopes || []));
+        },
+        error: () => {
+          // If fails or offline, fallback to empty or admin bypass
+        },
+      });
+  }
+
+  hasPermission(permission: string): boolean {
+    if (!permission) return true;
+    if (this.isSuperAdmin() || this.hasAnyRole(['ADMIN'])) return true;
+    const current = this.permissions();
+    return current.has('*') || current.has(permission.trim());
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
+    if (!permissions || permissions.length === 0) return true;
+    if (this.isSuperAdmin() || this.hasAnyRole(['ADMIN'])) return true;
+    const current = this.permissions();
+    if (current.has('*')) return true;
+    return permissions.some((p) => current.has(p.trim()));
+  }
+
+  hasBranchAccess(branchId: string): boolean {
+    if (!branchId) return true;
+    if (this.isSuperAdmin() || this.hasAnyRole(['ADMIN'])) return true;
+    const scopes = this.branchScopes();
+    if (scopes.size === 0 || scopes.has('*')) return true;
+    return scopes.has(branchId.trim());
+  }
+
+  hasCostCenterAccess(costCenterId: string): boolean {
+    if (!costCenterId) return true;
+    if (this.isSuperAdmin() || this.hasAnyRole(['ADMIN'])) return true;
+    const scopes = this.costCenterScopes();
+    if (scopes.size === 0 || scopes.has('*')) return true;
+    return scopes.has(costCenterId.trim());
+  }
+
   isSuperAdmin(): boolean { return this.user()?.roles.includes('SUPER_ADMIN') ?? false; }
 
   hasAnyRole(roles: readonly RoleCode[]): boolean {
@@ -211,17 +280,21 @@ export class AuthService {
     // All other roles, including ADMIN, respect tenant feature availability.
     const activeFeatures = user.activeFeatures ?? [];
     if (menuId === 'payroll' && !activeFeatures.includes('payroll.enabled')) return false;
-    if (menuId === 'sales' && !activeFeatures.includes('sales.enabled')) return false;
+    if ((menuId === 'sales' || menuId === 'pos' || menuId === 'crm') && !activeFeatures.includes('sales.enabled')) return false;
     if (menuId === 'production' && !activeFeatures.includes('manufacturing.enabled')) return false;
     if (menuId === 'quality' && !activeFeatures.includes('quality.enabled')) return false;
     if (menuId === 'procurement'
         && !activeFeatures.includes('procurement.enabled')
         && !activeFeatures.includes('purchasing.enabled')) return false;
+    if (menuId === 'export-shipments' && !activeFeatures.includes('agri.enabled')) return false;
     if (!activeFeatures.includes('finance.enabled')
         && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks'
-          || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets')) return false;
+          || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets'
+          || menuId === 'fixed-assets' || menuId === 'payment-links' || menuId === 'eta-tax')) return false;
     if (!activeFeatures.includes('workforce.contractorAccounts.enabled')
-        && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
+        && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements' || menuId === 'workforce-client-billing')) return false;
+    if ((menuId === 'clinic-patients' || menuId === 'clinic-queue' || menuId === 'clinic-commissions' || menuId === 'clinic-appointments' || menuId === 'clinic-pharmacy' || menuId === 'clinic-lab' || menuId === 'clinic-insurance' || menuId === 'hospital-ops' || menuId === 'dental-charting' || menuId === 'medical-tools')
+        && !activeFeatures.includes('medical.enabled')) return false;
 
     // ADMIN bypasses per-user menu assignment only after feature availability checks.
     if (user.roles.includes('ADMIN')) return true;

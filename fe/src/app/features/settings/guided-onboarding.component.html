@@ -1,1 +1,98 @@
-<section class="onboarding"><header><h2>{{ i18n.t('onboarding.title') }}</h2><p>{{ i18n.t('onboarding.description') }}</p><button class="button primary" type="button" (click)="assess()" [disabled]="saving()">{{ i18n.t('onboarding.assess') }}</button></header>@if(error()){<div class="alert error">{{ error() }}</div>}@if(loading()){<div class="loading"></div>}@else if(overview();as result){<div class="scores"><article><span>{{ i18n.t('onboarding.setupProgress') }}</span><strong>{{ result.setupProgress }}%</strong><progress max="100" [value]="result.setupProgress"></progress></article><article><span>{{ i18n.t('onboarding.dataQuality') }}</span><strong>{{ result.dataQualityScore }}%</strong><progress max="100" [value]="result.dataQualityScore"></progress></article><article><span>{{ i18n.t('onboarding.readiness') }}</span><strong>{{ i18n.t(statusKey(result.readiness)) }}</strong><small>{{ format(result.assessedAt) }}</small></article></div><div class="grid"><article class="panel"><h3>{{ i18n.t('onboarding.checklist') }}</h3><ol>@for(step of result.steps;track step.key){<li [class.blocked]="step.status==='BLOCKED'"><span>{{ i18n.t(step.key) }} @if(step.optional){<small>{{ i18n.t('onboarding.optional') }}</small>}</span><b>{{ i18n.t(statusKey(step.status)) }}</b></li>}</ol></article><article class="panel"><h3>{{ i18n.t('onboarding.issues') }}</h3>@if(result.issues.length===0){<p class="success">{{ i18n.t('onboarding.noIssues') }}</p>}@else{<ul class="issues">@for(issue of result.issues;track issue.code){<li><span>{{ i18n.t(issue.labelKey) }}</span><a class="button secondary" [routerLink]="issue.route">{{ i18n.t('onboarding.directAction') }}</a></li>}</ul>}</article></div>}</section>
+<section class="onboarding">
+  <header>
+    <div>
+      <h2>{{ i18n.t('onboarding.title') }}</h2>
+      <p>{{ i18n.t('onboarding.description') }}</p>
+    </div>
+    @if (selectedPackCode()) {
+      <button class="button primary" type="button" (click)="assess()" [disabled]="saving()">
+        {{ i18n.t('onboarding.assess') }}
+      </button>
+    }
+  </header>
+
+  @if (packs().length > 1) {
+    <div class="pack-switcher">
+      <span class="switcher-label">{{ i18n.t('onboarding.selectPack') }}:</span>
+      <div class="tabs">
+        @for (p of packs(); track p.code) {
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedPackCode() === p.code"
+            (click)="selectPack(p.code)"
+          >
+            {{ i18n.t(p.nameKey) }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading"></div>
+  } @else if (packs().length === 0) {
+    <div class="empty-state">
+      <h3>{{ i18n.t('onboarding.noPacksInstalled') }}</h3>
+      <p>{{ i18n.t('onboarding.noPacksInstalledDescription') }}</p>
+      <a class="button primary" routerLink="/settings">{{ i18n.t('onboarding.goToSettings') }}</a>
+    </div>
+  } @else if (overview(); as result) {
+    <div class="scores">
+      <article>
+        <span>{{ i18n.t('onboarding.setupProgress') }}</span>
+        <strong>{{ result.setupProgress }}%</strong>
+        <progress max="100" [value]="result.setupProgress"></progress>
+      </article>
+      <article>
+        <span>{{ i18n.t('onboarding.dataQuality') }}</span>
+        <strong>{{ result.dataQualityScore }}%</strong>
+        <progress max="100" [value]="result.dataQualityScore"></progress>
+      </article>
+      <article>
+        <span>{{ i18n.t('onboarding.readiness') }}</span>
+        <strong>{{ i18n.t(statusKey(result.readiness)) }}</strong>
+        <small>{{ format(result.assessedAt) }}</small>
+      </article>
+    </div>
+
+    <div class="grid">
+      <article class="panel">
+        <h3>{{ i18n.t('onboarding.checklist') }}</h3>
+        <ol>
+          @for (step of result.steps; track step.key) {
+            <li [class.blocked]="step.status === 'BLOCKED'">
+              <span>
+                {{ i18n.t(step.key) }}
+                @if (step.optional) {
+                  <small>{{ i18n.t('onboarding.optional') }}</small>
+                }
+              </span>
+              <b>{{ i18n.t(statusKey(step.status)) }}</b>
+            </li>
+          }
+        </ol>
+      </article>
+
+      <article class="panel">
+        <h3>{{ i18n.t('onboarding.issues') }}</h3>
+        @if (result.issues.length === 0) {
+          <p class="success">{{ i18n.t('onboarding.noIssues') }}</p>
+        } @else {
+          <ul class="issues">
+            @for (issue of result.issues; track issue.code) {
+              <li>
+                <span>{{ i18n.t(issue.labelKey) }}</span>
+                <a class="button secondary" [routerLink]="issue.route">{{ i18n.t('onboarding.directAction') }}</a>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    </div>
+  }
+</section>

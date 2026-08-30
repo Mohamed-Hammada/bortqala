@@ -1,0 +1,63 @@
+id;translation_key;locale;text_value
+v338-001-ar;LOT_SERIAL_PICK_QTY_INVALID;ar-EG;الكمية المطلوبة يجب أن تكون أكبر من صفر
+v338-001-en;LOT_SERIAL_PICK_QTY_INVALID;en-US;Picked quantity must be positive
+v338-002-ar;ADVANCE_REPAYMENT_EXCEEDS_BALANCE;ar-EG;مبلغ السداد لا يمكن أن يتجاوز الرصيد المتبقي
+v338-002-en;ADVANCE_REPAYMENT_EXCEEDS_BALANCE;en-US;Repayment amount cannot exceed the remaining balance
+v338-003-ar;ADVANCE_REPAYMENT_FULL_MISMATCH;ar-EG;عند السداد الكامل يجب أن يساوي المبلغ الرصيد المتبقي
+v338-003-en;ADVANCE_REPAYMENT_FULL_MISMATCH;en-US;For full repayment the amount must equal the remaining balance
+v338-004-ar;BIO_DEVICE_HTTP_ERROR_;ar-EG;خطأ HTTP في جهاز البصمة
+v338-004-en;BIO_DEVICE_HTTP_ERROR_;en-US;Biometric device HTTP error
+v338-005-ar;DEVICE_HUB_REQUEST_FAILED;ar-EG;فشل الاتصال بمركز الأجهزة
+v338-005-en;DEVICE_HUB_REQUEST_FAILED;en-US;Device hub request failed
+v338-006-ar;DUPLICATE_BOOKING_CODE;ar-EG;كود الحجز مكرر
+v338-006-en;DUPLICATE_BOOKING_CODE;en-US;Booking code already exists
+v338-007-ar;DUPLICATE_CONTRACT_CODE;ar-EG;كود العقد مكرر
+v338-007-en;DUPLICATE_CONTRACT_CODE;en-US;Contract code already exists
+v338-008-ar;DUPLICATE_CUSTOMS_FILE;ar-EG;ملف الجمارك مكرر
+v338-008-en;DUPLICATE_CUSTOMS_FILE;en-US;Customs file already exists
+v338-009-ar;DUPLICATE_STUDENT_CODE;ar-EG;كود الطالب مكرر
+v338-009-en;DUPLICATE_STUDENT_CODE;en-US;Student code already exists
+v338-010-ar;JOB_ALREADY_RUNNING;ar-EG;هذا العمل قيد التنفيذ بالفعل
+v338-010-en;JOB_ALREADY_RUNNING;en-US;This job is already running
+v338-011-ar;PROC_PAYMENT_EXCEEDS_BALANCE;ar-EG;مبلغ الدفع يتجاوز الرصيد المستحق
+v338-011-en;PROC_PAYMENT_EXCEEDS_BALANCE;en-US;Payment amount exceeds the outstanding balance
+v338-012-ar;SETTL_INVALID_STATUS;ar-EG;حالة فترة التسوية غير مطابقة للمرحلة المطلوبة
+v338-012-en;SETTL_INVALID_STATUS;en-US;Settlement period status does not match the required stage
+v338-013-ar;SETTL_NOT_FOUND;ar-EG;تسوية المقاول غير موجودة
+v338-013-en;SETTL_NOT_FOUND;en-US;Contractor settlement not found
+v338-014-ar;common.pagination;ar-EG;الصفحات
+v338-014-en;common.pagination;en-US;Pagination
+v338-015-ar;common.remove;ar-EG;إزالة
+v338-015-en;common.remove;en-US;Remove
+v338-016-ar;common.required;ar-EG;مطلوب
+v338-016-en;common.required;en-US;Required
+v338-017-ar;common.viewEdit;ar-EG;عرض / تعديل
+v338-017-en;common.viewEdit;en-US;View / Edit
+v338-018-ar;dpr.approveReport;ar-EG;اعتماد التقرير
+v338-018-en;dpr.approveReport;en-US;Approve Report
+v338-019-ar;dpr.copyPrevious;ar-EG;نسخ اليوم السابق
+v338-019-en;dpr.copyPrevious;en-US;Copy previous day report
+v338-020-ar;dpr.deleteReport;ar-EG;حذف التقرير
+v338-020-en;dpr.deleteReport;en-US;Delete Report
+v338-021-ar;dpr.reopenReport;ar-EG;إعادة فتح التقرير
+v338-021-en;dpr.reopenReport;en-US;Reopen Report
+v338-022-ar;dpr.submitForApproval;ar-EG;إرسال للموافقة
+v338-022-en;dpr.submitForApproval;en-US;Submit for Approval
+v338-023-ar;import.stepsAria;ar-EG;خطوات الاستيراد الذكي
+v338-023-en;import.stepsAria;en-US;Smart import steps
+v338-024-ar;imports.supportedSuppliers;ar-EG;الموردون المدعومون
+v338-024-en;imports.supportedSuppliers;en-US;Supported suppliers
+v338-025-ar;settings.shortcutCount;ar-EG;عدد الاختصارات
+v338-025-en;settings.shortcutCount;en-US;Shortcut count
+v338-026-ar;settings.translationFilters;ar-EG;فلاتر الترجمة
+v338-026-en;settings.translationFilters;en-US;Translation filters
+v338-027-ar;settings.translationImport;ar-EG;استيراد الترجمة
+v338-027-en;settings.translationImport;en-US;Translation import
+v338-028-ar;settings.translationSummary;ar-EG;ملخص الترجمة
+v338-028-en;settings.translationSummary;en-US;Translation summary
+v338-029-ar;support.sectionsAria;ar-EG;أقسام الدعم
+v338-029-en;support.sectionsAria;en-US;Support sections
+v338-030-ar;tax.itemNameArabic;ar-EG;اسم الصنف بالعربي
+v338-030-en;tax.itemNameArabic;en-US;Item name in Arabic
+v338-031-ar;users.overview;ar-EG;نظرة عامة على المستخدمين
+v338-031-en;users.overview;en-US;Users overview

@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260829_v418_menu_01
+      author: squad-medical
+      changes:
+        - sql:
+            comment: Grant clinic-appointments menu to existing users
+            sql: >
+              UPDATE app_users
+              SET allowed_menus = CASE
+                WHEN allowed_menus IS NULL OR allowed_menus = '' THEN 'clinic-appointments'
+                WHEN allowed_menus NOT LIKE '%clinic-appointments%' THEN allowed_menus || ',clinic-appointments'
+                ELSE allowed_menus
+              END
+              WHERE allowed_menus IS NOT NULL;

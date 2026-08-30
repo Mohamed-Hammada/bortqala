@@ -1,0 +1,118 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v355_expense_claims_schema
+      author: wolfn
+      validCheckSum: ANY
+      changes:
+        - createTable:
+            tableName: expense_claims
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: employee_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: spent_on
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: NUMERIC(15,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(1000)
+              - column:
+                  name: receipt_name
+                  type: VARCHAR(255)
+              - column:
+                  name: receipt_content_type
+                  type: VARCHAR(100)
+              - column:
+                  name: receipt_size
+                  type: BIGINT
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: approver_id
+                  type: VARCHAR(100)
+              - column:
+                  name: decided_at
+                  type: TIMESTAMP
+              - column:
+                  name: decision_note
+                  type: VARCHAR(500)
+              - column:
+                  name: reimbursement_reference
+                  type: VARCHAR(100)
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: expense_claims
+            indexName: idx_expense_claims_app_employee
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: employee_id
+        - createIndex:
+            tableName: expense_claims
+            indexName: idx_expense_claims_app_status
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: status
+
+  - changeSet:
+      id: 20260826-v355-expense-grant-menus
+      author: wolfn
+      validCheckSum: ANY
+      comment: "WP-11: grant expenses menu to users with explicit allowed_menus lists."
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: app_users
+      changes:
+        - sql:
+            sql: "UPDATE app_users SET allowed_menus = CASE WHEN allowed_menus IS NULL OR TRIM(allowed_menus) = '' THEN 'expenses' ELSE CONCAT(allowed_menus, ',expenses') END WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%expenses%'"

@@ -6,8 +6,19 @@ import { TrialDemoSettingsComponent } from '../settings/trial-demo-settings.comp
 import { IndustryPackSettingsComponent } from '../settings/industry-pack-settings.component';
 import { EntitlementSettingsComponent } from '../settings/entitlement-settings.component';
 import { TranslationManagementComponent } from '../settings/translation-management.component';
+import { PlatformDiagnosticsComponent } from './platform-diagnostics.component';
+import { PlatformBackupsComponent } from './platform-backups.component';
+import { PlatformLicensingComponent } from './platform-licensing.component';
 
-type PlatformAdminTab = 'subscription' | 'trial' | 'industry' | 'entitlements' | 'translations';
+type PlatformAdminTab =
+  | 'subscription'
+  | 'trial'
+  | 'industry'
+  | 'entitlements'
+  | 'translations'
+  | 'diagnostics'
+  | 'backups'
+  | 'licensing';
 
 const PLATFORM_TABS: readonly PlatformAdminTab[] = [
   'subscription',
@@ -15,6 +26,9 @@ const PLATFORM_TABS: readonly PlatformAdminTab[] = [
   'industry',
   'entitlements',
   'translations',
+  'diagnostics',
+  'backups',
+  'licensing',
 ];
 
 @Component({
@@ -26,6 +40,9 @@ const PLATFORM_TABS: readonly PlatformAdminTab[] = [
     IndustryPackSettingsComponent,
     EntitlementSettingsComponent,
     TranslationManagementComponent,
+    PlatformDiagnosticsComponent,
+    PlatformBackupsComponent,
+    PlatformLicensingComponent,
   ],
   templateUrl: './platform-admin.page.html',
   styleUrl: './platform-admin.page.scss',

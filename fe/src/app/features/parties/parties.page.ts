@@ -10,15 +10,24 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { I18nService } from '../../core/i18n.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
-import { BusinessParty, BusinessPartyPayload } from './parties.models';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { PartiesStore } from './parties.store';
 import { SampleTemplateService } from '../../core/sample-template.service';
-
-import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { formatDate } from '../../core/date';
+import { downloadBlob } from '../../core/download';
+import {
+  BusinessParty,
+  BusinessPartyPayload,
+  PartyFinancialPositionSummary,
+  PartyStatementResponse,
+} from './parties.models';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-parties-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent, DecimalPipe],
   providers: [PartiesStore],
   templateUrl: './parties.page.html',
   styleUrl: './parties.page.scss',
@@ -28,11 +37,18 @@ export class PartiesPage {
   readonly store = inject(PartiesStore);
   readonly i18n = inject(I18nService);
   readonly sampleTemplates = inject(SampleTemplateService);
+  readonly http = inject(HttpClient);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly submitted = signal(false);
   readonly duplicateWarning = signal<string | null>(null);
   readonly supplierModalOpen = signal(false);
+  readonly statementModalOpen = signal(false);
+  readonly selectedParty = signal<BusinessParty | null>(null);
+  readonly partyFinancialPosition = signal<PartyFinancialPositionSummary | null>(null);
+  readonly partyStatement = signal<PartyStatementResponse | null>(null);
+  readonly statementFromDate = signal<string>('');
+  readonly statementToDate = signal<string>('');
   readonly documentFile = signal<File | null>(null);
   readonly search = signal('');
   readonly pagination = new TablePagination();
@@ -323,5 +339,55 @@ export class PartiesPage {
       default:
         return type.replaceAll('_', ' ');
     }
+  }
+
+  async openFinancialPosition(party: BusinessParty): Promise<void> {
+    this.selectedParty.set(party);
+    this.statementFromDate.set('');
+    this.statementToDate.set('');
+    try {
+      const [pos, stmt] = await Promise.all([
+        firstValueFrom(this.http.get<PartyFinancialPositionSummary>(`/api/v1/parties/${party.id}/financial-position`)),
+        firstValueFrom(this.http.get<PartyStatementResponse>(`/api/v1/parties/${party.id}/statement`)),
+      ]);
+      this.partyFinancialPosition.set(pos);
+      this.partyStatement.set(stmt);
+      this.statementModalOpen.set(true);
+    } catch {
+      this.partyFinancialPosition.set(null);
+      this.partyStatement.set(null);
+    }
+  }
+
+  async filterStatement(): Promise<void> {
+    const party = this.selectedParty();
+    if (!party) return;
+    const from = this.statementFromDate() ? new Date(this.statementFromDate()).getTime() : undefined;
+    const to = this.statementToDate() ? new Date(this.statementToDate()).getTime() : undefined;
+    const params: Record<string, string> = {};
+    if (from) params['fromDate'] = String(from);
+    if (to) params['toDate'] = String(to);
+
+    try {
+      const stmt = await firstValueFrom(this.http.get<PartyStatementResponse>(`/api/v1/parties/${party.id}/statement`, { params }));
+      this.partyStatement.set(stmt);
+    } catch {
+      // ignore
+    }
+  }
+
+  async exportStatementCsv(): Promise<void> {
+    const party = this.selectedParty();
+    if (!party) return;
+    try {
+      const blob = await firstValueFrom(this.http.get(`/api/v1/parties/${party.id}/statement/export.csv`, { responseType: 'blob' }));
+      downloadBlob(blob, `statement-${party.code}.csv`);
+    } catch {
+      // ignore
+    }
+  }
+
+  date(ms: number): string {
+    return formatDate(ms);
   }
 }

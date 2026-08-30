@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v313_pos_allowed_menus
+      author: wolfn
+      validCheckSum: ANY
+      comment: "Grant the pos screen to existing users for Feature 23 Point of Sale (POS) Retail Engine."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',pos')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%pos%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(allowed_menus, ',pos', '')
+              WHERE allowed_menus IS NOT NULL;

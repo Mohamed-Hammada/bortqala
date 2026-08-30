@@ -1,0 +1,5 @@
+id;key;locale;value
+v340-001;PAYROLL_SOD_SELF_APPROVAL;en-US;The user who calculated this payroll cannot approve or post it. A different approver is required.
+v340-002;PAYROLL_SOD_SELF_APPROVAL;ar-EG;المستخدم الذي قام بحساب هذا المسير لا يمكنه اعتماده أو ترحيله؛ يلزم معتمد مختلف.
+v340-003;PAYROLL_SOD_DISBURSEMENT_CONFLICT;en-US;The user who approved or posted this payroll cannot disburse its payments. A different disburser is required.
+v340-004;PAYROLL_SOD_DISBURSEMENT_CONFLICT;ar-EG;المستخدم الذي اعتمد أو رحّل هذا المسير لا يمكنه صرف مستحقاته؛ يلزم صرف مختلف.

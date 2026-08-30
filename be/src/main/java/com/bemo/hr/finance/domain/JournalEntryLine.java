@@ -38,6 +38,15 @@ public class JournalEntryLine {
     @Column(length = 255)
     private String memo;
 
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
+
     protected JournalEntryLine() {
     }
 
@@ -49,6 +58,12 @@ public class JournalEntryLine {
         this.debit = debit == null ? BigDecimal.ZERO : debit;
         this.credit = credit == null ? BigDecimal.ZERO : credit;
         this.memo = memo == null ? null : memo.strip();
+    }
+
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId) {
+        this.projectId = projectId == null || projectId.isBlank() ? null : projectId.strip();
+        this.wbsNodeId = wbsNodeId == null || wbsNodeId.isBlank() ? null : wbsNodeId.strip();
+        this.costCodeId = costCodeId == null || costCodeId.isBlank() ? null : costCodeId.strip();
     }
 
     public String getId() {
@@ -77,5 +92,17 @@ public class JournalEntryLine {
 
     public String getMemo() {
         return memo;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getWbsNodeId() {
+        return wbsNodeId;
+    }
+
+    public String getCostCodeId() {
+        return costCodeId;
     }
 }

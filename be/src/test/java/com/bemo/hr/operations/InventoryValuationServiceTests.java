@@ -194,6 +194,83 @@ class InventoryValuationServiceTests {
         assertThat(lock.value()).isEqualTo(LockModeType.PESSIMISTIC_WRITE);
     }
 
+    @Test
+    void asOfReportExcludesLaterReceiptsFromCost() {
+        Instant cutoff = Instant.parse("2026-08-10T00:00:00Z");
+        when(itemRepository.findAllByOrderByNameAsc()).thenReturn(List.of(item));
+        when(movementRepository.balanceAsOf(item.getId(), cutoff)).thenReturn(new BigDecimal("4"));
+        when(movementCostRepository.inventoryValueAsOf(item.getId(), cutoff)).thenReturn(new BigDecimal("40.00"));
+        when(movementCostRepository.valuedQuantityAsOf(item.getId(), cutoff)).thenReturn(new BigDecimal("4"));
+        when(revaluationRepository.revaluationValueAsOf(item.getId(), cutoff)).thenReturn(BigDecimal.ZERO);
+
+        var report = service.report(cutoff.toEpochMilli(), null, null);
+
+        assertThat(report.items()).hasSize(1);
+        var row = report.items().get(0);
+        assertThat(row.quantityOnHand()).isEqualByComparingTo("4");
+        assertThat(row.inventoryValue()).isEqualByComparingTo("40.00");
+        assertThat(row.averageUnitCost()).isEqualByComparingTo("10.000000");
+        assertThat(row.valuationMethod()).isEqualTo("WEIGHTED_AVERAGE");
+        assertThat(report.glInventoryAccountBalance()).isNull();
+        assertThat(report.inventoryVarianceFromGl()).isNull();
+    }
+
+    @Test
+    void reportReconcilesAgainstPostedGlInventoryAccount() {
+        policy.update(InventoryValuationPolicy.Method.FIFO, "acc-inv", "acc-offset", "acc-cogs", "acc-adj", true, false);
+        when(itemRepository.findAllByOrderByNameAsc()).thenReturn(List.of(item));
+        when(movementRepository.balance(item.getId())).thenReturn(new BigDecimal("5"));
+        when(movementCostRepository.inventoryValue(item.getId())).thenReturn(new BigDecimal("60.00"));
+        when(movementCostRepository.valuedQuantity(item.getId())).thenReturn(new BigDecimal("5"));
+        when(revaluationRepository.revaluationValue(item.getId())).thenReturn(BigDecimal.ZERO);
+        JournalEntry entry = mock(JournalEntry.class);
+        when(entry.getId()).thenReturn("je-1");
+        when(journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED)).thenReturn(List.of(entry));
+        JournalEntryLine inventoryLine = mock(JournalEntryLine.class);
+        when(inventoryLine.getAccountId()).thenReturn("acc-inv");
+        when(inventoryLine.getDebit()).thenReturn(new BigDecimal("55.00"));
+        when(inventoryLine.getCredit()).thenReturn(BigDecimal.ZERO);
+        JournalEntryLine otherLine = mock(JournalEntryLine.class);
+        lenient().when(otherLine.getAccountId()).thenReturn("acc-other");
+        lenient().when(otherLine.getDebit()).thenReturn(new BigDecimal("999.00"));
+        lenient().when(otherLine.getCredit()).thenReturn(BigDecimal.ZERO);
+        when(journalEntryLineRepository.findByJournalEntryIdIn(List.of("je-1"))).thenReturn(List.of(inventoryLine, otherLine));
+
+        var report = service.report(null, null, null);
+
+        assertThat(report.items().get(0).valuationMethod()).isEqualTo("FIFO");
+        assertThat(report.glInventoryAccountBalance()).isEqualByComparingTo("55.00");
+        assertThat(report.totalInventoryValue()).isEqualByComparingTo("60.00");
+        assertThat(report.inventoryVarianceFromGl()).isEqualByComparingTo("5.00");
+    }
+
+    @Test
+    void unknownItemFilterReturnsClean404() {
+        when(itemRepository.findById("ghost")).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.report(null, null, "ghost"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> {
+                    BusinessRuleException conflict = (BusinessRuleException) ex;
+                    assertThat(conflict.getCode()).isEqualTo("OPS_ITEM_NOT_FOUND");
+                    assertThat(conflict.getStatus()).isEqualTo(org.springframework.http.HttpStatus.NOT_FOUND);
+                });
+    }
+
+    @Test
+    void warehouseFilterApproximatesValueWithGlobalAverageUnitCost() {
+        when(itemRepository.findAllByOrderByNameAsc()).thenReturn(List.of(item));
+        when(movementRepository.balanceByWarehouse(item.getId(), "wh-1")).thenReturn(new BigDecimal("2"));
+        when(movementRepository.balance(item.getId())).thenReturn(new BigDecimal("4"));
+        when(movementCostRepository.inventoryValue(item.getId())).thenReturn(new BigDecimal("80.00"));
+        when(movementCostRepository.valuedQuantity(item.getId())).thenReturn(new BigDecimal("4"));
+        when(revaluationRepository.revaluationValue(item.getId())).thenReturn(BigDecimal.ZERO);
+
+        var report = service.report(null, "wh-1", null);
+
+        assertThat(report.items().get(0).quantityOnHand()).isEqualByComparingTo("2");
+        assertThat(report.items().get(0).inventoryValue()).isEqualByComparingTo("40.00");
+    }
+
     private StockMovement movement(String quantity, String operation) {
         return new StockMovement(item.getId(), null, operation, new BigDecimal(quantity), null, null, null,
                 Instant.parse("2026-08-09T10:00:00Z"), "admin");

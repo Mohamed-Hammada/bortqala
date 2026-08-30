@@ -1,0 +1,91 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('reportBuilder.datasets') }}</p>
+      <h1>{{ i18n.t('reportBuilder.title') }}</h1>
+    </div>
+  </header>
+
+  <div class="builder-layout">
+    <div class="left-panel">
+      <h3>{{ i18n.t('reportBuilder.datasets') }}</h3>
+      <select [value]="selectedDataset()" (change)="selectDataset($any($event.target).value)">
+        <option value="">—</option>
+        @for (ds of datasets(); track ds.code) {
+          <option [value]="ds.code">{{ i18n.locale() === 'ar-EG' ? ds.labelAr : ds.labelEn }}</option>
+        }
+      </select>
+
+      @if (datasetFields().length > 0) {
+        <div class="field-section">
+          <h4>{{ i18n.t('reportBuilder.dimensions') }}</h4>
+          @for (f of datasetFields(); track f.name) {
+            @if (f.dimension) {
+              <label class="field-check"><input type="checkbox" [checked]="dimensions().includes(f.name)" (change)="toggleField(f.name, true)"> {{ i18n.locale() === 'ar-EG' ? f.labelAr : f.labelEn }}</label>
+            }
+          }
+        </div>
+        <div class="field-section">
+          <h4>{{ i18n.t('reportBuilder.measures') }}</h4>
+          @for (f of datasetFields(); track f.name) {
+            @if (!f.dimension) {
+              <label class="field-check"><input type="checkbox" [checked]="measures().includes(f.name)" (change)="toggleField(f.name, false)"> {{ i18n.locale() === 'ar-EG' ? f.labelAr : f.labelEn }}</label>
+            }
+          }
+        </div>
+        <div class="limit-row">
+          <label>{{ i18n.t('reportBuilder.limit') }}<input type="number" [value]="limit()" (input)="limit.set(+$any($event.target).value)" min="1" max="10000"></label>
+        </div>
+        <button class="button" (click)="runQuery()" [disabled]="!dimensions().length && !measures().length">{{ i18n.t('reportBuilder.runQuery') }}</button>
+      }
+    </div>
+
+    <div class="right-panel">
+      @if (queryResult()) {
+        <div class="result-area">
+          <div class="result-toolbar">
+            <span>{{ i18n.t('reportBuilder.totalRows') }}: {{ queryResult()!.totalRows }}</span>
+            <div class="save-row">
+              <input [value]="reportName()" (input)="reportName.set($any($event.target).value)" [placeholder]="i18n.t('reportBuilder.reportName')">
+              <button class="button" (click)="saveReport()" [disabled]="savingReport()">{{ i18n.t('reportBuilder.saveReport') }}</button>
+            </div>
+          </div>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  @for (col of queryResult()!.columns; track col.name) {
+                    <th>{{ i18n.locale() === 'ar-EG' ? col.labelAr : col.label }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of queryResult()!.rows; track $index) {
+                  <tr>
+                    @for (col of queryResult()!.columns; track col.name) {
+                      <td>{{ row[col.name] }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      } @else {
+        <div class="empty-state">{{ i18n.t('reportBuilder.noData') }}</div>
+      }
+
+      @if (savedReports().length > 0) {
+        <div class="saved-section">
+          <h3>{{ i18n.t('reportBuilder.myReports') }}</h3>
+          @for (r of savedReports(); track r.id) {
+            <div class="saved-item">
+              <span>{{ r.name }} ({{ r.datasetCode }})</span>
+              <button class="btn-delete" (click)="deleteReport(r.id)">✕</button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</section>

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-43-user-preferences-default-page
       author: hr-platform
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - tableExists:

@@ -46,6 +46,7 @@ public class ProcurementService {
     private final GoodsReceiptRepository goodsReceiptRepository;
     private final SupplierInvoiceRepository supplierInvoiceRepository;
     private final SupplierPaymentRepository supplierPaymentRepository;
+    private final com.bemo.hr.trade.procurement.application.SupplierPaymentPlanService supplierPaymentPlanService;
     private final SupplierReturnRepository supplierReturnRepository;
     private final BusinessPartyRepository businessPartyRepository;
     private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
@@ -67,6 +68,7 @@ public class ProcurementService {
                               GoodsReceiptRepository goodsReceiptRepository,
                               SupplierInvoiceRepository supplierInvoiceRepository,
                               SupplierPaymentRepository supplierPaymentRepository,
+                              SupplierPaymentPlanService supplierPaymentPlanService,
                               SupplierReturnRepository supplierReturnRepository,
                               BusinessPartyRepository businessPartyRepository,
                               PartnerLedgerEntryRepository partnerLedgerEntryRepository,
@@ -87,6 +89,7 @@ public class ProcurementService {
         this.goodsReceiptRepository = goodsReceiptRepository;
         this.supplierInvoiceRepository = supplierInvoiceRepository;
         this.supplierPaymentRepository = supplierPaymentRepository;
+        this.supplierPaymentPlanService = supplierPaymentPlanService;
         this.supplierReturnRepository = supplierReturnRepository;
         this.businessPartyRepository = businessPartyRepository;
         this.partnerLedgerEntryRepository = partnerLedgerEntryRepository;
@@ -134,6 +137,7 @@ public class ProcurementService {
         PurchaseOrder po = new PurchaseOrder(resolvePoNumber(payload.poNumber(), null), poDate, payload.supplierId(),
                 payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
         po.assignDepartment(payload.departmentId());
+        po.assignProject(payload.projectId(), payload.wbsNodeId(), payload.costCodeId());
         po.applyExchangeRate(rate.baseCurrencyCode(), rate.rate(), rate.rateDate(), rate.source(), rate.overrideReason());
         PurchaseOrder saved = purchaseOrderRepository.save(po);
         List<PurchaseOrderLine> lines = buildLines(saved.getId(), payload.items());
@@ -164,6 +168,7 @@ public class ProcurementService {
         po.updateDraft(resolvePoNumber(payload.poNumber(), po.getId()), poDate, payload.supplierId(),
                 payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
         po.assignDepartment(payload.departmentId());
+        po.assignProject(payload.projectId(), payload.wbsNodeId(), payload.costCodeId());
         po.applyExchangeRate(po.getBaseCurrencyCode(), po.getExchangeRate(), po.getExchangeRateDate(),
                 po.getExchangeRateSource(), po.getExchangeRateOverrideReason());
         purchaseOrderLineRepository.deleteByPurchaseOrderId(po.getId());
@@ -181,7 +186,7 @@ public class ProcurementService {
         PurchaseOrder po = requirePo(id);
         if (po.getStatus() != PurchaseOrder.Status.DRAFT) {
             log.warn("Validation failed: PurchaseOrder {} cannot be issued from status {}", id, po.getStatus());
-            throw new BusinessRuleException("يمكن إصدار أمر الشراء من حالة مسودة فقط", "PROC_ORDER_ISSUE_FROM_DRAFT", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Purchase orders can only be issued from draft status.", "PROC_ORDER_ISSUE_FROM_DRAFT", HttpStatus.CONFLICT);
         }
         po.updateStatus(PurchaseOrder.Status.ISSUED);
         budgetService.encumberForOrder(po.getId(), po.getPoNumber(), po.getDepartmentId(),
@@ -195,7 +200,7 @@ public class ProcurementService {
     @Transactional
     public ProcurementApi.PurchaseOrderResponse receive(String id) {
         log.debug("receive PO called with id={} (deprecated)", id);
-        throw new BusinessRuleException("يجب تسجيل إذن استلام بضاعة (Goods Receipt) لاستلام أمر الشراء.", "PROC_DIRECT_RECEIVE_DEPRECATED", HttpStatus.BAD_REQUEST);
+        throw new BusinessRuleException("A goods receipt is required to receive against a purchase order.", "PROC_DIRECT_RECEIVE_DEPRECATED", HttpStatus.BAD_REQUEST);
     }
 
     @Transactional
@@ -204,7 +209,7 @@ public class ProcurementService {
         PurchaseOrder po = requirePo(id);
         if (po.getStatus() == PurchaseOrder.Status.CANCELLED) {
             log.warn("Validation failed: PurchaseOrder {} is already cancelled", id);
-            throw new BusinessRuleException("أمر الشراء ملغي بالفعل", "PROC_ORDER_ALREADY_CANCELLED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Purchase order is already cancelled.", "PROC_ORDER_ALREADY_CANCELLED", HttpStatus.CONFLICT);
         }
 
         List<GoodsReceipt> grns = goodsReceiptRepository.findByPurchaseOrderId(po.getId());
@@ -213,12 +218,12 @@ public class ProcurementService {
                 .map(GoodsReceiptLine::getQuantity)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         if (totalAccepted.compareTo(BigDecimal.ZERO) > 0) {
-            throw new BusinessRuleException("لا يمكن إلغاء أمر شراء تم استلام بضائع عليه. يجب استخدام إذن إرجاع للمورد.", "PO_HAS_RECEIPTS_CANNOT_CANCEL", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot cancel a purchase order with goods received. Use a supplier return instead.", "PO_HAS_RECEIPTS_CANNOT_CANCEL", HttpStatus.CONFLICT);
         }
 
         List<SupplierInvoice> invoices = supplierInvoiceRepository.findByPurchaseOrderId(po.getId());
         if (!invoices.isEmpty()) {
-            throw new BusinessRuleException("لا يمكن إلغاء أمر شراء له فواتير مورّدين.", "PO_HAS_INVOICES_CANNOT_CANCEL", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot cancel a purchase order with supplier invoices.", "PO_HAS_INVOICES_CANNOT_CANCEL", HttpStatus.CONFLICT);
         }
 
         po.updateStatus(PurchaseOrder.Status.CANCELLED);
@@ -244,7 +249,7 @@ public class ProcurementService {
         PurchaseOrder po = requirePo(payload.purchaseOrderId());
         if (po.getStatus() != PurchaseOrder.Status.ISSUED
                 && po.getStatus() != PurchaseOrder.Status.PARTIALLY_RECEIVED)
-            throw new BusinessRuleException("يمكن إضافة إذن استلام فقط لأوامر الشراء المفتوحة", "PROC_GRN_OPEN_ORDER_ONLY", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Goods receipts can only be added to open purchase orders.", "PROC_GRN_OPEN_ORDER_ONLY", HttpStatus.CONFLICT);
 
         if (!po.getSupplierId().equals(payload.supplierId()))
             throw new BusinessRuleException("Goods receipt supplier must match the purchase order supplier.", "PROC_GRN_SUPPLIER_MISMATCH", HttpStatus.CONFLICT);
@@ -268,18 +273,20 @@ public class ProcurementService {
             BigDecimal rejected = line.rejectedQuantity();
             BigDecimal deducted = line.deductedQuantity();
             if (delivered == null || delivered.signum() <= 0 || rejected.signum() < 0 || deducted.signum() < 0)
-                throw new BusinessRuleException("الكمية المستلمة يجب أن تكون أكبر من صفر، ولا يمكن أن تكون المرفوضة أو المخصومة سالبة.", "PROC_GRN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Delivered quantity must be greater than zero, and rejected/deducted quantities cannot be negative.", "PROC_GRN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
             BigDecimal accepted = delivered.subtract(rejected).subtract(deducted);
             if (accepted.signum() < 0)
-                throw new BusinessRuleException("مجموع الكمية المرفوضة والمخصومة لا يمكن أن يتجاوز الكمية المستلمة.", "PROC_GRN_REJECTED_EXCEEDS", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Sum of rejected and deducted quantities cannot exceed the delivered quantity.", "PROC_GRN_REJECTED_EXCEEDS", HttpStatus.CONFLICT);
             BigDecimal remaining = ordered.getQuantity().subtract(previouslyAccepted.getOrDefault(ordered.getId(), BigDecimal.ZERO));
             if (accepted.compareTo(remaining) > 0)
-                throw new BusinessRuleException("الكمية المقبولة تتجاوز المتبقي في أمر الشراء للصنف: " + ordered.getItemName());
+                throw new BusinessRuleException("Accepted quantity exceeds remaining quantity for item: " + ordered.getItemName());
             previouslyAccepted.merge(ordered.getId(), accepted, BigDecimal::add);
-            return new GoodsReceiptLine(line.purchaseOrderLineId(), line.itemId(), ordered.getItemName(),
+            GoodsReceiptLine grnLine = new GoodsReceiptLine(line.purchaseOrderLineId(), line.itemId(), ordered.getItemName(),
                     ordered.getItemCategory(), delivered, rejected, deducted, accepted, ordered.getUnitOfMeasure(),
                     ordered.getUnitPrice(), normalizeOptional(line.locationId()), normalizeOptional(line.lotNumber()),
                     normalizeOptional(line.qualityReason()));
+            grnLine.assignProject(ordered.getProjectId(), ordered.getWbsNodeId(), ordered.getCostCodeId());
+            return grnLine;
         }).toList();
         if (lines.stream().map(GoodsReceiptLine::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add).signum() <= 0)
             throw new BusinessRuleException("Goods receipt must contain an accepted quantity.", "PROC_GRN_ACCEPTED_QUANTITY_REQUIRED", HttpStatus.CONFLICT);
@@ -335,7 +342,7 @@ public class ProcurementService {
         if (payload.purchaseOrderId() != null) {
             PurchaseOrder po = requirePo(payload.purchaseOrderId());
             if (po.getStatus() == PurchaseOrder.Status.CANCELLED)
-                throw new BusinessRuleException("لا يمكن إصدار فاتورة لأمر شراء ملغي", "PROC_INVOICE_CANCELLED_ORDER", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Cannot issue an invoice for a cancelled purchase order.", "PROC_INVOICE_CANCELLED_ORDER", HttpStatus.CONFLICT);
         }
 
         LocalDate invoiceDate = Instant.ofEpochMilli(payload.invoiceDate()).atZone(ZoneOffset.UTC).toLocalDate();
@@ -352,12 +359,18 @@ public class ProcurementService {
                 payload.purchaseOrderId(), payload.goodsReceiptId(), supplier.getResponsiblePartyId(),
                 invoiceDate, payload.totalAmount(),
                 payload.discountAmount(), payload.taxAmount(), dueDate, invoiceNotes);
+        if (payload.projectId() != null && !payload.projectId().isBlank()) {
+            inv.assignProject(payload.projectId(), payload.wbsNodeId(), payload.costCodeId());
+        } else if (payload.purchaseOrderId() != null && !payload.purchaseOrderId().isBlank()) {
+            purchaseOrderRepository.findById(payload.purchaseOrderId()).ifPresent(po ->
+                    inv.assignProject(po.getProjectId(), po.getWbsNodeId(), po.getCostCodeId()));
+        }
         inv.applyExchangeRate(rate.baseCurrencyCode(), rate.rate(), rate.rateDate(), rate.source(), rate.overrideReason());
         SupplierInvoice saved = supplierInvoiceRepository.save(inv);
 
         partnerLedgerEntryRepository.save(new PartnerLedgerEntry(
                 saved.getSupplierId(), "PURCHASE_INVOICE", saved.getBaseNetAmount().negate(),
-                saved.getDocumentReference(), "فاتورة مشتريات: " + saved.getDocumentReference(),
+                saved.getDocumentReference(), "Purchase invoice: " + saved.getDocumentReference(),
                 saved.getInvoiceDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
         procurementAccountingService.postSupplierInvoice(saved, getCurrentUser());
@@ -401,7 +414,7 @@ public class ProcurementService {
 
     private ProcurementApi.SupplierPaymentResponse replayPayment(String paymentId) {
         SupplierPayment payment = supplierPaymentRepository.findById(paymentId)
-                .orElseThrow(() -> new BusinessRuleException("الدفعة غير موجودة.", "PROC_PAYMENT_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Payment not found.", "PROC_PAYMENT_NOT_FOUND", HttpStatus.CONFLICT));
         return toPaymentResponse(payment, resolveNames(List.of(payment.getSupplierId())));
     }
 
@@ -412,24 +425,35 @@ public class ProcurementService {
             if (!existing.getSupplierId().equals(payload.supplierId())
                     || !existing.getSupplierInvoiceId().equals(payload.supplierInvoiceId())
                     || existing.getAmount().compareTo(payload.amount()) != 0) {
-                throw new BusinessRuleException("معرّف عملية الدفع مستخدم لدفعة مختلفة.", "PROC_PAYMENT_OPERATION_CONFLICT", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Operation ID is already used for a different payment.", "PROC_PAYMENT_OPERATION_CONFLICT", HttpStatus.CONFLICT);
             }
             return toPaymentResponse(existing, resolveNames(List.of(existing.getSupplierId())));
         }
         SupplierInvoice inv = supplierInvoiceRepository.findByIdForPayment(payload.supplierInvoiceId())
-                .orElseThrow(() -> new BusinessRuleException("الفاتورة غير موجودة", "PROC_INVOICE_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Invoice not found.", "PROC_INVOICE_NOT_FOUND", HttpStatus.CONFLICT));
         if ("PAID".equals(inv.getStatus()) || "CANCELLED".equals(inv.getStatus()))
-            throw new BusinessRuleException("الفاتورة مدفوعة بالفعل أو ملغية", "PROC_INVOICE_ALREADY_PAID", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Invoice is already paid or cancelled.", "PROC_INVOICE_ALREADY_PAID", HttpStatus.CONFLICT);
 
         if (!inv.getSupplierId().equals(payload.supplierId()))
-            throw new BusinessRuleException("الفاتورة المحددة لا تخص المورد المختار. اختر فاتورة مفتوحة لنفس المورد.", "PROC_INVOICE_SUPPLIER_MISMATCH", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("The selected invoice does not belong to the chosen supplier. Select an open invoice for the same supplier.", "PROC_INVOICE_SUPPLIER_MISMATCH", HttpStatus.CONFLICT);
         requirePayableSupplier(payload.supplierId());
         if (payload.amount().signum() <= 0)
-            throw new BusinessRuleException("يجب أن يكون مبلغ الدفعة أكبر من صفر.", "PROC_PAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Payment amount must be greater than zero.", "PROC_PAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
+        BigDecimal discount = payload.settlementDiscount() == null ? BigDecimal.ZERO : payload.settlementDiscount();
+        if (discount.compareTo(BigDecimal.ZERO) < 0)
+            throw new BusinessRuleException("Settlement discount cannot be negative.", "PROC_SETTLEMENT_DISCOUNT_INVALID", HttpStatus.BAD_REQUEST);
+        if (discount.compareTo(BigDecimal.ZERO) > 0 && !actorHasFinanceRole())
+            throw new BusinessRuleException("Settlement discounts can only be granted by finance roles.",
+                    "PROC_SETTLEMENT_DISCOUNT_FORBIDDEN", HttpStatus.FORBIDDEN);
         BigDecimal paidBefore = paidAmount(inv.getId());
         BigDecimal outstanding = inv.getNetAmount().subtract(paidBefore);
-        if (payload.amount().compareTo(outstanding) > 0)
-            throw new BusinessRuleException("مبلغ الدفعة يتجاوز الرصيد المتبقي للفاتورة وهو " + outstanding + " " + inv.getCurrencyCode() + ".");
+        if (payload.amount().add(discount).compareTo(outstanding) > 0) {
+            if (discount.compareTo(BigDecimal.ZERO) > 0)
+                throw new BusinessRuleException("Payment plus settlement discount (" + payload.amount().add(discount)
+                        + ") exceeds the outstanding balance of " + outstanding + " " + inv.getCurrencyCode() + ".",
+                        "PROC_SETTLEMENT_DISCOUNT_EXCEEDS", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Payment amount exceeds the outstanding balance of " + outstanding + " " + inv.getCurrencyCode() + ".", "PROC_PAYMENT_EXCEEDS_BALANCE", HttpStatus.CONFLICT);
+        }
 
         LocalDate paymentDate = Instant.ofEpochMilli(payload.paymentDate()).atZone(ZoneOffset.UTC).toLocalDate();
         fiscalPeriodGuard.requireOpen(paymentDate);
@@ -437,43 +461,73 @@ public class ProcurementService {
                 payload.supplierInvoiceId(), payload.operationId(), payload.amount(), payload.paymentMethod(), payload.notes());
         pmt.freezeBeneficiaryBankAccount(businessPartyRepository.findById(payload.supplierId())
                 .map(com.bemo.hr.party.BusinessParty::getBankAccount).orElse(null));
+        if (discount.compareTo(BigDecimal.ZERO) > 0)
+            pmt.applySettlementDiscount(discount);
+        pmt.applyOriginalDue(outstanding);
         SupplierPayment saved = supplierPaymentRepository.save(pmt);
 
-        inv.updatePaymentStatus(paidBefore.add(saved.getAmount()));
+        inv.updatePaymentStatus(paidBefore.add(saved.getAmount()).add(discount));
+        supplierPaymentPlanService.markInstallmentsSettled(inv.getId(), paidBefore.add(saved.getAmount()).add(discount));
 
         partnerLedgerEntryRepository.save(new PartnerLedgerEntry(
                 saved.getSupplierId(), "SUPPLIER_PAYMENT",
                 saved.getAmount().multiply(inv.getExchangeRate()).setScale(2, java.math.RoundingMode.HALF_UP),
-                saved.getPaymentNumber(), "دفعة مورد: " + saved.getPaymentNumber(),
+                saved.getPaymentNumber(), "Supplier payment: " + saved.getPaymentNumber(),
                 saved.getPaymentDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
+        if (discount.compareTo(BigDecimal.ZERO) > 0)
+            partnerLedgerEntryRepository.save(new PartnerLedgerEntry(
+                    saved.getSupplierId(), "SUPPLIER_SETTLEMENT_DISCOUNT",
+                    discount.multiply(inv.getExchangeRate()).setScale(2, java.math.RoundingMode.HALF_UP),
+                    saved.getPaymentNumber(), "Settlement discount on invoice " + inv.getInvoiceNumber()
+                            + " via payment " + saved.getPaymentNumber(),
+                    saved.getPaymentDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
         procurementAccountingService.postSupplierPayment(saved, inv, getCurrentUser());
+        if (discount.compareTo(BigDecimal.ZERO) > 0)
+            procurementAccountingService.postSupplierSettlementDiscount(saved, inv, discount, getCurrentUser());
+        String auditExtra = discount.compareTo(BigDecimal.ZERO) > 0 ? ",\"settlementDiscount\":" + discount
+                + ",\"originalDue\":" + outstanding : "";
         auditService.record("CREATE", "SUPPLIER_PAYMENT", saved.getId(), getCurrentUser(),
                 "{\"paymentNumber\":\"" + saved.getPaymentNumber() + "\",\"operationId\":\""
-                        + saved.getOperationId() + "\",\"amount\":" + saved.getAmount() + "}", null);
+                        + saved.getOperationId() + "\",\"amount\":" + saved.getAmount() + auditExtra + "}", null);
         log.info("SupplierPayment {} created with number {} successfully", saved.getId(), saved.getPaymentNumber());
         return toPaymentResponse(saved, resolveNames(List.of(saved.getSupplierId())));
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────
 
+    private boolean actorHasFinanceRole() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null)
+            return false;
+        for (org.springframework.security.core.GrantedAuthority granted : authentication.getAuthorities()) {
+            String authority = granted.getAuthority();
+            if (authority.startsWith("ROLE_"))
+                authority = authority.substring("ROLE_".length());
+            if ("SUPER_ADMIN".equals(authority) || "ADMIN".equals(authority)
+                    || "FINANCE_MANAGER".equals(authority) || "ACCOUNTANT".equals(authority))
+                return true;
+        }
+        return false;
+    }
+
     private PurchaseOrder requirePo(String id) {
         return purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("أمر الشراء غير موجود", "PROC_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Purchase order not found.", "PROC_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
     }
 
     private void requireSupplier(String id) {
         var supplier = businessPartyRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("المورد غير موجود في دليل الموردين.", "PROC_SUPPLIER_NOT_IN_DIRECTORY", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Supplier not found in the supplier directory.", "PROC_SUPPLIER_NOT_IN_DIRECTORY", HttpStatus.CONFLICT));
         if (!supplier.isProcurementAllowed())
-            throw new BusinessRuleException("يجب اختيار مورد نشط ومسجل في دليل الموردين.", "PROC_SUPPLIER_ACTIVE_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("An active and registered supplier is required.", "PROC_SUPPLIER_ACTIVE_REQUIRED", HttpStatus.CONFLICT);
     }
 
     private void requirePayableSupplier(String id) {
         var supplier = businessPartyRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("المورد غير موجود في دليل الموردين.", "PROC_SUPPLIER_NOT_IN_DIRECTORY", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Supplier not found in the supplier directory.", "PROC_SUPPLIER_NOT_IN_DIRECTORY", HttpStatus.CONFLICT));
         if (!supplier.isPaymentAllowed()) {
-            throw new BusinessRuleException("يجب تفعيل المورد والتحقق من حسابه البنكي قبل الدفع.",
+            throw new BusinessRuleException("Supplier must be activated and its bank account verified before payment.",
                     "PROC_SUPPLIER_BANK_VERIFICATION_REQUIRED", HttpStatus.CONFLICT);
         }
     }
@@ -486,7 +540,7 @@ public class ProcurementService {
         if (code == null || code.isBlank()) code = "EGP";
         String normalized = code.strip().toUpperCase(java.util.Locale.ROOT);
         currencyRepository.findByCodeIgnoreCaseAndActiveTrue(normalized)
-                .orElseThrow(() -> new BusinessRuleException("يجب اختيار عملة نشطة ومسجلة في إعدادات العملات.", "PROC_CURRENCY_ACTIVE_REQUIRED", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("An active currency registered in currency settings is required.", "PROC_CURRENCY_ACTIVE_REQUIRED", HttpStatus.CONFLICT));
         return normalized;
     }
 
@@ -500,20 +554,20 @@ public class ProcurementService {
     private ExchangeRateSnapshot resolveExchangeRate(String currencyCode, LocalDate documentDate,
                                                      BigDecimal requestedRate, String overrideReason) {
         Currency currency = currencyRepository.findByCodeIgnoreCaseAndActiveTrue(currencyCode)
-                .orElseThrow(() -> new BusinessRuleException("لا يوجد سعر صرف نشط للعملة المحددة.", "PROC_EXCHANGE_RATE_MISSING", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("No active exchange rate found for the specified currency.", "PROC_EXCHANGE_RATE_MISSING", HttpStatus.CONFLICT));
         String baseCurrency = currencyRepository.findAllByOrderByCodeAsc().stream()
                 .filter(item -> item.isActive() && item.isBase()).map(Currency::getCode).findFirst().orElse("EGP");
         BigDecimal configuredRate = currency.getCode().equalsIgnoreCase(baseCurrency)
                 ? BigDecimal.ONE : currency.getExchangeRate();
         if (configuredRate == null || configuredRate.signum() <= 0) {
-            throw new BusinessRuleException("لا يمكن ترحيل المستند: لا يتوفر سعر صرف صالح للعملة " + currency.getCode() + ".");
+            throw new BusinessRuleException("Cannot post document: no valid exchange rate available for currency " + currency.getCode() + ".");
         }
         BigDecimal effectiveRate = requestedRate == null ? configuredRate : requestedRate;
         if (effectiveRate.signum() <= 0)
-            throw new BusinessRuleException("سعر الصرف يجب أن يكون أكبر من صفر.", "PROC_EXCHANGE_RATE_POSITIVE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Exchange rate must be greater than zero.", "PROC_EXCHANGE_RATE_POSITIVE", HttpStatus.CONFLICT);
         boolean manuallyOverridden = effectiveRate.compareTo(configuredRate) != 0;
         if (manuallyOverridden && (overrideReason == null || overrideReason.isBlank())) {
-            throw new BusinessRuleException("اكتب سبب تعديل سعر الصرف يدوياً.", "PROC_EXCHANGE_RATE_REASON_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Provide a reason for manually overriding the exchange rate.", "PROC_EXCHANGE_RATE_REASON_REQUIRED", HttpStatus.CONFLICT);
         }
         String source = manuallyOverridden ? "MANUAL_OVERRIDE"
                 : currency.getCode().equalsIgnoreCase(baseCurrency) ? "BASE_CURRENCY" : "CURRENCY_MASTER";
@@ -524,18 +578,18 @@ public class ProcurementService {
     private void validateFrozenPurchaseOrderExchangeSnapshot(PurchaseOrder po,
                                                              ProcurementApi.PurchaseOrderPayload payload, LocalDate requestedDocumentDate) {
         if (!po.getPoDate().equals(requestedDocumentDate)) {
-            throw new BusinessRuleException("لا يمكن تغيير تاريخ أمر الشراء بعد حفظ لقطة سعر الصرف.", "PROC_EXCHANGE_RATE_DATE_FROZEN", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot change the purchase order date after saving the exchange rate snapshot.", "PROC_EXCHANGE_RATE_DATE_FROZEN", HttpStatus.CONFLICT);
         }
         if (payload.currencyCode() != null && !payload.currencyCode().isBlank()
                 && !po.getCurrencyCode().equalsIgnoreCase(payload.currencyCode().strip())) {
-            throw new BusinessRuleException("لا يمكن تغيير عملة أمر الشراء بعد الحفظ؛ أنشئ مستنداً جديداً.", "PROC_EXCHANGE_RATE_CURRENCY_FROZEN", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot change the purchase order currency after saving; create a new document.", "PROC_EXCHANGE_RATE_CURRENCY_FROZEN", HttpStatus.CONFLICT);
         }
         if (payload.exchangeRate() != null && payload.exchangeRate().compareTo(po.getExchangeRate()) != 0) {
-            throw new BusinessRuleException("سعر الصرف مثبت مع أمر الشراء ولا يمكن تغييره بعد الحفظ.", "PROC_EXCHANGE_RATE_FROZEN", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Exchange rate is locked with the purchase order and cannot be changed after saving.", "PROC_EXCHANGE_RATE_FROZEN", HttpStatus.CONFLICT);
         }
         if (payload.exchangeRateOverrideReason() != null && !payload.exchangeRateOverrideReason().isBlank()
                 && !java.util.Objects.equals(po.getExchangeRateOverrideReason(), payload.exchangeRateOverrideReason().strip())) {
-            throw new BusinessRuleException("سبب تعديل سعر الصرف جزء من اللقطة المثبتة ولا يمكن تغييره.", "PROC_EXCHANGE_RATE_REASON_FROZEN", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Exchange rate override reason is part of the locked snapshot and cannot be changed.", "PROC_EXCHANGE_RATE_REASON_FROZEN", HttpStatus.CONFLICT);
         }
     }
 
@@ -557,8 +611,10 @@ public class ProcurementService {
                 throw new BusinessRuleException("Inactive inventory items cannot be purchased.", "PROC_INACTIVE_ITEM", HttpStatus.CONFLICT);
             String unit = inventoryItem.uomName() != null && !inventoryItem.uomName().isBlank()
                     ? inventoryItem.uomName() : inventoryItem.unitCode();
-            return new PurchaseOrderLine(purchaseOrderId, inventoryItem.id(), inventoryItem.name(),
+            PurchaseOrderLine line = new PurchaseOrderLine(purchaseOrderId, inventoryItem.id(), inventoryItem.name(),
                     inventoryItem.categoryName(), item.quantity(), unit, item.unitPrice());
+            line.assignProject(item.projectId(), item.wbsNodeId(), item.costCodeId());
+            return line;
         }).toList();
     }
 
@@ -592,19 +648,19 @@ public class ProcurementService {
     private String resolvePoNumber(String requested, String currentId) {
         if (automaticNumbering()) return currentId == null
                 ? nextDocumentNumber("PURCHASE_ORDER") : requirePo(currentId).getPoNumber();
-        String value = requireManualNumber(requested, "رقم أمر الشراء مطلوب عند اختيار الترقيم اليدوي.");
+        String value = requireManualNumber(requested, "Purchase order number is required when using manual numbering.");
         boolean duplicate = currentId == null ? purchaseOrderRepository.existsByPoNumberIgnoreCase(value)
                 : purchaseOrderRepository.existsByPoNumberIgnoreCaseAndIdNot(value, currentId);
         if (duplicate)
-            throw new BusinessRuleException("رقم أمر الشراء مستخدم بالفعل.", "PROC_ORDER_NUMBER_EXISTS", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Purchase order number already in use.", "PROC_ORDER_NUMBER_EXISTS", HttpStatus.CONFLICT);
         return value;
     }
 
     private String resolveGrnNumber(String requested) {
         if (automaticNumbering()) return nextDocumentNumber("GOODS_RECEIPT");
-        String value = requireManualNumber(requested, "رقم إذن الاستلام مطلوب عند اختيار الترقيم اليدوي.");
+        String value = requireManualNumber(requested, "Goods receipt number is required when using manual numbering.");
         if (goodsReceiptRepository.existsByGrnNumberIgnoreCase(value))
-            throw new BusinessRuleException("رقم إذن الاستلام مستخدم بالفعل.", "PROC_GRN_NUMBER_EXISTS", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Goods receipt number already in use.", "PROC_GRN_NUMBER_EXISTS", HttpStatus.CONFLICT);
         return value;
     }
 
@@ -617,9 +673,9 @@ public class ProcurementService {
         if (automaticDocumentNumbering()) {
             return documentNumberService.next("SUPPLIER_PAYMENT", "PMT", paymentDate);
         }
-        String value = requireManualNumber(payload.paymentNumber(), "رقم الدفعة مطلوب عند اختيار الترقيم اليدوي.");
+        String value = requireManualNumber(payload.paymentNumber(), "Payment number is required when using manual numbering.");
         if (supplierPaymentRepository.existsByPaymentNumberIgnoreCase(value))
-            throw new BusinessRuleException("رقم الدفعة مستخدم بالفعل.", "PROC_PAYMENT_NUMBER_EXISTS", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Payment number already in use.", "PROC_PAYMENT_NUMBER_EXISTS", HttpStatus.CONFLICT);
         return value;
     }
 
@@ -663,7 +719,8 @@ public class ProcurementService {
         Map<String, BigDecimal> received = acceptedQuantities(po.getId());
         return new ProcurementApi.PurchaseOrderResponse(po.getId(), po.getPoNumber(), toEpochMs(po.getPoDate()),
                 po.getSupplierId(), supplierNames.get(po.getSupplierId()), po.getPurchaseRequestId(),
-                po.getDepartmentId(), po.getPaymentTerms(), po.getCurrencyCode(), po.getBaseCurrencyCode(), po.getExchangeRate(),
+                po.getDepartmentId(), po.getProjectId(), po.getWbsNodeId(), po.getCostCodeId(),
+                po.getPaymentTerms(), po.getCurrencyCode(), po.getBaseCurrencyCode(), po.getExchangeRate(),
                 toEpochMs(po.getExchangeRateDate()), po.getExchangeRateSource(), po.getExchangeRateOverrideReason(),
                 po.getBaseTotalAmount(), po.getStatus().name(), po.getTotalAmount(),
                 lines.stream().map(line -> toLineResponse(line, received)).toList(), po.getCreatedAt(), po.getUpdatedAt());
@@ -675,7 +732,7 @@ public class ProcurementService {
         BigDecimal remainingQuantity = line.getQuantity().subtract(receivedQuantity).max(BigDecimal.ZERO);
         return new ProcurementApi.PurchaseOrderLineResponse(line.getId(), line.getItemId(), line.getItemName(), line.getItemCategory(),
                 line.getQuantity(), receivedQuantity, remainingQuantity, line.getUnitOfMeasure(),
-                line.getUnitPrice(), line.getLineTotal());
+                line.getUnitPrice(), line.getLineTotal(), line.getProjectId(), line.getWbsNodeId(), line.getCostCodeId());
     }
 
     private Map<String, BigDecimal> acceptedQuantities(String purchaseOrderId) {
@@ -697,8 +754,9 @@ public class ProcurementService {
                 grn.getLines().stream().map(l -> new ProcurementApi.GoodsReceiptLineResponse(
                         l.getId(), l.getPurchaseOrderLineId(), l.getItemId(), l.getItemName(), l.getItemCategory(),
                         l.getDeliveredQuantity(), l.getRejectedQuantity(), l.getDeductedQuantity(),
-                        l.getQuantity(), l.getUnitOfMeasure(), l.getUnitPrice(),
-                        l.getLocationId(), l.getLotNumber(), l.getQualityReason())).toList(),
+                        l.getQuantity(), l.getUnitOfMeasure(), l.getUnitPrice(), l.getUnitPrice().multiply(l.getQuantity()),
+                        l.getLocationId(), l.getLotNumber(), l.getQualityReason(),
+                        l.getProjectId(), l.getWbsNodeId(), l.getCostCodeId())).toList(),
                 grn.getCreatedAt());
     }
 
@@ -707,6 +765,7 @@ public class ProcurementService {
         BigDecimal outstandingAmount = inv.getNetAmount().subtract(paidAmount).max(BigDecimal.ZERO);
         return new ProcurementApi.SupplierInvoiceResponse(inv.getId(), inv.getInvoiceNumber(), inv.getSupplierId(),
                 supplierNames.get(inv.getSupplierId()), inv.getPurchaseOrderId(), inv.getGoodsReceiptId(),
+                inv.getProjectId(), inv.getWbsNodeId(), inv.getCostCodeId(),
                 inv.getResponsiblePartyId(), inv.getInternalReference(), inv.getMissingInvoiceReason(), inv.getCurrencyCode(),
                 inv.getBaseCurrencyCode(), inv.getExchangeRate(), toEpochMs(inv.getExchangeRateDate()),
                 inv.getExchangeRateSource(), inv.getExchangeRateOverrideReason(), inv.getBaseNetAmount(),
@@ -720,7 +779,7 @@ public class ProcurementService {
     private ProcurementApi.SupplierPaymentResponse toPaymentResponse(SupplierPayment pmt, Map<String, String> supplierNames) {
         return new ProcurementApi.SupplierPaymentResponse(pmt.getId(), pmt.getPaymentNumber(),
                 toEpochMs(pmt.getPaymentDate()), pmt.getSupplierId(), supplierNames.get(pmt.getSupplierId()),
-                pmt.getSupplierInvoiceId(), pmt.getAmount(), supplierPaymentCurrency(pmt), pmt.getPaymentMethod(), pmt.getNotes(),
+                pmt.getSupplierInvoiceId(), pmt.getAmount(), pmt.getSettlementDiscount(), pmt.getOriginalDue(), supplierPaymentCurrency(pmt), pmt.getPaymentMethod(), pmt.getNotes(),
                 pmt.getOperationId(), pmt.getStatus(), pmt.getCreatedAt());
     }
 
@@ -732,7 +791,8 @@ public class ProcurementService {
     private BigDecimal paidAmount(String invoiceId) {
         return supplierPaymentRepository.findBySupplierInvoiceId(invoiceId).stream()
                 .filter(payment -> "POSTED".equals(payment.getStatus()))
-                .map(SupplierPayment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(payment -> payment.getAmount().add(payment.getSettlementDiscount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private String getCurrentUser() {
@@ -852,15 +912,15 @@ public class ProcurementService {
             if (poLine.getItemId() == null || !poLine.getItemId().equals(line.itemId()))
                 throw new BusinessRuleException("Supplier return inventory item must match its purchase-order line.", "PROC_RETURN_ITEM_MISMATCH", HttpStatus.CONFLICT);
             if (line.quantity() == null || line.quantity().signum() <= 0)
-                throw new BusinessRuleException("كمية الإرجاع يجب أن تكون أكبر من صفر.", "PROC_RETURN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Return quantity must be greater than zero.", "PROC_RETURN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
 
             BigDecimal accepted = totalAcceptedPerPoLine.getOrDefault(poLine.getId(), BigDecimal.ZERO);
             BigDecimal returned = previouslyReturnedPerPoLine.getOrDefault(poLine.getId(), BigDecimal.ZERO);
             BigDecimal returnable = accepted.subtract(returned);
             if (returnable.signum() <= 0)
-                throw new BusinessRuleException("لا توجد كمية قابلة للإرجاع للصنف: " + poLine.getItemName(), "PROC_RETURN_NO_RETURNABLE_QTY", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("No returnable quantity available for item: " + poLine.getItemName(), "PROC_RETURN_NO_RETURNABLE_QTY", HttpStatus.CONFLICT);
             if (line.quantity().compareTo(returnable) > 0)
-                throw new BusinessRuleException("كمية الإرجاع تتجاوز المتاح للإرجاع للصنف: " + poLine.getItemName(), "PROC_RETURN_EXCEEDS_RETURNABLE", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Return quantity exceeds the returnable quantity for item: " + poLine.getItemName(), "PROC_RETURN_EXCEEDS_RETURNABLE", HttpStatus.CONFLICT);
 
             previouslyReturnedPerPoLine.merge(poLine.getId(), line.quantity(), BigDecimal::add);
             return new SupplierReturnLine(line.purchaseOrderLineId(), line.itemId(), poLine.getItemName(),
@@ -903,9 +963,9 @@ public class ProcurementService {
         if (automaticDocumentNumbering()) {
             return documentNumberService.next("SUPPLIER_RETURN", "RET", returnDate);
         }
-        String value = requireManualNumber(requested, "رقم إذن الإرجاع مطلوب عند اختيار الترقيم اليدوي.");
+        String value = requireManualNumber(requested, "Return number is required when using manual numbering.");
         if (supplierReturnRepository.existsByReturnNumberIgnoreCase(value))
-            throw new BusinessRuleException("رقم إذن الإرجاع مستخدم بالفعل.", "PROC_RETURN_NUMBER_EXISTS", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Return number already in use.", "PROC_RETURN_NUMBER_EXISTS", HttpStatus.CONFLICT);
         return value;
     }
 

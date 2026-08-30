@@ -1,0 +1,338 @@
+<div class="ess-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ i18n.t('ess.title') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('ess.subtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="openAdvanceModal()">
+        {{ i18n.t('ess.requestAdvance') }}
+      </button>
+      <button class="btn btn-primary" (click)="openLeaveModal()">
+        + {{ i18n.t('ess.requestLeave') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="ess-tabs">
+    <button class="tab-btn" [class.active]="activeTab() === 'overview'" (click)="setTab('overview')">
+      {{ i18n.t('ess.tabOverview') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'payslips'" (click)="setTab('payslips')">
+      {{ i18n.t('ess.tabPayslips') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'leaves'" (click)="setTab('leaves')">
+      {{ i18n.t('ess.tabLeaves') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'advances'" (click)="setTab('advances')">
+      {{ i18n.t('ess.tabAdvances') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'attendance'" (click)="setTab('attendance')">
+      {{ i18n.t('ess.tabAttendance') }}
+    </button>
+  </div>
+
+  <!-- Tab 1: Overview -->
+  @if (activeTab() === 'overview') {
+    <div class="overview-grid">
+      <!-- Profile Card -->
+      <div class="card profile-card">
+        <h2 class="card-title">{{ i18n.t('ess.myProfile') }}</h2>
+        <div class="profile-info">
+          <div class="profile-row">
+            <span class="label">{{ i18n.t('common.name') }}</span>
+            <span class="value font-bold">{{ ess.profile()?.fullName }}</span>
+          </div>
+          <div class="profile-row">
+            <span class="label">{{ i18n.t('common.code') }}</span>
+            <span class="value font-mono">{{ ess.profile()?.employeeCode }}</span>
+          </div>
+          <div class="profile-row">
+            <span class="label">{{ i18n.t('common.department') }}</span>
+            <span class="value">{{ ess.profile()?.categoryName }}</span>
+          </div>
+          <div class="profile-row">
+            <span class="label">{{ i18n.t('common.status') }}</span>
+            <span class="badge badge-success">{{ ess.profile()?.employmentType }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vacation & Requests Stat Card -->
+      <div class="card stat-card">
+        <span class="stat-label">{{ i18n.t('ess.vacationBalance') }}</span>
+        <span class="stat-value highlight">{{ ess.profile()?.annualLeaveRemainingDays | number:'1.1-1' }} {{ i18n.t('common.days') }}</span>
+        <div class="stat-meta">
+          <span>{{ ess.profile()?.pendingLeavesCount }} {{ i18n.t('ess.tabLeaves') }} ({{ i18n.t('common.pending') }})</span>
+          <span>{{ ess.profile()?.pendingAdvancesCount }} {{ i18n.t('ess.tabAdvances') }} ({{ i18n.t('common.pending') }})</span>
+        </div>
+      </div>
+
+      <!-- Quick Punch Card -->
+      <div class="card punch-card">
+        <h3 class="card-title">{{ i18n.t('ess.quickPunch') }}</h3>
+        <p class="punch-info">
+          <span class="label">{{ i18n.t('ess.lastPunch') }}: </span>
+          <span class="value font-mono">{{ ess.profile()?.lastPunchTime || '—' }}</span>
+        </p>
+        <div class="punch-actions">
+          <a routerLink="/selfie-punch" class="btn btn-primary btn-block">
+            📷 {{ i18n.t('ess.quickPunch') }}
+          </a>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 2: Payslips -->
+  @if (activeTab() === 'payslips') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.period') }}</th>
+              <th>{{ i18n.t('ess.grossPay') }}</th>
+              <th>{{ i18n.t('ess.deductions') }}</th>
+              <th>{{ i18n.t('ess.netPay') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of ess.payslips(); track p.paymentId) {
+              <tr>
+                <td class="font-bold">{{ p.periodYear }} - {{ p.periodMonth }} ({{ p.periodKind }})</td>
+                <td>{{ p.grossTotal | number:'1.2-2' }}</td>
+                <td class="text-danger">{{ p.totalDeductions | number:'1.2-2' }}</td>
+                <td class="font-bold text-success">{{ p.netPay | number:'1.2-2' }}</td>
+                <td>
+                  <span class="badge badge-success">{{ p.paymentStatus }}</span>
+                </td>
+                <td>
+                  <button class="btn btn-xs btn-outline-primary" (click)="viewPayslip(p)">
+                    {{ i18n.t('ess.viewPayslip') }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 3: Leaves -->
+  @if (activeTab() === 'leaves') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.code') }}</th>
+              <th>{{ i18n.t('ess.leaveType') }}</th>
+              <th>{{ i18n.t('common.startDate') }}</th>
+              <th>{{ i18n.t('common.endDate') }}</th>
+              <th>{{ i18n.t('common.total') }}</th>
+              <th>{{ i18n.t('common.reason') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of ess.leaves(); track l.id) {
+              <tr>
+                <td class="font-mono font-bold">{{ l.requestNumber }}</td>
+                <td>{{ l.leaveTypeName }}</td>
+                <td>{{ l.startDate }}</td>
+                <td>{{ l.endDate }}</td>
+                <td class="font-bold">{{ l.totalDays }} {{ i18n.t('common.days') }}</td>
+                <td>{{ l.reason || '—' }}</td>
+                <td>
+                  <span class="badge" [class.badge-warning]="l.status === 'PENDING_APPROVAL'" [class.badge-success]="l.status === 'APPROVED'" [class.badge-danger]="l.status === 'REJECTED'">
+                    {{ l.status }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 4: Advances -->
+  @if (activeTab() === 'advances') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('ess.advanceAmount') }}</th>
+              <th>{{ i18n.t('ess.installmentsCount') }}</th>
+              <th>{{ i18n.t('ess.installmentsAmount') }}</th>
+              <th>{{ i18n.t('ess.remainingBalance') }}</th>
+              <th>{{ i18n.t('common.date') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of ess.advances(); track a.id) {
+              <tr>
+                <td class="font-bold">{{ a.amount | number:'1.2-2' }}</td>
+                <td>{{ a.totalInstallments }}</td>
+                <td>{{ a.installmentAmount | number:'1.2-2' }}</td>
+                <td class="font-mono font-bold">{{ a.remainingBalance | number:'1.2-2' }}</td>
+                <td>{{ a.firstInstallmentDate }}</td>
+                <td>
+                  <span class="badge" [class.badge-warning]="a.status === 'REQUESTED'" [class.badge-success]="a.status === 'ACTIVE'" [class.badge-muted]="a.status === 'PAID_OFF'">
+                    {{ a.status }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 5: Attendance History -->
+  @if (activeTab() === 'attendance') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.date') }}</th>
+              <th>{{ i18n.t('common.hours') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (att of ess.attendance(); track att.date) {
+              <tr>
+                <td class="font-bold">{{ att.date }}</td>
+                <td class="font-mono">{{ att.checkIn || '—' }}</td>
+                <td>
+                  <span class="badge badge-success">{{ att.status }}</span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Payslip Breakdown -->
+  @if (showPayslipModal()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3 class="modal-title">{{ i18n.t('ess.salaryBreakdown') }}</h3>
+        <div class="payslip-header-summary">
+          <div>
+            <span class="label">{{ i18n.t('common.period') }}: </span>
+            <span class="value font-bold">{{ ess.selectedPayslip()?.periodYear }} - {{ ess.selectedPayslip()?.periodMonth }}</span>
+          </div>
+          <div>
+            <span class="label">{{ i18n.t('ess.netPay') }}: </span>
+            <span class="value font-bold text-success">{{ ess.selectedPayslip()?.netPay | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="breakdown-list">
+          <div class="breakdown-item">
+            <span>{{ i18n.t('ess.grossPay') }}</span>
+            <span class="font-bold">{{ ess.selectedPayslip()?.grossTotal | number:'1.2-2' }}</span>
+          </div>
+          <div class="breakdown-item text-danger">
+            <span>{{ i18n.t('ess.deductions') }}</span>
+            <span class="font-bold">-{{ ess.selectedPayslip()?.totalDeductions | number:'1.2-2' }}</span>
+          </div>
+          @for (item of ess.selectedPayslip()?.explanationItems; track item.componentType) {
+            <div class="breakdown-item explanation-row">
+              <span class="item-label">{{ item.label }}</span>
+              <span class="item-amount">{{ item.amount | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-primary" (click)="showPayslipModal.set(false)">{{ i18n.t('common.close') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Leave Request -->
+  @if (showLeaveModal()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3 class="modal-title">{{ i18n.t('ess.requestLeave') }}</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('common.startDate') }}</label>
+            <input type="date" class="form-input" [ngModel]="leaveForm().startDate" (ngModelChange)="leaveForm().startDate = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.endDate') }}</label>
+            <input type="date" class="form-input" [ngModel]="leaveForm().endDate" (ngModelChange)="leaveForm().endDate = $event" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.reason') }}</label>
+          <textarea class="form-input" rows="3" [ngModel]="leaveForm().reason" (ngModelChange)="leaveForm().reason = $event"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="showLeaveModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveLeave()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Advance Request -->
+  @if (showAdvanceModal()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3 class="modal-title">{{ i18n.t('ess.requestAdvance') }}</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('ess.advanceAmount') }}</label>
+            <input type="number" class="form-input" [ngModel]="advanceForm().amount" (ngModelChange)="advanceForm().amount = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('ess.installmentsCount') }}</label>
+            <input type="number" min="1" max="36" class="form-input" [ngModel]="advanceForm().totalInstallments" (ngModelChange)="advanceForm().totalInstallments = $event" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.reason') }}</label>
+          <textarea class="form-input" rows="3" [ngModel]="advanceForm().reason" (ngModelChange)="advanceForm().reason = $event"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="showAdvanceModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveAdvance()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

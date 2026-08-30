@@ -121,8 +121,11 @@ public class OperationsController {
     }
 
     @GetMapping("/valuation/report")
-    OperationsApi.ValuationReport valuationReport() {
-        return inventoryValuationService.report();
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'FINANCE_MANAGER', 'AUDITOR')")
+    OperationsApi.ValuationReport valuationReport(@RequestParam(required = false) Long asOf,
+                                                  @RequestParam(name = "warehouseId", required = false) String warehouseId,
+                                                  @RequestParam(required = false) String itemId) {
+        return inventoryValuationService.report(asOf, warehouseId, itemId);
     }
 
     @GetMapping("/valuation/movements/{movementId}")

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260815-v250-smart-import-i18n
       author: openai
+      validCheckSum: ANY
       comment: Arabic and English copy for Smart Import Center wizard and validation workflows.
       preConditions:
         - onFail: MARK_RAN

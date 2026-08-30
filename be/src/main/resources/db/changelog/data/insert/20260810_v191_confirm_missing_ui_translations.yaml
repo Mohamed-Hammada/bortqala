@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260810-v191-confirm-missing-ui-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "Bilingual translations for missing confirm dialog keys (approve/post payroll period) and success/static keys referenced by the frontend that were absent from the translations table."
       preConditions:
         - onFail: MARK_RAN

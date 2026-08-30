@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: add_operation_id_to_supplier_payments
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

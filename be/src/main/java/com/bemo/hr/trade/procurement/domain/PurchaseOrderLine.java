@@ -20,6 +20,15 @@ public class PurchaseOrderLine {
     @Column(name = "purchase_order_id", nullable = false, length = 36)
     private String purchaseOrderId;
 
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
+
     @Column(name = "item_id", length = 36)
     private String itemId;
 
@@ -58,19 +67,48 @@ public class PurchaseOrderLine {
         this.unitOfMeasure = unitOfMeasure;
         this.unitPrice = unitPrice;
         this.lineTotal = quantity.multiply(unitPrice);
+        this.createdAt = System.currentTimeMillis();
     }
 
-    @PrePersist
-    void prePersist() {
-        createdAt = System.currentTimeMillis();
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId) {
+        this.projectId = projectId == null || projectId.isBlank() ? null : projectId.strip();
+        this.wbsNodeId = wbsNodeId == null || wbsNodeId.isBlank() ? null : wbsNodeId.strip();
+        this.costCodeId = costCodeId == null || costCodeId.isBlank() ? null : costCodeId.strip();
+    }
+
+    public void update(String itemId, String itemName, String itemCategory,
+                       BigDecimal quantity, String unitOfMeasure, BigDecimal unitPrice) {
+        this.itemId = itemId;
+        this.itemName = itemName;
+        this.itemCategory = itemCategory;
+        this.quantity = quantity;
+        this.unitOfMeasure = unitOfMeasure;
+        this.unitPrice = unitPrice;
+        this.lineTotal = quantity.multiply(unitPrice);
     }
 
     public String getId() {
         return id;
     }
 
+    public String getAppId() {
+        return appId;
+    }
+
     public String getPurchaseOrderId() {
         return purchaseOrderId;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getWbsNodeId() {
+        return wbsNodeId;
+    }
+
+    public String getCostCodeId() {
+        return costCodeId;
     }
 
     public String getItemId() {

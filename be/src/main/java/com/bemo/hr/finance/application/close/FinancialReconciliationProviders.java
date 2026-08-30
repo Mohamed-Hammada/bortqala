@@ -179,14 +179,77 @@ public class FinancialReconciliationProviders {
     SubledgerReconciliationProvider treasuryReconciliation(
             JdbcTemplate jdbc,
             FiscalPeriodRepository periods) {
-        // Intentionally left on the legacy source-linked behavior until a real
-        // bank-statement -> GL bank-account mapping is defined.
         return genericSourceProvider(
                 SubledgerReconciliationReport.SubledgerType.TREASURY,
                 jdbc,
                 periods,
                 "select id, statement_reference, closing_balance from bank_statements where app_id=? and period_end<=?",
                 "BANK_STATEMENT",
+                1);
+    }
+
+    @Bean
+    SubledgerReconciliationProvider bankReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods) {
+        return genericSourceProvider(
+                SubledgerReconciliationReport.SubledgerType.BANK,
+                jdbc,
+                periods,
+                "select id, coalesce(statement_reference, id), closing_balance from bank_statements where app_id=? and period_end<=?",
+                "BANK_STATEMENT",
+                1);
+    }
+
+    @Bean
+    SubledgerReconciliationProvider cashReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods) {
+        return genericSourceProvider(
+                SubledgerReconciliationReport.SubledgerType.CASH,
+                jdbc,
+                periods,
+                "select id, voucher_number, amount from petty_cash_vouchers where app_id=? and voucher_date<=?",
+                "PETTY_CASH_VOUCHER",
+                1);
+    }
+
+    @Bean
+    SubledgerReconciliationProvider payrollReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods) {
+        return genericSourceProvider(
+                SubledgerReconciliationReport.SubledgerType.PAYROLL,
+                jdbc,
+                periods,
+                "select id, payment_month, net_salary from salary_payments where app_id=? and status in ('PAID','APPROVED')",
+                "SALARY_PAYMENT",
+                1);
+    }
+
+    @Bean
+    SubledgerReconciliationProvider projectCostReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods) {
+        return genericSourceProvider(
+                SubledgerReconciliationReport.SubledgerType.PROJECT_COST,
+                jdbc,
+                periods,
+                "select id, code, actual_cost from project_cost_entries where app_id=? and entry_date<=?",
+                "PROJECT_COST",
+                1);
+    }
+
+    @Bean
+    SubledgerReconciliationProvider manufacturingCostReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods) {
+        return genericSourceProvider(
+                SubledgerReconciliationReport.SubledgerType.MANUFACTURING_COST,
+                jdbc,
+                periods,
+                "select id, order_number, actual_cost from manufacturing_work_orders where app_id=? and status<>'CANCELLED'",
+                "MANUFACTURING_WORK_ORDER",
                 1);
     }
 

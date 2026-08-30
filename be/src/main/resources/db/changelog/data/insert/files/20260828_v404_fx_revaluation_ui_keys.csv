@@ -1,0 +1,3 @@
+id;translation_key;locale;text_value
+v404-001-en;taxCurrency.fxRevaluationSkippedAccount;en-US;Skipped {count} currency run(s) - configure the FX revaluation accounts in settings first.
+v404-001-ar;taxCurrency.fxRevaluationSkippedAccount;ar-EG;تم تخطي {count} عملة - قم بإعداد حسابات قيد إعادة تقييم العملات أولاً.

@@ -42,6 +42,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                             com.bemo.hr.shared.observability.RequestAuditFilter requestAuditFilter,
+                                            com.bemo.hr.platform.infrastructure.ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
                                             CorsConfigurationSource corsConfigurationSource,
                                             AppUserRepository appUserRepository,
                                             ObjectMapper objectMapper) throws Exception {
@@ -57,7 +58,9 @@ public class SecurityConfig {
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/logout",
                                 "/api/v1/auth/demo-login",
+                                "/api/v1/auth/2fa/verify",
                                 "/api/v1/system/status",
+                                "/api/v1/public/**",
                                 "/actuator/health",
                                 "/actuator/health/**"
                         ).permitAll()
@@ -85,6 +88,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().permitAll())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(appUserRepository))))
+                .addFilterBefore(apiKeyAuthenticationFilter, BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(requestAuditFilter, BearerTokenAuthenticationFilter.class)
                 .build();
     }
@@ -172,7 +176,7 @@ public class SecurityConfig {
         var configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Device-Id", "X-Correlation-Id", "Cache-Control"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Device-Id", "X-Correlation-Id", "X-Api-Key", "Cache-Control"));
         configuration.setExposedHeaders(List.of("Content-Disposition", "X-Correlation-Id", "X-Server-Correlation-Id"));
         configuration.setAllowCredentials(true);
         var source = new UrlBasedCorsConfigurationSource();

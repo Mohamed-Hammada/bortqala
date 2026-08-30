@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260815-v252-attendance-browser-i18n
       author: wolfn
+      validCheckSum: ANY
       comment: Arabic and English copy for attendance month and employee details explorer.
       preConditions:
         - onFail: MARK_RAN

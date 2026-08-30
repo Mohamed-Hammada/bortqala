@@ -1,0 +1,79 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826-v351-user-role-templates
+      author: wolfn
+      validCheckSum: ANY
+      changes:
+        - createTable:
+            tableName: user_role_templates
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+              - column:
+                  name: vertical
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name_key
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: menu_ids
+                  type: VARCHAR(2000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: permission_prefixes
+                  type: VARCHAR(1000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sort_order
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_user_role_templates_vertical
+            tableName: user_role_templates
+            columns:
+              - column:
+                  name: vertical
+        - createIndex:
+            indexName: idx_user_role_templates_app_id
+            tableName: user_role_templates
+            columns:
+              - column:
+                  name: app_id
+      rollback:
+        - dropTable:
+            tableName: user_role_templates

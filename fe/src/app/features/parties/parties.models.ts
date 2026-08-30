@@ -107,3 +107,80 @@ export interface SupplierDuplicateResponse {
   bankMatches: { supplierId: string; code: string; name: string; reason: string }[];
   duplicateFound: boolean;
 }
+
+export interface AgingBreakdown {
+  currentNotDue: number;
+  bucket1To30: number;
+  bucket31To60: number;
+  bucket61To90: number;
+  bucket90Plus: number;
+  totalOverdue: number;
+}
+
+export interface PartyFinancialPositionSummary {
+  partyId: string;
+  partyCode: string;
+  partyName: string;
+  partyType: string;
+  currencyCode: string;
+  openingBalance: number;
+  totalDebits: number;
+  totalCredits: number;
+  netClosingBalance: number;
+  overdueAmount: number;
+  unappliedCashAmount: number;
+  retentionHeldAmount: number;
+  creditLimit: number;
+  creditHold: boolean;
+  creditStatus: string;
+  aging: AgingBreakdown;
+}
+
+export interface PartyStatementLine {
+  transactionDate: number;
+  documentType: string;
+  documentNumber: string;
+  reference?: string;
+  description: string;
+  debit: number;
+  credit: number;
+  runningBalance: number;
+  dueDate?: number;
+  overdueDays: number;
+  sourceEntityId: string;
+}
+
+export interface PartyStatementResponse {
+  summary: PartyFinancialPositionSummary;
+  fromDate?: number;
+  toDate?: number;
+  lines: PartyStatementLine[];
+}
+
+export interface AgingReportRow {
+  partyId: string;
+  partyCode: string;
+  partyName: string;
+  partyType: string;
+  totalBalance: number;
+  currentNotDue: number;
+  bucket1To30: number;
+  bucket31To60: number;
+  bucket61To90: number;
+  bucket90Plus: number;
+}
+
+export interface AgingReportResponse {
+  asOfDate: number;
+  partyTypeFilter?: string;
+  totalOutstanding: number;
+  rows: AgingReportRow[];
+}
+
+export interface ArApGlReconciliationResponse {
+  partyType: string;
+  subledgerTotal: number;
+  glControlAccountBalance: number;
+  variance: number;
+  isReconciled: boolean;
+}

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260807-v121-trends-export-translations
       author: codex
+      validCheckSum: ANY
       comment: Arabic/English translations for the multi-period trends dashboard surface and its Excel export columns (attendance rate, scheduled/present/exception days, overtime, paid/pending counts, gross/paid totals). Registered in next + test-h2 changelogs.
       changes:
         - loadData:

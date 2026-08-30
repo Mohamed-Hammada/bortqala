@@ -3,7 +3,134 @@
 .header-row { background-color: rgba(255, 255, 255, 0.03); }
 code { font-family: monospace; font-size: 13px; color: var(--gold); }
 
-/* BEMO UI FIX 2026-08-10: finance account dialog layout */
+.tabs-nav {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+.tab-btn {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+.tab-btn.active {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text);
+  border-bottom: 2px solid var(--gold);
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
+.row-action {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--surface-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.row-action.danger {
+  color: var(--danger-text);
+}
+
+/* Statements Workbench */
+.statements-workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.statement-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.subtabs {
+  display: flex;
+  gap: 8px;
+}
+.subtab-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-muted);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+}
+.subtab-btn.active {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+  color: var(--text);
+  font-weight: 700;
+}
+.statement-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.statement-filters input {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.statement-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.statement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.statement-header h3 { margin: 0; }
+
+.statement-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+.statement-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-muted);
+}
+.statement-kpi.highlight {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+}
+.statement-kpi .label { font-size: 12px; color: var(--muted); }
+.statement-kpi .val { font-size: 18px; font-weight: 700; color: var(--text); }
+
+/* BEMO UI FIX: finance account dialog layout */
 .drawer {
   padding: 0;
   overflow: hidden;
@@ -51,46 +178,4 @@ code { font-family: monospace; font-size: 13px; color: var(--gold); }
   .drawer-actions {
     padding-block: 10px;
   }
-}
-
-/* BEMO UI FOLLOW-UP 2026-08-11: finance account checkbox organization */
-.drawer > form > .form-grid {
-  align-items: start;
-}
-
-.drawer > form > .form-grid :is(.field, .field-checkbox, .checkbox-field):has(input[type='checkbox']),
-.drawer > form > .form-grid > label:has(input[type='checkbox']) {
-  grid-column: 1 / -1;
-}
-
-.drawer > form > .form-grid label:has(input[type='checkbox']) {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface-muted);
-  color: var(--ink);
-  font-weight: 700;
-  box-sizing: border-box;
-}
-
-.drawer > form > .form-grid label:has(input[type='checkbox']) input[type='checkbox'] {
-  flex: 0 0 18px;
-  width: 18px;
-  height: 18px;
-  margin: 2px 0 0;
-  accent-color: var(--gold);
-}
-
-.drawer > form > .form-grid label:has(input[type='checkbox']) small,
-.drawer > form > .form-grid .checkbox-hint,
-.drawer > form > .form-grid .checkbox-note {
-  display: block;
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 500;
 }

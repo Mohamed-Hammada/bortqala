@@ -1,0 +1,83 @@
+id;translation_key;locale;text_value
+v391-001;nav.helpdesk;ar-EG;تذاكر الدعم الفني
+v391-002;nav.helpdesk;en-US;Helpdesk Tickets
+v391-003;nav.helpdeskHint;ar-EG;إدارة تذاكر الدعم الفني وSLA والمتابعة
+v391-004;nav.helpdeskHint;en-US;Manage support tickets, SLA timers and tracking
+v391-005;nav.kb;ar-EG;قاعدة المعرفة
+v391-006;nav.kb;en-US;Knowledge Base
+v391-007;nav.kbHint;ar-EG;مقالات البحث وقاعدة المعرفة ثنائية اللغة
+v391-008;nav.kbHint;en-US;Searchable bilingual knowledge base articles
+v391-009;nav.marketing;ar-EG;التسويق
+v391-010;nav.marketing;en-US;Marketing
+v391-011;nav.marketingHint;ar-EG;حملات البريد الإلكتروني والرسائل القصيرة والاستبيانات
+v391-012;nav.marketingHint;en-US;Email/SMS campaigns and surveys
+v391-013;nav.reportBuilder;ar-EG;منشئ التقارير
+v391-014;nav.reportBuilder;en-US;Report Builder
+v391-015;nav.reportBuilderHint;ar-EG;استكشاف البيانات وبناء تقارير مخصصة
+v391-016;nav.reportBuilderHint;en-US;Dataset explorer and custom report builder
+v391-017;helpdesk.categories;ar-EG;فئات الدعم
+v391-018;helpdesk.categories;en-US;Helpdesk Categories
+v391-019;helpdesk.createCategory;ar-EG;إنشاء فئة
+v391-020;helpdesk.createCategory;en-US;Create Category
+v391-021;helpdesk.nameAr;ar-EG;الاسم بالعربية
+v391-022;helpdesk.nameAr;en-US;Arabic Name
+v391-023;helpdesk.nameEn;ar-EG;الاسم بالإنجليزية
+v391-024;helpdesk.nameEn;en-US;English Name
+v391-025;helpdesk.slaFirstResponse;ar-EG;استجابة أولى (ساعات)
+v391-026;helpdesk.slaFirstResponse;en-US;First Response (hours)
+v391-027;helpdesk.slaResolution;ar-EG;الحل (ساعات)
+v391-028;helpdesk.slaResolution;en-US;Resolution (hours)
+v391-029;helpdesk.tickets;ar-EG;التذاكر
+v391-030;helpdesk.tickets;en-US;Tickets
+v391-031;helpdesk.createTicket;ar-EG;تذكرة جديدة
+v391-032;helpdesk.createTicket;en-US;New Ticket
+v391-033;helpdesk.ticketNo;ar-EG;رقم التذكرة
+v391-034;helpdesk.ticketNo;en-US;Ticket #
+v391-035;helpdesk.title;ar-EG;العنوان
+v391-036;helpdesk.title;en-US;Title
+v391-037;helpdesk.description;ar-EG;الوصف
+v391-038;helpdesk.description;en-US;Description
+v391-039;helpdesk.priority;ar-EG;الأولوية
+v391-040;helpdesk.priority;en-US;Priority
+v391-041;helpdesk.status;ar-EG;الحالة
+v391-042;helpdesk.status;en-US;Status
+v391-043;helpdesk.assignee;ar-EG;المسؤول
+v391-044;helpdesk.assignee;en-US;Assignee
+v391-045;helpdesk.assign;ar-EG;تعيين
+v391-046;helpdesk.assign;en-US;Assign
+v391-047;helpdesk.category;ar-EG;الفئة
+v391-048;helpdesk.category;en-US;Category
+v391-049;helpdesk.messages;ar-EG;الرسائل
+v391-050;helpdesk.messages;en-US;Messages
+v391-051;helpdesk.addMessage;ar-EG;إضافة رسالة
+v391-052;helpdesk.addMessage;en-US;Add Message
+v391-053;helpdesk.internalNote;ar-EG;ملاحظة داخلية
+v391-054;helpdesk.internalNote;en-US;Internal Note
+v391-055;helpdesk.dueFirstResponse;ar-EG;موعد الاستجابة الأولى
+v391-056;helpdesk.dueFirstResponse;en-US;Due First Response
+v391-057;helpdesk.dueResolution;ar-EG;موعد الحل
+v391-058;helpdesk.dueResolution;en-US;Due Resolution
+v391-059;helpdesk.slaBreach;ar-EG;انتهاك SLA
+v391-060;helpdesk.slaBreach;en-US;SLA Breach
+v391-061;helpdesk.openCount;ar-EG;التذاكر المفتوحة
+v391-062;helpdesk.openCount;en-US;Open Tickets
+v391-063;helpdesk.myOpenCount;ar-EG;تذاكري المفتوحة
+v391-064;helpdesk.myOpenCount;en-US;My Open Tickets
+v391-065;helpdesk.inbox;ar-EG;صندوق الوارد
+v391-066;helpdesk.inbox;en-US;Inbox
+v391-067;helpdesk.ticketCreated;ar-EG;تم إنشاء التذكرة
+v391-068;helpdesk.ticketCreated;en-US;Ticket created
+v391-069;helpdesk.ticketAssigned;ar-EG;تم تعيين التذكرة
+v391-070;helpdesk.ticketAssigned;en-US;Ticket assigned
+v391-071;helpdesk.messageAdded;ar-EG;تم إضافة الرسالة
+v391-072;helpdesk.messageAdded;en-US;Message added
+v391-073;helpdesk.ticketUpdated;ar-EG;تم تحديث حالة التذكرة
+v391-074;helpdesk.ticketUpdated;en-US;Ticket status updated
+v391-075;helpdesk.noTickets;ar-EG;لا توجد تذاكر بعد
+v391-076;helpdesk.noTickets;en-US;No tickets yet
+v391-077;helpdesk.noCategories;ar-EG;لا توجد فئات
+v391-078;helpdesk.noCategories;en-US;No categories
+v391-079;helpdesk.filterStatus;ar-EG;تصفية بالحالة
+v391-080;helpdesk.filterStatus;en-US;Filter by Status
+v391-081;helpdesk.filterAssignee;ar-EG;تصفية بالمسؤول
+v391-082;helpdesk.filterAssignee;en-US;Filter by Assignee

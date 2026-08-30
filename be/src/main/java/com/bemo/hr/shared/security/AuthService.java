@@ -2,6 +2,10 @@ package com.bemo.hr.shared.security;
 
 import com.bemo.hr.access.application.AccessCatalogService;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
+import com.bemo.hr.security.pack.application.IpAllowlistService;
+import com.bemo.hr.security.pack.application.PasswordPolicyService;
+import com.bemo.hr.security.pack.application.TotpService;
+import com.bemo.hr.security.pack.application.TrustedDeviceService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.i18n.TranslationService;
@@ -14,7 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
@@ -36,6 +42,7 @@ public class AuthService {
     private static final String DEMO_SUPERADMIN_USERNAME = "demo_superadmin";
     private final AuthenticationManager authenticationManager;
     private final JwtEncoder jwtEncoder;
+    private final JwtDecoder jwtDecoder;
     private final JwtProperties jwtProperties;
     private final AppUserRepository appUserRepository;
     private final RoleRepository roleRepository;
@@ -54,8 +61,14 @@ public class AuthService {
     private final DemoNoLoginProperties demoNoLoginProperties;
     private final AccessCatalogService accessCatalogService;
     private final com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService;
+    private final com.bemo.hr.access.application.PolicyGroupService policyGroupService;
+    private final TotpService totpService;
+    private final PasswordPolicyService passwordPolicyService;
+    private final TrustedDeviceService trustedDeviceService;
+    private final IpAllowlistService ipAllowlistService;
 
-    public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
+    public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtDecoder jwtDecoder,
+                       JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
                        TenantApplicationRepository tenantApplicationRepository,
                        UserPreferenceService userPreferenceService, PasswordEncoder passwordEncoder,
@@ -69,9 +82,15 @@ public class AuthService {
                        TenantFeatureService tenantFeatureService,
                        DemoNoLoginProperties demoNoLoginProperties,
                        AccessCatalogService accessCatalogService,
-                       com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService) {
+                       com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService,
+                       com.bemo.hr.access.application.PolicyGroupService policyGroupService,
+                       TotpService totpService,
+                       PasswordPolicyService passwordPolicyService,
+                       TrustedDeviceService trustedDeviceService,
+                       IpAllowlistService ipAllowlistService) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
+        this.jwtDecoder = jwtDecoder;
         this.jwtProperties = jwtProperties;
         this.appUserRepository = appUserRepository;
         this.roleRepository = roleRepository;
@@ -90,6 +109,11 @@ public class AuthService {
         this.demoNoLoginProperties = demoNoLoginProperties;
         this.accessCatalogService = accessCatalogService;
         this.subscriptionLimitService = subscriptionLimitService;
+        this.policyGroupService = policyGroupService;
+        this.totpService = totpService;
+        this.passwordPolicyService = passwordPolicyService;
+        this.trustedDeviceService = trustedDeviceService;
+        this.ipAllowlistService = ipAllowlistService;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -138,6 +162,11 @@ public class AuthService {
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public LoginResult login(AuthApi.LoginRequest request, String deviceId, String ip) {
+        return login(request, deviceId, ip, null);
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public LoginResult login(AuthApi.LoginRequest request, String deviceId, String ip, String userAgent) {
         log.debug("login called with username={}, appCode={}", request.username(), request.appCode());
         if (loginRateLimiter.isGlobalIpBlocked(ip)) {
             performDummyPasswordCheck(request.password());
@@ -164,9 +193,14 @@ public class AuthService {
             var user = userOpt.get();
             Instant now = Instant.now();
             if (user.isLocked(now)) {
-                throw new BusinessRuleException("الحساب مقفل مؤقتاً بسبب محاولات تسجيل دخول خاطئة متكررة.",
+                throw new BusinessRuleException("Account temporarily locked due to repeated failed login attempts.",
                         "ACCOUNT_TEMPORARILY_LOCKED", HttpStatus.UNAUTHORIZED);
             }
+
+            // Check Role IP allowlist
+            Set<RoleCode> userRoles = user.getRoles().stream().map(Role::getCode).collect(Collectors.toSet());
+            ipAllowlistService.validateClientIp(appId, userRoles, ip);
+
             try {
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                         appId + "|" + request.username(), request.password()));
@@ -177,6 +211,22 @@ public class AuthService {
             }
             loginStateService.recordSuccess(appId, request.username(), now);
             loginRateLimiter.reset(appId, request.username());
+
+            // Check if 2FA is enabled for this user
+            if (totpService.isTotpEnabled(appId, user.getId())) {
+                String challengeToken = issue2faChallengeToken(appId, user, now);
+                log.info("2FA required for user {} in app {}", user.getUsername(), appId);
+                return new LoginResult(appId,
+                        new AuthApi.LoginResponse(challengeToken, "2FA_REQUIRED", now.plus(Duration.ofMinutes(5)),
+                                false,
+                                new AuthApi.AppResponse(appId, app.get().getCode(), app.get().getName(),
+                                        app.get().isAdminDashboardCustomizationEnabled()), toResponse(user),
+                                toPreferenceResponse(preferenceFor(user), user, app.get())),
+                        null, null);
+            }
+
+            // 2FA not enabled: proceed with normal login
+            trustedDeviceService.recordDeviceActivity(appId, user.getId(), deviceId, userAgent, ip);
             Instant accessExpiresAt = issueAccessToken(app.get(), user, now);
             var refresh = refreshTokenService.issue(appId, user.getId(), deviceId);
             auditService.record("USER_LOGIN", "USER", user.getId(), user.getUsername(), "Successful login", null);
@@ -191,6 +241,87 @@ public class AuthService {
         } finally {
             TenantContext.clear();
         }
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public LoginResult verify2faLogin(String challengeToken, String code, String deviceId, String userAgent, String ip) {
+        log.debug("verify2faLogin called");
+        Jwt jwt;
+        try {
+            jwt = jwtDecoder.decode(challengeToken);
+        } catch (Exception e) {
+            throw new BusinessRuleException("Two-factor authentication challenge token is invalid or expired.",
+                    "TOTP_CHALLENGE_INVALID", HttpStatus.UNAUTHORIZED);
+        }
+
+        String purpose = jwt.getClaimAsString("purpose");
+        if (!"2fa_challenge".equals(purpose)) {
+            throw new BusinessRuleException("Invalid challenge token purpose.",
+                    "TOTP_CHALLENGE_INVALID", HttpStatus.UNAUTHORIZED);
+        }
+
+        String appId = jwt.getClaimAsString("aid");
+        String userId = jwt.getClaimAsString("uid");
+        if (appId == null || userId == null) {
+            throw new BusinessRuleException("Invalid challenge token payload.",
+                    "TOTP_CHALLENGE_INVALID", HttpStatus.UNAUTHORIZED);
+        }
+
+        TenantContext.set(appId);
+        try {
+            var app = tenantApplicationRepository.findById(appId)
+                    .orElseThrow(() -> new NotFoundException("Application not found.", "APP_NOT_FOUND"));
+            var user = appUserRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("User not found.", "USER_NOT_FOUND"));
+
+            if (!user.isActive()) {
+                throw new BusinessRuleException("User account is inactive.", "AUTH_USER_INACTIVE", HttpStatus.UNAUTHORIZED);
+            }
+
+            // Validate TOTP code / backup code
+            boolean valid = totpService.verifyLoginCode(appId, userId, code);
+            if (!valid) {
+                log.warn("Invalid 2FA code entered for user {} in app {}", user.getUsername(), appId);
+                throw new BusinessRuleException("Invalid verification code. Please check your authenticator app.",
+                        "TOTP_INVALID_CODE", HttpStatus.UNAUTHORIZED);
+            }
+
+            // Check IP allowlist
+            Set<RoleCode> userRoles = user.getRoles().stream().map(Role::getCode).collect(Collectors.toSet());
+            ipAllowlistService.validateClientIp(appId, userRoles, ip);
+
+            Instant now = Instant.now();
+            trustedDeviceService.recordDeviceActivity(appId, user.getId(), deviceId, userAgent, ip);
+            Instant accessExpiresAt = issueAccessToken(app, user, now);
+            var refresh = refreshTokenService.issue(appId, user.getId(), deviceId);
+            auditService.record("USER_LOGIN_2FA", "USER", user.getId(), user.getUsername(), "Successful 2FA login", null);
+            log.info("User {} logged in successfully with 2FA for app={}", user.getUsername(), appId);
+
+            return new LoginResult(appId,
+                    new AuthApi.LoginResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt,
+                            user.isMustChangePassword(),
+                            new AuthApi.AppResponse(appId, app.getCode(), app.getName(),
+                                    app.isAdminDashboardCustomizationEnabled()), toResponse(user),
+                            toPreferenceResponse(preferenceFor(user), user, app)),
+                    refresh.rawValue(), refresh.expiresAt());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    private String issue2faChallengeToken(String appId, AppUser user, Instant now) {
+        Instant expiresAt = now.plus(Duration.ofMinutes(5));
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("bemo-hr")
+                .issuedAt(now)
+                .expiresAt(expiresAt)
+                .subject(user.getUsername())
+                .claim("uid", user.getId())
+                .claim("aid", appId)
+                .claim("purpose", "2fa_challenge")
+                .build();
+        JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
+        return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
     }
 
     private void performDummyPasswordCheck(String password) {
@@ -249,21 +380,29 @@ public class AuthService {
         log.info("All sessions revoked for user {}", username);
     }
 
+    @Transactional(readOnly = true)
+    public String getUserIdByUsername(String appId, String username) {
+        return requireByUsername(appId, username).getId();
+    }
+
     @Transactional
     public void changePassword(String username, AuthApi.ChangePasswordRequest request) {
         log.debug("changePassword called with username={}", username);
         var app = requireCurrentApp();
         var user = requireByUsername(app.getId(), username);
         if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
-            throw new BusinessRuleException("كلمة المرور الحالية غير صحيحة.", "PASSWORD_MISMATCH", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Current password is incorrect.", "PASSWORD_MISMATCH", HttpStatus.BAD_REQUEST);
         }
         if (request.currentPassword().equals(request.newPassword())) {
-            throw new BusinessRuleException("كلمة المرور الجديدة يجب أن تختلف عن كلمة المرور الحالية.",
+            throw new BusinessRuleException("New password must be different from the current password.",
                     "PASSWORD_REUSE", HttpStatus.BAD_REQUEST);
         }
         validatePasswordStrength(request.newPassword(), app);
-        user.changePassword(passwordEncoder.encode(request.newPassword()));
+        passwordPolicyService.validatePassword(app.getId(), user.getId(), request.newPassword());
+        String newHash = passwordEncoder.encode(request.newPassword());
+        user.changePassword(newHash);
         user.markPasswordChanged(Instant.now());
+        passwordPolicyService.recordPasswordChange(app.getId(), user.getId(), newHash);
         refreshTokenService.revokeAllForUser(app.getId(), user.getId(), username);
         auditService.record("PASSWORD_CHANGE", "USER", user.getId(), username, "Changed password and revoked all sessions", null);
         log.info("Password changed for user {}", username);
@@ -349,8 +488,19 @@ public class AuthService {
     }
 
     public java.util.List<AuthApi.UserResponse> listUsers() {
-        return appUserRepository.findAllByAppIdOrderByDisplayNameAsc(TenantContext.require()).stream()
-                .map(this::toResponse).toList();
+        String appId = TenantContext.require();
+        List<AppUser> users = appUserRepository.findAllByAppIdOrderByDisplayNameAsc(appId);
+        var userIds = users.stream().map(AppUser::getId).toList();
+        var policyMap = policyGroupService.getUserPolicyAssignmentsForUsers(appId, userIds);
+        var activeFeatures = tenantFeatureService.getAllEnabled(appId);
+
+        return users.stream().map(user -> new AuthApi.UserResponse(
+                user.getId(), user.getUsername(), user.getDisplayName(),
+                user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
+                user.getAllowedMenus(), menuAccessMode(user), user.isCanViewSalary(), user.getCategoryId(),
+                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures,
+                policyMap.getOrDefault(user.getId(), List.of())
+        )).toList();
     }
 
     public List<AuthApi.UserCategoryResponse> listCategories() {
@@ -433,6 +583,10 @@ public class AuthService {
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
         appUserRepository.save(user);
+        if (request.policyAssignments() != null) {
+            policyGroupService.assignUserPolicies(user.getId(),
+                    new com.bemo.hr.access.api.AccessPolicyApi.AssignUserPoliciesRequest(request.policyAssignments()), currentUsername);
+        }
         auditService.record("USER_CREATE", "USER", user.getId(), currentUsername,
                 "Created user " + user.getDisplayName() + " roles=" + request.roles()
                         + (request.accessChangeReason() == null || request.accessChangeReason().isBlank()
@@ -457,6 +611,7 @@ public class AuthService {
         boolean actorIsSuperAdmin = actor.getRoles().stream()
                 .anyMatch(role -> role.getCode() == RoleCode.SUPER_ADMIN);
         boolean targetIsSuperAdmin = user.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.SUPER_ADMIN);
+        boolean targetIsAdmin = user.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.ADMIN);
 
         if (!actorIsSuperAdmin) {
             if (targetIsSuperAdmin) {
@@ -467,12 +622,20 @@ public class AuthService {
                 throw new BusinessRuleException("Only a Super Admin can assign the Super Admin role.",
                         "AUTH_SUPER_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN", HttpStatus.CONFLICT);
             }
+            if (targetIsAdmin && !user.getId().equals(actor.getId())) {
+                throw new BusinessRuleException("Only a Super Admin can modify Admin accounts.",
+                        "AUTH_ADMIN_ACCOUNT_PROTECTED", HttpStatus.CONFLICT);
+            }
+            if (request.roles().contains(RoleCode.ADMIN) && !targetIsAdmin) {
+                throw new BusinessRuleException("Only a Super Admin can assign the Admin role.",
+                        "AUTH_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN", HttpStatus.CONFLICT);
+            }
         }
 
         boolean targetCurrentlyActiveAdmin = user.isActive() && isAdminUser(user);
         boolean targetWillBeActiveAdmin = request.active() && isAdminRoles(request.roles());
         if (targetCurrentlyActiveAdmin && !targetWillBeActiveAdmin && activeAdminCount(appId) <= 1) {
-            throw new BusinessRuleException("لا يمكن تعطيل أو إزالة دور آخر مسؤول نشط في النظام.",
+            throw new BusinessRuleException("Cannot disable or remove the last active admin role in the system.",
                     "FINAL_ADMIN_PROTECTION", HttpStatus.BAD_REQUEST);
         }
 
@@ -502,6 +665,10 @@ public class AuthService {
         }
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
+        if (request.policyAssignments() != null) {
+            policyGroupService.assignUserPolicies(user.getId(),
+                    new com.bemo.hr.access.api.AccessPolicyApi.AssignUserPoliciesRequest(request.policyAssignments()), currentUsername);
+        }
         auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername,
                 accessChangeDetails(user, request, previousRoles), null);
         log.info("User {} updated by {}", user.getUsername(), currentUsername);
@@ -615,29 +782,29 @@ public class AuthService {
         int maxLen = app.getMaxPasswordLength() > 0 ? app.getMaxPasswordLength() : 128;
 
         if (password.length() < minLen) {
-            throw new BusinessRuleException("يجب أن لا تقل كلمة المرور عن " + minLen + " أحرف.");
+            throw new BusinessRuleException("Password must be at least " + minLen + " characters long.");
         }
         if (password.length() > maxLen) {
-            throw new BusinessRuleException("يجب أن لا تتجاوز كلمة المرور " + maxLen + " حرفاً.");
+            throw new BusinessRuleException("Password must not exceed " + maxLen + " characters.");
         }
         if (app.isDisallowSpaces() && password.contains(" ")) {
-            throw new BusinessRuleException("كلمة المرور يجب أن لا تحتوي على مسافات.",
+            throw new BusinessRuleException("Password must not contain spaces.",
                     "PASSWORD_NO_SPACES", HttpStatus.CONFLICT);
         }
         if (app.isRequireUppercase() && !password.chars().anyMatch(Character::isUpperCase)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف كبير على الأقل.",
+            throw new BusinessRuleException("Password must contain at least one uppercase letter.",
                     "PASSWORD_REQUIRES_UPPERCASE", HttpStatus.CONFLICT);
         }
         if (app.isRequireLowercase() && !password.chars().anyMatch(Character::isLowerCase)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف صغير على الأقل.",
+            throw new BusinessRuleException("Password must contain at least one lowercase letter.",
                     "PASSWORD_REQUIRES_LOWERCASE", HttpStatus.CONFLICT);
         }
         if (app.isRequireNumbers() && !password.chars().anyMatch(Character::isDigit)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.",
+            throw new BusinessRuleException("Password must contain at least one digit.",
                     "PASSWORD_REQUIRES_DIGIT", HttpStatus.CONFLICT);
         }
         if (app.isRequireSpecialChars() && !password.matches(".*[^A-Za-z0-9].*")) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.",
+            throw new BusinessRuleException("Password must contain at least one special character.",
                     "PASSWORD_REQUIRES_SPECIAL", HttpStatus.CONFLICT);
         }
     }
@@ -662,10 +829,11 @@ public class AuthService {
 
     private AuthApi.UserResponse toResponse(AppUser user) {
         var activeFeatures = tenantFeatureService.getAllEnabled(user.getAppId());
+        var policyAssignments = policyGroupService.getUserPolicyAssignments(user.getId());
         return new AuthApi.UserResponse(user.getId(), user.getUsername(), user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
                 user.getAllowedMenus(), menuAccessMode(user), user.isCanViewSalary(), user.getCategoryId(),
-                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures);
+                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures, policyAssignments);
     }
 
     private String menuAccessMode(AppUser user) {

@@ -1,0 +1,458 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819-v272-001
+      author: bemo-architect
+      changes:
+        - createTable:
+            tableName: project_daily_reports
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: project_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: report_number
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: report_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: shift
+                  type: VARCHAR(32)
+                  defaultValue: DAY
+                  constraints:
+                    nullable: false
+              - column:
+                  name: weather_condition
+                  type: VARCHAR(32)
+              - column:
+                  name: temperature_celsius
+                  type: DECIMAL(5,2)
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: DRAFT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: site_engineer_user_id
+                  type: VARCHAR(64)
+              - column:
+                  name: approver_user_id
+                  type: VARCHAR(64)
+              - column:
+                  name: approved_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: reopened_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: general_notes
+                  type: CLOB
+              - column:
+                  name: blockers_and_issues
+                  type: CLOB
+              - column:
+                  name: safety_observations
+                  type: CLOB
+              - column:
+                  name: total_workforce_count
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_equipment_count
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260819-v272-002
+      author: bemo-architect
+      changes:
+        - addUniqueConstraint:
+            tableName: project_daily_reports
+            columnNames: tenant_id, project_id, report_date, shift
+            constraintName: uq_project_daily_report_date_shift
+        - createIndex:
+            tableName: project_daily_reports
+            indexName: idx_dpr_project_date
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: project_id
+              - column:
+                  name: report_date
+
+  - changeSet:
+      id: 20260819-v272-003
+      author: bemo-architect
+      changes:
+        - createTable:
+            tableName: daily_work_progress_lines
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: daily_report_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wbs_code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wbs_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_of_measure
+                  type: VARCHAR(32)
+              - column:
+                  name: previous_quantity
+                  type: DECIMAL(18,4)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: today_quantity
+                  type: DECIMAL(18,4)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cumulative_quantity
+                  type: DECIMAL(18,4)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: percent_complete
+                  type: DECIMAL(7,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: location_notes
+                  type: VARCHAR(255)
+              - column:
+                  name: remarks
+                  type: CLOB
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260819-v272-004
+      author: bemo-architect
+      changes:
+        - createIndex:
+            tableName: daily_work_progress_lines
+            indexName: idx_dpr_progress_report_id
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: daily_report_id
+        - createIndex:
+            tableName: daily_work_progress_lines
+            indexName: idx_dpr_progress_wbs_node
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: wbs_node_id
+
+  - changeSet:
+      id: 20260819-v272-005
+      author: bemo-architect
+      changes:
+        - createTable:
+            tableName: daily_labor_snapshots
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: daily_report_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)
+              - column:
+                  name: trade_category
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source_type
+                  type: VARCHAR(32)
+                  defaultValue: DIRECT_EMPLOYEE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: party_id
+                  type: VARCHAR(36)
+              - column:
+                  name: headcount
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hours_worked
+                  type: DECIMAL(6,2)
+                  defaultValueNumeric: 8.00
+                  constraints:
+                    nullable: false
+              - column:
+                  name: activity_description
+                  type: CLOB
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260819-v272-006
+      author: bemo-architect
+      changes:
+        - createIndex:
+            tableName: daily_labor_snapshots
+            indexName: idx_dpr_labor_report_id
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: daily_report_id
+
+  - changeSet:
+      id: 20260819-v272-007
+      author: bemo-architect
+      changes:
+        - createTable:
+            tableName: daily_equipment_logs
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: daily_report_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: equipment_type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: equipment_code
+                  type: VARCHAR(64)
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: WORKING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hours_operated
+                  type: DECIMAL(6,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hours_idle
+                  type: DECIMAL(6,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fuel_consumed_liters
+                  type: DECIMAL(10,2)
+                  defaultValueNumeric: 0
+              - column:
+                  name: operator_name
+                  type: VARCHAR(100)
+              - column:
+                  name: notes
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260819-v272-008
+      author: bemo-architect
+      changes:
+        - createIndex:
+            tableName: daily_equipment_logs
+            indexName: idx_dpr_equipment_report_id
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: daily_report_id
+
+  - changeSet:
+      id: 20260819-v272-009
+      author: bemo-architect
+      changes:
+        - createTable:
+            tableName: daily_material_consumptions
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: daily_report_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: material_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_of_measure
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity_used
+                  type: DECIMAL(18,4)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: delivery_note_number
+                  type: VARCHAR(64)
+              - column:
+                  name: supplier_party_id
+                  type: VARCHAR(36)
+              - column:
+                  name: notes
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260819-v272-010
+      author: bemo-architect
+      changes:
+        - createIndex:
+            tableName: daily_material_consumptions
+            indexName: idx_dpr_material_report_id
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: daily_report_id

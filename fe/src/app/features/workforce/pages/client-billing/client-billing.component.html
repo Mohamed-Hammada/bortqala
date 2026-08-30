@@ -1,0 +1,235 @@
+<section class="workforce-container client-billing">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">{{ i18n.t('workforce.clientBilling.title') }}</span>
+      <h1>{{ i18n.t('workforce.clientBilling.title') }}</h1>
+      <p>{{ i18n.t('workforce.clientBilling.pageHint') }}</p>
+    </div>
+  </header>
+
+  @if (pageError()) { <div class="alert error">{{ pageError() }}</div> }
+  @if (loading() || generating()) { <div class="alert">{{ i18n.t('workforce.ui.settlement.loading') }}</div> }
+
+  <div class="card toolbar">
+    <div class="toolbar-row">
+      <label class="toolbar-field">
+        <span>{{ i18n.t('workforce.clientBilling.client') }}</span>
+        <select
+          [value]="selectedClientId()"
+          (change)="onClientEvent($event)">
+          <option value="">{{ i18n.t('workforce.clientBilling.selectClient') }}</option>
+          @for (client of workforceService.clients(); track client.id) {
+            <option [value]="client.id">{{ clientLabel(client) }}</option>
+          }
+        </select>
+      </label>
+      <label class="toolbar-field">
+        <span>{{ i18n.t('workforce.clientBilling.periodPlaceholder') }}</span>
+        <input
+          type="month"
+          [value]="selectedPeriod()"
+          (change)="onPeriodChange($event)" />
+      </label>
+      <div class="toolbar-actions">
+        <button type="button" class="btn primary" [disabled]="!canPrepare()" (click)="generate()">
+          {{ generating() ? i18n.t('workforce.ui.settlement.loading') : i18n.t('workforce.clientBilling.generateButton') }}
+        </button>
+        <button type="button" class="btn secondary" [disabled]="!selectedClientId()" (click)="reviewDraft()">
+          {{ i18n.t('workforce.clientBilling.reviewTitle') }}
+        </button>
+        <button type="button" class="btn" [disabled]="!selectedClientId()" (click)="loadMargin()">
+          {{ i18n.t('workforce.clientBilling.marginTitle') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card rates-card">
+    <header class="card-header">
+      <h2>{{ i18n.t('workforce.clientBilling.ratesTitle') }}</h2>
+      <p>{{ i18n.t('workforce.clientBilling.ratesHint') }}</p>
+      <button type="button" class="btn primary" [disabled]="!selectedClientId()" (click)="openRateModal()">
+        {{ i18n.t('workforce.clientBilling.addRate') }}
+      </button>
+    </header>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('workforce.clientBilling.category') }}</th>
+            <th>{{ i18n.t('workforce.clientBilling.dayRate') }}</th>
+            <th>{{ i18n.t('workforce.clientBilling.effectiveFrom') }}</th>
+            <th>{{ i18n.t('workforce.clientBilling.effectiveTo') }}</th>
+            <th>{{ i18n.t('workforce.ui.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (rate of workforceService.clientRates(); track rate.id) {
+            <tr>
+              <td>{{ rate.categoryName || rate.workerCategoryId }}</td>
+              <td>{{ rate.dayRate | number:'1.2-2' }}</td>
+              <td>{{ rate.effectiveFrom }}</td>
+              <td>{{ rate.effectiveTo || '—' }}</td>
+              <td class="actions">
+                <button type="button" class="btn danger" [disabled]="!canPrepare()" (click)="removeRate(rate)">
+                  {{ i18n.t('workforce.clientBilling.deleteRate') }}
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty">{{ i18n.t('workforce.clientBilling.ratesTitle') }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (review(); as review) {
+    <div class="card">
+      <header class="card-header">
+        <h2>{{ i18n.t('workforce.clientBilling.generateTitle') }} · {{ review.period.period }}</h2>
+        @if (review.period.status === 'INVOICED') {
+          <span class="badge invoiced">{{ i18n.t('workforce.ui.settlement.invoiced') }}
+            · {{ review.period.invoiceNumber || '—' }}</span>
+        } @else {
+          <span class="badge">{{ review.period.status }}</span>
+        }
+      </header>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('workforce.clientBilling.workerCode') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.worker') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.category') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.approvedDays') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.dayRate') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.billedAmount') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.wageCost') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.variance') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.status') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.reason') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of review.lines; track line.id) {
+              <tr [class.missing]="line.lineStatus === 'MISSING_RATE'">
+                <td>{{ line.workerCode }}</td>
+                <td><strong>{{ line.fullName }}</strong></td>
+                <td>{{ line.categoryName || line.categoryId }}</td>
+                <td>{{ line.approvedDays | number:'1.2-2' }}</td>
+                <td>{{ line.dayRate | number:'1.2-2' }}</td>
+                <td>{{ line.amount | number:'1.2-2' }}</td>
+                <td>{{ line.wageCost | number:'1.2-2' }}</td>
+                <td>{{ line.varianceAmount | number:'1.2-2' }}</td>
+                <td>
+                  <span class="badge" [class.missing]="line.lineStatus === 'MISSING_RATE'">{{ lineStatusLabel(line) }}</span>
+                </td>
+                <td>{{ line.reason || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="10" class="empty">{{ i18n.t('workforce.clientBilling.reviewTitle') }}</td></tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">{{ i18n.t('workforce.ui.settlement.records') }} ({{ review.lines.length }})</td>
+              <td>{{ review.totalApprovedDays | number:'1.2-2' }}</td>
+              <td></td>
+              <td><strong>{{ review.totalBilledAmount | number:'1.2-2' }}</strong></td>
+              <td>{{ review.totalWageCost | number:'1.2-2' }}</td>
+              <td>{{ (review.totalBilledAmount - review.totalWageCost) | number:'1.2-2' }}</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="confirm-row">
+        @if (hasMissingRates(review) && review.period.status !== 'INVOICED') {
+          <span class="confirm-blocked">{{ i18n.t('workforce.clientBilling.confirmBlocked') }}</span>
+        }
+        <button
+          type="button"
+          class="btn success"
+          [disabled]="!canFinalize() || reviewingLocked(review) || confirming()"
+          (click)="confirm()">
+          {{ confirming() ? i18n.t('workforce.ui.settlement.loading') : i18n.t('workforce.clientBilling.confirmButton') }}
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (margin(); as margin) {
+    <div class="card">
+      <header class="card-header">
+        <h2>{{ i18n.t('workforce.clientBilling.marginTitle') }} · {{ margin.period }}</h2>
+        <button type="button" class="btn secondary" (click)="exportMargin()">{{ i18n.t('workforce.clientBilling.exportMargin') }}</button>
+      </header>
+      <div class="summary-grid">
+        <article><small>{{ i18n.t('workforce.clientBilling.totalBilled') }}</small><strong>{{ margin.totalBilled | number:'1.2-2' }}</strong></article>
+        <article><small>{{ i18n.t('workforce.clientBilling.totalWageCost') }}</small><strong>{{ margin.totalWageCost | number:'1.2-2' }}</strong></article>
+        <article><small>{{ i18n.t('workforce.clientBilling.totalMargin') }}</small><strong>{{ margin.totalMargin | number:'1.2-2' }}</strong></article>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('workforce.clientBilling.worker') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.category') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.approvedDays') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.dayRate') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.billedAmount') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.wageCost') }}</th>
+              <th>{{ i18n.t('workforce.clientBilling.variance') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of margin.rows; track row.workerId) {
+              <tr>
+                <td><strong>{{ row.fullName }}</strong><small>{{ row.workerCode }}</small></td>
+                <td>{{ row.categoryName }}</td>
+                <td>{{ row.approvedDays | number:'1.2-2' }}</td>
+                <td>{{ row.dayRate | number:'1.2-2' }}</td>
+                <td>{{ row.billedAmount | number:'1.2-2' }}</td>
+                <td>{{ row.wageCost | number:'1.2-2' }}</td>
+                <td>{{ row.marginAmount | number:'1.2-2' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty">—</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <app-modal-dialog [isOpen]="rateModalOpen()" [title]="i18n.t('workforce.clientBilling.addRate')" (close)="rateModalOpen.set(false)">
+    <form class="form" (ngSubmit)="saveRate()">
+      <label>{{ i18n.t('workforce.clientBilling.client') }}
+        <input type="text" [value]="clientLabelById(rateForm.clientPartyId)" disabled />
+      </label>
+      <label>{{ i18n.t('workforce.clientBilling.category') }}
+        <select [(ngModel)]="rateForm.workerCategoryId" name="category" required>
+          <option value="">{{ i18n.t('workforce.clientBilling.selectCategory') }}</option>
+          @for (category of workforceService.categories(); track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select>
+      </label>
+      <label>{{ i18n.t('workforce.clientBilling.dayRate') }}
+        <input type="number" step="0.01" min="0" [(ngModel)]="rateForm.dayRate" name="dayRate" required />
+      </label>
+      <label>{{ i18n.t('workforce.clientBilling.effectiveFrom') }}
+        <input type="date" [(ngModel)]="rateForm.effectiveFrom" name="effectiveFrom" required />
+      </label>
+      <label>{{ i18n.t('workforce.clientBilling.effectiveTo') }}
+        <input type="date" [(ngModel)]="rateForm.effectiveTo" name="effectiveTo" />
+      </label>
+    </form>
+    <div modal-actions>
+      <button type="button" class="btn primary" (click)="saveRate()">{{ i18n.t('workforce.clientBilling.addRate') }}</button>
+      <button type="button" class="btn secondary" (click)="rateModalOpen.set(false)">{{ i18n.t('workforce.ui.cancel') }}</button>
+    </div>
+  </app-modal-dialog>
+</section>

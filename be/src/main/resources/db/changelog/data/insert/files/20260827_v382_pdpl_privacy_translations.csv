@@ -1,0 +1,73 @@
+id;translation_key;locale;text_value
+v382-001-en;settings.privacy;en-US;Privacy (PDPL)
+v382-001-ar;settings.privacy;ar-EG;الخصوصية (PDPL)
+v382-002-en;settings.privacyHint;en-US;Manage data subject requests, consent registry and retention policies
+v382-002-ar;settings.privacyHint;ar-EG;إدارة طلبات玩家朋友 البيانات وسجل الموافقات وسياسات الاحتفاظ
+v382-003-en;privacy.requests;en-US;Privacy Requests
+v382-003-ar;privacy.requests;ar-EG;طلبات الخصوصية
+v382-004-en;privacy.newRequest;en-US;New Request
+v382-004-ar;privacy.newRequest;ar-EG;طلب جديد
+v382-005-en;privacy.subjectType;en-US;Subject Type
+v382-005-ar;privacy.subjectType;ar-EG;نوع_subject
+v382-006-en;privacy.subjectRef;en-US;Subject Reference
+v382-006-ar;privacy.subjectRef;ar-EG;معرف_subject
+v382-007-en;privacy.kind;en-US;Request Kind
+v382-007-ar;privacy.kind;ar-EG;نوع الطلب
+v382-008-en;privacy.export;en-US;Data Export
+v382-008-ar;privacy.export;ar-EG;تصدير البيانات
+v382-009-en;privacy.erase;en-US;Data Erasure
+v382-009-ar;privacy.erase;ar-EG;حذف البيانات
+v382-010-en;privacy.consentWithdraw;en-US;Consent Withdrawal
+v382-010-ar;privacy.consentWithdraw;ar-EG;سحب الموافقة
+v382-011-en;privacy.dueAt;en-US;Due Date
+v382-011-ar;privacy.dueAt;ar-EG;تاريخ الاستحقاق
+v382-012-en;privacy.overdue;en-US;Overdue
+v382-012-ar;privacy.overdue;ar-EG;متأخر
+v382-013-en;privacy.downloadExport;en-US;Download Export
+v382-013-ar;privacy.downloadExport;ar-EG;تحميل التصدير
+v382-014-en;privacy.noRequests;en-US;No privacy requests yet
+v382-014-ar;privacy.noRequests;ar-EG;لا توجد طلبات خصوصية بعد
+v382-015-en;privacy.requestCreated;en-US;Privacy request created
+v382-015-ar;privacy.requestCreated;ar-EG;تم إنشاء طلب الخصوصية
+v382-016-en;privacy.decisionRequired;en-US;Decision note is required for rejection
+v382-016-ar;privacy.decisionRequired;ar-EG;ملاحظة القرار مطلوبة للرفض
+v382-017-en;privacy.consentGranted;en-US;Consent granted
+v382-017-ar;privacy.consentGranted;ar-EG;تم منح الموافقة
+v382-018-en;privacy.consentWithdrawn;en-US;Consent withdrawn
+v382-018-ar;privacy.consentWithdrawn;ar-EG;تم سحب الموافقة
+v382-019-en;privacy.consentRegistry;en-US;Consent Registry
+v382-019-ar;privacy.consentRegistry;ar-EG;سجل الموافقات
+v382-020-en;privacy.retentionPolicies;en-US;Retention Policies
+v382-020-ar;privacy.retentionPolicies;ar-EG;سياسات الاحتفاظ
+v382-021-en;privacy.entityKey;en-US;Entity
+v382-021-ar;privacy.entityKey;ar-EG;الكيان
+v382-022-en;privacy.retentionMonths;en-US;Retention (months)
+v382-022-ar;privacy.retentionMonths;ar-EG;مدة الاحتفاظ (أشهر)
+v382-023-en;privacy.action;en-US;Action
+v382-023-ar;privacy.action;ar-EG;الإجراء
+v382-024-en;privacy.anonymize;en-US;Anonymize
+v382-024-ar;privacy.anonymize;ar-EG;تعريض الهوية
+v382-025-en;privacy.deleteAction;en-US;Delete
+v382-025-ar;privacy.deleteAction;ar-EG;حذف
+v382-026-en;privacy.dryRun;en-US;Dry Run Preview
+v382-026-ar;privacy.dryRun;ar-EG;معاينة تجريبية
+v382-027-en;privacy.dryRunHint;en-US;Preview affected records before executing
+v382-027-ar;privacy.dryRunHint;ar-EG;معاينة السجلات المتأثرة قبل التنفيذ
+v382-028-en;privacy.createPolicy;en-US;Create Policy
+v382-028-ar;privacy.createPolicy;ar-EG;إنشاء سياسة
+v382-029-en;privacy.purposeKey;en-US;Purpose
+v382-029-ar;privacy.purposeKey;ar-EG;الغرض
+v382-030-en;privacy.noConsents;en-US;No consents recorded
+v382-030-ar;privacy.noConsents;ar-EG;لا توجد موافقات مسجلة
+v382-031-en;privacy.active;en-US;Active
+v382-031-ar;privacy.active;ar-EG;نشط
+v382-032-en;privacy.withdrawn;en-US;Withdrawn
+v382-032-ar;privacy.withdrawn;ar-EG;تم السحب
+v382-033-en;privacy.noPolicies;en-US;No retention policies configured
+v382-033-ar;privacy.noPolicies;ar-EG;لا توجد سياسات احتفاظ مكونة
+v382-034-en;privacy.dryRunResult;en-US;Dry Run Results
+v382-034-ar;privacy.dryRunResult;ar-EG;نتائج المعاينة التجريبية
+v382-035-en;privacy.affectedRecords;en-US;Affected Records
+v382-035-ar;privacy.affectedRecords;ar-EG;السجلات المتأثرة
+v382-036-en;privacy.retainNote;en-US;Financial records are preserved for legal compliance
+v382-036-ar;privacy.retainNote;ar-EG;السجلات المالية محفوظة للامتثال القانوني

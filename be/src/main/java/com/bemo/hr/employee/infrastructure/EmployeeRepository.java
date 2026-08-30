@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -55,4 +56,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
 
     List<Employee> findByActiveTrueAndActiveFromLessThanEqualAndActiveToIsNullOrActiveTrueAndActiveFromLessThanEqualAndActiveToGreaterThanEqual(
             LocalDate from1, LocalDate from2, LocalDate to);
+
+    long countByAppIdAndCreatedAtBefore(String appId, Instant before);
 }

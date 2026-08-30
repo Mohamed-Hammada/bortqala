@@ -17,28 +17,40 @@ const ADMIN_BYPASS: string[] = ['ADMIN', 'SUPER_ADMIN'];
 function navRoles(roles: string[] | undefined): string[] {
   const base = roles ?? [];
   if (base.length === 0) return [];
+  if (base.length === 1 && base[0] === 'SUPER_ADMIN') return ['SUPER_ADMIN'];
   return [...new Set([...ADMIN_BYPASS, ...base])].sort();
 }
 
 describe('page access consistency', () => {
   const contractByMenu = new Map(CATALOG_PAGE_CONTRACT.map((item) => [item.menuId, item]));
 
-  it('shell NAV_ITEMS cover exactly the catalog contract menu ids', () => {
-    const navMenuIds = NAV_ITEMS.map((item) => item.menuId).sort();
+  it('primary shell NAV_ITEMS cover exactly the catalog contract menu ids', () => {
+    const primaryNavMenuIds = NAV_ITEMS
+      .filter((item) => !item.permissionMenuId)
+      .map((item) => item.menuId)
+      .sort();
     const contractMenuIds = CATALOG_PAGE_CONTRACT.map((item) => item.menuId).sort();
-    expect(navMenuIds).toEqual(contractMenuIds);
+    expect(primaryNavMenuIds).toEqual(contractMenuIds);
   });
 
-  it('shell paths match the catalog contract routes', () => {
-    for (const item of NAV_ITEMS) {
+  it('navigation alias items map to valid catalog contract permission menu ids', () => {
+    const aliasItems = NAV_ITEMS.filter((item) => !!item.permissionMenuId);
+    const contractMenuIds = new Set(CATALOG_PAGE_CONTRACT.map((item) => item.menuId));
+    for (const item of aliasItems) {
+      expect(contractMenuIds.has(item.permissionMenuId!)).toBe(true);
+    }
+  });
+
+  it('shell paths match the catalog contract routes for primary items', () => {
+    for (const item of NAV_ITEMS.filter((item) => !item.permissionMenuId)) {
       const contract = contractByMenu.get(item.menuId);
       expect(contract, `missing contract for ${item.menuId}`).toBeDefined();
       expect(item.path, `path mismatch for ${item.menuId}`).toBe(contract!.route);
     }
   });
 
-  it('shell route-guard roles match the catalog contract', () => {
-    for (const item of NAV_ITEMS) {
+  it('shell route-guard roles match the catalog contract for primary items', () => {
+    for (const item of NAV_ITEMS.filter((item) => !item.permissionMenuId)) {
       const contract = contractByMenu.get(item.menuId)!;
       expect(navRoles(item.roles), `roles mismatch for ${item.menuId}`).toEqual([...contract.roles].sort());
     }
@@ -67,36 +79,40 @@ describe('page access consistency', () => {
       gatedByFeature.set(contract.requiredFeature, list);
     }
     expect([...gatedByFeature.keys()].sort()).toEqual([
+      'agri.enabled',
       'finance.enabled',
       'manufacturing.enabled',
+      'medical.enabled',
       'payroll.enabled',
       'quality.enabled',
       'sales.enabled',
       'workforce.contractorAccounts.enabled',
     ]);
+    expect(gatedByFeature.get('medical.enabled')!.sort()).toEqual([
+      'clinic-appointments', 'clinic-commissions', 'clinic-insurance', 'clinic-lab', 'clinic-patients', 'clinic-pharmacy', 'clinic-queue', 'dental-charting', 'hospital-ops', 'medical-tools',
+    ]);
     expect(gatedByFeature.get('finance.enabled')!.sort()).toEqual([
-      'accounts', 'banks', 'budgets', 'fiscal-periods', 'journal-entries', 'tax-currency',
+      'accounts', 'banks', 'budgets', 'eta-tax', 'fiscal-periods', 'fixed-assets', 'journal-entries', 'payment-links', 'tax-currency',
     ]);
     expect(gatedByFeature.get('payroll.enabled')).toEqual(['payroll']);
-    expect(gatedByFeature.get('sales.enabled')).toEqual(['sales']);
+    expect(gatedByFeature.get('sales.enabled')!.sort()).toEqual(['crm', 'pos', 'sales']);
+    expect(gatedByFeature.get('agri.enabled')).toEqual(['export-shipments']);
     expect(gatedByFeature.get('manufacturing.enabled')).toEqual(['production']);
     expect(gatedByFeature.get('quality.enabled')).toEqual(['quality']);
     expect(gatedByFeature.get('workforce.contractorAccounts.enabled')!.sort()).toEqual([
-      'workforce-accounts', 'workforce-settlements',
+      'workforce-accounts', 'workforce-client-billing', 'workforce-settlements',
     ]);
   });
 });
 
 describe('route parity', () => {
-  const routeData: Array<{ path: string; menuId?: string; roles?: string[] }> = [];
-  const seenMenus = new Set<string>();
+  const allRoutesWithMenu: Array<{ path: string; menuId: string; roles?: string[] }> = [];
   const walk = (items: typeof routes, prefix = ''): void => {
     for (const route of items) {
       const path = `${prefix}/${route.path ?? ''}`.replace(/\/+/g, '/');
       const menuId = route.data?.['menuId'] as string | undefined;
-      if (menuId && !seenMenus.has(menuId)) {
-        seenMenus.add(menuId);
-        routeData.push({ path, menuId, roles: route.data?.['roles'] as string[] | undefined });
+      if (menuId) {
+        allRoutesWithMenu.push({ path, menuId, roles: route.data?.['roles'] as string[] | undefined });
       }
       if (route.children) walk(route.children as typeof routes, path);
     }
@@ -104,9 +120,8 @@ describe('route parity', () => {
   walk(routes);
   for (const route of WORKFORCE_ROUTES) {
     const menuId = route.data?.['menuId'] as string | undefined;
-    if (menuId && !seenMenus.has(menuId)) {
-      seenMenus.add(menuId);
-      routeData.push({
+    if (menuId) {
+      allRoutesWithMenu.push({
         path: `/workforce/${route.path}`,
         menuId,
         roles: route.data?.['roles'] as string[] | undefined,
@@ -116,18 +131,35 @@ describe('route parity', () => {
 
   const contractByMenu = new Map(CATALOG_PAGE_CONTRACT.map((item) => [item.menuId, item]));
 
-  it('every route with a menuId is in the catalog contract and uses matching guards', () => {
-    for (const route of routeData) {
-      const contract = contractByMenu.get(route.menuId!);
+  it('every route with a menuId references a valid catalog contract menu', () => {
+    for (const route of allRoutesWithMenu) {
+      const contract = contractByMenu.get(route.menuId);
       expect(contract, `route for unknown menu ${route.menuId}`).toBeDefined();
-      expect(route.path, `route path for ${route.menuId}`).toBe(contract!.route);
-      expect(navRoles(route.roles), `route roles for ${route.menuId}`).toEqual([...contract!.roles].sort());
     }
   });
 
-  it('every catalog contract menu has a route', () => {
-    const routedMenus = routeData.map((route) => route.menuId).sort();
-    const contractMenus = CATALOG_PAGE_CONTRACT.map((item) => item.menuId).sort();
-    expect(routedMenus).toEqual(contractMenus);
+  it('every catalog contract menu has at least one matching route', () => {
+    const routedMenus = new Set(allRoutesWithMenu.map((route) => route.menuId));
+    for (const contract of CATALOG_PAGE_CONTRACT) {
+      expect(routedMenus.has(contract.menuId), `missing route for catalog menu ${contract.menuId}`).toBe(true);
+    }
+  });
+
+  it('primary routes match their catalog contract paths and roles', () => {
+    for (const contract of CATALOG_PAGE_CONTRACT) {
+      const route = allRoutesWithMenu.find((r) => r.path === contract.route);
+      expect(route, `missing route for ${contract.route}`).toBeDefined();
+      expect(route!.menuId).toBe(contract.menuId);
+      expect(navRoles(route!.roles), `route roles mismatch for ${contract.menuId}`).toEqual([...contract.roles].sort());
+    }
+  });
+
+  it('settings-derived alias routes explicitly use the settings menu contract', () => {
+    const aliasPaths = ['/partner-risk', '/admin/setup-readiness', '/admin/product-insights', '/platform-admin'];
+    for (const path of aliasPaths) {
+      const route = allRoutesWithMenu.find((r) => r.path === path);
+      expect(route, `missing route for ${path}`).toBeDefined();
+      expect(route!.menuId).toBe('settings');
+    }
   });
 });

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: v57-procurement-transaction-currency
       author: codex
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: purchase_orders

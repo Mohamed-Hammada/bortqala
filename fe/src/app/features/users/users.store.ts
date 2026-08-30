@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { I18nService } from '../../core/i18n.service';
 import { AuthUser, RoleCode } from '../../core/auth/auth.models';
+import { UserPolicyAssignmentItem } from '../../core/auth/security-policy.models';
 
 export interface UserCategory {
   id: string;
@@ -24,6 +25,7 @@ export interface UserPayload {
   version: number | null;
   categoryId?: string | null;
   accessChangeReason?: string;
+  policyAssignments?: UserPolicyAssignmentItem[];
 }
 
 @Injectable()

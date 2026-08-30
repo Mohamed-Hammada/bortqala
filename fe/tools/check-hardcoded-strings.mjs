@@ -55,10 +55,19 @@ const ALLOWED_EXACT = new Set([
   'v',
   'yyyy-MM-dd HH:mm',
   'yyyy-MM-dd HH:mm:ss',
-  '&nbsp;',
-  'v',
-  'yyyy-MM-dd HH:mm',
-  'yyyy-MM-dd HH:mm:ss',
+  'SUPER_ADMIN',
+  'ADMIN',
+  'PROJECT_MANAGER',
+  'COMMERCIAL_MANAGER',
+  'COST_ENGINEER',
+  'SITE_ENGINEER',
+  'GENERAL_MANAGER',
+  'WORKFORCE_MANAGER',
+  'WORKFORCE_FINANCE',
+  'FINANCE_MANAGER',
+  'PROCUREMENT_MANAGER',
+  'PAYROLL_MANAGER',
+  'HR_MANAGER',
 ]);
 
 function findTagEnd(source, start) {

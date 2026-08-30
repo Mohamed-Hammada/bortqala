@@ -1,0 +1,184 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260821_v332_pbac_security_schema
+      author: wolfn
+      validCheckSum: ANY
+      changes:
+        - createTable:
+            tableName: sec_permissions
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: permission_key
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: module
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: submodule
+                  type: VARCHAR(50)
+              - column:
+                  name: description_key
+                  type: VARCHAR(100)
+              - column:
+                  name: action
+                  type: VARCHAR(50)
+              - column:
+                  name: is_system
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: sec_policy_groups
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: group_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+              - column:
+                  name: is_system
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: sec_group_permissions
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: policy_group_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sec_grp_perm_group
+                    references: sec_policy_groups(id)
+              - column:
+                  name: permission_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sec_grp_perm_perm
+                    references: sec_permissions(id)
+              - column:
+                  name: granted_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: sec_user_policy_assignments
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sec_usr_pol_user
+                    references: app_users(id)
+              - column:
+                  name: policy_group_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_sec_usr_pol_group
+                    references: sec_policy_groups(id)
+              - column:
+                  name: scope_branch_id
+                  type: VARCHAR(50)
+              - column:
+                  name: scope_cost_center_id
+                  type: VARCHAR(50)
+              - column:
+                  name: assigned_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: sec_policy_groups
+            columnNames: app_id, group_name
+            constraintName: uq_sec_policy_group_name
+
+        - addUniqueConstraint:
+            tableName: sec_group_permissions
+            columnNames: policy_group_id, permission_id
+            constraintName: uq_sec_group_permission
+
+        - createIndex:
+            tableName: sec_user_policy_assignments
+            indexName: idx_sec_usr_pol_tenant_user
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: user_id

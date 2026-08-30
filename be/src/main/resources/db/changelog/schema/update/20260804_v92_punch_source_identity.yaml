@@ -11,6 +11,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-import-evidence-table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Records which batch supplied each punch so a punch can stay deduplicated while every batch that contributed evidence for it remains auditable and reversible.
       preConditions:
         - onFail: MARK_RAN
@@ -54,6 +55,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-biometric-sources-table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Creates the registered biometric source catalog that both live-sync and file-import punches reference.
       preConditions:
         - onFail: MARK_RAN
@@ -85,6 +87,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-source-add-columns
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Adds the stable source reference to punches and batches.
       preConditions:
         - onFail: MARK_RAN
@@ -115,6 +118,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-source-backfill
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Idempotent backfill. Registers one DEVICE source per biometric device and one FILE_DEVICE source per distinct file device name, then links every historical punch and batch to its source.
       changes:
         - sql:
@@ -181,6 +185,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-source-evidence-backfill
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Records which batch supplied each historical punch row before deduplication so batch evidence survives when duplicate punches collapse onto one row.
       changes:
         - sql:
@@ -203,6 +208,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-batch-metric-columns
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Adds the distinct batch outcome metrics so total, valid, error, new-punch and duplicate-punch counts are never conflated with a punch_records count.
       preConditions:
         - onFail: MARK_RAN
@@ -230,6 +236,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-source-dedupe
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Resolves pre-existing duplicates (the lexicographically smallest punch id wins) and records each batch's distinct outcome metrics from its evidence, never by counting punch_records.
       changes:
         - sql:
@@ -259,6 +266,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-source-not-null
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Every punch and every batch must carry a mapped source identity before the NOT NULL constraints are applied; any unmapped row halts the upgrade.
       preConditions:
         - onFail: HALT
@@ -289,6 +297,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-source-foreign-keys
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Source identity is a reference, never free text. RESTRICT deletion so a source with historical punches or batches cannot be removed out from under them.
       preConditions:
         - onFail: MARK_RAN
@@ -320,6 +329,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-source-dedup-index
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Unique per (app, source, device user, punch time) so duplicate file imports and concurrent syncs are conflict-safe.
       preConditions:
         - onFail: MARK_RAN
@@ -347,6 +357,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-batch-source-checksum
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: A checksum is only unique per source so identical bytes imported from two different sources remain two batches.
       preConditions:
         - onFail: MARK_RAN
@@ -371,6 +382,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v92-punch-drop-legacy-device-dedup-index
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: The V90 device-scoped index is fully superseded by the source-scoped index.
       preConditions:
         - onFail: MARK_RAN

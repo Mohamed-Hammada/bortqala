@@ -154,7 +154,7 @@ class BiometricEmployeeProvisioningServiceTests {
         var defaultCat = attendanceCategoryRepository.findById(source.getAutoCreateCategoryId()).orElseThrow();
         createdCategories.add(defaultCat.getId());
         assertThat(defaultCat.getCode()).startsWith("BIO_AUTO");
-        assertThat(defaultCat.getName()).isEqualTo("موظفو البصمة - تلقائي");
+        assertThat(defaultCat.getName()).isEqualTo("Biometric Employees - Auto");
     }
 
     @Test

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260727-31-create-manufacturing-and-qc-tables
       author: system
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

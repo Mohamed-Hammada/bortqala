@@ -1,0 +1,121 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-titles">
+        <h3 class="modal-title">{{ i18n.t('costControl.createBudgetVersion') }}</h3>
+        <p class="modal-subtitle">{{ i18n.t('costControl.subtitle') }}</p>
+      </div>
+      <button type="button" class="btn-close" (click)="close.emit()" [attr.aria-label]="i18n.t('common.close')">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label class="form-label required">{{ i18n.t('costControl.versionName') }}</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="versionName()"
+            (ngModelChange)="versionName.set($event)"
+            [placeholder]="i18n.t('costControl.versionName')"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group mb-4">
+        <label class="form-label">{{ i18n.t('common.notes') }}</label>
+        <textarea
+          class="form-control"
+          rows="2"
+          [ngModel]="notes()"
+          (ngModelChange)="notes.set($event)"
+          [placeholder]="i18n.t('common.notes')"
+        ></textarea>
+      </div>
+
+      <div class="form-check mb-4">
+        <input
+          type="checkbox"
+          id="initFromWbs"
+          class="form-check-input"
+          [ngModel]="initFromWbs()"
+          (ngModelChange)="initFromWbs.set($event)"
+        />
+        <label for="initFromWbs" class="form-check-label font-medium">
+          {{ i18n.t('projects.initBudgetFromWbs') }}
+        </label>
+      </div>
+
+      @if (!initFromWbs()) {
+        <div class="manual-lines-section">
+          <div class="section-header">
+            <h4 class="section-title">{{ i18n.t('costControl.tabCostLedger') }}</h4>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addLine()">
+              + {{ i18n.t('common.add') }}
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm lines-table">
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('common.description') }}</th>
+                  <th>{{ i18n.t('costControl.costCategory') }}</th>
+                  <th>{{ i18n.t('projects.plannedQty') }}</th>
+                  <th>{{ i18n.t('projects.unitOfMeasure') }}</th>
+                  <th>{{ i18n.t('projects.unitRate') }}</th>
+                  <th>{{ i18n.t('projects.plannedCost') }}</th>
+                  <th class="text-center w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (line of manualLines(); track $index) {
+                  <tr>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="line.description" required />
+                    </td>
+                    <td>
+                      <select class="form-select form-select-sm" [(ngModel)]="line.costCategory">
+                        @for (cat of categories; track cat) {
+                          <option [value]="cat">{{ getCategoryLabel(cat) }}</option>
+                        }
+                      </select>
+                    </td>
+                    <td>
+                      <input type="number" class="form-control form-control-sm" [(ngModel)]="line.budgetQuantity" min="0" />
+                    </td>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="line.unitOfMeasure" />
+                    </td>
+                    <td>
+                      <input type="number" class="form-control form-control-sm" [(ngModel)]="line.budgetUnitRate" min="0" />
+                    </td>
+                    <td class="font-mono font-semibold">
+                      {{ ((line.budgetQuantity || 0) * (line.budgetUnitRate || 0)) | number:'1.2-2' }}
+                    </td>
+                    <td class="text-center">
+                      <button type="button" class="btn-icon text-danger" (click)="removeLine($index)">✕</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="close.emit()" [disabled]="submitting()">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="onSave()" [disabled]="submitting() || !versionName().trim()">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm"></span>
+        }
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>

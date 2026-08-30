@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819-v284-procurement-project-attribution-schema
+      author: bemo-architect
+      changes:
+        - addColumn:
+            tableName: purchase_requisitions
+            columns:
+              - column: { name: project_id, type: VARCHAR(36) }
+              - column: { name: wbs_node_id, type: VARCHAR(36) }
+              - column: { name: cost_code_id, type: VARCHAR(36) }
+        - addColumn:
+            tableName: purchase_requisition_lines
+            columns:
+              - column: { name: project_id, type: VARCHAR(36) }
+              - column: { name: wbs_node_id, type: VARCHAR(36) }
+              - column: { name: cost_code_id, type: VARCHAR(36) }
+        - addColumn:
+            tableName: purchase_orders
+            columns:
+              - column: { name: project_id, type: VARCHAR(36) }
+              - column: { name: wbs_node_id, type: VARCHAR(36) }
+              - column: { name: cost_code_id, type: VARCHAR(36) }
+        - addColumn:
+            tableName: purchase_order_lines
+            columns:
+              - column: { name: project_id, type: VARCHAR(36) }
+              - column: { name: wbs_node_id, type: VARCHAR(36) }
+              - column: { name: cost_code_id, type: VARCHAR(36) }
+        - addColumn:
+            tableName: goods_receipts
+            columns:
+              - column: { name: project_id, type: VARCHAR(36) }
+              - column: { name: wbs_node_id, type: VARCHAR(36) }
+        - addColumn:
+            tableName: goods_receipt_lines
+            columns:
+              - column: { name: project_id, type: VARCHAR(36) }
+              - column: { name: wbs_node_id, type: VARCHAR(36) }
+              - column: { name: cost_code_id, type: VARCHAR(36) }
+        - addColumn:
+            tableName: supplier_invoices
+            columns:
+              - column: { name: project_id, type: VARCHAR(36) }
+              - column: { name: wbs_node_id, type: VARCHAR(36) }
+              - column: { name: cost_code_id, type: VARCHAR(36) }

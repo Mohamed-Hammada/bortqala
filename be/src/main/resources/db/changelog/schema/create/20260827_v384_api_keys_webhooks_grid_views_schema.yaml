@@ -1,0 +1,146 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v384_api_keys_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: api_keys
+      changes:
+        - createTable:
+            tableName: api_keys
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: key_hash, type: varchar(128), constraints: { nullable: false } }
+              - column: { name: scopes, type: varchar(1000), constraints: { nullable: false }, defaultValue: "" }
+              - column: { name: rate_limit_per_min, type: int, constraints: { nullable: false }, defaultValueNumeric: 120 }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: last_used_at, type: timestamp }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: api_keys
+            indexName: idx_api_keys_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: api_keys
+            indexName: idx_api_keys_hash
+            columns:
+              - column: { name: key_hash }
+        - addUniqueConstraint:
+            tableName: api_keys
+            columnNames: app_id, key_hash
+            constraintName: uq_api_keys_app_hash
+      rollback:
+        - dropTable:
+            tableName: api_keys
+
+  - changeSet:
+      id: 20260827_v385_webhook_endpoints_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: webhook_endpoints
+      changes:
+        - createTable:
+            tableName: webhook_endpoints
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: url, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: secret, type: varchar(128), constraints: { nullable: false } }
+              - column: { name: events, type: varchar(1000), constraints: { nullable: false }, defaultValue: "" }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: webhook_endpoints
+            indexName: idx_webhook_ep_app
+            columns:
+              - column: { name: app_id }
+      rollback:
+        - dropTable:
+            tableName: webhook_endpoints
+
+  - changeSet:
+      id: 20260827_v386_webhook_deliveries_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: webhook_deliveries
+      changes:
+        - createTable:
+            tableName: webhook_deliveries
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { nullable: false, primaryKey: true } }
+              - column: { name: endpoint_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: event, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: payload, type: text, constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "PENDING" }
+              - column: { name: attempts, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: last_error, type: varchar(1000) }
+              - column: { name: response_status, type: int }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: webhook_deliveries
+            indexName: idx_webhook_del_ep
+            columns:
+              - column: { name: endpoint_id }
+        - createIndex:
+            tableName: webhook_deliveries
+            indexName: idx_webhook_del_status
+            columns:
+              - column: { name: status }
+      rollback:
+        - dropTable:
+            tableName: webhook_deliveries
+
+  - changeSet:
+      id: 20260827_v387_grid_views_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: grid_views
+      changes:
+        - createTable:
+            tableName: grid_views
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: user_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: page_key, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: filters, type: text }
+              - column: { name: hidden_columns, type: varchar(1000) }
+              - column: { name: sort, type: varchar(200) }
+              - column: { name: shared_roles, type: varchar(200) }
+              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+        - createIndex:
+            tableName: grid_views
+            indexName: idx_grid_views_app_user_page
+            columns:
+              - column: { name: app_id }
+              - column: { name: user_id }
+              - column: { name: page_key }
+      rollback:
+        - dropTable:
+            tableName: grid_views

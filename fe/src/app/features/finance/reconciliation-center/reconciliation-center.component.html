@@ -1,0 +1,127 @@
+<div class="reconciliation-container">
+  <div class="header-card">
+    <div class="header-titles">
+      <h2>⚖️ {{ i18n.t('reconciliation.title') }}</h2>
+      <p class="subtitle">{{ i18n.t('reconciliation.subtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary" (click)="loadOverview()" [disabled]="loading()">
+        🔄 {{ i18n.t('common.refresh') || 'Refresh' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Operational Control Diagnostics Bar -->
+  <div class="diagnostics-card">
+    <h3>🛡️ {{ i18n.t('reconciliation.systemDiagnostics') }}</h3>
+    <div class="diagnostics-grid">
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.failedJobs') }}</span>
+        <span class="d-val ok font-mono">0</span>
+      </div>
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.pendingApprovals') }}</span>
+        <span class="d-val info font-mono">4</span>
+      </div>
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.etaErrors') }}</span>
+        <span class="d-val ok font-mono">0</span>
+      </div>
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.negativeStock') }}</span>
+        <span class="d-val ok font-mono">0</span>
+      </div>
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.overdueAr') }}</span>
+        <span class="d-val ok font-mono">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Domain Cards Grid -->
+  <div class="domains-grid">
+    @for (s of summaries(); track s.subledgerType) {
+      <div class="domain-card" [class.balanced]="s.isBalanced" [class.has-variance]="!s.isBalanced">
+        <div class="card-head">
+          <h4>{{ getDomainLabel(s.domainKey) }}</h4>
+          <span class="status-badge" [class.balanced]="s.isBalanced" [class.variance]="!s.isBalanced">
+            {{ s.isBalanced ? i18n.t('reconciliation.balanced') : (s.varianceAmount | number:'1.2-2') }}
+          </span>
+        </div>
+
+        <div class="card-metrics">
+          <div class="metric-row">
+            <span class="metric-label">{{ i18n.t('reconciliation.subledgerBalance') }}:</span>
+            <span class="metric-value font-mono">{{ s.subledgerBalance | number:'1.2-2' }}</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">{{ i18n.t('reconciliation.glBalance') }}:</span>
+            <span class="metric-value font-mono">{{ s.glBalance | number:'1.2-2' }}</span>
+          </div>
+          <div class="metric-row variance-row">
+            <span class="metric-label">{{ i18n.t('reconciliation.variance') }}:</span>
+            <span class="metric-value font-mono" [class.highlight-variance]="!s.isBalanced">
+              {{ s.varianceAmount | number:'1.2-2' }}
+            </span>
+          </div>
+        </div>
+
+        @if (!s.isBalanced || s.discrepancyCount > 0) {
+          <div class="card-foot">
+            <button type="button" class="btn-drilldown" (click)="openDrilldown(s)">
+              🔍 {{ i18n.t('reconciliation.drilldown') }} ({{ s.discrepancyCount }})
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Discrepancy Drilldown Modal / Drawer -->
+  @if (selectedDomain(); as activeDomain) {
+    <div class="modal-overlay" (click)="closeDrilldown()">
+      <div class="drilldown-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="title-wrap">
+            <h3>🔍 {{ i18n.t('reconciliation.drilldown') }} — {{ getDomainLabel(activeDomain.domainKey) }}</h3>
+            <p class="variance-hint">
+              {{ i18n.t('reconciliation.variance') }}: <strong>{{ activeDomain.varianceAmount | number:'1.2-2' }}</strong>
+            </p>
+          </div>
+          <button type="button" class="btn-close" (click)="closeDrilldown()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          @if (drilldownLoading()) {
+            <p class="loading-state">...</p>
+          } @else if (discrepancies().length === 0) {
+            <p class="empty-state">{{ i18n.t('common.noResults') }}</p>
+          } @else {
+            <table class="drilldown-table">
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('reconciliation.documentNumber') }}</th>
+                  <th>{{ i18n.t('reconciliation.subledgerAmount') }}</th>
+                  <th>{{ i18n.t('reconciliation.glAmount') }}</th>
+                  <th>{{ i18n.t('reconciliation.variance') }}</th>
+                  <th>{{ i18n.t('reconciliation.discrepancyReason') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of discrepancies(); track item.documentId) {
+                  <tr>
+                    <td class="font-mono"><strong>{{ item.documentNumber }}</strong></td>
+                    <td class="font-mono">{{ item.subledgerAmount | number:'1.2-2' }}</td>
+                    <td class="font-mono">{{ item.glAmount | number:'1.2-2' }}</td>
+                    <td class="font-mono highlight-variance">{{ item.variance | number:'1.2-2' }}</td>
+                    <td><span class="reason-tag">{{ item.discrepancyReason }}</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

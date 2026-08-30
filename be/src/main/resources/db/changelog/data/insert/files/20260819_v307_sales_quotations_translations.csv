@@ -1,0 +1,33 @@
+id;translation_key;locale;text_value
+v307-001;sales.tabQuotations;ar-EG;عروض الأسعار
+v307-002;sales.tabQuotations;en-US;Sales Quotations
+v307-003;sales.newQuotation;ar-EG;عرض سعر جديد
+v307-004;sales.newQuotation;en-US;New Quotation
+v307-005;sales.quotationNumber;ar-EG;رقم عرض السعر
+v307-006;sales.quotationNumber;en-US;Quotation No.
+v307-007;sales.validUntil;ar-EG;صالح حتى
+v307-008;sales.validUntil;en-US;Valid Until
+v307-009;sales.termsAndConditions;ar-EG;الشروط والأحكام
+v307-010;sales.termsAndConditions;en-US;Terms & Conditions
+v307-011;sales.sendQuotation;ar-EG;إرسال للعميل
+v307-012;sales.sendQuotation;en-US;Send to Customer
+v307-013;sales.acceptQuotation;ar-EG;قبول العرض
+v307-014;sales.acceptQuotation;en-US;Accept Quote
+v307-015;sales.rejectQuotation;ar-EG;رفض العرض
+v307-016;sales.rejectQuotation;en-US;Reject Quote
+v307-017;sales.convertToOrder;ar-EG;تحويل إلى أمر بيع
+v307-018;sales.convertToOrder;en-US;Convert to Sales Order
+v307-019;sales.quoteSaved;ar-EG;تم حفظ عرض السعر بنجاح
+v307-020;sales.quoteSaved;en-US;Quotation saved successfully
+v307-021;sales.quoteSent;ar-EG;تم إرسال عرض السعر للعميل
+v307-022;sales.quoteSent;en-US;Quotation sent to customer
+v307-023;sales.quoteAccepted;ar-EG;تم قبول عرض السعر
+v307-024;sales.quoteAccepted;en-US;Quotation accepted
+v307-025;sales.quoteConverted;ar-EG;تم تحويل عرض السعر إلى أمر بيع بنجاح
+v307-026;sales.quoteConverted;en-US;Quotation converted to sales order successfully
+v307-027;sales.tabOrders;ar-EG;أوامر البيع
+v307-028;sales.tabOrders;en-US;Sales Orders
+v307-029;sales.tabReceivables;ar-EG;المستحقات والتحصيل
+v307-030;sales.tabReceivables;en-US;Receivables & Collections
+v307-031;common.tax;ar-EG;الضريبة
+v307-032;common.tax;en-US;Tax

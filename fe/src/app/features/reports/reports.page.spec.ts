@@ -6,11 +6,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ReportsPage } from './reports.page';
 import { I18nService } from '../../core/i18n.service';
 import { ReportsStore } from './reports.store';
-import { PeriodOption } from './reports.models';
+import { GeneratedPeriod, PeriodOption, ReportPreview } from './reports.models';
 
 describe('ReportsPage REM-006 period presets', () => {
   let httpMock: HttpTestingController;
   let page: ReportsPage;
+  let fixture: ReturnType<typeof TestBed.createComponent<ReportsPage>>;
 
   const period: PeriodOption = {
     year: 2026,
@@ -36,13 +37,14 @@ describe('ReportsPage REM-006 period presets', () => {
           useValue: {
             locale: () => 'ar-EG',
             t: (key: string, params?: Record<string, string>) => params ? `${key}:${params['period']}` : key,
+            use: () => undefined,
           },
         },
       ],
     }).compileComponents();
 
     httpMock = TestBed.inject(HttpTestingController);
-    const fixture = TestBed.createComponent(ReportsPage);
+    fixture = TestBed.createComponent(ReportsPage);
     page = fixture.componentInstance;
 
     flushInitialLoads();
@@ -53,11 +55,15 @@ describe('ReportsPage REM-006 period presets', () => {
     httpMock.verify();
   });
 
-  function flushInitialLoads() {
+  function flushInitialLoads(options: { generated?: GeneratedPeriod[] } = {}) {
     httpMock.expectOne((req) => req.method === 'GET' && req.url === '/api/v1/reports').flush([]);
     httpMock.expectOne((req) => req.method === 'GET' && req.url.includes('/available-periods')).flush([period]);
+    httpMock
+      .expectOne((req) => req.method === 'GET' && req.url.includes('/generated-periods'))
+      .flush(options.generated ?? []);
     httpMock.expectOne((req) => req.method === 'GET' && req.url === '/api/v1/admin/app-settings').flush({});
     httpMock.expectOne((req) => req.method === 'GET' && req.url === '/api/v1/data-exchange/catalog').flush([]);
+    httpMock.expectOne((req) => req.method === 'GET' && req.url === '/api/v1/report-schedules').flush([]);
   }
 
   it('fills the period form on preset click and does not create a report', () => {
@@ -74,5 +80,100 @@ describe('ReportsPage REM-006 period presets', () => {
     const aria = page.i18n.t('reports.usePeriodAria', { period: name });
     expect(aria).toContain(name);
     expect(aria).toContain('reports.usePeriodAria');
+  });
+
+  const generatedAugust: GeneratedPeriod = {
+    from: 1785531600000,
+    to: 1788209999999,
+    type: 'MONTHLY',
+    reportId: 'rep-aug',
+  };
+
+  it('WP-06: finalized period disables its chip with the translated tooltip and links to the exact report', () => {
+    page.store.generated.set([generatedAugust]);
+    page.store.generatedLoading.set(false);
+    fixture.detectChanges();
+
+    const chips = Array.from(fixture.nativeElement.querySelectorAll('.periods .preset-item')) as HTMLElement[];
+    const locked = chips.find((el) => el.classList.contains('generated'));
+    expect(locked).toBeDefined();
+    expect(page.generatedFor(period)?.reportId).toBe('rep-aug');
+
+    const button = locked!.querySelector('button') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute('title')).toBe('reports.alreadyGenerated');
+    expect(locked!.textContent).toContain('reports.alreadyGenerated');
+
+    const link = locked!.querySelector('a.view-existing') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/reports/rep-aug');
+    expect(link.textContent).toContain('reports.viewExisting');
+  });
+
+  it('WP-06: without finalized reports every preset stays enabled with no view link (AC-2)', () => {
+    fixture.detectChanges();
+
+    const chips = Array.from(fixture.nativeElement.querySelectorAll('.periods .preset-item')) as HTMLElement[];
+    expect(chips.length).toBeGreaterThan(0);
+    for (const chip of chips) {
+      expect(chip.classList.contains('generated')).toBe(false);
+      expect(chip.querySelector('a.view-existing')).toBeNull();
+      expect((chip.querySelector('button') as HTMLButtonElement).disabled).toBe(false);
+    }
+  });
+
+  it('WP-06: changing the year refetches the generated-period registry (AC-4)', async () => {
+    page.changeYear('2025');
+    await Promise.resolve();
+
+    httpMock.expectOne((req) => req.method === 'GET' && req.url === '/api/v1/reports').flush([]);
+    httpMock
+      .expectOne((req) => req.method === 'GET' && req.url.includes('/available-periods') && req.params.get('year') === '2025')
+      .flush([]);
+    const generatedReq = httpMock.expectOne(
+      (req) => req.method === 'GET' && req.url.includes('/generated-periods') && req.params.get('year') === '2025');
+    generatedReq.flush([{ from: 1735689600000, to: 1738367999999, type: 'MONTHLY', reportId: 'rep-jan-25' }]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(page.store.generated().map((item) => item.reportId)).toEqual(['rep-jan-25']);
+    expect(page.store.generatedLoading()).toBe(false);
+  });
+
+  function renderPreview() {
+    const preview: ReportPreview = {
+      periodStart: 1786406400000,
+      periodEnd: 1787356799999,
+      payCycle: 'MONTHLY',
+      categories: [],
+      employeeCount: 2,
+      workdays: 15,
+      scheduleCoverageCount: 30,
+      existingReportId: null,
+      overlappingReportIds: [],
+    };
+    page.previewResult.set(preview);
+    fixture.detectChanges();
+  }
+
+  it('WP-48 AC-7: hijri overlay disabled produces zero DOM change (no .hijri label)', () => {
+    page.hijriEnabled.set(false);
+    renderPreview();
+
+    const range = fixture.nativeElement.querySelector('.preview-range') as HTMLElement;
+    expect(range).not.toBeNull();
+    const gregorian = range.querySelector('.ltr');
+    expect(gregorian).not.toBeNull();
+    expect(range.querySelector('.hijri')).toBeNull();
+  });
+
+  it('WP-48 AC-7: hijri overlay enabled renders a secondary Hijri label beside each Gregorian date', () => {
+    page.hijriEnabled.set(true);
+    renderPreview();
+
+    const range = fixture.nativeElement.querySelector('.preview-range') as HTMLElement;
+    expect(range).not.toBeNull();
+    const hijri = range.querySelector('.hijri');
+    expect(hijri).not.toBeNull();
+    expect(hijri!.textContent).toContain('→');
+    expect((hijri as HTMLElement).getAttribute('dir')).toBe('rtl');
+    expect(hijri!.textContent?.trim().length).toBeGreaterThan(0);
   });
 });

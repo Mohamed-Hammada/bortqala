@@ -1,0 +1,333 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260820_v326_deployment_health_snapshots
+      author: bemo-platform
+      changes:
+        - createTable:
+            tableName: deployment_health_snapshots
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: db_status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: db_latency_ms
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: storage_used_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: storage_total_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active_sessions_count
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: background_jobs_health
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: jvm_memory_used_mb
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: jvm_memory_max_mb
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: uptime_seconds
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: correlation_id
+                  type: VARCHAR(64)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: deployment_health_snapshots
+            indexName: idx_health_snapshots_tenant_created
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: created_at
+
+  - changeSet:
+      id: 20260820_v326_backup_snapshots
+      author: bemo-platform
+      changes:
+        - createTable:
+            tableName: backup_snapshots
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: snapshot_name
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: backup_type
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_size_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sha256_checksum
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: encryption_algorithm
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: storage_location
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: verification_drill_status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: verified_at
+                  type: BIGINT
+              - column:
+                  name: verified_by
+                  type: VARCHAR(64)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: BIGINT
+        - createIndex:
+            tableName: backup_snapshots
+            indexName: idx_backup_snapshots_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+
+  - changeSet:
+      id: 20260820_v326_tenant_license_certificates
+      author: bemo-platform
+      changes:
+        - createTable:
+            tableName: tenant_license_certificates
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: license_key_hash
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: certificate_payload
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: signature_ed25519
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: device_fingerprint_hash
+                  type: VARCHAR(64)
+              - column:
+                  name: licensed_seats
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: licensed_modules_json
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: issue_date
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiry_date
+                  type: BIGINT
+              - column:
+                  name: is_perpetual
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: grace_period_days
+                  type: INT
+                  defaultValueNumeric: 14
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_validated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: tenant_license_certificates
+            indexName: idx_license_cert_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+
+  - changeSet:
+      id: 20260820_v326_dr_drill_records
+      author: bemo-platform
+      changes:
+        - createTable:
+            tableName: dr_drill_records
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: drill_name
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_rpo_minutes
+                  type: INT
+                  defaultValueNumeric: 15
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_rto_minutes
+                  type: INT
+                  defaultValueNumeric: 60
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actual_rpo_minutes
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actual_rto_minutes
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: drill_details_json
+                  type: TEXT
+              - column:
+                  name: conducted_by
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: conducted_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: dr_drill_records
+            indexName: idx_dr_drills_tenant_conducted
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: conducted_at

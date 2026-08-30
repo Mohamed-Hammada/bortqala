@@ -89,6 +89,21 @@
           </div>
         </fieldset>
 
+        <!-- Section 3.5: Calendar Overlay -->
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.calendarOverlay') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.calendarOverlayHint') }}</p>
+          <div class="field-stack settings-option-stack">
+            <label class="selectable-card settings-toggle-card">
+              <input type="checkbox" formControlName="hijriOverlay" />
+              <span>
+                <strong>{{ i18n.t('settings.hijriOverlay') }}</strong>
+                <small>{{ i18n.t('settings.hijriOverlayHint') }}</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
         <!-- Section 4: Default Landing Page -->
         <fieldset class="settings-group">
           <legend class="group-title">{{ i18n.t('settings.defaultPageTitle') }}</legend>
@@ -203,6 +218,10 @@
 
   <!-- Tab 2: Session Settings (Admin only) -->
   @if (activeTab() === 'session' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+    <app-business-vertical-setup></app-business-vertical-setup>
+
+    <app-advances-policy-settings></app-advances-policy-settings>
+
     <form
       class="card settings-card admin-settings"
       [formGroup]="appSettingsForm"
@@ -307,116 +326,9 @@
       </div>
     </form>
   }
-  <!-- Tab 3: Security & Password Policy (Admin only) -->
-  @if (activeTab() === 'security' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
-    <form
-      class="card settings-card admin-settings"
-      [formGroup]="appSettingsForm"
-      (ngSubmit)="saveAppSettings()"
-    >
-      <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.securityTitle') }}</legend>
-        <p class="group-hint">{{ i18n.t('settings.securityHint') }}</p>
-
-        <div class="password-policy-section">
-          <div class="policy-rules-grid">
-            <div class="policy-field">
-              <label for="min-password-length">{{ i18n.t('settings.minPasswordLength', undefined, 'Minimum Length') }}</label>
-              <input id="min-password-length" class="ltr" type="number" min="6" max="128" formControlName="minPasswordLength" />
-            </div>
-            <div class="policy-field">
-              <label for="max-password-length">{{ i18n.t('settings.maxPasswordLength', undefined, 'Maximum Length') }}</label>
-              <input id="max-password-length" class="ltr" type="number" min="0" max="256" formControlName="maxPasswordLength" />
-              <small class="field-hint">{{ i18n.t('settings.maxPasswordLengthHint', undefined, '0 = unlimited') }}</small>
-            </div>
-            <div class="policy-field">
-              <label for="password-expiry">{{ i18n.t('settings.passwordExpiryDays', undefined, 'Password Age') }}</label>
-              <input id="password-expiry" class="ltr" type="number" min="0" max="365" formControlName="passwordExpiryDays" />
-              <small class="field-hint">{{ i18n.t('settings.passwordExpiryHint', undefined, '0 = disabled') }} · {{ i18n.t('settings.days', undefined, 'days') }}</small>
-            </div>
-            <div class="policy-field">
-              <label for="password-history">{{ i18n.t('settings.passwordHistoryCount', undefined, 'History Count') }}</label>
-              <input id="password-history" class="ltr" type="number" min="0" max="50" formControlName="passwordHistoryCount" />
-              <small class="field-hint">{{ i18n.t('settings.passwordHistoryHint', undefined, '0 = disabled') }}</small>
-            </div>
-          </div>
-
-          <div class="policy-requirements-card">
-            <div class="policy-card-header">
-              <h4 class="policy-card-title">{{ i18n.t('settings.charRequirements', undefined, 'Character Requirements') }}</h4>
-            </div>
-            <div class="policy-switch-row">
-              <label class="policy-switch-label" for="req-uppercase">
-                <span class="policy-switch-text">{{ i18n.t('settings.requireUppercase', undefined, 'Uppercase') }} <span class="switch-hint">(A-Z)</span></span>
-                <div class="switch-track" [class.on]="appSettingsForm.controls.requireUppercase.value">
-                  <input id="req-uppercase" type="checkbox" formControlName="requireUppercase" />
-                  <span class="switch-thumb"></span>
-                </div>
-              </label>
-            </div>
-            <div class="policy-switch-row">
-              <label class="policy-switch-label" for="req-lowercase">
-                <span class="policy-switch-text">{{ i18n.t('settings.requireLowercase', undefined, 'Lowercase') }} <span class="switch-hint">(a-z)</span></span>
-                <div class="switch-track" [class.on]="appSettingsForm.controls.requireLowercase.value">
-                  <input id="req-lowercase" type="checkbox" formControlName="requireLowercase" />
-                  <span class="switch-thumb"></span>
-                </div>
-              </label>
-            </div>
-            <div class="policy-switch-row">
-              <label class="policy-switch-label" for="req-numbers">
-                <span class="policy-switch-text">{{ i18n.t('settings.requireNumbers', undefined, 'Numbers') }} <span class="switch-hint">(0-9)</span></span>
-                <div class="switch-track" [class.on]="appSettingsForm.controls.requireNumbers.value">
-                  <input id="req-numbers" type="checkbox" formControlName="requireNumbers" />
-                  <span class="switch-thumb"></span>
-                </div>
-              </label>
-            </div>
-            <div class="policy-switch-row">
-              <label class="policy-switch-label" for="req-special">
-                <span class="policy-switch-text">{{ i18n.t('settings.requireSpecialChars', undefined, 'Special Characters') }} <span class="switch-hint">(!@#$%)</span></span>
-                <div class="switch-track" [class.on]="appSettingsForm.controls.requireSpecialChars.value">
-                  <input id="req-special" type="checkbox" formControlName="requireSpecialChars" />
-                  <span class="switch-thumb"></span>
-                </div>
-              </label>
-            </div>
-            <div class="policy-switch-row last">
-              <label class="policy-switch-label" for="req-no-spaces">
-                <span class="policy-switch-text">{{ i18n.t('settings.disallowSpaces', undefined, 'Disallow Spaces') }}</span>
-                <div class="switch-track" [class.on]="appSettingsForm.controls.disallowSpaces.value">
-                  <input id="req-no-spaces" type="checkbox" formControlName="disallowSpaces" />
-                  <span class="switch-thumb"></span>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-
-      @if (desktop) {
-        <fieldset class="settings-group">
-          <legend class="group-title">{{ i18n.t('settings.licenseTitle') }}</legend>
-          <p class="group-hint">{{ i18n.t('settings.licenseHint') }}</p>
-          @if (licenseMessage()) {
-            <div class="alert">{{ licenseMessage() }}</div>
-          }
-          <button class="button secondary" type="button" (click)="releaseLicense()">
-            {{ i18n.t('settings.licenseRelease') }}
-          </button>
-        </fieldset>
-      }
-
-      <div class="settings-toolbar">
-        <button
-          class="button primary"
-          type="submit"
-          [disabled]="appSettingsLoading() || appSettingsSaving() || appSettingsForm.invalid"
-        >
-          💾 {{ i18n.t('settings.saveAllSystemSettings', undefined, 'حفظ جميع الإعدادات') }}
-        </button>
-      </div>
-    </form>
+  <!-- Tab 3: Security & Auth Settings (2FA, Password Policy, Devices, IP Rules) -->
+  @if (activeTab() === 'security') {
+    <app-security-settings />
   }
 
   <!-- Tab 4: Reports & Export -->
@@ -491,6 +403,143 @@
 
   @if (activeTab() === 'shortcuts') {
     <app-shortcut-settings />
+  }
+
+  @if (activeTab() === 'sso') {
+    <div class="card settings-card">
+      <div class="settings-sections">
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.sso') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.ssoHint') }}</p>
+          @if (ssoConfigs().length === 0) {
+            <div class="empty-state">
+              <strong>{{ i18n.t('sso.noConfigs') }}</strong>
+            </div>
+          } @else {
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('sso.provider') }}</th>
+                  <th>{{ i18n.t('sso.clientId') }}</th>
+                  <th>{{ i18n.t('sso.autoProvision') }}</th>
+                  <th>{{ i18n.t('sso.defaultRole') }}</th>
+                  <th>{{ i18n.t('reports.lastStatus') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cfg of ssoConfigs(); track cfg.id) {
+                  <tr>
+                    <td>{{ cfg.provider }}</td>
+                    <td class="ltr">{{ cfg.clientId }}</td>
+                    <td>{{ cfg.autoProvision ? '✓' : '—' }}</td>
+                    <td>{{ cfg.defaultRole }}</td>
+                    <td><span class="badge" [class.success]="cfg.active">{{ cfg.active ? i18n.t('sso.configured') : '—' }}</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+          <button class="button secondary" type="button" (click)="showSsoForm.set(!showSsoForm())">
+            {{ i18n.t('sso.createConfig') }}
+          </button>
+          @if (showSsoForm()) {
+            <form class="settings-form" [formGroup]="ssoForm" (ngSubmit)="saveSsoConfig()" style="margin-top:1rem;">
+              <div class="field-row">
+                <div class="field">
+                  <label>{{ i18n.t('sso.provider') }}</label>
+                  <select formControlName="provider">
+                    <option value="GOOGLE">{{ i18n.t('sso.google') }}</option>
+                    <option value="MICROSOFT">{{ i18n.t('sso.microsoft') }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('sso.clientId') }}</label>
+                  <input type="text" formControlName="clientId" class="ltr" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('sso.clientSecret') }}</label>
+                  <input type="password" formControlName="clientSecret" class="ltr" />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>{{ i18n.t('sso.autoProvision') }}</label>
+                  <div class="switch-track" [class.on]="ssoForm.controls.autoProvision.value">
+                    <input type="checkbox" formControlName="autoProvision" />
+                    <span class="switch-thumb"></span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('sso.defaultRole') }}</label>
+                  <select formControlName="defaultRole">
+                    <option value="VIEWER">{{ i18n.t('sso.roleViewer') }}</option>
+                    <option value="HR_REVIEWER">{{ i18n.t('sso.roleHrReviewer') }}</option>
+                    <option value="ADMIN">{{ i18n.t('sso.roleAdmin') }}</option>
+                  </select>
+                </div>
+              </div>
+              <button class="button primary" type="submit" [disabled]="ssoForm.invalid">{{ i18n.t('common.save') }}</button>
+            </form>
+          }
+        </fieldset>
+      </div>
+    </div>
+  }
+
+  @if (activeTab() === 'privacy') {
+    <div class="card settings-card">
+      <div class="settings-sections">
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('privacy.requests') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.privacyHint') }}</p>
+          @if (privacyRequests().length === 0) {
+            <div class="empty-state">
+              <strong>{{ i18n.t('privacy.noRequests') }}</strong>
+            </div>
+          } @else {
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('privacy.subjectType') }}</th>
+                  <th>{{ i18n.t('privacy.subjectRef') }}</th>
+                  <th>{{ i18n.t('privacy.kind') }}</th>
+                  <th>{{ i18n.t('reports.lastStatus') }}</th>
+                  <th>{{ i18n.t('privacy.dueAt') }}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (req of privacyRequests(); track req.id) {
+                  <tr [class.overdue]="req.overdue">
+                    <td>{{ req.subjectType }}</td>
+                    <td>{{ req.subjectRef }}</td>
+                    <td>{{ req.kind }}</td>
+                    <td>
+                      <span class="badge" [class.success]="req.status === 'COMPLETED'" [class.error]="req.status === 'REJECTED'" [class.warning]="req.overdue">
+                        {{ req.status }}
+                      </span>
+                      @if (req.overdue) {
+                        <span class="badge error">{{ i18n.t('privacy.overdue') }}</span>
+                      }
+                    </td>
+                    <td>{{ formatDate(req.dueAt) }}</td>
+                    <td>
+                      @if (req.kind === 'EXPORT' && req.status === 'COMPLETED') {
+                        <button class="button secondary small" type="button" (click)="downloadExport(req.id)">{{ i18n.t('privacy.downloadExport') }}</button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </fieldset>
+      </div>
+    </div>
+  }
+
+  @if (activeTab() === 'integrations') {
+    <app-integrations-settings />
   }
     </div>
   </div>

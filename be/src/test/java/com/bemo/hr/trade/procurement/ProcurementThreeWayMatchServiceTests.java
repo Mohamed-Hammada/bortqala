@@ -78,6 +78,7 @@ class ProcurementThreeWayMatchServiceTests {
         procurementService = new ProcurementService(
                 purchaseOrderRepository, purchaseOrderLineRepository, procurementDocumentSequenceRepository,
                 goodsReceiptRepository, supplierInvoiceRepository, supplierPaymentRepository,
+                mock(com.bemo.hr.trade.procurement.application.SupplierPaymentPlanService.class),
                 supplierReturnRepository, businessPartyRepository, partnerLedgerEntryRepository, auditService,
                 procurementExcelExporter, operationsService, tenantApplicationRepository,
                 currencyRepository, idempotencyService, fiscalPeriodGuard,

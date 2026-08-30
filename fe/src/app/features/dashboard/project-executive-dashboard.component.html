@@ -1,0 +1,222 @@
+<div class="executive-dashboard-container">
+  <!-- Top Bar & Filters -->
+  <div class="header-card">
+    <div class="d-flex justify-between align-center flex-wrap gap-4">
+      <div>
+        <h2 class="page-title">{{ i18n.t('executiveDashboard.title') }}</h2>
+        <p class="page-subtitle">{{ i18n.t('executiveDashboard.subtitle') }}</p>
+      </div>
+
+      <div class="d-flex align-center gap-3 flex-wrap">
+        @if (data(); as d) {
+          <div class="freshness-tag">
+            <span class="pulse-dot"></span>
+            <span>{{ i18n.t('executiveDashboard.dataAsOf') }}: <strong>{{ d.dataAsOf | date:'mediumTime' }}</strong></span>
+          </div>
+        }
+        <button type="button" class="btn btn-outline-secondary" (click)="loadData()" [disabled]="loading()">
+          ↻ {{ i18n.t('costControl.recalculateCostControl') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (data(); as d) {
+    <!-- 1. Portfolio Financials KPI Grid -->
+    <div class="section-block">
+      <h3 class="section-heading">{{ i18n.t('executiveDashboard.portfolioSummary') }}</h3>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">{{ i18n.t('executiveDashboard.activeProjects') }}</div>
+          <div class="kpi-value font-mono font-bold">{{ d.activeProjects }} / {{ d.totalProjects }}</div>
+          <div class="kpi-hint">{{ i18n.t('executiveDashboard.allProjects') }}</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">{{ i18n.t('executiveDashboard.totalContractValue') }}</div>
+          <div class="kpi-value font-mono font-bold">{{ d.totalContractValue | number:'1.2-2' }} <span class="currency">{{ d.currencyCode }}</span></div>
+          <div class="kpi-hint">{{ i18n.t('executiveDashboard.totalBudget') }}: {{ d.totalBudget | number:'1.2-2' }}</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">{{ i18n.t('executiveDashboard.totalCommitted') }}</div>
+          <div class="kpi-value font-mono text-warning font-bold">{{ d.totalCommitted | number:'1.2-2' }} <span class="currency">{{ d.currencyCode }}</span></div>
+          <div class="kpi-hint">{{ i18n.t('costControl.typeCommitted') }}</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">{{ i18n.t('executiveDashboard.totalActualCost') }}</div>
+          <div class="kpi-value font-mono text-danger font-bold">{{ d.totalActualCost | number:'1.2-2' }} <span class="currency">{{ d.currencyCode }}</span></div>
+          <div class="kpi-hint">{{ i18n.t('costControl.typeActual') }}</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">{{ i18n.t('executiveDashboard.totalRevenue') }}</div>
+          <div class="kpi-value font-mono text-info font-bold">{{ d.totalRevenue | number:'1.2-2' }} <span class="currency">{{ d.currencyCode }}</span></div>
+          <div class="kpi-hint">{{ i18n.t('costControl.typeRevenue') }}</div>
+        </div>
+
+        <div class="kpi-card highlight-profit">
+          <div class="kpi-label">{{ i18n.t('executiveDashboard.portfolioProfit') }}</div>
+          <div class="kpi-value font-mono font-bold" [ngClass]="d.portfolioGrossProfit >= 0 ? 'text-success' : 'text-danger'">
+            {{ d.portfolioGrossProfit | number:'1.2-2' }} <span class="currency">{{ d.currencyCode }}</span>
+          </div>
+          <div class="kpi-hint">{{ i18n.t('executiveDashboard.portfolioMargin') }}: <strong>{{ d.portfolioGrossMarginPercent | number:'1.1-2' }}%</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Treasury, Liquidity & Receivables -->
+    <div class="grid grid-2 gap-4 mb-4">
+      <!-- Treasury Liquidity Card -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">{{ i18n.t('executiveDashboard.treasuryLiquidity') }}</h4>
+        </div>
+        <div class="card-body p-4">
+          <div class="sub-kpi-grid">
+            <div class="sub-kpi-item">
+              <div class="sub-label">{{ i18n.t('executiveDashboard.totalBankBalances') }}</div>
+              <div class="sub-value font-mono text-primary font-bold">{{ d.treasury.totalBankBalance | number:'1.2-2' }}</div>
+            </div>
+            <div class="sub-kpi-item">
+              <div class="sub-label">{{ i18n.t('executiveDashboard.totalCashOnHand') }}</div>
+              <div class="sub-value font-mono text-success font-bold">{{ d.treasury.totalCashOnHand | number:'1.2-2' }}</div>
+            </div>
+            <div class="sub-kpi-item">
+              <div class="sub-label">{{ i18n.t('executiveDashboard.totalUnclearedCheques') }}</div>
+              <div class="sub-value font-mono text-warning font-bold">{{ d.treasury.totalUnclearedCheques | number:'1.2-2' }}</div>
+            </div>
+            <div class="sub-kpi-item highlight-liquidity">
+              <div class="sub-label">{{ i18n.t('executiveDashboard.netLiquidCapital') }}</div>
+              <div class="sub-value font-mono text-success font-bold">{{ d.treasury.netLiquidCapital | number:'1.2-2' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Claims & Receivables Aging Card -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">{{ i18n.t('executiveDashboard.claimsReceivables') }}</h4>
+        </div>
+        <div class="card-body p-4">
+          <div class="sub-kpi-grid">
+            <div class="sub-kpi-item">
+              <div class="sub-label">{{ i18n.t('executiveDashboard.totalCertifiedClaims') }}</div>
+              <div class="sub-value font-mono text-info font-bold">{{ d.totalRevenue | number:'1.2-2' }}</div>
+            </div>
+            <div class="sub-kpi-item">
+              <div class="sub-label">{{ i18n.t('executiveDashboard.uncollectedReceivables') }}</div>
+              <div class="sub-value font-mono text-danger font-bold">{{ d.totalReceivables | number:'1.2-2' }}</div>
+            </div>
+            <div class="sub-kpi-item">
+              <div class="sub-label">{{ i18n.t('executiveDashboard.retentionHeld') }}</div>
+              <div class="sub-value font-mono text-warning font-bold">{{ d.totalRetentionHeld | number:'1.2-2' }}</div>
+            </div>
+            <div class="sub-kpi-item">
+              <div class="sub-label">{{ i18n.t('executiveDashboard.averageProgress') }}</div>
+              <div class="sub-value font-mono text-primary font-bold">{{ d.executionHealth.averageProgressPercent | number:'1.1-2' }}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Multi-Project Executive Portfolio Matrix -->
+    <div class="card">
+      <div class="card-header d-flex justify-between align-center flex-wrap gap-4">
+        <div>
+          <h4 class="card-title">{{ i18n.t('executiveDashboard.projectMatrix') }}</h4>
+          <span class="text-muted text-sm">{{ filteredProjects().length }} {{ i18n.t('executiveDashboard.allProjects') }}</span>
+        </div>
+
+        <div class="d-flex align-center gap-3">
+          <input
+            type="text"
+            class="form-control form-control-sm w-48"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            [placeholder]="i18n.t('common.search')"
+          />
+          <select
+            class="form-select form-select-sm w-auto"
+            [ngModel]="statusFilter()"
+            (ngModelChange)="statusFilter.set($event)"
+          >
+            <option value="ALL">— {{ i18n.t('common.all') }} —</option>
+            <option value="ACTIVE">{{ i18n.t('executiveDashboard.activeProjects') }}</option>
+            <option value="DRAFT">{{ i18n.t('common.draft') }}</option>
+            <option value="COMPLETED">{{ i18n.t('common.completed') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('projects.wbsItem') }}</th>
+              <th>{{ i18n.t('executiveDashboard.filterStatus') }}</th>
+              <th>{{ i18n.t('executiveDashboard.totalContractValue') }}</th>
+              <th>{{ i18n.t('executiveDashboard.totalBudget') }}</th>
+              <th>{{ i18n.t('executiveDashboard.totalActualCost') }}</th>
+              <th>{{ i18n.t('executiveDashboard.totalRevenue') }}</th>
+              <th>{{ i18n.t('executiveDashboard.portfolioProfit') }}</th>
+              <th>{{ i18n.t('executiveDashboard.portfolioMargin') }}</th>
+              <th>{{ i18n.t('executiveDashboard.averageProgress') }}</th>
+              <th class="text-end">{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredProjects(); track p.projectId) {
+              <tr>
+                <td>
+                  <div class="font-semibold">{{ p.projectName }}</div>
+                  <div class="text-xs text-muted font-mono">{{ p.projectId }}</div>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'badge-success': p.status === 'ACTIVE',
+                    'badge-secondary': p.status === 'DRAFT',
+                    'badge-info': p.status === 'COMPLETED'
+                  }">{{ p.status }}</span>
+                  @if (p.delayed) {
+                    <span class="badge badge-danger ms-1">⚠ {{ i18n.t('executiveDashboard.delayed') }}</span>
+                  }
+                </td>
+                <td class="font-mono">{{ p.contractValue | number:'1.2-2' }}</td>
+                <td class="font-mono">{{ p.budgetAmount | number:'1.2-2' }}</td>
+                <td class="font-mono text-danger">{{ p.actualCost | number:'1.2-2' }}</td>
+                <td class="font-mono text-info">{{ p.recognizedRevenue | number:'1.2-2' }}</td>
+                <td class="font-mono font-bold" [ngClass]="p.grossProfit >= 0 ? 'text-success' : 'text-danger'">
+                  {{ p.grossProfit | number:'1.2-2' }}
+                </td>
+                <td class="font-mono font-bold" [ngClass]="p.grossMarginPercent >= 0 ? 'text-success' : 'text-danger'">
+                  {{ p.grossMarginPercent | number:'1.1-2' }}%
+                </td>
+                <td>
+                  <div class="d-flex align-center gap-2">
+                    <div class="progress-bar-container flex-1">
+                      <div class="progress-bar-fill" [style.width.%]="p.progressPercent"></div>
+                    </div>
+                    <span class="text-xs font-mono font-bold">{{ p.progressPercent | number:'1.0-1' }}%</span>
+                  </div>
+                </td>
+                <td class="text-end">
+                  <a [routerLink]="['/projects', p.projectId]" class="btn btn-sm btn-outline-primary">
+                    🔍 {{ i18n.t('executiveDashboard.viewCostControl') }}
+                  </a>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="10" class="text-center py-6 text-muted">{{ i18n.t('projects.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

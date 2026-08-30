@@ -1,0 +1,142 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="close.emit()">
+  <div class="modal-container printable-certificate" (click)="$event.stopPropagation()">
+    <div class="modal-header no-print">
+      <div class="modal-title-group">
+        <h3 class="modal-title">{{ i18n.t('claims.certificateTitle') }}</h3>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="printCertificate()">
+          🖨️ {{ i18n.t('common.export') }}
+        </button>
+        <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+      </div>
+    </div>
+
+    <div class="certificate-body" *ngIf="claim">
+      <!-- Certificate Document Header -->
+      <div class="cert-header">
+        <div class="cert-company-brand">
+          <h2>{{ i18n.t('claims.companyName') }}</h2>
+          <p class="cert-doc-name">{{ i18n.t('claims.certificateTitle') }}</p>
+        </div>
+        <div class="cert-meta-grid">
+          <div class="meta-row">
+            <span class="meta-label">{{ i18n.t('claims.claimNumber') }}:</span>
+            <span class="meta-value font-mono font-bold">{{ claim.claimNumber }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">{{ i18n.t('claims.sequenceNumber') }}:</span>
+            <span class="meta-value font-mono font-bold">#{{ claim.claimSequenceNumber }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">{{ i18n.t('projects.formName') }}:</span>
+            <span class="meta-value">{{ projectName }}</span>
+          </div>
+          <div class="meta-row" *ngIf="claim.partyName">
+            <span class="meta-label">{{ i18n.t('projects.roleParty') }}:</span>
+            <span class="meta-value font-bold">{{ claim.partyName }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">{{ i18n.t('claims.periodStart') }} - {{ i18n.t('claims.periodEnd') }}:</span>
+            <span class="meta-value font-mono">{{ claim.periodStartDate }} ~ {{ claim.periodEndDate }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">{{ i18n.t('common.status') }}:</span>
+            <span class="meta-value status-badge font-mono">{{ claim.status }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Measurement Summary Table -->
+      <div class="cert-section">
+        <h4 class="section-heading">{{ i18n.t('claims.tabMeasurements') }}</h4>
+        <table class="cert-table">
+          <thead>
+            <tr>
+              <th style="width: 60px">{{ i18n.t('wbs.code') }}</th>
+              <th>{{ i18n.t('wbs.name') }}</th>
+              <th style="width: 50px">{{ i18n.t('wbs.unitOfMeasure') }}</th>
+              <th style="width: 80px">{{ i18n.t('claims.contractQty') }}</th>
+              <th style="width: 80px">{{ i18n.t('claims.previousQty') }}</th>
+              <th style="width: 80px">{{ i18n.t('claims.currentQty') }}</th>
+              <th style="width: 80px">{{ i18n.t('claims.cumulativeQty') }}</th>
+              <th style="width: 85px">{{ i18n.t('wbs.unitRate') }}</th>
+              <th style="width: 100px">{{ i18n.t('claims.currentAmt') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of claim.lines">
+              <td class="font-mono">{{ l.itemCode }}</td>
+              <td>{{ l.description }}</td>
+              <td class="text-center">{{ l.unitOfMeasure }}</td>
+              <td class="font-mono text-end">{{ l.contractQuantity | number:'1.2-2' }}</td>
+              <td class="font-mono text-end">{{ l.previousQuantity | number:'1.2-2' }}</td>
+              <td class="font-mono text-end font-bold">{{ l.currentQuantity | number:'1.2-2' }}</td>
+              <td class="font-mono text-end font-bold">{{ l.cumulativeQuantity | number:'1.2-2' }}</td>
+              <td class="font-mono text-end">{{ l.unitRate | number:'1.2-2' }}</td>
+              <td class="font-mono text-end font-bold">{{ l.currentAmount | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Financial Reconciliation Box -->
+      <div class="cert-section cert-reconciliation">
+        <h4 class="section-heading">{{ i18n.t('claims.tabAdjustments') }}</h4>
+        <div class="recon-grid">
+          <div class="recon-row">
+            <span class="recon-label">1. {{ i18n.t('claims.cumulativeGross') }}</span>
+            <span class="recon-val font-mono">{{ claim.cumulativeGrossAmount | number:'1.2-2' }} {{ claim.currencyCode }}</span>
+          </div>
+          <div class="recon-row">
+            <span class="recon-label">2. {{ i18n.t('claims.previousGross') }}</span>
+            <span class="recon-val font-mono">({{ claim.previousGrossAmount | number:'1.2-2' }}) {{ claim.currencyCode }}</span>
+          </div>
+          <div class="recon-row highlight-subtotal">
+            <span class="recon-label">3. {{ i18n.t('claims.currentGross') }} (1 - 2)</span>
+            <span class="recon-val font-mono font-bold">{{ claim.currentGrossAmount | number:'1.2-2' }} {{ claim.currencyCode }}</span>
+          </div>
+          <div class="recon-row">
+            <span class="recon-label">4. {{ i18n.t('claims.currentRetention') }}</span>
+            <span class="recon-val font-mono text-danger">- {{ claim.currentRetentionAmount | number:'1.2-2' }}</span>
+          </div>
+          <div class="recon-row">
+            <span class="recon-label">5. {{ i18n.t('claims.currentAdvance') }}</span>
+            <span class="recon-val font-mono text-danger">- {{ claim.currentAdvanceRecoveryAmount | number:'1.2-2' }}</span>
+          </div>
+          <div class="recon-row" *ngIf="claim.currentTaxAmount">
+            <span class="recon-label">6. {{ i18n.t('claims.currentTax') }}</span>
+            <span class="recon-val font-mono text-success">+ {{ claim.currentTaxAmount | number:'1.2-2' }}</span>
+          </div>
+          <div class="recon-row" *ngIf="claim.currentDeductionsAmount">
+            <span class="recon-label">7. {{ i18n.t('claims.currentDeductions') }}</span>
+            <span class="recon-val font-mono text-danger">- {{ claim.currentDeductionsAmount | number:'1.2-2' }}</span>
+          </div>
+          <div class="recon-row recon-total">
+            <span class="recon-label font-bold">{{ i18n.t('claims.netPayable') }}</span>
+            <span class="recon-val font-mono font-bold text-accent">{{ claim.currentNetPayableAmount | number:'1.2-2' }} {{ claim.currencyCode }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formal Signatures Box -->
+      <div class="cert-signatures">
+        <div class="sig-box">
+          <span class="sig-title">{{ i18n.t('claims.contractorSignature') }}</span>
+          <div class="sig-line"></div>
+          <span class="sig-date">{{ i18n.t('common.date') }}: ____/____/2026</span>
+        </div>
+        <div class="sig-box">
+          <span class="sig-title">{{ i18n.t('claims.engineerSignature') }}</span>
+          <div class="sig-line"></div>
+          <span class="sig-date">{{ i18n.t('common.date') }}: ____/____/2026</span>
+        </div>
+        <div class="sig-box">
+          <span class="sig-title">{{ i18n.t('claims.ownerSignature') }}</span>
+          <div class="sig-line"></div>
+          <span class="sig-date">{{ i18n.t('common.date') }}: ____/____/2026</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

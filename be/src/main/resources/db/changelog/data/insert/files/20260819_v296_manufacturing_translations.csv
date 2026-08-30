@@ -1,0 +1,43 @@
+id;translation_key;locale;text_value
+v296-001;production.tabRoutings;ar-EG;مسارات ومراحل التشغيل (Routings)
+v296-006;production.tabRoutings;en-US;Manufacturing Routings
+v296-007;production.tabWorkCenters;ar-EG;مراكز العمل وخطوط الإنتاج (Work Centers)
+v296-008;production.tabWorkCenters;en-US;Work Centers & Capacity
+v296-009;production.tabInspections;ar-EG;فحوصات وضبط الجودة (QA/QC)
+v296-010;production.tabInspections;en-US;Quality Inspections
+v296-011;production.addWorkCenter;ar-EG;إضافة مركز عمل جديد
+v296-012;production.addWorkCenter;en-US;Add Work Center
+v296-013;production.addRouting;ar-EG;إضافة مسار تشغيل جديد
+v296-014;production.addRouting;en-US;Add Routing
+v296-015;production.addInspection;ar-EG;تسجيل فحص جودة
+v296-016;production.addInspection;en-US;Record Inspection
+v296-017;production.workCenterCode;ar-EG;كود مركز العمل
+v296-018;production.workCenterCode;en-US;Work Center Code
+v296-019;production.workCenterName;ar-EG;اسم مركز العمل
+v296-020;production.workCenterName;en-US;Work Center Name
+v296-021;production.hourlyRate;ar-EG;معدل التكلفة في الساعة
+v296-022;production.hourlyRate;en-US;Hourly Rate
+v296-023;production.capacityHours;ar-EG;الطاقة الاستيعابية اليومية (ساعة)
+v296-024;production.capacityHours;en-US;Capacity (Hours/Day)
+v296-025;production.routingCode;ar-EG;كود مسار التشغيل
+v296-026;production.routingCode;en-US;Routing Code
+v296-027;production.routingName;ar-EG;اسم مسار ومراحل التشغيل
+v296-028;production.routingName;en-US;Routing Name
+v296-029;production.itemId;ar-EG;المنتج التام المرتبط
+v296-030;production.itemId;en-US;Associated Finished Item
+v296-031;production.inspectionNumber;ar-EG;رقم الفحص
+v296-032;production.inspectionNumber;en-US;Inspection Number
+v296-033;production.inspectionResult;ar-EG;نتيجة فحص الجودة
+v296-034;production.inspectionResult;en-US;Inspection Result
+v296-035;production.resultPassed;ar-EG;مطابق للمواصفات ✓
+v296-036;production.resultPassed;en-US;Passed ✓
+v296-037;production.resultFailed;ar-EG;غير مطابق ✕
+v296-038;production.resultFailed;en-US;Failed ✕
+v296-039;production.workCenterSaved;ar-EG;تم حفظ مركز العمل بنجاح
+v296-040;production.workCenterSaved;en-US;Work center saved successfully
+v296-041;production.routingSaved;ar-EG;تم حفظ مسار التشغيل بنجاح
+v296-042;production.routingSaved;en-US;Routing saved successfully
+v296-043;production.inspectionSaved;ar-EG;تم تسجيل فحص الجودة بنجاح
+v296-044;production.inspectionSaved;en-US;Quality inspection recorded successfully
+v296-045;production.inspector;ar-EG;مفتش الجودة المسؤول
+v296-046;production.inspector;en-US;Quality Inspector

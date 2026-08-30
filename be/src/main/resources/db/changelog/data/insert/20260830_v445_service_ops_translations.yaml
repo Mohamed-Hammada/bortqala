@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260830-v445-001
+      author: bemo-team
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260830_v445_service_ops_translations.csv
+            separator: ";"
+            relativeToChangelogFile: false
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(64)
+                  header: id
+              - column:
+                  name: key
+                  type: VARCHAR(128)
+                  header: key
+              - column:
+                  name: locale
+                  type: VARCHAR(16)
+                  header: locale
+              - column:
+                  name: value
+                  type: VARCHAR(1000)
+                  header: value

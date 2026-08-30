@@ -1,0 +1,144 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819-v276-project-tenders-schema
+      author: bemo-architect
+      changes:
+        # 1. Project Tenders Table
+        - createTable:
+            tableName: project_tenders
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: tender_number, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: title, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: title_en, type: VARCHAR(255) }
+              - column: { name: tender_type, type: VARCHAR(30), defaultValue: "EXTERNAL", constraints: { nullable: false } }
+              - column: { name: project_id, type: VARCHAR(36) }
+              - column: { name: client_party_id, type: VARCHAR(36) }
+              - column: { name: submission_deadline, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: estimated_value, type: "NUMERIC(18, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: currency_code, type: VARCHAR(10), defaultValue: "EGP", constraints: { nullable: false } }
+              - column: { name: technical_weight_percent, type: INT, defaultValueNumeric: 70, constraints: { nullable: false } }
+              - column: { name: financial_weight_percent, type: INT, defaultValueNumeric: 30, constraints: { nullable: false } }
+              - column: { name: bid_bond_required, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: bid_bond_amount, type: "NUMERIC(18, 2)", defaultValueNumeric: 0 }
+              - column: { name: bid_bond_validity_days, type: INT, defaultValueNumeric: 90 }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "DRAFT", constraints: { nullable: false } }
+              - column: { name: awarded_bidder_id, type: VARCHAR(36) }
+              - column: { name: awarded_amount, type: "NUMERIC(18, 2)" }
+              - column: { name: awarded_at, type: BIGINT }
+              - column: { name: notes, type: TEXT }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: project_tenders
+            columnNames: app_id, tender_number
+            constraintName: uq_prj_tenders_app_num
+
+        - createIndex:
+            tableName: project_tenders
+            indexName: idx_prj_tenders_app_status
+            columns:
+              - column: { name: app_id }
+              - column: { name: status }
+
+        # 2. Tender BOQ Items Table
+        - createTable:
+            tableName: tender_boq_items
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: tender_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: item_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: description, type: VARCHAR(500), constraints: { nullable: false } }
+              - column: { name: description_en, type: VARCHAR(500) }
+              - column: { name: unit_of_measure, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: quantity, type: "NUMERIC(18, 4)", defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: estimated_rate, type: "NUMERIC(18, 4)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: estimated_amount, type: "NUMERIC(18, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: tender_boq_items
+            indexName: idx_tender_boq_app_tender
+            columns:
+              - column: { name: app_id }
+              - column: { name: tender_id }
+              - column: { name: sort_order }
+
+        # 3. Tender Bidders Table
+        - createTable:
+            tableName: tender_bidders
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: tender_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: party_id, type: VARCHAR(36) }
+              - column: { name: bidder_name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: contact_email, type: VARCHAR(100) }
+              - column: { name: contact_phone, type: VARCHAR(50) }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "INVITED", constraints: { nullable: false } }
+              - column: { name: invitation_date, type: BIGINT }
+              - column: { name: submission_date, type: BIGINT }
+              - column: { name: technical_score, type: "NUMERIC(5, 2)" }
+              - column: { name: financial_score, type: "NUMERIC(5, 2)" }
+              - column: { name: combined_score, type: "NUMERIC(5, 2)" }
+              - column: { name: rank_order, type: INT }
+              - column: { name: total_bid_amount, type: "NUMERIC(18, 2)" }
+              - column: { name: bid_bond_received, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: bid_bond_number, type: VARCHAR(100) }
+              - column: { name: bid_bond_expiry_date, type: DATE }
+              - column: { name: notes, type: TEXT }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: tender_bidders
+            indexName: idx_tender_bidders_app_tender
+            columns:
+              - column: { name: app_id }
+              - column: { name: tender_id }
+
+        # 4. Bid Submission Lines Table
+        - createTable:
+            tableName: bid_submission_lines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: bidder_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: boq_item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: unit_rate, type: "NUMERIC(18, 4)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: total_amount, type: "NUMERIC(18, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: technical_remarks, type: VARCHAR(500) }
+              - column: { name: deviations_notes, type: VARCHAR(500) }
+
+        - createIndex:
+            tableName: bid_submission_lines
+            indexName: idx_bid_sub_lines_app_bidder
+            columns:
+              - column: { name: app_id }
+              - column: { name: bidder_id }
+
+        # 5. Tender Clarifications / Addenda Table
+        - createTable:
+            tableName: tender_clarifications
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: tender_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: question, type: TEXT, constraints: { nullable: false } }
+              - column: { name: asked_by_party_id, type: VARCHAR(36) }
+              - column: { name: asked_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: answer, type: TEXT }
+              - column: { name: answered_by_user_id, type: VARCHAR(36) }
+              - column: { name: answered_at, type: BIGINT }
+              - column: { name: is_public_addendum, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+
+        - createIndex:
+            tableName: tender_clarifications
+            indexName: idx_tender_clarif_app_tender
+            columns:
+              - column: { name: app_id }
+              - column: { name: tender_id }

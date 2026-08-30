@@ -1,0 +1,96 @@
+<fieldset class="policy-card" [disabled]="loading()">
+  <legend class="group-title">{{ i18n.t('settings.advancesPolicyTitle') }}</legend>
+  <p class="group-hint">{{ i18n.t('settings.advancesPolicyHint') }}</p>
+
+  <div class="policy-grid">
+    <div class="policy-scope">
+      <h4>{{ i18n.t('settings.advancesPolicyGlobalCard') }}</h4>
+      <label>
+        <span>{{ i18n.t('settings.advancesPolicyModeLabel') }}</span>
+        <select
+          [ngModel]="globalMode()"
+          (ngModelChange)="setGlobalMode($event)"
+        >
+          <option value="AUTO">{{ i18n.t('settings.advancesPolicyModeAuto') }}</option>
+          <option value="MANUAL">{{ i18n.t('settings.advancesPolicyModeManual') }}</option>
+        </select>
+      </label>
+      <label>
+        <span>{{ i18n.t('settings.advancesPolicyCadenceLabel') }}</span>
+        <select
+          [ngModel]="globalCadence()"
+          (ngModelChange)="setGlobalCadence($event)"
+        >
+          <option value="MONTHLY">{{ i18n.t('settings.advancesPolicyCadenceMonthly') }}</option>
+          <option value="MID_MONTH_SPLIT">{{ i18n.t('settings.advancesPolicyCadenceMidMonth') }}</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="policy-exceptions">
+      <div class="exceptions-header">
+        <h4>{{ i18n.t('settings.advancesPolicyCategoryCard') }}</h4>
+        <button
+          class="button secondary"
+          type="button"
+          (click)="addException()"
+          [disabled]="!availableCategories().length"
+        >
+          ＋ {{ i18n.t('settings.advancesPolicyAddException') }}
+        </button>
+      </div>
+
+      @if (!exceptions().length) {
+        <p class="empty-hint">{{ i18n.t('settings.advancesPolicyNoExceptions') }}</p>
+      }
+
+      @for (item of exceptions(); track item.categoryId) {
+        <div class="exception-row">
+          <strong class="ltr">{{ item.categoryName }}</strong>
+          <select
+            [ngModel]="item.mode"
+            (ngModelChange)="updateException(item.categoryId, { mode: $event })"
+          >
+            <option value="AUTO">{{ i18n.t('settings.advancesPolicyModeAuto') }}</option>
+            <option value="MANUAL">{{ i18n.t('settings.advancesPolicyModeManual') }}</option>
+          </select>
+          <select
+            [ngModel]="item.cadence"
+            (ngModelChange)="updateException(item.categoryId, { cadence: $event })"
+          >
+            <option value="MONTHLY">{{ i18n.t('settings.advancesPolicyCadenceMonthly') }}</option>
+            <option value="MID_MONTH_SPLIT">{{ i18n.t('settings.advancesPolicyCadenceMidMonth') }}</option>
+          </select>
+          @if (item.persistedVersion === null) {
+            <button
+              class="button danger"
+              type="button"
+              (click)="removeException(item.categoryId)"
+              [attr.aria-label]="i18n.t('common.cancel')"
+              [attr.title]="i18n.t('common.cancel')"
+            >✕</button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="policy-actions">
+    <button
+      class="button primary"
+      type="button"
+      (click)="saveAll()"
+      [disabled]="!dirty() || saving()"
+    >
+      {{ i18n.t('common.save') }}
+    </button>
+    <button
+      class="button secondary"
+      type="button"
+      (click)="cancel()"
+      [disabled]="!dirty() || saving()"
+    >
+      {{ i18n.t('common.discard') }}
+    </button>
+  </div>
+</fieldset>

@@ -1,0 +1,526 @@
+<div class="dental-charting-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('clinic.dentalTitle') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('clinic.dentalSubtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" *ngIf="activeTab() === 'PLANS'" (click)="openCreatePlanModal()">
+        + {{ i18n.t('clinic.planTitle') }}
+      </button>
+      <button class="btn btn-primary" *ngIf="activeTab() === 'TEMPLATES'" (click)="openCreateTemplateModal()">
+        + {{ i18n.t('clinic.examTemplateName') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Patient Selector Strip -->
+  <div class="patient-selector-card card" *ngIf="activeTab() !== 'TEMPLATES'">
+    <div class="selector-row">
+      <label class="font-bold">{{ i18n.t('clinic.patients') }}:</label>
+      <select class="form-control patient-select" [ngModel]="selectedPatientId()" (ngModelChange)="selectPatient($event)">
+        <option *ngFor="let p of patients()" [value]="p.id">
+          {{ p.fullName }} ({{ p.mrn }})
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'ODONTOGRAM'"
+      (click)="setTab('ODONTOGRAM')"
+    >
+      🦷 {{ i18n.t('clinic.tabOdontogram') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'PLANS'"
+      (click)="setTab('PLANS')"
+    >
+      📋 {{ i18n.t('clinic.tabTreatmentPlans') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'TEMPLATES'"
+      (click)="setTab('TEMPLATES')"
+    >
+      📝 {{ i18n.t('clinic.tabExamTemplates') }}
+    </button>
+  </div>
+
+  <!-- TAB 1: ODONTOGRAM -->
+  <div class="tab-content" *ngIf="activeTab() === 'ODONTOGRAM'">
+    <!-- Condition Legend Bar -->
+    <div class="legend-bar card">
+      <div class="legend-item"><span class="badge badge-success">🟢 {{ i18n.t('clinic.healthy') }}</span></div>
+      <div class="legend-item"><span class="badge badge-danger">🔴 {{ i18n.t('clinic.caries') }}</span></div>
+      <div class="legend-item"><span class="badge badge-info">🔵 {{ i18n.t('clinic.filled') }}</span></div>
+      <div class="legend-item"><span class="badge badge-warning">🟡 {{ i18n.t('clinic.crown') }}</span></div>
+      <div class="legend-item"><span class="badge badge-neutral">⚪ {{ i18n.t('clinic.missing') }}</span></div>
+      <div class="legend-item"><span class="badge badge-purple">🟣 {{ i18n.t('clinic.implant') }}</span></div>
+      <div class="legend-item"><span class="badge badge-orange">🟠 {{ i18n.t('clinic.rootCanal') }}</span></div>
+      <div class="legend-item"><span class="badge badge-danger">⛔ {{ i18n.t('clinic.extractionPlanned') }}</span></div>
+    </div>
+
+    <!-- 32-Tooth Chart Arch Layout -->
+    <div class="odontogram-board card">
+      <!-- Upper Maxillary Arch -->
+      <div class="arch-section">
+        <div class="quadrant-header font-bold">{{ i18n.t('clinic.upperRight') }} (18..11) | {{ i18n.t('clinic.upperLeft') }} (21..28)</div>
+        <div class="teeth-row">
+          <!-- Upper Right -->
+          <div class="quadrant-group">
+            <button
+              type="button"
+              class="tooth-btn"
+              *ngFor="let t of upperRightTeeth"
+              [ngClass]="'condition-' + getToothSummary(t).condition.toLowerCase()"
+              [attr.aria-label]="i18n.t('clinic.toothNumber') + ' ' + t + ' ' + getToothSummary(t).condition"
+              (click)="openToothModal(t)"
+              (keydown.enter)="openToothModal(t)"
+              tabindex="0"
+            >
+              <span class="tooth-num">{{ t }}</span>
+              <span class="tooth-icon">
+                <ng-container [ngSwitch]="getToothSummary(t).condition">
+                  <span *ngSwitchCase="'HEALTHY'">🟢</span>
+                  <span *ngSwitchCase="'CARIES'">🔴</span>
+                  <span *ngSwitchCase="'FILLED'">🔵</span>
+                  <span *ngSwitchCase="'CROWN'">🟡</span>
+                  <span *ngSwitchCase="'MISSING'">⚪</span>
+                  <span *ngSwitchCase="'IMPLANT'">🟣</span>
+                  <span *ngSwitchCase="'ROOT_CANAL'">🟠</span>
+                  <span *ngSwitchCase="'EXTRACTION_PLANNED'">⛔</span>
+                  <span *ngSwitchDefault>🟢</span>
+                </ng-container>
+              </span>
+              <span class="tooth-surface" *ngIf="getToothSummary(t).surface">{{ getToothSummary(t).surface }}</span>
+            </button>
+          </div>
+
+          <div class="arch-divider"></div>
+
+          <!-- Upper Left -->
+          <div class="quadrant-group">
+            <button
+              type="button"
+              class="tooth-btn"
+              *ngFor="let t of upperLeftTeeth"
+              [ngClass]="'condition-' + getToothSummary(t).condition.toLowerCase()"
+              [attr.aria-label]="i18n.t('clinic.toothNumber') + ' ' + t + ' ' + getToothSummary(t).condition"
+              (click)="openToothModal(t)"
+              (keydown.enter)="openToothModal(t)"
+              tabindex="0"
+            >
+              <span class="tooth-num">{{ t }}</span>
+              <span class="tooth-icon">
+                <ng-container [ngSwitch]="getToothSummary(t).condition">
+                  <span *ngSwitchCase="'HEALTHY'">🟢</span>
+                  <span *ngSwitchCase="'CARIES'">🔴</span>
+                  <span *ngSwitchCase="'FILLED'">🔵</span>
+                  <span *ngSwitchCase="'CROWN'">🟡</span>
+                  <span *ngSwitchCase="'MISSING'">⚪</span>
+                  <span *ngSwitchCase="'IMPLANT'">🟣</span>
+                  <span *ngSwitchCase="'ROOT_CANAL'">🟠</span>
+                  <span *ngSwitchCase="'EXTRACTION_PLANNED'">⛔</span>
+                  <span *ngSwitchDefault>🟢</span>
+                </ng-container>
+              </span>
+              <span class="tooth-surface" *ngIf="getToothSummary(t).surface">{{ getToothSummary(t).surface }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="jaw-separator"></div>
+
+      <!-- Lower Mandibular Arch -->
+      <div class="arch-section">
+        <div class="teeth-row">
+          <!-- Lower Right -->
+          <div class="quadrant-group">
+            <button
+              type="button"
+              class="tooth-btn"
+              *ngFor="let t of lowerRightTeeth"
+              [ngClass]="'condition-' + getToothSummary(t).condition.toLowerCase()"
+              [attr.aria-label]="i18n.t('clinic.toothNumber') + ' ' + t + ' ' + getToothSummary(t).condition"
+              (click)="openToothModal(t)"
+              (keydown.enter)="openToothModal(t)"
+              tabindex="0"
+            >
+              <span class="tooth-num">{{ t }}</span>
+              <span class="tooth-icon">
+                <ng-container [ngSwitch]="getToothSummary(t).condition">
+                  <span *ngSwitchCase="'HEALTHY'">🟢</span>
+                  <span *ngSwitchCase="'CARIES'">🔴</span>
+                  <span *ngSwitchCase="'FILLED'">🔵</span>
+                  <span *ngSwitchCase="'CROWN'">🟡</span>
+                  <span *ngSwitchCase="'MISSING'">⚪</span>
+                  <span *ngSwitchCase="'IMPLANT'">🟣</span>
+                  <span *ngSwitchCase="'ROOT_CANAL'">🟠</span>
+                  <span *ngSwitchCase="'EXTRACTION_PLANNED'">⛔</span>
+                  <span *ngSwitchDefault>🟢</span>
+                </ng-container>
+              </span>
+              <span class="tooth-surface" *ngIf="getToothSummary(t).surface">{{ getToothSummary(t).surface }}</span>
+            </button>
+          </div>
+
+          <div class="arch-divider"></div>
+
+          <!-- Lower Left -->
+          <div class="quadrant-group">
+            <button
+              type="button"
+              class="tooth-btn"
+              *ngFor="let t of lowerLeftTeeth"
+              [ngClass]="'condition-' + getToothSummary(t).condition.toLowerCase()"
+              [attr.aria-label]="i18n.t('clinic.toothNumber') + ' ' + t + ' ' + getToothSummary(t).condition"
+              (click)="openToothModal(t)"
+              (keydown.enter)="openToothModal(t)"
+              tabindex="0"
+            >
+              <span class="tooth-num">{{ t }}</span>
+              <span class="tooth-icon">
+                <ng-container [ngSwitch]="getToothSummary(t).condition">
+                  <span *ngSwitchCase="'HEALTHY'">🟢</span>
+                  <span *ngSwitchCase="'CARIES'">🔴</span>
+                  <span *ngSwitchCase="'FILLED'">🔵</span>
+                  <span *ngSwitchCase="'CROWN'">🟡</span>
+                  <span *ngSwitchCase="'MISSING'">⚪</span>
+                  <span *ngSwitchCase="'IMPLANT'">🟣</span>
+                  <span *ngSwitchCase="'ROOT_CANAL'">🟠</span>
+                  <span *ngSwitchCase="'EXTRACTION_PLANNED'">⛔</span>
+                  <span *ngSwitchDefault>🟢</span>
+                </ng-container>
+              </span>
+              <span class="tooth-surface" *ngIf="getToothSummary(t).surface">{{ getToothSummary(t).surface }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="quadrant-header font-bold">{{ i18n.t('clinic.lowerRight') }} (48..41) | {{ i18n.t('clinic.lowerLeft') }} (31..38)</div>
+      </div>
+    </div>
+
+    <!-- Tooth History Log Table -->
+    <div class="card history-card" *ngIf="odontogram() && odontogram()!.history.length > 0">
+      <h3>{{ i18n.t('clinic.tabOdontogram') }}</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('clinic.toothNumber') }}</th>
+            <th>{{ i18n.t('clinic.toothCondition') }}</th>
+            <th>{{ i18n.t('clinic.toothSurface') }}</th>
+            <th>{{ i18n.t('clinic.allergiesNotes') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let h of odontogram()!.history">
+            <td class="font-bold">{{ h.toothNumber }}</td>
+            <td><span class="badge badge-info">{{ h.condition }}</span></td>
+            <td>{{ h.surface || '—' }}</td>
+            <td>{{ h.notes || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 2: TREATMENT PLANS -->
+  <div class="tab-content" *ngIf="activeTab() === 'PLANS'">
+    <div class="plans-layout">
+      <!-- Plans List Sidebar -->
+      <div class="card plans-sidebar">
+        <h3>{{ i18n.t('clinic.tabTreatmentPlans') }}</h3>
+        <div class="plans-list" *ngIf="treatmentPlans().length > 0; else noPlans">
+          <div
+            class="plan-item"
+            *ngFor="let p of treatmentPlans()"
+            [class.selected]="p.id === selectedPlan()?.id"
+            (click)="selectedPlan.set(p)"
+          >
+            <div class="plan-header font-bold">{{ p.title }}</div>
+            <div class="plan-badge">
+              <span class="badge badge-info">{{ p.status }}</span>
+            </div>
+          </div>
+        </div>
+        <ng-template #noPlans>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+
+      <!-- Selected Plan Items -->
+      <div class="card plan-details" *ngIf="selectedPlan()">
+        <div class="plan-header-row">
+          <div>
+            <h3>{{ selectedPlan()!.title }}</h3>
+            <span class="badge badge-info">{{ selectedPlan()!.status }}</span>
+          </div>
+          <button class="btn btn-sm btn-primary" (click)="openAddPlanItemModal(selectedPlan()!)">
+            + {{ i18n.t('clinic.addPlanItem') }}
+          </button>
+        </div>
+
+        <table class="data-table" *ngIf="selectedPlan()!.items.length > 0; else noItems">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('clinic.toothNumber') }}</th>
+              <th>{{ i18n.t('common.description') }}</th>
+              <th>{{ i18n.t('clinic.estimatedCost') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedPlan()!.items">
+              <td class="font-bold">{{ item.toothNumber }}</td>
+              <td>{{ item.procedureText }}</td>
+              <td>{{ item.estimatedCost }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="item.status === 'DONE'" [class.badge-warning]="item.status === 'PLANNED'">
+                  {{ item.status }}
+                </span>
+              </td>
+              <td>
+                <button
+                  *ngIf="item.status === 'PLANNED'"
+                  class="btn btn-xs btn-success"
+                  (click)="markPlanItemDone(item)"
+                >
+                  ✓ {{ i18n.t('clinic.markDone') }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noItems>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: SPECIALTY EXAM TEMPLATES -->
+  <div class="tab-content card" *ngIf="activeTab() === 'TEMPLATES'">
+    <div class="templates-layout">
+      <!-- Templates Sidebar -->
+      <div class="templates-sidebar">
+        <h3>{{ i18n.t('clinic.tabExamTemplates') }}</h3>
+        <div class="template-item-list" *ngIf="examTemplates().length > 0; else noTemplates">
+          <div
+            class="template-entry"
+            *ngFor="let tmpl of examTemplates()"
+            [class.selected]="tmpl.id === selectedTemplate()?.id"
+            (click)="selectTemplate(tmpl)"
+          >
+            <div class="font-bold">{{ tmpl.name }}</div>
+            <span class="badge badge-neutral">{{ tmpl.specialty }}</span>
+          </div>
+        </div>
+        <ng-template #noTemplates>
+          <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+        </ng-template>
+      </div>
+
+      <!-- Dynamic Form Area -->
+      <div class="dynamic-form-area" *ngIf="selectedTemplate()">
+        <h3>{{ selectedTemplate()!.name }} ({{ selectedTemplate()!.specialty }})</h3>
+        <form (ngSubmit)="submitExam()">
+          <div class="dynamic-fields-grid">
+            <div class="form-group" *ngFor="let f of templateFields()">
+              <label>{{ f.label || f.key }}</label>
+
+              <!-- Text Input -->
+              <input
+                *ngIf="f.type === 'text'"
+                type="text"
+                class="form-control"
+                [(ngModel)]="dynamicAnswers()[f.key]"
+                [name]="f.key"
+              />
+
+              <!-- Number Input -->
+              <input
+                *ngIf="f.type === 'number'"
+                type="number"
+                class="form-control"
+                [(ngModel)]="dynamicAnswers()[f.key]"
+                [name]="f.key"
+              />
+
+              <!-- Select Input -->
+              <select
+                *ngIf="f.type === 'select'"
+                class="form-control"
+                [(ngModel)]="dynamicAnswers()[f.key]"
+                [name]="f.key"
+              >
+                <option *ngFor="let opt of f.options" [value]="opt">{{ opt }}</option>
+              </select>
+
+              <!-- Checkbox Input -->
+              <div *ngIf="f.type === 'checkbox'" class="checkbox-row">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="dynamicAnswers()[f.key]"
+                  [name]="f.key"
+                  [id]="f.key"
+                />
+                <label [for]="f.key">{{ f.label || f.key }}</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="saving()">
+              {{ i18n.t('clinic.submitExam') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tooth Condition Modal -->
+  <div class="modal-overlay" *ngIf="showToothModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.toothCondition') }} ({{ i18n.t('clinic.toothNumber') }}: {{ toothForm.toothNumber }})</h3>
+        <button class="btn-close" (click)="showToothModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitToothCondition()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.toothCondition') }} *</label>
+          <select class="form-control" [(ngModel)]="toothForm.condition" name="condition" required>
+            <option value="HEALTHY">{{ i18n.t('clinic.healthy') }}</option>
+            <option value="CARIES">{{ i18n.t('clinic.caries') }}</option>
+            <option value="FILLED">{{ i18n.t('clinic.filled') }}</option>
+            <option value="CROWN">{{ i18n.t('clinic.crown') }}</option>
+            <option value="MISSING">{{ i18n.t('clinic.missing') }}</option>
+            <option value="IMPLANT">{{ i18n.t('clinic.implant') }}</option>
+            <option value="ROOT_CANAL">{{ i18n.t('clinic.rootCanal') }}</option>
+            <option value="EXTRACTION_PLANNED">{{ i18n.t('clinic.extractionPlanned') }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.toothSurface') }}</label>
+          <select class="form-control" [(ngModel)]="toothForm.surface" name="surface">
+            <option value="OCCLUSAL">{{ i18n.t('clinic.surfaceOcclusal') }}</option>
+            <option value="MESIAL">{{ i18n.t('clinic.surfaceMesial') }}</option>
+            <option value="DISTAL">{{ i18n.t('clinic.surfaceDistal') }}</option>
+            <option value="BUCCAL">{{ i18n.t('clinic.surfaceBuccal') }}</option>
+            <option value="LINGUAL">{{ i18n.t('clinic.surfaceLingual') }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.allergiesNotes') }}</label>
+          <textarea class="form-control" [(ngModel)]="toothForm.notes" name="notes" rows="3"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showToothModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Plan Modal -->
+  <div class="modal-overlay" *ngIf="showPlanModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.planTitle') }}</h3>
+        <button class="btn-close" (click)="showPlanModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitCreatePlan()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.planTitle') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="planForm.title" name="planTitle" required />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showPlanModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!planForm.title || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Plan Item Modal -->
+  <div class="modal-overlay" *ngIf="showPlanItemModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.addPlanItem') }}</h3>
+        <button class="btn-close" (click)="showPlanItemModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitAddPlanItem()">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.toothNumber') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="planItemForm.toothNumber" name="toothNumber" required />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('clinic.estimatedCost') }} *</label>
+            <input type="number" class="form-control" [(ngModel)]="planItemForm.estimatedCost" name="estimatedCost" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.description') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="planItemForm.procedureText" name="procText" required />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showPlanItemModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!planItemForm.procedureText || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Template Modal -->
+  <div class="modal-overlay" *ngIf="showTemplateModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>{{ i18n.t('clinic.examTemplateName') }}</h3>
+        <button class="btn-close" (click)="showTemplateModal.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="submitCreateTemplate()">
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.examSpecialty') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="templateForm.specialty" name="specialty" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('clinic.examTemplateName') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="templateForm.name" name="tmplName" required />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.description') }} *</label>
+          <textarea class="form-control" [(ngModel)]="templateForm.schemaJson" name="schema" rows="6" required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showTemplateModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!templateForm.name || !templateForm.schemaJson || saving()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

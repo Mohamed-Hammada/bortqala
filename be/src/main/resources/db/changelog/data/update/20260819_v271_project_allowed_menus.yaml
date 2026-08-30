@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819-v271-project-allowed-menus
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "Grant the projects screen to existing users for P0.1 Project Register & WBS."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',projects')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%projects%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(allowed_menus, ',projects', '')
+              WHERE allowed_menus IS NOT NULL;

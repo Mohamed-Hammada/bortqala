@@ -124,6 +124,6 @@ public class SubledgerReconciliationReport {
     }
 
     public enum SubledgerType {
-        AR, AP, INVENTORY, TREASURY, PAYROLL
+        AR, AP, INVENTORY, TREASURY, PAYROLL, BANK, CASH, PROJECT_COST, MANUFACTURING_COST
     }
 }

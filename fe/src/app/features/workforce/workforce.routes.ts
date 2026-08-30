@@ -71,6 +71,12 @@ export const WORKFORCE_ROUTES: Routes = [
     loadComponent: () => import('./pages/contractor-accounts/contractor-accounts.component').then(m => m.ContractorAccountsComponent)
   },
   {
+    path: 'client-billing',
+    canActivate: [workforceRoleGuard, menuAccessGuard],
+    data: { roles: WORKFORCE_BASE_ROLES, menuId: 'workforce-client-billing' },
+    loadComponent: () => import('./pages/client-billing/client-billing.component').then(m => m.ClientBillingComponent)
+  },
+  {
     path: 'reports-import',
     canActivate: [workforceRoleGuard, menuAccessGuard],
     data: { roles: WORKFORCE_IMPORT_ROLES, menuId: 'workforce-reports' },

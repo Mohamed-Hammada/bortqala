@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260828_v405_seed_default_cheque_layouts
+      author: wolfn
+      validCheckSum: ANY
+      dbms: postgresql
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: cheque_layouts
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              INSERT INTO cheque_layouts
+              (id, app_id, bank_code, bank_name,
+               payee_x, payee_y, payee_width,
+               date_x, date_y,
+               amount_words_x, amount_words_y, amount_words_width,
+               amount_digits_x, amount_digits_y, amount_digits_width,
+               cheque_number_x, cheque_number_y,
+               crossing_lines, active, created_at, updated_at)
+              SELECT md5(a.id || ':CHEQUE-NBE'), a.id, 'NBE', 'البنك الأهلي المصري',
+                     50, 80, 400,
+                     530, 30,
+                     50, 140, 450,
+                     520, 140, 120,
+                     530, 80,
+                     true, true,
+                     (extract(epoch from now()) * 1000)::bigint,
+                     (extract(epoch from now()) * 1000)::bigint
+              FROM apps a
+              WHERE NOT EXISTS (SELECT 1 FROM cheque_layouts c WHERE c.app_id = a.id AND c.bank_code = 'NBE');
+
+              INSERT INTO cheque_layouts
+              (id, app_id, bank_code, bank_name,
+               payee_x, payee_y, payee_width,
+               date_x, date_y,
+               amount_words_x, amount_words_y, amount_words_width,
+               amount_digits_x, amount_digits_y, amount_digits_width,
+               cheque_number_x, cheque_number_y,
+               crossing_lines, active, created_at, updated_at)
+              SELECT md5(a.id || ':CHEQUE-CIB'), a.id, 'CIB', 'البنك التجاري الدولي',
+                     45, 90, 420,
+                     560, 30,
+                     45, 150, 460,
+                     530, 150, 120,
+                     560, 85,
+                     false, true,
+                     (extract(epoch from now()) * 1000)::bigint,
+                     (extract(epoch from now()) * 1000)::bigint
+              FROM apps a
+              WHERE NOT EXISTS (SELECT 1 FROM cheque_layouts c WHERE c.app_id = a.id AND c.bank_code = 'CIB');
+      rollback:
+        - sql:
+            splitStatements: false
+            sql: |
+              DELETE FROM cheque_layouts
+              WHERE id = md5(app_id || ':CHEQUE-NBE')
+                 OR id = md5(app_id || ':CHEQUE-CIB')

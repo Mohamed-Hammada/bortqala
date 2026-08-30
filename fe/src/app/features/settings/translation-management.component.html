@@ -4,7 +4,7 @@
       <h2>{{ i18n.t('translations.title', undefined, 'إدارة الترجمات') }}</h2>
       <p>{{ i18n.t('translations.description', undefined, 'عدّل النص الافتراضي للمنصة أو أنشئ ترجمة خاصة بتطبيق محدد.') }}</p>
     </div>
-    <div class="translation-summary" aria-label="Translation summary">
+    <div class="translation-summary" [attr.aria-label]="i18n.t('settings.translationSummary')">
       <span><strong>{{ total() }}</strong> {{ i18n.t('translations.keys', undefined, 'مفتاح') }}</span>
       @if (appId()) {
         <span class="custom-summary"><strong>{{ overriddenCount() }}</strong> {{ i18n.t('translations.custom', undefined, 'مخصصة') }}</span>
@@ -12,7 +12,7 @@
     </div>
   </header>
 
-  <section class="translation-tools" aria-label="Translation filters">
+  <section class="translation-tools" [attr.aria-label]="i18n.t('settings.translationFilters')">
     <div class="scope-grid">
       <label>
         <span>{{ i18n.t('translations.language', undefined, 'اللغة') }}</span>
@@ -45,7 +45,7 @@
     }
   </section>
 
-  <section class="translation-import" aria-label="Translation import">
+  <section class="translation-import" [attr.aria-label]="i18n.t('settings.translationImport')">
     <div class="import-copy">
       <span class="import-icon" aria-hidden="true">⇧</span>
       <div>

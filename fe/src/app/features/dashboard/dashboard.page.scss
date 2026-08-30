@@ -853,3 +853,14 @@ td small {
   width: 17px;
   height: 17px;
 }
+
+/* WP-08 peak clock-in bars */
+.peak-bars { display:flex; flex-direction:column; gap:.45rem; }
+.peak-row { display:grid; grid-template-columns: 4rem 1fr minmax(10rem, auto); gap:.75rem; align-items:center; }
+.peak-hour { color: var(--muted); font-size:.85rem; text-align:right; }
+.peak-track { display:block; height:.85rem; background: var(--surface-muted, rgba(0,0,0,.06)); border-radius:.4rem; overflow:hidden; }
+.peak-fill { display:block; height:100%; background: var(--gold, #b8860b); border-radius:.4rem; }
+.peak-count { font-size:.82rem; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.peak-legend { display:flex; flex-wrap:wrap; gap:.75rem 1.25rem; margin-bottom:.85rem; }
+.peak-legend-item { display:inline-flex; align-items:center; gap:.35rem; font-size:.8rem; color: var(--muted); }
+.legend-dot { display:inline-block; width:.6rem; height:.6rem; border-radius:50%; flex:none; }

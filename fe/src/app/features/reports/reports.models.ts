@@ -37,6 +37,12 @@ export interface PeriodOption {
   start: number;
   end: number;
 }
+export interface GeneratedPeriod {
+  from: number;
+  to: number;
+  type: string;
+  reportId: string;
+}
 export interface PreviewCategory {
   categoryId: string;
   categoryName: string;

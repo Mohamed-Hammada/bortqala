@@ -1,0 +1,125 @@
+id;translation_key;locale;text_value
+v413-001-en;CLIENT_RATE_INVALID;en-US;Rate effective dates are invalid.
+v413-001-ar;CLIENT_RATE_INVALID;ar-EG;تواريخ سريان المعدل غير صالحة.
+v413-002-en;CLIENT_RATE_OVERLAP;en-US;Effective date range overlaps another rate for the same category.
+v413-002-ar;CLIENT_RATE_OVERLAP;ar-EG;نطاق تاريخ السريان يتداخل مع معدل آخر لنفس الفئة.
+v413-003-en;CLIENT_RATE_NOT_FOUND;en-US;Client rate not found.
+v413-003-ar;CLIENT_RATE_NOT_FOUND;ar-EG;معدل العميل غير موجود.
+v413-004-en;CLIENT_CATEGORY_NOT_FOUND;en-US;Worker category not found.
+v413-004-ar;CLIENT_CATEGORY_NOT_FOUND;ar-EG;فئة العامل غير موجودة.
+v413-005-en;CLIENT_BILLING_INVALID_PERIOD;en-US;Billing period must match YYYY-MM.
+v413-005-ar;CLIENT_BILLING_INVALID_PERIOD;ar-EG;يجب أن تطابق فترة الفوترة الصيغة YYYY-MM.
+v413-006-en;CLIENT_BILLING_PERIOD_NOT_FOUND;en-US;Billing period not found for this client and month.
+v413-006-ar;CLIENT_BILLING_PERIOD_NOT_FOUND;ar-EG;فترة الفوترة غير موجودة لهذا العميل والشهر.
+v413-007-en;CLIENT_BILLING_PERIOD_EXISTS;en-US;Billing is already invoiced for this client and month.
+v413-007-ar;CLIENT_BILLING_PERIOD_EXISTS;ar-EG;تم بالفعل إصدار فاتورة لهذا العميل والشهر.
+v413-008-en;CLIENT_BILLING_PERIOD_NOT_OPEN;en-US;Billing period is not open for confirmation.
+v413-008-ar;CLIENT_BILLING_PERIOD_NOT_OPEN;ar-EG;فترة الفوترة غير مفتوحة للتأكيد.
+v413-009-en;CLIENT_BILLING_EMPTY;en-US;Billing period has no billable lines.
+v413-009-ar;CLIENT_BILLING_EMPTY;ar-EG;فترة الفوترة لا تحتوي على بنود قابلة للفوترة.
+v413-010-en;CLIENT_BILLING_UNRESOLVED_LINES;en-US;Billing has unresolved worker(s) without an effective client rate.
+v413-010-ar;CLIENT_BILLING_UNRESOLVED_LINES;ar-EG;الفوترة بها عاملون غير محلولون دون معدل عميل ساري.
+v413-011-en;workforce.clientBilling.title;en-US;Manpower Client Billing
+v413-011-ar;workforce.clientBilling.title;ar-EG;فوترة عملاء القوى العاملة
+v413-012-en;workforce.clientBilling.hint;en-US;Bill approved workforce attendance to clients at effective-dated rates, confirm into invoices and track margin.
+v413-012-ar;workforce.clientBilling.hint;ar-EG;قم بفوترة حضور القوى العاملة المعتمد للعملاء بمعدلات سارية التاريخ، وأصدر الفواتير وتابع الهامش.
+v413-013-en;workforce.clientBilling.pageHint;en-US;Generate monthly client billing from approved attendance and settled wage cost.
+v413-013-ar;workforce.clientBilling.pageHint;ar-EG;أنشئ فواتير العملاء الشهرية من الحضور المعتمد وتكلفة الأجور المسوّاة.
+v413-014-en;workforce.clientBilling.client;en-US;Client
+v413-014-ar;workforce.clientBilling.client;ar-EG;العميل
+v413-015-en;workforce.clientBilling.selectClient;en-US;Select a client...
+v413-015-ar;workforce.clientBilling.selectClient;ar-EG;اختر عميل...
+v413-016-en;workforce.clientBilling.selectClientFirst;en-US;Select a client first.
+v413-016-ar;workforce.clientBilling.selectClientFirst;ar-EG;اختر عميلاً أولاً.
+v413-017-en;workforce.clientBilling.category;en-US;Category
+v413-017-ar;workforce.clientBilling.category;ar-EG;الفئة
+v413-018-en;workforce.clientBilling.selectCategory;en-US;Select category...
+v413-018-ar;workforce.clientBilling.selectCategory;ar-EG;اختر الفئة...
+v413-019-en;workforce.clientBilling.dayRate;en-US;Day rate (EGP)
+v413-019-ar;workforce.clientBilling.dayRate;ar-EG;معدل اليوم (جنيه)
+v413-020-en;workforce.clientBilling.effectiveFrom;en-US;Effective from
+v413-020-ar;workforce.clientBilling.effectiveFrom;ar-EG;ساري من
+v413-021-en;workforce.clientBilling.effectiveTo;en-US;Effective to (blank = open)
+v413-021-ar;workforce.clientBilling.effectiveTo;ar-EG;ساري حتى (فارغ = مفتوح)
+v413-022-en;workforce.clientBilling.addRate;en-US;Add rate
+v413-022-ar;workforce.clientBilling.addRate;ar-EG;إضافة معدل
+v413-023-en;workforce.clientBilling.deleteRate;en-US;Delete
+v413-023-ar;workforce.clientBilling.deleteRate;ar-EG;حذف
+v413-024-en;workforce.clientBilling.ratesTitle;en-US;Client billing rates
+v413-024-ar;workforce.clientBilling.ratesTitle;ar-EG;معدلات فوترة العملاء
+v413-025-en;workforce.clientBilling.ratesHint;en-US;Effective-dated daily rates charged to each client per worker category.
+v413-025-ar;workforce.clientBilling.ratesHint;ar-EG;معدلات يومية سارية التاريخ تُحمَّل على كل عميل لكل فئة عمالة.
+v413-026-en;workforce.clientBilling.rateAdded;en-US;Rate added successfully.
+v413-026-ar;workforce.clientBilling.rateAdded;ar-EG;تمت إضافة المعدل بنجاح.
+v413-027-en;workforce.clientBilling.rateRemoved;en-US;Rate removed.
+v413-027-ar;workforce.clientBilling.rateRemoved;ar-EG;تم حذف المعدل.
+v413-028-en;workforce.clientBilling.generateTitle;en-US;Generate monthly billing
+v413-028-ar;workforce.clientBilling.generateTitle;ar-EG;إنشاء فوترة شهرية
+v413-029-en;workforce.clientBilling.periodPlaceholder;en-US;Month (YYYY-MM)
+v413-029-ar;workforce.clientBilling.periodPlaceholder;ar-EG;الشهر (YYYY-MM)
+v413-030-en;workforce.clientBilling.generateButton;en-US;Generate draft
+v413-030-ar;workforce.clientBilling.generateButton;ar-EG;إنشاء مسودة
+v413-031-en;workforce.clientBilling.generated;en-US;Draft billing generated.
+v413-031-ar;workforce.clientBilling.generated;ar-EG;تم إنشاء مسودة الفوترة.
+v413-032-en;workforce.clientBilling.reviewTitle;en-US;Draft review
+v413-032-ar;workforce.clientBilling.reviewTitle;ar-EG;مراجعة المسودة
+v413-033-en;workforce.clientBilling.worker;en-US;Worker
+v413-033-ar;workforce.clientBilling.worker;ar-EG;العامل
+v413-034-en;workforce.clientBilling.workerCode;en-US;Code
+v413-034-ar;workforce.clientBilling.workerCode;ar-EG;الكود
+v413-035-en;workforce.clientBilling.approvedDays;en-US;Approved days
+v413-035-ar;workforce.clientBilling.approvedDays;ar-EG;أيام معتمدة
+v413-036-en;workforce.clientBilling.billedAmount;en-US;Billed amount
+v413-036-ar;workforce.clientBilling.billedAmount;ar-EG;المبلغ المحسوب
+v413-037-en;workforce.clientBilling.wageCost;en-US;Wage cost
+v413-037-ar;workforce.clientBilling.wageCost;ar-EG;تكلفة الأجور
+v413-038-en;workforce.clientBilling.variance;en-US;vs previous month
+v413-038-ar;workforce.clientBilling.variance;ar-EG;مقارنة بالشهر السابق
+v413-039-en;workforce.clientBilling.status;en-US;Status
+v413-039-ar;workforce.clientBilling.status;ar-EG;الحالة
+v413-040-en;workforce.clientBilling.missingRate;en-US;Missing rate
+v413-040-ar;workforce.clientBilling.missingRate;ar-EG;معدل مفقود
+v413-041-en;workforce.clientBilling.billable;en-US;Billable
+v413-041-ar;workforce.clientBilling.billable;ar-EG;قابل للفوترة
+v413-042-en;workforce.clientBilling.reason;en-US;Reason
+v413-042-ar;workforce.clientBilling.reason;ar-EG;السبب
+v413-043-en;workforce.clientBilling.draftedOn;en-US;Generate a draft first to review.
+v413-043-ar;workforce.clientBilling.draftedOn;ar-EG;أنشئ مسودة أولاً للمراجعة.
+v413-044-en;workforce.clientBilling.confirmButton;en-US;Confirm invoice
+v413-044-ar;workforce.clientBilling.confirmButton;ar-EG;تأكيد الفاتورة
+v413-045-en;workforce.clientBilling.confirmed;en-US;Billing confirmed into invoice {{invoiceNumber}}.
+v413-045-ar;workforce.clientBilling.confirmed;ar-EG;تم تأكيد الفوترة في الفاتورة {{invoiceNumber}}.
+v413-046-en;workforce.clientBilling.confirmBlocked;en-US;Confirm blocked: resolve missing rates first.
+v413-046-ar;workforce.clientBilling.confirmBlocked;ar-EG;التأكيد محظور: قم بحل المعدلات المفقودة أولاً.
+v413-047-en;workforce.clientBilling.marginTitle;en-US;Margin analysis
+v413-047-ar;workforce.clientBilling.marginTitle;ar-EG;تحليل الهامش
+v413-048-en;workforce.clientBilling.exportMargin;en-US;Export XLSX
+v413-048-ar;workforce.clientBilling.exportMargin;ar-EG;تصدير Excel
+v413-049-en;workforce.clientBilling.totalBilled;en-US;Total billed
+v413-049-ar;workforce.clientBilling.totalBilled;ar-EG;إجمالي المحسوب
+v413-050-en;workforce.clientBilling.totalWageCost;en-US;Total wage cost
+v413-050-ar;workforce.clientBilling.totalWageCost;ar-EG;إجمالي تكلفة الأجور
+v413-051-en;workforce.clientBilling.totalMargin;en-US;Gross margin
+v413-051-ar;workforce.clientBilling.totalMargin;ar-EG;الهامش الإجمالي
+v413-052-en;workforce.clientBilling.loadFailed;en-US;Failed to load client billing data.
+v413-052-ar;workforce.clientBilling.loadFailed;ar-EG;تعذر تحميل بيانات فوترة العملاء.
+v413-053-en;export.sheet.margin;en-US;Client Billing Margin
+v413-053-ar;export.sheet.margin;ar-EG;هامش فوترة العملاء
+v413-054-en;export.column.worker;en-US;Worker
+v413-054-ar;export.column.worker;ar-EG;العامل
+v413-055-en;export.column.category;en-US;Category
+v413-055-ar;export.column.category;ar-EG;الفئة
+v413-056-en;export.column.approvedDays;en-US;Approved days
+v413-056-ar;export.column.approvedDays;ar-EG;أيام معتمدة
+v413-057-en;export.column.dayRate;en-US;Day rate
+v413-057-ar;export.column.dayRate;ar-EG;معدل اليوم
+v413-058-en;export.column.billed;en-US;Billed
+v413-058-ar;export.column.billed;ar-EG;المحسوب
+v413-059-en;export.column.wageCost;en-US;Wage cost
+v413-059-ar;export.column.wageCost;ar-EG;تكلفة الأجور
+v413-060-en;export.column.margin;en-US;Margin
+v413-060-ar;export.column.margin;ar-EG;الهامش
+v413-061-en;export.total;en-US;Total
+v413-061-ar;export.total;ar-EG;الإجمالي
+v413-062-en;workforce.ui.settlement.invoiced;en-US;Invoiced
+v413-062-ar;workforce.ui.settlement.invoiced;ar-EG;تم إصدار فاتورة

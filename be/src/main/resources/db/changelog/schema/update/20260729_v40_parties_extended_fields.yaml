@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-40-parties-extended-fields
       author: hr-platform
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - tableExists:

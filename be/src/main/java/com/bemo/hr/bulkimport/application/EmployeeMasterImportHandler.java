@@ -54,11 +54,11 @@ public class EmployeeMasterImportHandler implements SmartImportHandler {
             var e = employment.get(employeeCode);
             var s = salary.get(employeeCode);
             if (e == null) {
-                errors.add(error(p, "EmployeeCode", "Employment sheet row is required for this employee.", "يجب وجود سطر للموظف في صفحة التوظيف."));
+                errors.add(error(p, "EmployeeCode", "Employment sheet row is required for this employee.", "An employment sheet row is required for this employee."));
                 continue;
             }
             if (existingCodes.contains(employeeCode.toLowerCase(Locale.ROOT))) {
-                errors.add(error(p, "EmployeeCode", "Employee code already exists in Bemo ERP.", "كود الموظف موجود بالفعل في النظام."));
+                errors.add(error(p, "EmployeeCode", "Employee code already exists in Bemo ERP.", "Employee code already exists in the system."));
                 continue;
             }
             String categoryInput = clean(e.values().get("AssignedAttendanceCategory"));
@@ -66,12 +66,12 @@ public class EmployeeMasterImportHandler implements SmartImportHandler {
                     .filter(c -> c.code().equalsIgnoreCase(categoryInput) || c.name().equalsIgnoreCase(categoryInput))
                     .findFirst().orElse(null);
             if (category == null) {
-                errors.add(error(e, "AssignedAttendanceCategory", "Attendance category was not found by code or name.", "لم يتم العثور على فئة الحضور بالكود أو الاسم."));
+                errors.add(error(e, "AssignedAttendanceCategory", "Attendance category was not found by code or name.", "Attendance category not found by code or name."));
                 continue;
             }
             if (category.attendanceMode().name().equals("BIOMETRIC") && clean(p.values().get("DeviceUserId")).isBlank()) {
                 errors.add(error(p, "DeviceUserId", "Active employees in biometric categories require a biometric DeviceUserId in the current branch schema.",
-                        "الموظف النشط في فئة بصمة يحتاج DeviceUserId وفق نموذج الفرع الحالي."));
+                        "Active employees in biometric categories require a DeviceUserId per the current branch schema."));
                 continue;
             }
             var request = new EmployeeApi.UpsertRequest(
@@ -101,7 +101,7 @@ public class EmployeeMasterImportHandler implements SmartImportHandler {
                     committed++;
                 } catch (RuntimeException ex) {
                     errors.add(error(candidate.source(), "EmployeeCode", "Domain validation rejected employee: " + safeMessage(ex),
-                            "رفضت قواعد النظام الموظف: " + safeMessage(ex)));
+                            "Domain validation rejected employee: " + safeMessage(ex)));
                 }
             }
         } else {
@@ -111,7 +111,7 @@ public class EmployeeMasterImportHandler implements SmartImportHandler {
 
         return new HandlerOutcome(true, committed, errors.size(),
                 "Employees were committed using the current branch employee schema. National ID, banking, department/branch, job title and allowance fields remain validation/staging metadata because those fields are not present in the current Employee write model.",
-                "تم حفظ الموظفين باستخدام نموذج الموظف الحالي في الفرع. تبقى بيانات الرقم القومي والبنك والإدارة/الفرع والمسمى الوظيفي والبدلات كبيانات تحقق/مرحلية لأن نموذج Employee الحالي لا يحتوي هذه الحقول.",
+                "Employees were committed using the current branch employee schema. National ID, banking, department/branch, job title and allowance fields remain validation/staging metadata because those fields are not present in the current Employee write model.",
                 errors);
     }
 

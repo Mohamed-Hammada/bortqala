@@ -1,0 +1,39 @@
+id;translation_key;locale;text_value
+v362-001-en;employees.group.identity;en-US;Identity
+v362-001-ar;employees.group.identity;ar-EG;الهوية
+v362-002-en;employees.group.identityHint;en-US;Employee code and full name
+v362-002-ar;employees.group.identityHint;ar-EG;رقم الموظف والاسم الكامل
+v362-003-en;employees.group.job;en-US;Job
+v362-003-ar;employees.group.job;ar-EG;الوظيفة
+v362-004-en;employees.group.jobHint;en-US;Category employment type and department
+v362-004-ar;employees.group.jobHint;ar-EG;الفئة ونوع التعيين والقسم
+v362-005-en;employees.group.schedule;en-US;Schedule
+v362-005-ar;employees.group.schedule;ar-EG;الجدول
+v362-006-en;employees.group.scheduleHint;en-US;Shift and attendance schedule
+v362-006-ar;employees.group.scheduleHint;ar-EG;وردية وجدول الحضور
+v362-007-en;employees.group.salary;en-US;Salary
+v362-007-ar;employees.group.salary;ar-EG;الراتب
+v362-008-en;employees.group.salaryHint;en-US;Base salary and bank account
+v362-008-ar;employees.group.salaryHint;ar-EG;الراتب الأساسي وحساب البنك
+v362-009-en;employees.group.contracts;en-US;Contracts
+v362-009-ar;employees.group.contracts;ar-EG;العقود
+v362-010-en;employees.group.contractsHint;en-US;Contract and employment data
+v362-010-ar;employees.group.contractsHint;ar-EG;بيانات العقد والتوظيف
+v362-011-en;employees.group.biometric;en-US;Biometric
+v362-011-ar;employees.group.biometric;ar-EG;البصمة
+v362-012-en;employees.group.biometricHint;en-US;Fingerprint device user ID
+v362-012-ar;employees.group.biometricHint;ar-EG;معرف جهاز البصمة
+v362-013-en;employees.group.dates;en-US;Dates
+v362-013-ar;employees.group.dates;ar-EG;التواريخ
+v362-014-en;employees.group.datesHint;en-US;Active period and status
+v362-014-ar;employees.group.datesHint;ar-EG;فترة النشاط وال حالة
+v362-015-en;employees.previewLayout;en-US;Preview Layout
+v362-015-ar;employees.previewLayout;ar-EG;معاينة التخطيط
+v362-016-en;employees.previewLayoutHint;en-US;View a summary of fields and their groups
+v362-016-ar;employees.previewLayoutHint;ar-EG;عرض ملخص للحقول ومجموعاتها
+v362-017-en;employees.group.collapsed;en-US;Collapsed
+v362-017-ar;employees.group.collapsed;ar-EG;مطوي
+v362-018-en;employees.group.expanded;en-US;Expanded
+v362-018-ar;employees.group.expanded;ar-EG;موسّع
+v362-019-en;employees.group.invalidFields;en-US;Fix required fields
+v362-019-ar;employees.group.invalidFields;ar-EG;أكمل الحقول المطلوبة

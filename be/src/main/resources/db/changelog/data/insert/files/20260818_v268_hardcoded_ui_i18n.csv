@@ -1,0 +1,245 @@
+id;key;locale;text
+v268-001-ar;approvals.engineEyebrow;ar-EG;مُحرك الاعتمادات المتعددة
+v268-001-en;approvals.engineEyebrow;en-US;Multi-approval engine
+v268-002-ar;approvals.engineHeading;ar-EG;مسارات الاعتماد وتحديد الصلاحيات
+v268-002-en;approvals.engineHeading;en-US;Approval paths and permissions
+v268-003-ar;approvals.engineDescription;ar-EG;تحديد وإدارة خطوات الاعتماد لكل نوع مستند داخل النظام.
+v268-003-en;approvals.engineDescription;en-US;Define and manage approval steps for each document type inside the system.
+v268-004-ar;approvals.createNewPath;ar-EG;＋ إنشاء مسار جديد
+v268-004-en;approvals.createNewPath;en-US;+ Create new path
+v268-005-ar;approvals.loadingPaths;ar-EG;جارٍ تحميل مسارات الاعتماد…
+v268-005-en;approvals.loadingPaths;en-US;Loading approval paths…
+v268-006-ar;approvals.colDocument;ar-EG;المستند
+v268-006-en;approvals.colDocument;en-US;Document
+v268-007-ar;approvals.colPathName;ar-EG;اسم المسار
+v268-007-en;approvals.colPathName;en-US;Path name
+v268-008-ar;approvals.colStepCount;ar-EG;عدد الخطوات
+v268-008-en;approvals.colStepCount;en-US;Step count
+v268-009-ar;approvals.colVersion;ar-EG;الإصدار
+v268-009-en;approvals.colVersion;en-US;Version
+v268-010-ar;approvals.colStatus;ar-EG;الحالة
+v268-010-en;approvals.colStatus;en-US;Status
+v268-011-ar;approvals.colLastUpdated;ar-EG;تاريخ التحديث
+v268-011-en;approvals.colLastUpdated;en-US;Last updated
+v268-012-ar;approvals.colActions;ar-EG;الإجراءات
+v268-012-en;approvals.colActions;en-US;Actions
+v268-013-ar;approvals.stepsSuffix;ar-EG;خطوات
+v268-013-en;approvals.stepsSuffix;en-US;steps
+v268-014-ar;approvals.editSteps;ar-EG;✏ تعديل الخطوات
+v268-014-en;approvals.editSteps;en-US;✏ Edit steps
+v268-015-ar;approvals.noPathsYet;ar-EG;لا توجد مسارات اعتماد معرفة حتى الآن.
+v268-015-en;approvals.noPathsYet;en-US;No approval paths defined yet.
+v268-016-ar;approvals.docTypeLabel;ar-EG;نوع المستند
+v268-016-en;approvals.docTypeLabel;en-US;Document type
+v268-017-ar;approvals.docTypePO;ar-EG;أمر شراء (PURCHASE_ORDER)
+v268-017-en;approvals.docTypePO;en-US;Purchase order (PURCHASE_ORDER)
+v268-018-ar;approvals.docTypeCS;ar-EG;تسوية مقاول (CONTRACTOR_SETTLEMENT)
+v268-018-en;approvals.docTypeCS;en-US;Contractor settlement (CONTRACTOR_SETTLEMENT)
+v268-019-ar;approvals.docTypePR;ar-EG;مسير رواتب (PAYROLL_RUN)
+v268-019-en;approvals.docTypePR;en-US;Payroll run (PAYROLL_RUN)
+v268-020-ar;approvals.docTypeSI;ar-EG;فاتورة مورد (SUPPLIER_INVOICE)
+v268-020-en;approvals.docTypeSI;en-US;Supplier invoice (SUPPLIER_INVOICE)
+v268-021-ar;approvals.docTypeSP;ar-EG;سداد مورد (SUPPLIER_PAYMENT)
+v268-021-en;approvals.docTypeSP;en-US;Supplier payment (SUPPLIER_PAYMENT)
+v268-022-ar;approvals.docTypeJE;ar-EG;قيد محاسبي (JOURNAL_ENTRY)
+v268-022-en;approvals.docTypeJE;en-US;Journal entry (JOURNAL_ENTRY)
+v268-023-ar;approvals.docTypeLR;ar-EG;طلب عمالة (LABOR_REQUEST)
+v268-023-en;approvals.docTypeLR;en-US;Labor request (LABOR_REQUEST)
+v268-024-ar;approvals.docTypeADV;ar-EG;سلفة عمالة (ADVANCE)
+v268-024-en;approvals.docTypeADV;en-US;Advance (ADVANCE)
+v268-025-ar;approvals.pathNameLabel;ar-EG;اسم المسار
+v268-025-en;approvals.pathNameLabel;en-US;Path name
+v268-026-ar;approvals.pathNamePlaceholder;ar-EG;مثال: مسار اعتمادات أوامر الشراء
+v268-026-en;approvals.pathNamePlaceholder;en-US;e.g. Purchase order approval path
+v268-027-ar;approvals.activateImmediately;ar-EG;تفعيل المسار مباشرة
+v268-027-en;approvals.activateImmediately;en-US;Activate path immediately
+v268-028-ar;approvals.sequentialSteps;ar-EG;خطوات الاعتماد المتتابعة
+v268-028-en;approvals.sequentialSteps;en-US;Sequential approval steps
+v268-029-ar;approvals.addStep;ar-EG;＋ إضافة خطوة
+v268-029-en;approvals.addStep;en-US;+ Add step
+v268-030-ar;approvals.selectRole;ar-EG;اختر الدور المطلوب…
+v268-030-en;approvals.selectRole;en-US;Choose required role…
+v268-031-ar;approvals.stepNamePlaceholder;ar-EG;اسم الخطوة (مثال: اعتماد المدير المالي)
+v268-031-en;approvals.stepNamePlaceholder;en-US;Step name (e.g. CFO approval)
+v268-032-ar;approvals.addStepHint;ar-EG;اضغط إضافة خطوة لبناء مسار الاعتماد المتتابع.
+v268-032-en;approvals.addStepHint;en-US;Click add step to build the sequential approval path.
+v268-033-ar;approvals.saving;ar-EG;جارٍ الحفظ…
+v268-033-en;approvals.saving;en-US;Saving…
+v268-034-ar;approvals.savePath;ar-EG;حفظ المسار
+v268-034-en;approvals.savePath;en-US;Save path
+v268-035-ar;approvals.cancel;ar-EG;إلغاء
+v268-035-en;approvals.cancel;en-US;Cancel
+v268-036-ar;approvals.activeBadge;ar-EG;مفعل
+v268-036-en;approvals.activeBadge;en-US;Active
+v268-037-ar;approvals.inactiveBadge;ar-EG;معطل
+v268-037-en;approvals.inactiveBadge;en-US;Inactive
+v268-038-ar;approvals.createPathTitle;ar-EG;إنشاء مسار اعتماد جديد
+v268-038-en;approvals.createPathTitle;en-US;Create new approval path
+v268-039-ar;approvals.editPathTitle;ar-EG;تعديل مسار الاعتماد
+v268-039-en;approvals.editPathTitle;en-US;Edit approval path
+v268-040-ar;approvals.loadError;ar-EG;تعذر تحميل مسارات الاعتماد.
+v268-040-en;approvals.loadError;en-US;Could not load approval paths.
+v268-041-ar;approvals.saveError;ar-EG;تعذر حفظ المسار.
+v268-041-en;approvals.saveError;en-US;Could not save the path.
+v268-042-ar;approvals.stepName;ar-EG;الخطوة {order}
+v268-042-en;approvals.stepName;en-US;Step {order}
+v268-043-ar;attendanceBrowser.pageTitle;ar-EG;الحضور والانصراف
+v268-043-en;attendanceBrowser.pageTitle;en-US;Attendance
+v268-044-ar;attendanceBrowser.pageHeading;ar-EG;تفاصيل حضور الموظفين
+v268-044-en;attendanceBrowser.pageHeading;en-US;Employee attendance details
+v268-045-ar;attendanceBrowser.pageDescription;ar-EG;اختر السنة والشهر من نافذة مختصرة، ثم راجع الموظفين والبصمات.
+v268-045-en;attendanceBrowser.pageDescription;en-US;Choose the year and month from a compact dialog, then review employees and punches.
+v268-047-ar;attendanceBrowser.noPunchesYet;ar-EG;لا توجد بصمات مستوردة بعد.
+v268-047-en;attendanceBrowser.noPunchesYet;en-US;No imported punches yet.
+v268-048-ar;attendanceBrowser.displayedPeriod;ar-EG;الفترة المعروضة
+v268-048-en;attendanceBrowser.displayedPeriod;en-US;Displayed period
+v268-049-ar;attendanceBrowser.employeesUsers;ar-EG;موظف/مستخدم
+v268-049-en;attendanceBrowser.employeesUsers;en-US;employees/users
+v268-050-ar;attendanceBrowser.punchesLabel;ar-EG;بصمة
+v268-050-en;attendanceBrowser.punchesLabel;en-US;punches
+v268-051-ar;attendanceBrowser.chooseYearMonth;ar-EG;اختيار السنة والشهر
+v268-051-en;attendanceBrowser.chooseYearMonth;en-US;Choose year & month
+v268-053-ar;attendanceBrowser.matchingRecords;ar-EG;سجل مطابق
+v268-053-en;attendanceBrowser.matchingRecords;en-US;matching records
+v268-054-ar;attendanceBrowser.search;ar-EG;بحث
+v268-054-en;attendanceBrowser.search;en-US;Search
+v268-056-ar;attendanceBrowser.fromDate;ar-EG;من تاريخ
+v268-056-en;attendanceBrowser.fromDate;en-US;From
+v268-057-ar;attendanceBrowser.toDate;ar-EG;إلى تاريخ
+v268-057-en;attendanceBrowser.toDate;en-US;To
+v268-058-ar;attendanceBrowser.reset;ar-EG;إعادة الضبط
+v268-058-en;attendanceBrowser.reset;en-US;Reset
+v268-059-ar;attendanceBrowser.exportResults;ar-EG;تصدير النتائج
+v268-059-en;attendanceBrowser.exportResults;en-US;Export results
+v268-064-ar;attendanceBrowser.thFirstLastPunch;ar-EG;أول / آخر بصمة
+v268-064-en;attendanceBrowser.thFirstLastPunch;en-US;First / last punch
+v268-070-ar;attendanceBrowser.choosePeriod;ar-EG;اختيار فترة الحضور
+v268-070-en;attendanceBrowser.choosePeriod;en-US;Choose attendance period
+v268-071-ar;attendanceBrowser.choosePeriodHint;ar-EG;اختر السنة أولاً ثم الشهر.
+v268-071-en;attendanceBrowser.choosePeriodHint;en-US;Choose a year first, then a month.
+v268-072-ar;attendanceBrowser.yearLabel;ar-EG;السنة
+v268-072-en;attendanceBrowser.yearLabel;en-US;Year
+v268-073-ar;attendanceBrowser.monthEmployees;ar-EG;موظف
+v268-073-en;attendanceBrowser.monthEmployees;en-US;employees
+v268-074-ar;attendanceBrowser.monthPunches;ar-EG;بصمة
+v268-074-en;attendanceBrowser.monthPunches;en-US;punches
+v268-075-ar;attendanceBrowser.noMonths;ar-EG;لا توجد شهور لهذه السنة.
+v268-075-en;attendanceBrowser.noMonths;en-US;No months available for this year.
+v268-076-ar;attendanceEmployee.pageTitle;ar-EG;تفاصيل الحضور
+v268-076-en;attendanceEmployee.pageTitle;en-US;Attendance details
+v268-078-ar;attendanceEmployee.addToSystem;ar-EG;إضافة للنظام
+v268-078-en;attendanceEmployee.addToSystem;en-US;Add to employees
+v268-087-ar;attendanceEmployee.deviceUserId;ar-EG;رقم جهاز البصمة
+v268-087-en;attendanceEmployee.deviceUserId;en-US;Device user ID
+v268-089-ar;attendanceEmployee.dailyHint;ar-EG;كل البصمات مرتبة حسب اليوم.
+v268-089-en;attendanceEmployee.dailyHint;en-US;All punches grouped by day.
+v268-090-ar;attendanceEmployee.colDate;ar-EG;التاريخ
+v268-090-en;attendanceEmployee.colDate;en-US;Date
+v268-091-ar;attendanceEmployee.colFirst;ar-EG;أول بصمة
+v268-091-en;attendanceEmployee.colFirst;en-US;First
+v268-092-ar;attendanceEmployee.colLast;ar-EG;آخر بصمة
+v268-092-en;attendanceEmployee.colLast;en-US;Last
+v268-093-ar;attendanceEmployee.colCount;ar-EG;العدد
+v268-093-en;attendanceEmployee.colCount;en-US;Count
+v268-094-ar;attendanceEmployee.colDuration;ar-EG;المدة
+v268-094-en;attendanceEmployee.colDuration;en-US;Duration
+v268-095-ar;attendanceEmployee.colPunches;ar-EG;البصمات
+v268-095-en;attendanceEmployee.colPunches;en-US;Punches
+v268-097-ar;attendanceSnapshot.eyebrow;ar-EG;الحضور المستورد
+v268-097-en;attendanceSnapshot.eyebrow;en-US;Imported attendance
+v268-098-ar;attendanceSnapshot.heading;ar-EG;ملخص آخر شهر بالبصمة
+v268-098-en;attendanceSnapshot.heading;en-US;Latest biometric month
+v268-099-ar;attendanceSnapshot.refresh;ar-EG;تحديث
+v268-099-en;attendanceSnapshot.refresh;en-US;Refresh
+v268-100-ar;attendanceSnapshot.details;ar-EG;التفاصيل
+v268-100-en;attendanceSnapshot.details;en-US;Details
+v268-101-ar;attendanceSnapshot.fromBiometric;ar-EG;من بيانات البصمة المستوردة
+v268-101-en;attendanceSnapshot.fromBiometric;en-US;from imported biometric punches
+v268-102-ar;attendanceSnapshot.employeesUsers;ar-EG;مستخدم / موظف
+v268-102-en;attendanceSnapshot.employeesUsers;en-US;employees / users
+v268-103-ar;attendanceSnapshot.mappedEmployees;ar-EG;مربوط بموظف
+v268-103-en;attendanceSnapshot.mappedEmployees;en-US;mapped employees
+v268-104-ar;attendanceSnapshot.punches;ar-EG;بصمة
+v268-104-en;attendanceSnapshot.punches;en-US;punches
+v268-105-ar;attendanceSnapshot.unmappedWarning;ar-EG;يوجد {count} مستخدم غير مربوط بموظف.
+v268-105-en;attendanceSnapshot.unmappedWarning;en-US;{count} biometric users are still unmapped.
+v268-106-ar;attendanceSnapshot.noData;ar-EG;لا توجد بيانات بصمة مستوردة بعد.
+v268-106-en;attendanceSnapshot.noData;en-US;No imported biometric attendance yet.
+v268-107-ar;errorBanner.title;ar-EG;حدث خطأ في العملية:
+v268-107-en;errorBanner.title;en-US;An error occurred:
+v268-108-ar;errorBanner.retry;ar-EG;🔄 إعادة المحاولة
+v268-108-en;errorBanner.retry;en-US;🔄 Retry
+v268-109-ar;fieldError.required;ar-EG;⚠️ هذا الحقل مطلوب ولا يمكن تركه فارغاً.
+v268-109-en;fieldError.required;en-US;⚠️ This field is required and cannot be left empty.
+v268-110-ar;fieldError.minlength;ar-EG;⚠️ يجب أن يحتوي الحقل على {min} أحرف على الأقل.
+v268-110-en;fieldError.minlength;en-US;⚠️ The field must contain at least {min} characters.
+v268-111-ar;fieldError.maxlength;ar-EG;⚠️ تجاوزت الحد الأقصى للمسموح ({max} حرفاً).
+v268-111-en;fieldError.maxlength;en-US;⚠️ Exceeded the maximum allowed ({max} characters).
+v268-112-ar;fieldError.minValue;ar-EG;⚠️ القيمة أدنى من الحد المسموح بها (أصغر قيمة {min}).
+v268-112-en;fieldError.minValue;en-US;⚠️ Value is below the minimum allowed (minimum {min}).
+v268-113-ar;fieldError.email;ar-EG;⚠️ صيغة البريد الإلكتروني غير صحيحة.
+v268-113-en;fieldError.email;en-US;⚠️ Invalid email format.
+v268-114-ar;fieldError.invalid;ar-EG;⚠️ مدخلات غير صحيحة، يرجى التعديل.
+v268-114-en;fieldError.invalid;en-US;⚠️ Invalid input, please correct.
+v268-115-ar;workforceImport.importing;ar-EG;جارٍ الاستيراد…
+v268-115-en;workforceImport.importing;en-US;Importing…
+v268-116-ar;workforceImport.importExcel;ar-EG;استيراد Excel
+v268-116-en;workforceImport.importExcel;en-US;Import Excel
+v268-117-ar;workforceImport.ariaLabel;ar-EG;استيراد Excel
+v268-117-en;workforceImport.ariaLabel;en-US;Excel import
+v268-118-ar;workforceImport.dialogTitle;ar-EG;استيراد من Excel
+v268-118-en;workforceImport.dialogTitle;en-US;Import from Excel
+v268-119-ar;workforceImport.dialogHint;ar-EG;حمّل القالب المعتمد، اختر طريقة المطابقة، ثم ارفع الملف.
+v268-119-en;workforceImport.dialogHint;en-US;Download the approved template, choose the matching method, then upload the file.
+v268-120-ar;workforceImport.downloadTemplate;ar-EG;تحميل قالب Excel
+v268-120-en;workforceImport.downloadTemplate;en-US;Download Excel template
+v268-121-ar;workforceImport.matchingMethod;ar-EG;طريقة المطابقة
+v268-121-en;workforceImport.matchingMethod;en-US;Matching method
+v268-122-ar;workforceImport.modeUserCode;ar-EG;بكود المستخدم / العامل
+v268-122-en;workforceImport.modeUserCode;en-US;User / worker code
+v268-123-ar;workforceImport.modeAuto;ar-EG;تلقائي (الكود ثم الهوية)
+v268-123-en;workforceImport.modeAuto;en-US;Automatic (code, then identity)
+v268-124-ar;workforceImport.templateHint;ar-EG;ابدأ بالقالب لتجنب أخطاء أسماء الأعمدة والحقول المطلوبة.
+v268-124-en;workforceImport.templateHint;en-US;Start from the template to avoid header and required-field errors.
+v268-125-ar;workforceImport.chooseFile;ar-EG;اختيار الملف وبدء الاستيراد
+v268-125-en;workforceImport.chooseFile;en-US;Choose file and import
+v268-126-ar;workforceImport.rowErrors;ar-EG;أخطاء الصفوف
+v268-126-en;workforceImport.rowErrors;en-US;Row errors
+v268-127-ar;workforceImport.row;ar-EG;صف
+v268-127-en;workforceImport.row;en-US;Row
+v268-128-ar;workforceImport.showingFirst20;ar-EG;يتم عرض أول 20 خطأ فقط.
+v268-128-en;workforceImport.showingFirst20;en-US;Showing the first 20 errors.
+v268-129-ar;importHistory.eyebrow;ar-EG;الاستيراد
+v268-129-en;importHistory.eyebrow;en-US;Imports
+v268-130-ar;importHistory.title;ar-EG;سجل دفعات الاستيراد
+v268-130-en;importHistory.title;en-US;Import batch history
+v268-131-ar;importHistory.description;ar-EG;شاشة مستقلة لمراجعة كامل سجل دفعات الاستيراد دون إطالة شاشة الاستيراد الرئيسية.
+v268-131-en;importHistory.description;en-US;A dedicated screen for the complete import history without making the main import screen too long.
+v268-132-ar;importHistory.backToImports;ar-EG;العودة للاستيراد
+v268-132-en;importHistory.backToImports;en-US;Back to imports
+v268-133-ar;importHistory.searchLabel;ar-EG;بحث في السجل
+v268-133-en;importHistory.searchLabel;en-US;Search history
+v268-134-ar;importHistory.searchPlaceholder;ar-EG;المصدر، الحالة، رقم الدفعة…
+v268-134-en;importHistory.searchPlaceholder;en-US;Source, status, batch id…
+v268-135-ar;importHistory.batches;ar-EG;دفعة
+v268-135-en;importHistory.batches;en-US;batches
+v268-136-ar;importHistory.colDate;ar-EG;التاريخ
+v268-136-en;importHistory.colDate;en-US;Date
+v268-137-ar;importHistory.colSource;ar-EG;المصدر
+v268-137-en;importHistory.colSource;en-US;Source
+v268-138-ar;importHistory.colFileBatch;ar-EG;الملف / الدفعة
+v268-138-en;importHistory.colFileBatch;en-US;File / batch
+v268-139-ar;importHistory.colStatus;ar-EG;الحالة
+v268-139-en;importHistory.colStatus;en-US;Status
+v268-140-ar;importHistory.colRows;ar-EG;السجلات
+v268-140-en;importHistory.colRows;en-US;Rows
+v268-141-ar;importHistory.noResults;ar-EG;لا توجد دفعات مطابقة.
+v268-141-en;importHistory.noResults;en-US;No matching import batches.
+v268-142-ar;importHistory.previous;ar-EG;السابق
+v268-142-en;importHistory.previous;en-US;Previous
+v268-143-ar;importHistory.next;ar-EG;التالي
+v268-143-en;importHistory.next;en-US;Next
+v268-144-ar;imports.viewFullHistory;ar-EG;عرض سجل الاستيراد بالكامل
+v268-144-en;imports.viewFullHistory;en-US;View full import history
+v268-145-ar;users.manageCategories;ar-EG;إدارة التصنيفات / إضافة تصنيف جديد
+v268-145-en;users.manageCategories;en-US;Manage categories / Add a category

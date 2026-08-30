@@ -4,12 +4,12 @@
         <div class="error-content">
           <span class="error-icon">🚨</span>
           <div class="error-text">
-            <strong>حدث خطأ في العملية:</strong>
+            <strong>{{ i18n.t('errorBanner.title') }}</strong>
             <p>{{ errorMessage() }}</p>
           </div>
         </div>
         <button class="button retry-btn" type="button" (click)="retry.emit()">
-          🔄 إعادة المحاولة (Retry)
+          {{ i18n.t('errorBanner.retry') }}
         </button>
       </div>
     }

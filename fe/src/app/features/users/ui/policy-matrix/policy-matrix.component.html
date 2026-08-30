@@ -1,0 +1,80 @@
+<div class="policy-matrix-container">
+  <div class="matrix-toolbar">
+    <div class="search-box">
+      <input
+        type="text"
+        [placeholder]="i18n.t('policy.searchPermissions')"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        class="form-control"
+      />
+    </div>
+
+    <div class="toolbar-actions" *ngIf="!readOnly">
+      <div class="preset-tiers-group">
+        <span class="preset-label">{{ i18n.t('policy.tierPresets') }}:</span>
+        <button type="button" class="btn btn-outline btn-xs" (click)="applyPresetTier('VIEW_ONLY')">
+          👁️ {{ i18n.t('policy.tierViewOnly') }}
+        </button>
+        <button type="button" class="btn btn-outline btn-xs" (click)="applyPresetTier('MANAGE')">
+          ✍️ {{ i18n.t('policy.tierManage') }}
+        </button>
+        <button type="button" class="btn btn-outline btn-xs" (click)="applyPresetTier('APPROVER')">
+          ⚖️ {{ i18n.t('policy.tierApprover') }}
+        </button>
+        <button type="button" class="btn btn-outline btn-xs" (click)="applyPresetTier('FULL_CONTROL')">
+          👑 {{ i18n.t('policy.tierFullControl') }}
+        </button>
+        <button type="button" class="btn btn-outline btn-xs text-danger" (click)="applyPresetTier('CLEAR')">
+          🧹 {{ i18n.t('policy.tierClear') }}
+        </button>
+      </div>
+    </div>
+
+    <div class="selection-badge">
+      <span>{{ i18n.t('policy.permissionsCount') }}:</span>
+      <strong>{{ totalSelectedCount() }}</strong>
+    </div>
+  </div>
+
+  <div class="modules-grid">
+    <div class="module-card" *ngFor="let mod of filteredModules()">
+      <div class="module-header" (click)="toggleModule(mod)">
+        <div class="module-title-area">
+          <input
+            type="checkbox"
+            [checked]="isModuleAllSelected(mod)"
+            [disabled]="readOnly"
+            (click)="$event.stopPropagation(); toggleModule(mod)"
+            class="module-checkbox"
+          />
+          <h4 class="module-title">{{ mod.module }}</h4>
+        </div>
+        <div class="module-count-badge">
+          {{ selectedInModuleCount(mod) }} / {{ mod.permissions.length }}
+        </div>
+      </div>
+
+      <div class="permissions-list">
+        <div
+          class="permission-row"
+          *ngFor="let p of mod.permissions"
+          [class.selected]="isPermissionSelected(p.permissionKey)"
+          (click)="togglePermission(p.permissionKey)"
+        >
+          <input
+            type="checkbox"
+            [checked]="isPermissionSelected(p.permissionKey)"
+            [disabled]="readOnly"
+            (click)="$event.stopPropagation(); togglePermission(p.permissionKey)"
+            class="perm-checkbox"
+          />
+          <div class="perm-info">
+            <span class="perm-name">{{ getPermissionLabel(p) }}</span>
+            <code class="perm-key">{{ p.permissionKey }}</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

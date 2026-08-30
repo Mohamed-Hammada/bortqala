@@ -84,7 +84,12 @@
       <div class="preview-card">
         <div class="preview-head">
           <strong>{{ i18n.t('reports.previewHead', {}, 'معاينة التوليد') }}</strong>
-          <span class="ltr">{{ date(preview.periodStart) }} → {{ date(preview.periodEnd) }}</span>
+          <span class="preview-range">
+            <span class="ltr">{{ date(preview.periodStart) }} → {{ date(preview.periodEnd) }}</span>
+            @if (hijriEnabled()) {
+              <span class="hijri" dir="rtl">{{ hijriDate(preview.periodStart) }} → {{ hijriDate(preview.periodEnd) }}</span>
+            }
+          </span>
         </div>
         <div class="preview-stats">
           <span><small>{{ i18n.t('reports.previewCategories', {}, 'الفئات') }}</small> {{ preview.categories.length }}</span>
@@ -125,15 +130,32 @@
       </div>
       <div class="periods">
         @for (period of store.periods(); track period.start + period.end) {
-          <button
-            [disabled]="store.loading()"
-            (click)="applyPreset(period)"
-            [attr.aria-label]="i18n.t('reports.usePeriodAria', { period: periodName(period) })"
-          >
-            <strong>{{ i18n.t('reports.useThisPeriod') }}</strong>
-            <small>{{ periodName(period) }} · {{ cycleLabel(period) }}</small>
-            <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
-          </button>
+          @if (generatedFor(period); as generated) {
+            <div class="preset-item generated" role="group"
+                 [attr.aria-label]="i18n.t('reports.usePeriodAria', { period: periodName(period) })">
+              <button type="button" disabled
+                      [title]="i18n.t('reports.alreadyGenerated')">
+                <strong>{{ i18n.t('reports.useThisPeriod') }}</strong>
+                <small>{{ periodName(period) }} · {{ cycleLabel(period) }}</small>
+                <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
+                <em class="generated-note">{{ i18n.t('reports.alreadyGenerated') }}</em>
+              </button>
+              @if (!store.generatedLoading()) {
+                <a class="view-existing" [routerLink]="['/reports', generated.reportId]">{{
+                  i18n.t('reports.viewExisting')
+                }}</a>
+              }
+            </div>
+          } @else {
+            <div class="preset-item" role="group"
+                 [attr.aria-label]="i18n.t('reports.usePeriodAria', { period: periodName(period) })">
+              <button type="button" [disabled]="store.loading()" (click)="applyPreset(period)">
+                <strong>{{ i18n.t('reports.useThisPeriod') }}</strong>
+                <small>{{ periodName(period) }} · {{ cycleLabel(period) }}</small>
+                <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
+              </button>
+            </div>
+          }
         } @empty {
           <div class="empty-state compact">
             <strong>{{ i18n.t('reports.noPeriods') }}</strong>
@@ -219,4 +241,114 @@
     />
     } <!-- end @if (!store.loading()) -->
   </div>
+
+  <!-- Scheduled Delivery Section -->
+  <section class="card schedule-card">
+    <div class="schedule-header">
+      <div>
+        <h2>{{ i18n.t('reports.scheduledDelivery') }}</h2>
+        <p>{{ i18n.t('reports.scheduledDeliveryHint') }}</p>
+      </div>
+      <button class="button secondary" type="button" (click)="showScheduleForm.set(!showScheduleForm())">
+        {{ i18n.t('reports.createSchedule') }}
+      </button>
+    </div>
+
+    @if (showScheduleForm()) {
+      <form class="schedule-form" [formGroup]="scheduleForm" (ngSubmit)="createSchedule()">
+        <div class="field-row">
+          <div class="field">
+            <label>{{ i18n.t('reports.scheduleName') }}</label>
+            <input type="text" formControlName="name" [placeholder]="i18n.t('reports.scheduleName')" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('reports.reportType') }}</label>
+            <select formControlName="reportKind">
+              <option value="ATTENDANCE">{{ i18n.t('nav.attendanceReports') }}</option>
+              <option value="PAYROLL">{{ i18n.t('nav.payroll') }}</option>
+              <option value="AR_AGING">{{ i18n.t('reports.scheduleKindArAging') }}</option>
+              <option value="CASHFLOW">{{ i18n.t('reports.scheduleKindCashFlow') }}</option>
+              <option value="TRENDS">{{ i18n.t('dashboard.trends') }}</option>
+              <option value="CUSTOM">{{ i18n.t('reports.scheduleKindCustom') }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('reports.channel') }}</label>
+            <select formControlName="channel">
+              <option value="EMAIL">{{ i18n.t('reports.scheduleKindEmail') }}</option>
+              <option value="WHATSAPP">{{ i18n.t('reports.scheduleKindWhatsApp') }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('reports.cadence') }}</label>
+            <select formControlName="cadence">
+              <option value="DAILY">{{ i18n.t('reports.daily') }}</option>
+              <option value="WEEKLY">{{ i18n.t('reports.weekly') }}</option>
+              <option value="MONTHLY">{{ i18n.t('reports.monthlyCron') }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('reports.timeOfDay') }}</label>
+            <input type="time" formControlName="timeOfDay" class="ltr" />
+          </div>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('reports.recipients') }}</label>
+          <input type="text" formControlName="recipients" placeholder="email1@example.com, email2@example.com" class="ltr" />
+        </div>
+        <div class="schedule-toolbar">
+          <button class="button primary" type="submit" [disabled]="scheduleForm.invalid || savingSchedule()">
+            {{ savingSchedule() ? '…' : i18n.t('reports.createSchedule') }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (schedules().length === 0) {
+      <div class="empty-state">
+        <strong>{{ i18n.t('reports.noSchedules') }}</strong>
+      </div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('reports.scheduleName') }}</th>
+            <th>{{ i18n.t('reports.reportType') }}</th>
+            <th>{{ i18n.t('reports.channel') }}</th>
+            <th>{{ i18n.t('reports.cadence') }}</th>
+            <th>{{ i18n.t('reports.timeOfDay') }}</th>
+            <th>{{ i18n.t('reports.lastRun') }}</th>
+            <th>{{ i18n.t('reports.lastStatus') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of schedules(); track s.id) {
+            <tr>
+              <td>{{ s.name }}</td>
+              <td>{{ s.reportKind }}</td>
+              <td>{{ s.channel }}</td>
+              <td>{{ s.cadence }}</td>
+              <td>{{ s.timeOfDay ?? '—' }}</td>
+              <td>{{ s.lastRunAt ? formatDateTime(s.lastRunAt) : '—' }}</td>
+              <td>
+                <span class="badge" [class.success]="s.lastStatus === 'SUCCESS'" [class.error]="s.lastStatus === 'FAILED'" [class.muted]="s.lastStatus === 'SKIPPED_CHANNEL'">
+                  {{ s.lastStatus ?? '—' }}
+                </span>
+                @if (s.lastError) {
+                  <small class="error-tooltip" [title]="s.lastError">⚠</small>
+                }
+              </td>
+              <td class="actions-cell">
+                <button class="button secondary small" type="button" (click)="runSchedule(s.id)" [disabled]="runningSchedule() === s.id">
+                  {{ runningSchedule() === s.id ? '…' : i18n.t('reports.runNow') }}
+                </button>
+                <button class="button danger small" type="button" (click)="deleteSchedule(s.id)">✕</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
 </section>

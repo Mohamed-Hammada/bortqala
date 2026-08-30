@@ -45,6 +45,89 @@ export class DashboardPage {
   readonly trendMonthCount = signal(6);
   readonly trendExporting = signal(false);
   readonly trendMonthOptions = [3, 6, 12, 24];
+  readonly peakMonths = signal(6);
+  readonly peakMonthOptions = [3, 6, 12];
+  readonly peakCategoryId = signal<string | null>(null);
+  readonly peakExporting = signal(false);
+  /** WP-08: deterministic per-category color for bars + legend. */
+  private static readonly PEAK_PALETTE = ['#c8a24a', '#4a7fc8', '#5aa86c', '#b8626d', '#8a67b8', '#c88a4a'];
+  /** WP-08: hour rows 04:00–13:00 with per-category counts flattened for CSS bars. */
+  readonly peakRows = computed(() => {
+    const nameById = new Map<string, string>();
+    for (const c of this.store.data()?.categories ?? []) nameById.set(c.categoryId, c.categoryName);
+    const buckets = this.store.clockInBuckets();
+    const rows: { hour: number; entries: { categoryId: string; categoryName: string; count: number; color: string }[]; total: number }[] = [];
+    let max = 0;
+    for (let hour = 4; hour <= 13; hour++) {
+      const bucket = buckets.find((b) => b.hour === hour);
+      const entries = Object.entries(bucket?.countsByCategory ?? {})
+        .map(([categoryId, count]) => ({
+          categoryId,
+          categoryName: nameById.get(categoryId) ?? categoryId,
+          count,
+          color: this.categoryColor(categoryId),
+        }))
+        .sort((a, b) => b.count - a.count);
+      const total = entries.reduce((sum, e) => sum + e.count, 0);
+      max = Math.max(max, total);
+      rows.push({ hour, entries, total });
+    }
+    return { rows, max };
+  });
+  readonly peakHasData = computed(() => this.peakRows().rows.some((r) => r.total > 0));
+  /** WP-08: legend categories present in the current histogram window. */
+  readonly peakLegend = computed(() => {
+    const seen = new Map<string, { categoryId: string; categoryName: string; color: string }>();
+    for (const row of this.peakRows().rows) {
+      for (const entry of row.entries) {
+        if (!seen.has(entry.categoryId)) {
+          seen.set(entry.categoryId, { categoryId: entry.categoryId, categoryName: entry.categoryName, color: entry.color });
+        }
+      }
+    }
+    return [...seen.values()];
+  });
+
+  categoryColor(categoryId: string): string {
+    const categories = this.store.data()?.categories ?? [];
+    const index = Math.max(categories.findIndex((c) => c.categoryId === categoryId), 0);
+    return DashboardPage.PEAK_PALETTE[index % DashboardPage.PEAK_PALETTE.length];
+  }
+
+  changePeakMonths(monthsStr: string): void {
+    const months = Number(monthsStr);
+    if (!isNaN(months) && months >= 1 && months <= 24) {
+      this.peakMonths.set(months);
+      void this.store.loadClockInHistogram(months, this.peakCategoryId() ?? undefined);
+    }
+  }
+
+  changePeakCategory(value: string): void {
+    this.peakCategoryId.set(value === '' ? null : value);
+    void this.store.loadClockInHistogram(this.peakMonths(), this.peakCategoryId() ?? undefined);
+  }
+
+  async exportPeak(): Promise<void> {
+    if (this.peakExporting()) return;
+    this.peakExporting.set(true);
+    try {
+      const blob = await this.store.downloadClockInHistogram(this.peakMonths(), this.peakCategoryId() ?? undefined);
+      downloadBlob(blob, timestampedExcelFileName(
+        this.i18n.t('export.file.clock-in-histogram'),
+        'clock-in-histogram',
+        this.i18n.locale(),
+      ));
+    } catch {
+      this.notification.error(this.i18n.t('dashboard.exportFailed'));
+    } finally {
+      this.peakExporting.set(false);
+    }
+  }
+
+  barWidth(count: number): string {
+    const max = Math.max(this.peakRows().max, 1);
+    return `${Math.round((count / max) * 100)}%`;
+  }
   readonly departmentOptions = computed(() => {
     const depts = this.store.departmentMetrics();
     return [{ id: null as string | null, name: this.i18n.t('dashboard.allDepartments') }, ...depts.map(d => ({ id: d.departmentId, name: d.departmentName }))];
@@ -185,6 +268,9 @@ export class DashboardPage {
       this.selectedDepartmentId(),
       this.trendMonthCount(),
     );
+    if (!this.store.clockInBuckets().length) {
+      void this.store.loadClockInHistogram(this.peakMonths());
+    }
   }
 
   changePeriodFilter(): void {
@@ -242,7 +328,7 @@ export class DashboardPage {
     try {
       const blob = await this.store.downloadTrends(this.trendMonthCount(), this.year(), this.month());
       downloadBlob(blob, timestampedExcelFileName(
-        'اتجاهات-متعددة-الفترات',
+        this.i18n.t('export.file.trends'),
         'multi-period-trends',
         this.i18n.locale(),
       ));

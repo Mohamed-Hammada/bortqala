@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260827_v377_report_schedules_schema
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: report_schedules
+      changes:
+        - createTable:
+            tableName: report_schedules
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { nullable: false, primaryKey: true } }
+              - column: { name: app_id, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: report_kind, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: params, type: text }
+              - column: { name: channel, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: recipients, type: text }
+              - column: { name: cadence, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: time_of_day, type: varchar(5) }
+              - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
+              - column: { name: last_run_at, type: timestamp }
+              - column: { name: last_status, type: varchar(20) }
+              - column: { name: last_error, type: text }
+              - column: { name: consecutive_failures, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
+        - createIndex:
+            tableName: report_schedules
+            indexName: idx_report_sched_app
+            columns:
+              - column: { name: app_id }
+        - createIndex:
+            tableName: report_schedules
+            indexName: idx_report_sched_active
+            columns:
+              - column: { name: active }
+      rollback:
+        - dropTable:
+            tableName: report_schedules

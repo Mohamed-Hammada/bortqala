@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260830-v448-001
+      author: bemo-architect
+      changes:
+        - addColumn:
+            tableName: app_users
+            columns:
+              - column:
+                  name: employee_id
+                  type: varchar(36)
+                  remarks: "Linked employee ID for Employee Self Service (ESS)"
+        - createIndex:
+            indexName: idx_app_users_employee_id
+            tableName: app_users
+            columns:
+              - column:
+                  name: employee_id

@@ -47,4 +47,32 @@ public class SegregationOfDutiesService {
             }
         }
     }
+
+    public void validateClaimCreatorNotCertifier(String creatorUsername, String certifierUsername, String claimType) {
+        log.debug("validateClaimCreatorNotCertifier called with creator={}, certifier={}, type={}",
+                creatorUsername, certifierUsername, claimType);
+        if (Objects.equals(creatorUsername, certifierUsername)) {
+            log.warn("Validation failed: claim creator-certifier conflict for {} on {}", certifierUsername, claimType);
+            throw new SegregationOfDutiesViolationException(
+                    "CLAIM_CREATOR_CERTIFIER_CONFLICT",
+                    certifierUsername,
+                    String.format("The user who prepared the %s cannot certify or approve it.", claimType)
+            );
+        }
+    }
+
+    public void validateDualAuthorizationRequired(int requiredApprovals, int distinctApproversCount, BigDecimal amount, BigDecimal dualAuthThreshold) {
+        log.debug("validateDualAuthorizationRequired called: required={}, distinct={}, amount={}, threshold={}",
+                requiredApprovals, distinctApproversCount, amount, dualAuthThreshold);
+        if (amount != null && dualAuthThreshold != null && amount.compareTo(dualAuthThreshold) >= 0) {
+            if (distinctApproversCount < Math.max(requiredApprovals, 2)) {
+                log.warn("Dual authorization check failed: only {} of minimum 2 distinct approvers have signed", distinctApproversCount);
+                throw new SegregationOfDutiesViolationException(
+                        "DUAL_AUTHORIZATION_REQUIRED",
+                        "MULTIPLE_APPROVERS",
+                        String.format("Transactions exceeding %s require at least 2 distinct authorized approvers.", dualAuthThreshold)
+                );
+            }
+        }
+    }
 }

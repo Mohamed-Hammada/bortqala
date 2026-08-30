@@ -127,6 +127,19 @@
             <label>{{ i18n.t('journal.referenceLabel') }}</label>
             <input class="ltr" formControlName="reference" [placeholder]="i18n.t('journal.referencePlaceholder')" />
           </div>
+          <div class="field">
+            <label>{{ i18n.t('journal.projectDimension') }}</label>
+            <select formControlName="projectId">
+              <option value="">{{ i18n.t('journal.allProjects') }}</option>
+              @for (p of projects(); track p.id) {
+                <option [value]="p.id">{{ p.code }} - {{ p.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('journal.costCodeDimension') }}</label>
+            <input class="ltr" formControlName="costCodeId" [placeholder]="i18n.t('journal.selectCostCode')" />
+          </div>
         </div>
 
         <!-- Journal Lines Table -->
@@ -163,6 +176,8 @@
                     <input type="text" [value]="line.memo" (input)="updateLine($index, 'memo', $any($event.target).value)" [placeholder]="i18n.t('journal.lineNotesPlaceholder')" />
                     <input type="text" [value]="line.costCenterId" (input)="updateLine($index, 'costCenterId', $any($event.target).value)" [placeholder]="i18n.t('journal.costCenter')" />
                     <input type="text" [value]="line.projectId" (input)="updateLine($index, 'projectId', $any($event.target).value)" [placeholder]="i18n.t('journal.project')" />
+                    <input type="text" [value]="line.wbsNodeId" (input)="updateLine($index, 'wbsNodeId', $any($event.target).value)" [placeholder]="i18n.t('journal.wbsDimension')" />
+                    <input type="text" [value]="line.costCodeId" (input)="updateLine($index, 'costCodeId', $any($event.target).value)" [placeholder]="i18n.t('journal.costCodeDimension')" />
                     <input type="text" [value]="line.departmentId" (input)="updateLine($index, 'departmentId', $any($event.target).value)" [placeholder]="i18n.t('journal.department')" />
                   </td>
                   <td>

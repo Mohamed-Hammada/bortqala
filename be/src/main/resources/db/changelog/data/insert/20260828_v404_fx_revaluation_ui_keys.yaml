@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260828_v404_fx_revaluation_ui_keys
+      author: wolfn
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: "0"
+            sql: SELECT COUNT(*) FROM translations WHERE id LIKE 'v404-%'
+      changes:
+        - loadData:
+            relativeToChangelogFile: true
+            file: files/20260828_v404_fx_revaluation_ui_keys.csv
+            tableName: translations
+            separator: ";"
+            quotchar: '"'
+      rollback:
+        - sql:
+            sql: DELETE FROM translations WHERE id LIKE 'v404-%'

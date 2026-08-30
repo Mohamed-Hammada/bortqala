@@ -1,0 +1,75 @@
+id;translation_key;locale;text_value
+v394-001;marketing.surveys;ar-EG;الاستبيانات
+v394-002;marketing.surveys;en-US;Surveys
+v394-003;marketing.createSurvey;ar-EG;إنشاء استبيان
+v394-004;marketing.createSurvey;en-US;Create Survey
+v394-005;marketing.surveyTitle;ar-EG;عنوان الاستبيان
+v394-006;marketing.surveyTitle;en-US;Survey Title
+v394-007;marketing.surveyDesc;ar-EG;وصف الاستبيان
+v394-008;marketing.surveyDesc;en-US;Survey Description
+v394-009;marketing.addQuestion;ar-EG;إضافة سؤال
+v394-010;marketing.addQuestion;en-US;Add Question
+v394-011;marketing.questionText;ar-EG;نص السؤال
+v394-012;marketing.questionText;en-US;Question Text
+v394-013;marketing.questionType;ar-EG;نوع السؤال
+v394-014;marketing.questionType;en-US;Question Type
+v394-015;marketing.choice;ar-EG;اختيار واحد
+v394-016;marketing.choice;en-US;Single Choice
+v394-017;marketing.multi;ar-EG;اختيار متعدد
+v394-018;marketing.multi;en-US;Multiple Choice
+v394-019;marketing.rating;ar-EG;تقييم
+v394-020;marketing.rating;en-US;Rating
+v394-021;marketing.text;ar-EG;نص حر
+v394-022;marketing.text;en-US;Free Text
+v394-023;marketing.options;ar-EG;الخيارات
+v394-024;marketing.options;en-US;Options
+v394-025;marketing.respondents;ar-EG;الم responded
+v394-026;marketing.respondents;en-US;Respondents
+v394-027;marketing.surveyResults;ar-EG;نتائج الاستبيان
+v394-028;marketing.surveyResults;en-US;Survey Results
+v394-029;marketing.surveyCreated;ar-EG;تم إنشاء الاستبيان
+v394-030;marketing.surveyCreated;en-US;Survey created
+v394-031;marketing.noSurveys;ar-EG;لا توجد استبيانات بعد
+v394-032;marketing.noSurveys;en-US;No surveys yet
+v394-033;marketing.answerSubmitted;ar-EG;تم تسجيل الإجابة
+v394-034;marketing.answerSubmitted;en-US;Answer submitted
+v394-035;marketing.noQuestions;ar-EG;لا توجد أسئلة بعد
+v394-036;marketing.noQuestions;en-US;No questions yet
+v394-037;marketing.totalRespondents;ar-EG;إجمالي الم participates
+v394-038;marketing.totalRespondents;en-US;Total Respondents
+v394-039;reportBuilder.title;ar-EG;منشئ التقارير المخصصة
+v394-040;reportBuilder.title;en-US;Custom Report Builder
+v394-041;reportBuilder.datasets;ar-EG;مجموعات البيانات
+v394-042;reportBuilder.datasets;en-US;Datasets
+v394-043;reportBuilder.dimensions;ar-EG;الأبعاد
+v394-044;reportBuilder.dimensions;en-US;Dimensions
+v394-045;reportBuilder.measures;ar-EG;المقاييس
+v394-046;reportBuilder.measures;en-US;Measures
+v394-047;reportBuilder.filters;ar-EG;العوامل التصفية
+v394-048;reportBuilder.filters;en-US;Filters
+v394-049;reportBuilder.sortBy;ar-EG;ترتيب حسب
+v394-050;reportBuilder.sortBy;en-US;Sort By
+v394-051;reportBuilder.runQuery;ar-EG;تنفيذ الاستعلام
+v394-052;reportBuilder.runQuery;en-US;Run Query
+v394-053;reportBuilder.saveReport;ar-EG;حفظ التقرير
+v394-054;reportBuilder.saveReport;en-US;Save Report
+v394-055;reportBuilder.reportName;ar-EG;اسم التقرير
+v394-056;reportBuilder.reportName;en-US;Report Name
+v394-057;reportBuilder.myReports;ar-EG;تقاريري المحفوظة
+v394-058;reportBuilder.myReports;en-US;My Saved Reports
+v394-059;reportBuilder.noReports;ar-EG;لا توجد تقارير محفوظة
+v394-060;reportBuilder.noReports;en-US;No saved reports
+v394-061;reportBuilder.reportSaved;ar-EG;تم حفظ التقرير
+v394-062;reportBuilder.reportSaved;en-US;Report saved
+v394-063;reportBuilder.dragField;ar-EG;اسحب الحقل هنا
+v394-064;reportBuilder.dragField;en-US;Drag field here
+v394-065;reportBuilder.limit;ar-EG;الحد الأقصى للصفوف
+v394-066;reportBuilder.limit;en-US;Max Rows
+v394-067;reportBuilder.totalRows;ar-EG;إجمالي الصفوف
+v394-068;reportBuilder.totalRows;en-US;Total Rows
+v394-069;reportBuilder.export;ar-EG;تصدير
+v394-070;reportBuilder.export;en-US;Export
+v394-071;reportBuilder.noData;ar-EG;لا توجد بيانات
+v394-072;reportBuilder.noData;en-US;No data
+v394-073;reportBuilder.preview;ar-EG;معاينة
+v394-074;reportBuilder.preview;en-US;Preview

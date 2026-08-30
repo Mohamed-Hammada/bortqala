@@ -1,0 +1,229 @@
+<div class="claims-workbench">
+  <!-- KPI Metrics Bar -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon">📜</div>
+      <div class="kpi-data">
+        <span class="kpi-value font-mono">{{ kpiTotal() }}</span>
+        <span class="kpi-label">{{ i18n.t('claims.title') }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">🏛️</div>
+      <div class="kpi-data">
+        <span class="kpi-value font-mono">{{ kpiOwner() }}</span>
+        <span class="kpi-label">{{ i18n.t('claims.typeOwner') }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">👷</div>
+      <div class="kpi-data">
+        <span class="kpi-value font-mono">{{ kpiSubcontractor() }}</span>
+        <span class="kpi-label">{{ i18n.t('claims.typeSubcontractor') }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card highlight-card">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-data">
+        <span class="kpi-value font-mono font-bold">{{ kpiTotalNetPayable() | number:'1.2-2' }}</span>
+        <span class="kpi-label">{{ i18n.t('claims.netPayable') }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Actions Toolbar -->
+  <div class="claims-toolbar">
+    <div class="filter-group">
+      <input
+        type="text"
+        class="search-input form-control"
+        [placeholder]="i18n.t('common.search')"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+
+      <select
+        class="form-select"
+        [ngModel]="typeFilter()"
+        (ngModelChange)="typeFilter.set($event)"
+      >
+        <option value="ALL">-- {{ i18n.t('claims.claimType') }} --</option>
+        <option value="OWNER_IPC">{{ i18n.t('claims.typeOwner') }}</option>
+        <option value="SUBCONTRACTOR_IPC">{{ i18n.t('claims.typeSubcontractor') }}</option>
+      </select>
+
+      <select
+        class="form-select"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event)"
+      >
+        <option value="ALL">-- {{ i18n.t('common.status') }} --</option>
+        <option value="DRAFT">{{ i18n.t('claims.statusDraft') }}</option>
+        <option value="SUBMITTED">{{ i18n.t('claims.statusSubmitted') }}</option>
+        <option value="REVIEWED">{{ i18n.t('claims.statusReviewed') }}</option>
+        <option value="CERTIFIED">{{ i18n.t('claims.statusCertified') }}</option>
+        <option value="POSTED_FINANCE">{{ i18n.t('claims.statusPosted') }}</option>
+        <option value="PAID">{{ i18n.t('claims.statusPaid') }}</option>
+        <option value="CANCELLED">{{ i18n.t('claims.statusCancelled') }}</option>
+      </select>
+    </div>
+
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      ➕ {{ i18n.t('claims.createClaim') }}
+    </button>
+  </div>
+
+  <!-- Claims Table -->
+  <div class="table-container">
+    <table class="data-table" *ngIf="filteredClaims().length > 0; else emptyState">
+      <thead>
+        <tr>
+          <th style="width: 50px">{{ i18n.t('claims.sequenceNumber') }}</th>
+          <th style="width: 140px">{{ i18n.t('claims.claimNumber') }}</th>
+          <th style="width: 140px">{{ i18n.t('claims.claimType') }}</th>
+          <th style="width: 110px">{{ i18n.t('claims.claimKind') }}</th>
+          <th>{{ i18n.t('projects.roleParty') }}</th>
+          <th style="width: 180px">{{ i18n.t('claims.periodStart') }} ~ {{ i18n.t('claims.periodEnd') }}</th>
+          <th style="width: 120px" class="text-end">{{ i18n.t('claims.currentGross') }}</th>
+          <th style="width: 110px" class="text-end">{{ i18n.t('claims.currentRetention') }}</th>
+          <th style="width: 130px" class="text-end">{{ i18n.t('claims.netPayable') }}</th>
+          <th style="width: 110px">{{ i18n.t('common.status') }}</th>
+          <th style="width: 160px" class="text-center">{{ i18n.t('common.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filteredClaims()">
+          <td class="font-mono text-center">#{{ c.claimSequenceNumber }}</td>
+          <td>
+            <button type="button" class="btn-link font-mono font-bold" (click)="openCertificate(c)">
+              {{ c.claimNumber }}
+            </button>
+          </td>
+          <td>
+            <span class="type-pill" [class.owner]="c.claimType === 'OWNER_IPC'" [class.sub]="c.claimType === 'SUBCONTRACTOR_IPC'">
+              {{ c.claimType === 'OWNER_IPC' ? i18n.t('claims.typeOwner') : i18n.t('claims.typeSubcontractor') }}
+            </span>
+          </td>
+          <td>
+            <span class="kind-tag">{{ c.claimKind === 'FINAL_ACCOUNT' ? i18n.t('claims.kindFinal') : i18n.t('claims.kindInterim') }}</span>
+          </td>
+          <td>{{ c.partyName || '—' }}</td>
+          <td class="font-mono text-muted">{{ c.periodStartDate }} ~ {{ c.periodEndDate }}</td>
+          <td class="font-mono text-end font-bold">{{ c.currentGrossAmount | number:'1.2-2' }}</td>
+          <td class="font-mono text-end text-danger">{{ c.currentRetentionAmount | number:'1.2-2' }}</td>
+          <td class="font-mono text-end font-bold highlight-cell">
+            {{ c.currentNetPayableAmount | number:'1.2-2' }} {{ c.currencyCode }}
+          </td>
+          <td>
+            <span class="status-badge" [attr.data-status]="c.status">{{ c.status }}</span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn-icon"
+                [title]="i18n.t('claims.tabCertificate')"
+                (click)="openCertificate(c)"
+              >
+                📜
+              </button>
+
+              <button
+                type="button"
+                class="btn-icon"
+                *ngIf="c.status === 'DRAFT'"
+                [title]="i18n.t('claims.editClaim')"
+                (click)="openEdit(c)"
+              >
+                ✏️
+              </button>
+
+              <button
+                type="button"
+                class="btn-icon btn-icon-accent"
+                *ngIf="c.status === 'DRAFT'"
+                [title]="i18n.t('claims.submitClaim')"
+                (click)="submitClaim(c)"
+              >
+                📤
+              </button>
+
+              <button
+                type="button"
+                class="btn-icon btn-icon-accent"
+                *ngIf="c.status === 'SUBMITTED'"
+                [title]="i18n.t('claims.reviewClaim')"
+                (click)="reviewClaim(c)"
+              >
+                🔍
+              </button>
+
+              <button
+                type="button"
+                class="btn-icon btn-icon-success"
+                *ngIf="c.status === 'REVIEWED' || c.status === 'SUBMITTED'"
+                [title]="i18n.t('claims.certifyClaim')"
+                (click)="certifyClaim(c)"
+              >
+                ✅
+              </button>
+
+              <button
+                type="button"
+                class="btn-icon btn-icon-success"
+                *ngIf="c.status === 'CERTIFIED'"
+                [title]="i18n.t('claims.postFinance')"
+                (click)="postClaimToFinance(c)"
+              >
+                💼
+              </button>
+
+              <button
+                type="button"
+                class="btn-icon btn-icon-danger"
+                *ngIf="c.status === 'DRAFT'"
+                [title]="i18n.t('claims.deleteClaim')"
+                (click)="deleteClaim(c)"
+              >
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <div class="empty-icon">📜</div>
+        <h4 class="empty-title">{{ i18n.t('claims.noClaimsTitle') }}</h4>
+        <p class="empty-desc">{{ i18n.t('claims.noClaimsDesc') }}</p>
+        <button type="button" class="btn btn-primary" (click)="openCreate()">
+          ➕ {{ i18n.t('claims.createClaim') }}
+        </button>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Claim Editor Modal (Create or Edit) -->
+  <app-claim-editor-modal
+    [isOpen]="editorModalOpen()"
+    [projectId]="projectId"
+    [claim]="activeClaim()"
+    [parties]="parties"
+    (close)="editorModalOpen.set(false)"
+    (saveCreate)="handleSaveCreate($event)"
+    (saveUpdate)="handleSaveUpdate($event)"
+  ></app-claim-editor-modal>
+
+  <!-- Claim Official Certificate Modal -->
+  <app-claim-certificate-modal
+    [isOpen]="certificateModalOpen()"
+    [claim]="activeClaim()"
+    [projectName]="projectName"
+    (close)="certificateModalOpen.set(false)"
+  ></app-claim-certificate-modal>
+</div>

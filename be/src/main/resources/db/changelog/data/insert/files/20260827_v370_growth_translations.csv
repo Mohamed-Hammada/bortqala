@@ -1,0 +1,93 @@
+id;translation_key;locale;text_value
+v370-001-en;growth.loyalty;en-US;Loyalty Points
+v370-001-ar;growth.loyalty;ar-EG;نقاط الولاء
+v370-002-en;growth.loyaltyRules;en-US;Loyalty Rules
+v370-002-ar;growth.loyaltyRules;ar-EG;قواعد الولاء
+v370-003-en;growth.pointsPerHundredEgp;en-US;Points per 100 EGP
+v370-003-ar;growth.pointsPerHundredEgp;ar-EG;نقاط لكل 100 جنيه
+v370-004-en;growth.redeemMaxPercent;en-US;Max Redeem % of Sale
+v370-004-ar;growth.redeemMaxPercent;ar-EG;نسبة الخصم القصوى من البيع
+v370-005-en;growth.expiryMonths;en-US;Points Expiry (months)
+v370-005-ar;growth.expiryMonths;ar-EG;صلاحية النقاط (أشهر)
+v370-006-en;growth.pointsBalance;en-US;Points Balance
+v370-006-ar;growth.pointsBalance;ar-EG;رصيد النقاط
+v370-007-en;growth.totalEarned;en-US;Total Earned
+v370-007-ar;growth.totalEarned;ar-EG;إجمالي المكتسب
+v370-008-en;growth.totalRedeemed;en-US;Total Redeemed
+v370-008-ar;growth.totalRedeemed;ar-EG;إجمالي المسترد
+v370-009-en;growth.ledger;en-US;Points History
+v370-009-ar;growth.ledger;ar-EG;سجل النقاط
+v370-010-en;growth.earnPoints;en-US;Earn Points
+v370-010-ar;growth.earnPoints;ar-EG;اكتساب نقاط
+v370-011-en;growth.redeemPoints;en-US;Redeem Points
+v370-011-ar;growth.redeemPoints;ar-EG;استرداد نقاط
+v370-012-en;growth.adjustPoints;en-US;Adjust Points
+v370-012-ar;growth.adjustPoints;ar-EG;تعديل النقاط
+v370-013-en;growth.membership;en-US;Memberships
+v370-013-ar;growth.membership;ar-EG;العضويات
+v370-014-en;growth.membershipPlans;en-US;Membership Plans
+v370-014-ar;growth.membershipPlans;ar-EG;خطط العضوية
+v370-015-en;growth.planName;en-US;Plan Name
+v370-015-ar;growth.planName;ar-EG;اسم الخطة
+v370-016-en;growth.periodDays;en-US;Period (Days)
+v370-016-ar;growth.periodDays;ar-EG;المدة (أيام)
+v370-017-en;growth.graceDays;en-US;Grace Period (Days)
+v370-017-ar;growth.graceDays;ar-EG;فترة السماح (أيام)
+v370-018-en;growth.autoRenew;en-US;Auto Renew
+v370-018-ar;growth.autoRenew;ar-EG;تجديد تلقائي
+v370-019-en;growth.subscriptions;en-US;Active Subscriptions
+v370-019-ar;growth.subscriptions;ar-EG;الاشتراكات النشطة
+v370-020-en;growth.subscribe;en-US;Subscribe
+v370-020-ar;growth.subscribe;ar-EG;اشترك
+v370-021-en;growth.cancelSubscription;en-US;Cancel Subscription
+v370-021-ar;growth.cancelSubscription;ar-EG;إلغاء الاشتراك
+v370-022-en;growth.referral;en-US;Referrals
+v370-022-ar;growth.referral;ar-EG;الإحالات
+v370-023-en;growth.referralRules;en-US;Referral Reward Rules
+v370-023-ar;growth.referralRules;ar-EG;قواعد مكافآت الإحالة
+v370-024-en;growth.referrerPoints;en-US;Referrer Reward Points
+v370-024-ar;growth.referrerPoints;ar-EG;نقاط مكافأة المُحيل
+v370-025-en;growth.referredPoints;en-US;Referred Bonus Points
+v370-025-ar;growth.referredPoints;ar-EG;نقاط مكافأة المُحال
+v370-026-en;growth.topReferrers;en-US;Top Referrers
+v370-026-ar;growth.topReferrers;ar-EG;أفضل المُحيلين
+v370-027-en;growth.referredCount;en-US;Referrals
+v370-027-ar;growth.referredCount;ar-EG;الإحالات
+v370-028-en;growth.rewardedCount;en-US;Rewarded
+v370-028-ar;growth.rewardedCount;ar-EG;تم التreward
+v370-029-en;growth.wallet;en-US;Wallet
+v370-029-ar;growth.wallet;ar-EG;المحفظة
+v370-030-en;growth.nextRenewal;en-US;Next Renewal
+v370-030-ar;growth.nextRenewal;ar-EG;التجديد القادم
+v370-031-en;growth.redeemAtPos;en-US;Redeem at POS
+v370-031-ar;growth.redeemAtPos;ar-EG;الاسترداد عند نقطة البيع
+v370-032-en;LOYALTY_ACCOUNT_NOT_FOUND;en-US;Loyalty account not found.
+v370-032-ar;LOYALTY_ACCOUNT_NOT_FOUND;ar-EG;حساب الولاء غير موجود.
+v370-033-en;LOYALTY_INSUFFICIENT_POINTS;en-US;Insufficient points balance.
+v370-033-ar;LOYALTY_INSUFFICIENT_POINTS;ar-EG;رصيد النقاط غير كافٍ.
+v370-034-en;LOYALTY_ADJUST_NEGATIVE;en-US;Cannot adjust: would result in negative balance.
+v370-034-ar;LOYALTY_ADJUST_NEGATIVE;ar-EG;لا يمكن التعديل: سيؤدي إلى رصيد سالب.
+v370-035-en;MEMBERSHIP_PLAN_NOT_FOUND;en-US;Membership plan not found.
+v370-035-ar;MEMBERSHIP_PLAN_NOT_FOUND;ar-EG;خطة العضوية غير موجودة.
+v370-036-en;MEMBERSHIP_SUB_NOT_FOUND;en-US;Subscription not found.
+v370-036-ar;MEMBERSHIP_SUB_NOT_FOUND;ar-EG;الاشتراك غير موجود.
+v370-037-en;MEMBERSHIP_SUB_INVALID_STATE;en-US;Subscription cannot be cancelled in current state.
+v370-037-ar;MEMBERSHIP_SUB_INVALID_STATE;ar-EG;لا يمكن إلغاء الاشتراك في الحالة الحالية.
+v370-038-en;REFERRAL_DUPLICATE;en-US;This customer has already been referred.
+v370-038-ar;REFERRAL_DUPLICATE;ar-EG;تم إحالة هذا العميل بالفعل.
+v370-039-en;REFERRAL_SELF;en-US;A customer cannot refer themselves.
+v370-039-ar;REFERRAL_SELF;ar-EG;لا يمكن للعميل إحالة نفسه.
+v370-040-en;growth.createPlan;en-US;Create Plan
+v370-040-ar;growth.createPlan;ar-EG;إنشاء خطة
+v370-041-en;growth.createReferral;en-US;Add Referral
+v370-041-ar;growth.createReferral;ar-EG;إضافة إحالة
+v370-042-en;growth.renewalRun;en-US;Run Renewal Job
+v370-042-ar;growth.renewalRun;ar-EG;تشغيل مهمة التجديد
+v370-043-en;growth.renewalResult;en-US;Renewal complete
+v370-043-ar;growth.renewalResult;ar-EG;اكتمل التجديد
+v370-044-en;growth.welcomeBonus;en-US;Welcome Referral Bonus
+v370-044-ar;growth.welcomeBonus;ar-EG;مكافأة ترحيبية بالإحالة
+v370-045-en;growth.referrerReward;en-US;Referrer Reward
+v370-045-ar;growth.referrerReward;ar-EG;مكافأة المُحيل
+v370-046-en;growth.expired;en-US;Expired
+v370-046-ar;growth.expired;ar-EG;منتهية الصلاحية

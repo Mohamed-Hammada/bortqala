@@ -1,0 +1,3 @@
+id;permission_key;module;submodule;description_key;action;is_system;created_at
+p-expense-001;expense:claims:read;expense;claims;perm.expense.claims.read;read;true;1787270400000
+p-expense-002;expense:claims:manage;expense;claims;perm.expense.claims.manage;manage;true;1787270400000

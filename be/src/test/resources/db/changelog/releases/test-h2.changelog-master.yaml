@@ -476,6 +476,10 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260806_v103_procurement_i18n_translations.yaml
   - include:
+      file: db/changelog/schema/update/20260806_v104_contractor_settlement_lifecycle.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v105_contractor_settlement_translations.yaml
+  - include:
       file: db/changelog/schema/create/20260806_v106_approval_workflow_engine.yaml
   - include:
       file: db/changelog/data/insert/20260806_v107_approval_engine_translations.yaml
@@ -750,5 +754,767 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260816_v255_entitlement_feature_translations.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260816_v260_runtime_feedback_fixes.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260816_v261_corrective_runtime_fixes.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260816_v262_remaining_runtime_fixes.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260817_v263_inline_locale_i18n_cleanup.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260817_v264_navigation_ia_openai.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260818_v265_settings_submenus_i18n.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260818_v266_fix_industry_onboarding_step_unique.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260818_v267_industry_pack_extensions_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260818_v268_hardcoded_ui_i18n.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_WBS_20260819: Feature 01 Project Register & Hierarchical WBS / BOQ
+  - include:
+      file: db/changelog/schema/create/20260819_v269_project_wbs_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v270_project_wbs_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v271_project_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_DPR_20260819: Feature 02 Daily Site Progress & Field Reporting (DPR)
+  - include:
+      file: db/changelog/schema/create/20260819_v272_project_daily_reports_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v273_project_daily_reports_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_SCHEDULING_20260819: Feature 03 Project Scheduling, Gantt & Resource Planning
+  - include:
+      file: db/changelog/schema/create/20260819_v274_project_scheduling_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v275_project_scheduling_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_TENDERS_20260819: Feature 04 Project Tender & Competition Management
+  - include:
+      file: db/changelog/schema/create/20260819_v276_project_tenders_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v277_project_tenders_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_CLAIMS_20260819: Feature 05 Owner & Subcontractor Progress Claims (IPC)
+  - include:
+      file: db/changelog/schema/create/20260819_v278_project_claims_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v279_project_claims_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_COST_CONTROL_20260819: Feature 06 Project Budget, Cost Control, Variance & Profitability
+  - include:
+      file: db/changelog/schema/create/20260819_v280_project_cost_control_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v281_project_cost_control_translations.yaml
+      relativeToChangelogFile: false
+  # P1_PROJECT_EXECUTIVE_DASHBOARD_20260819: Feature 07 Project Financial & Executive Dashboard
+  - include:
+      file: db/changelog/schema/create/20260819_v282_project_executive_dashboard_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v283_project_executive_dashboard_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROCUREMENT_SOURCING_20260819: Feature 08 Procurement & Sourcing Management
+  - include:
+      file: db/changelog/schema/alter/20260819_v284_procurement_project_attribution_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v285_procurement_project_attribution_translations.yaml
+      relativeToChangelogFile: false
+  # P1_INVENTORY_WAREHOUSES_20260819: Feature 09 Inventory & Site Warehouses
+  - include:
+      file: db/changelog/schema/alter/20260819_v286_inventory_site_warehouse_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v287_inventory_site_warehouse_translations.yaml
+      relativeToChangelogFile: false
+  # P0_GENERAL_LEDGER_ACCOUNTING_20260819: Feature 10 General Ledger & Financial Accounting
+  - include:
+      file: db/changelog/schema/alter/20260819_v288_gl_project_dimension_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v289_gl_project_dimension_translations.yaml
+      relativeToChangelogFile: false
+  # P1_TREASURY_BANKS_CASH_CHECKS_20260819: Feature 11 Treasury, Banks, Cash & Cheques
+  - include:
+      file: db/changelog/schema/create/20260819_v290_treasury_cash_cheque_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v291_treasury_cash_cheque_translations.yaml
+      relativeToChangelogFile: false
+  # P1_AR_AP_PARTY_FINANCIAL_POSITION_20260819: Feature 12 AR/AP & Business Party Financial Positions
+  - include:
+      file: db/changelog/schema/alter/20260819_v292_party_credit_financial_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v293_party_financial_position_translations.yaml
+      relativeToChangelogFile: false
+  # P1_FINANCIAL_STATEMENTS_CLOSE_COST_CENTERS_20260819: Feature 13 Financial Statements, Period Close & Cost Centers
+  - include:
+      file: db/changelog/schema/create/20260819_v294_cost_centers_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v295_cost_centers_translations.yaml
+      relativeToChangelogFile: false
+  # P0_MANUFACTURING_BOM_ROUTING_PRODUCTION_20260819: Feature 14 Manufacturing BOM, Routing & Work Orders
+  - include:
+      file: db/changelog/data/insert/20260819_v296_manufacturing_translations.yaml
+      relativeToChangelogFile: false
+  # P1_HR_EMPLOYEE_MASTER_CONTRACTS_20260819: Feature 16 HR Employee Master & Employment Contracts
+  - include:
+      file: db/changelog/schema/create/20260819_v297_employee_contracts_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v298_employee_contracts_translations.yaml
+      relativeToChangelogFile: false
+  # P1_LEAVE_MANAGEMENT_20260819: Feature 18 Leave & Vacation Management
+  - include:
+      file: db/changelog/schema/create/20260819_v299_leave_management_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v300_leave_management_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v301_leave_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P2_HR_KPI_PERFORMANCE_20260819: Feature 20 HR Performance & KPIs
+  - include:
+      file: db/changelog/schema/create/20260819_v303_performance_appraisals_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v304_performance_appraisals_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v305_performance_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P1_SALES_QUOTATIONS_20260819: Feature 21 Sales Quotations, Invoicing & Credit Notes
+  - include:
+      file: db/changelog/schema/create/20260819_v306_sales_quotations_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v307_sales_quotations_translations.yaml
+      relativeToChangelogFile: false
+  # P1_EGYPT_E_INVOICE_TAX_20260819: Feature 22 Egyptian E-Invoicing & ETA Compliance
+  - include:
+      file: db/changelog/schema/create/20260819_v308_eta_tax_compliance_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v309_eta_tax_compliance_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v310_eta_tax_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P2_POS_RETAIL_20260819: Feature 23 Point of Sale (POS) Retail Engine
+  - include:
+      file: db/changelog/schema/create/20260819_v311_pos_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v312_pos_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v313_pos_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P2_CRM_OMNICHANNEL_20260819: Feature 24 CRM, WhatsApp/Facebook & Chatbot Integration
+  - include:
+      file: db/changelog/schema/create/20260819_v314_crm_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v315_crm_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v316_crm_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P1_MULTI_COMPANY_BRANCH_20260819: Feature 25 Multi-Company & Branch Consolidation
+  - include:
+      file: db/changelog/schema/create/20260819_v317_intercompany_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v318_intercompany_translations.yaml
+      relativeToChangelogFile: false
+  # P1_EXECUTIVE_REPORTING_ANALYTICS_20260820: Feature 26 Executive Reporting & Cross-Module Analytics
+  - include:
+      file: db/changelog/schema/create/20260820_v319_executive_kpi_snapshots.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v320_executive_analytics_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260820_v321_executive_analytics_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P0_WORKFORCE_PROJECT_INTEGRATION_20260820: Feature 27 Workforce & Project Integration
+  - include:
+      file: db/changelog/schema/update/20260820_v322_workforce_project_wbs_integration.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v323_workforce_project_translations.yaml
+      relativeToChangelogFile: false
+  # P0_SECURITY_AUDIT_APPROVALS_20260820: Feature 28 Security, Audit Trails & Granular Approval Workflows
+  - include:
+      file: db/changelog/schema/update/20260820_v324_audit_break_glass_enhancements.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v325_approval_audit_translations.yaml
+      relativeToChangelogFile: false
+  # P1_DEPLOYMENT_LICENSING_DR_20260820: Feature 29 Deployment, Cloud Readiness, Diagnostics, Backups & Licensing
+  - include:
+      file: db/changelog/schema/create/20260820_v326_deployment_backup_licensing_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v327_deployment_licensing_translations.yaml
+      relativeToChangelogFile: false
+  # P1_SPECIALIZED_VERTICALS_20260820: Feature 30 Specialized Verticals (School, Tourism, Customs, 3PL)
+  - include:
+      file: db/changelog/schema/create/20260820_v328_specialized_verticals_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v329_specialized_verticals_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260820_v330_verticals_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # EXCEPTION_CODES_PARITY_20260820: Feature Exception Translations Parity
+  - include:
+      file: db/changelog/data/insert/20260820_v331_exception_code_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PBAC_SECURITY_MATRIX_20260821: Dynamic Policy-Based Access Control & Granular Privilege Matrix
+  - include:
+      file: db/changelog/schema/create/20260821_v332_pbac_security_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260821_v333_pbac_permissions_seed.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260821_v334_pbac_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v335_static_i18n_cleanup_translations.yaml
+      relativeToChangelogFile: false
+  # STORY_06_BUSINESS_VERTICAL_AND_TIERS_20260821: Business Verticals and Preset Tiers Translations
+  - include:
+      file: db/changelog/data/insert/20260821_v336_business_vertical_and_tier_translations.yaml
+      relativeToChangelogFile: false
+  # FEFO_POS_KEYBOARD_WHATSAPP_20260821: FEFO picking, POS keyboard shortcuts, WhatsApp webhook, Data scope
+  - include:
+      file: db/changelog/data/insert/20260821_v337_fefo_pos_keyboard_translations.yaml
+      relativeToChangelogFile: false
+  # I18N_HARMONIZATION_20260821: Missing error code translations + frontend i18n keys
+  - include:
+      file: db/changelog/data/insert/20260821_v338_static_i18n_harmonization.yaml
+      relativeToChangelogFile: false
+
+
+
+
+  # MARKET_READINESS_AUDIT_20260823: F-003 payroll SoD actor evidence columns
+  - include:
+      file: db/changelog/schema/update/20260823_v339_payroll_sod_actor_columns.yaml
+      relativeToChangelogFile: false
+  # MARKET_READINESS_AUDIT_20260823: F-003 payroll SoD bilingual error copy
+  - include:
+      file: db/changelog/data/insert/20260823_v340_payroll_sod_translations.yaml
+      relativeToChangelogFile: false
+  # WP-09: first-login web-push enablement prompt bilingual copy
+  - include:
+      file: db/changelog/data/insert/20260823_v341_push_prompt_translations.yaml
+      relativeToChangelogFile: false
+  # WP-08: peak clock-in histogram bilingual copy
+  - include:
+      file: db/changelog/data/insert/20260823_v342_peak_clock_translations.yaml
+      relativeToChangelogFile: false
+  # WP-02: persist agreed settlement discount on supplier payments
+  - include:
+      file: db/changelog/schema/update/20260823_v343_settlement_discount.yaml
+      relativeToChangelogFile: false
+  # WP-02: settlement discount bilingual copy
+  - include:
+      file: db/changelog/data/insert/20260823_v343_settlement_discount_translations.yaml
+      relativeToChangelogFile: false
+  # WP-01: supplier invoice installment plans
+  - include:
+      file: db/changelog/schema/create/20260824_v344_supplier_payment_plans.yaml
+      relativeToChangelogFile: false
+  # WP-01: installment-plan bilingual error copy
+  - include:
+      file: db/changelog/data/insert/20260824_v344_payment_plan_translations.yaml
+      relativeToChangelogFile: false
+  # WP-03: purchase requests (PRQ) with approval lifecycle and PO conversion
+  - include:
+      file: db/changelog/schema/create/20260825_v345_purchase_requests.yaml
+      relativeToChangelogFile: false
+  # WP-03: purchase-request bilingual error copy
+  - include:
+      file: db/changelog/data/insert/20260825_v345_purchase_request_translations.yaml
+      relativeToChangelogFile: false
+  # WP-14 prerequisite: web-push subscriptions table (was never registered in the H2 master)
+  - include:
+      file: db/changelog/schema/create/20260812_push_001_web_push_subscriptions.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260812_push_002_web_push_translations.yaml
+      relativeToChangelogFile: false
+  # WP-14: native shell — FCM push platform column + ESS selfie punches
+  - include:
+      file: db/changelog/schema/create/20260825_v346_native_shell.yaml
+      relativeToChangelogFile: false
+  # WP-14: native-shell bilingual error/UI copy
+  - include:
+      file: db/changelog/data/insert/20260825_v346_native_shell_translations.yaml
+      relativeToChangelogFile: false
+  # WP-04: fixed assets (B-4) — register, depreciation evidence and menu grant
+  - include:
+      file: db/changelog/schema/create/20260825_v347_fixed_assets.yaml
+      relativeToChangelogFile: false
+  # WP-04: fixed-assets bilingual error/UI copy
+  - include:
+      file: db/changelog/data/insert/20260825_v347_fixed_assets_translations.yaml
+      relativeToChangelogFile: false
+  # WP-02 completion: original-due column on supplier payments
+  - include:
+      file: db/changelog/schema/update/20260824_v348_settlement_discount_original_due.yaml
+      relativeToChangelogFile: false
+  # WP-02 completion: settlement-discount guard + payment dialog copy
+  - include:
+      file: db/changelog/data/insert/20260824_v348_settlement_discount_forbidden_translations.yaml
+      relativeToChangelogFile: false
+  # WP-05: inventory valuation report surface translations
+  - include:
+      file: db/changelog/data/insert/20260826_v349_valuation_report_translations.yaml
+      relativeToChangelogFile: false
+  # WP-07: advance deduction policy errors + settings/employees copy
+  - include:
+      file: db/changelog/data/insert/20260826_v350_advance_deduction_policy_translations.yaml
+      relativeToChangelogFile: false
+  # WP-10: vertical job role templates table
+  - include:
+      file: db/changelog/schema/create/20260826_v351_user_role_templates.yaml
+      relativeToChangelogFile: false
+  # WP-10: idempotent per-vertical template seed (24 roles)
+  - include:
+      file: db/changelog/data/insert/20260826_v351_user_role_templates_seed.yaml
+      relativeToChangelogFile: false
+  # WP-10: template names + users-page template UI copy
+  - include:
+      file: db/changelog/data/insert/20260826_v351_user_role_template_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260826_v352_generated_periods_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260826_v353_peak_clock_completion_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260826_v354_export_filename_translations.yaml
+  # WP-11: expense claims schema + translations
+  - include:
+      file: db/changelog/schema/create/20260826_v355_expense_claims.yaml
+  - include:
+      file: db/changelog/data/insert/20260826_v355_expense_claims_translations.yaml
+  # WP-11: expense permission seed + translations
+  - include:
+      file: db/changelog/data/insert/20260826_v356_expense_permissions.yaml
+  # WP-11: common.created + common.submit translations
+  - include:
+      file: db/changelog/data/insert/20260826_v357_common_translations.yaml
+  # WP-12: sales targets + commission rules schema
+  - include:
+      file: db/changelog/schema/create/20260826_v358_sales_targets.yaml
+  # WP-12: sales target translations
+  - include:
+      file: db/changelog/data/insert/20260826_v358_sales_target_translations.yaml
+  # WP-30: bank reconciliation aging translations
+  - include:
+      file: db/changelog/data/insert/20260826_v359_bank_aging_translations.yaml
+  # WP-48 T-3: hijri overlay translations
+  - include:
+      file: db/changelog/data/insert/20260826_v360_hijri_overlay_translations.yaml
+  # WP-19: single punch rule translations
+  - include:
+      file: db/changelog/data/insert/20260826_v361_single_punch_translations.yaml
+  # WP-20: employee form grouped accordion sections translations
+  - include:
+      file: db/changelog/data/insert/20260826_v362_employee_form_groups_translations.yaml
+  # WP-48 T-1: FX revaluation posts schema
+  - include:
+      file: db/changelog/schema/create/20260826_v363_fx_revaluation_posts.yaml
+  # WP-48 T-1: FX revaluation error code translations
+  - include:
+      file: db/changelog/data/insert/20260826_v363_fx_revaluation_translations.yaml
+  # WP-48 T-1: FX revaluation UI translations
+  - include:
+      file: db/changelog/data/insert/20260826_v364_fx_revaluation_ui_translations.yaml
+  # WP-48 T-2: cheque layouts schema
+  - include:
+      file: db/changelog/schema/create/20260826_v365_cheque_layouts_schema.yaml
+      relativeToChangelogFile: false
+  # WP-48 T-2: cheque layouts translations
+  - include:
+      file: db/changelog/data/insert/20260826_v365_cheque_layout_translations.yaml
+      relativeToChangelogFile: false
+  # WP-16: export shipments schema
+  - include:
+      file: db/changelog/schema/create/20260826_v366_export_shipments.yaml
+  # WP-16: export shipments translations
+  - include:
+      file: db/changelog/data/insert/20260826_v367_export_translations.yaml
+  # WP-28: OCR capture schema
+  - include:
+      file: db/changelog/schema/create/20260827_v368_ocr_capture_schema.yaml
+  # WP-28: OCR capture translations
+  - include:
+      file: db/changelog/data/insert/20260827_v368_ocr_translations.yaml
+  # WP-42: Growth pack schema (loyalty, membership, referrals)
+  - include:
+      file: db/changelog/schema/create/20260827_v369_growth_schema.yaml
+  # WP-42: Growth pack translations
+  - include:
+      file: db/changelog/data/insert/20260827_v370_growth_translations.yaml
+  # WP-29: Payment links + gateway transactions schema
+  - include:
+      file: db/changelog/schema/create/20260827_v371_payment_links_schema.yaml
+  # WP-29: Payment link translations
+  - include:
+      file: db/changelog/data/insert/20260827_v372_payment_link_translations.yaml
+  # WP-31: WhatsApp outbound log schema
+  - include:
+      file: db/changelog/schema/create/20260827_v373_whatsapp_outbound_schema.yaml
+  # WP-31: WhatsApp translations
+  - include:
+      file: db/changelog/data/insert/20260827_v374_whatsapp_translations.yaml
+  # WP-39: Automation pack schema (recurring templates + dunning rules)
+  - include:
+      file: db/changelog/schema/create/20260827_v375_automation_schema.yaml
+  # WP-39: Automation pack translations
+  - include:
+      file: db/changelog/data/insert/20260827_v376_automation_translations.yaml
+  # WP-32: Scheduled report delivery schema
+  - include:
+      file: db/changelog/schema/create/20260827_v377_report_schedules_schema.yaml
+      relativeToChangelogFile: false
+  # WP-32: Scheduled report delivery translations
+  - include:
+      file: db/changelog/data/insert/20260827_v378_report_schedule_translations.yaml
+      relativeToChangelogFile: false
+  # WP-34: SSO schema (sso_configs + user_sso_identities)
+  - include:
+      file: db/changelog/schema/create/20260827_v379_sso_schema.yaml
+      relativeToChangelogFile: false
+  # WP-34: SSO translations
+  - include:
+      file: db/changelog/data/insert/20260827_v380_sso_translations.yaml
+      relativeToChangelogFile: false
+  # WP-35: PDPL Privacy toolkit schema
+  - include:
+      file: db/changelog/schema/create/20260827_v381_pdpl_privacy_schema.yaml
+      relativeToChangelogFile: false
+  # WP-35: PDPL Privacy toolkit translations
+  - include:
+      file: db/changelog/data/insert/20260827_v382_pdpl_privacy_translations.yaml
+      relativeToChangelogFile: false
+  # WP-32/34/35: missing translation keys for i18n gate
+  - include:
+      file: db/changelog/data/insert/20260827_v383_missing_keys_translations.yaml
+      relativeToChangelogFile: false
+  # WP-36/37/40: API keys, webhooks, grid views schema
+  - include:
+      file: db/changelog/schema/create/20260827_v384_api_keys_webhooks_grid_views_schema.yaml
+      relativeToChangelogFile: false
+  # WP-36/37/40: translations
+  - include:
+      file: db/changelog/data/insert/20260827_v388_wp36_37_40_translations.yaml
+      relativeToChangelogFile: false
+  # WP-45: Helpdesk categories, tickets, messages + KB articles schema
+  - include:
+      file: db/changelog/schema/create/20260827_v389_helpdesk_kb_schema.yaml
+      relativeToChangelogFile: false
+  # WP-45/46/41: Marketing campaigns, surveys, saved reports schema
+  - include:
+      file: db/changelog/schema/create/20260827_v390_marketing_report_builder_schema.yaml
+      relativeToChangelogFile: false
+  # WP-45: Helpdesk + KB translations
+  - include:
+      file: db/changelog/data/insert/20260827_v391_helpdesk_kb_translations.yaml
+      relativeToChangelogFile: false
+  # WP-45: KB articles translations
+  - include:
+      file: db/changelog/data/insert/20260827_v392_kb_translations.yaml
+      relativeToChangelogFile: false
+  # WP-46: Marketing campaigns translations
+  - include:
+      file: db/changelog/data/insert/20260827_v393_marketing_translations.yaml
+      relativeToChangelogFile: false
+  # WP-46/41: Surveys + Report Builder translations
+  - include:
+      file: db/changelog/data/insert/20260827_v394_survey_report_translations.yaml
+      relativeToChangelogFile: false
+  # Missing translation cleanup
+  - include:
+      file: db/changelog/data/insert/20260827_v395_missing_translations.yaml
+      relativeToChangelogFile: false
+  # WP-51: Multi-country e-invoicing settings schema
+  - include:
+      file: db/changelog/schema/create/20260827_v396_einvoicing_settings_schema.yaml
+      relativeToChangelogFile: false
+  # WP-51: e-invoicing translations
+  - include:
+      file: db/changelog/data/insert/20260827_v397_einvoicing_translations.yaml
+      relativeToChangelogFile: false
+  # WP-50: Recruitment ATS schema
+  - include:
+      file: db/changelog/schema/create/20260827_v398_recruitment_schema.yaml
+      relativeToChangelogFile: false
+  # WP-50: Recruitment ATS translations
+  - include:
+      file: db/changelog/data/insert/20260827_v399_recruitment_translations.yaml
+      relativeToChangelogFile: false
+  # WP-47: eSign + Document Management schema
+  - include:
+      file: db/changelog/schema/create/20260828_v400_doc_esign_schema.yaml
+      relativeToChangelogFile: false
+  # WP-47: eSign + Document Management translations
+  - include:
+      file: db/changelog/data/insert/20260828_v401_doc_esign_translations.yaml
+      relativeToChangelogFile: false
+  # QA gate: availability error codes + scheduled-report/helpdesk/SSO UI keys
+  - include:
+      file: db/changelog/data/insert/20260828_v402_error_and_gate_translations.yaml
+      relativeToChangelogFile: false
+  # WP-51: backfill existing Egypt tenants to EGYPT_ETA (Postgres-only, skipped here)
+  - include:
+      file: db/changelog/data/update/20260828_v403_einvoicing_backfill_egypt_tenants.yaml
+      relativeToChangelogFile: false
+  # WP-48: FX revaluation skipped-account UI key
+  - include:
+      file: db/changelog/data/insert/20260828_v404_fx_revaluation_ui_keys.yaml
+      relativeToChangelogFile: false
+  # WP-48: default cheque layout seeds (Postgres-only, skipped here)
+  - include:
+      file: db/changelog/data/update/20260828_v405_seed_default_cheque_layouts.yaml
+      relativeToChangelogFile: false
+  # WP-50 AC-4: recruitment CV file storage
+  - include:
+      file: db/changelog/schema/create/20260828_v406_recruitment_cv_files.yaml
+      relativeToChangelogFile: false
+  # WP-50 AC-4: recruitment CV validation + UI translation rows
+  - include:
+      file: db/changelog/data/insert/20260828_v406_recruitment_cv_translations.yaml
+      relativeToChangelogFile: false
+  # WP-34 AC-3 + WP-29 AC-2: SSO inactive-user + webhook signature error codes
+  - include:
+      file: db/changelog/data/insert/20260828_v407_sso_webhook_error_translations.yaml
+      relativeToChangelogFile: false
+  # WP-11 AC-4: expense per-category limit — error code + UI keys (badge + forced HR note)
+  - include:
+      file: db/changelog/data/insert/20260828_v408_expense_limit_translations.yaml
+      relativeToChangelogFile: false
+  # WP-12 AC-5: sales commission payout ledger (idempotent send-to-payroll)
+  - include:
+      file: db/changelog/schema/create/20260828_v409_sales_commission_payouts.yaml
+      relativeToChangelogFile: false
+  # WP-12 AC-5: commission statement export + send-to-payroll translations
+  - include:
+      file: db/changelog/data/insert/20260828_v410_sales_commission_payout_translations.yaml
+      relativeToChangelogFile: false
+  # WP-16 AC-1/AC-5: printable export documents (COO / packing list / phyto sheet) translations
+  - include:
+      file: db/changelog/data/insert/20260829_v411_export_doc_translations.yaml
+      relativeToChangelogFile: false
+  # WP-17: manpower client billing schema (periods, effective-dated rates, draft lines)
+  - include:
+      file: db/changelog/schema/create/20260829_v412_manpower_client_billing_schema.yaml
+      relativeToChangelogFile: false
+  # WP-17: grant the workforce client-billing menu to existing users (menu protocol part 3)
+  - include:
+      file: db/changelog/data/update/20260829_v412_client_billing_menu_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-17: client billing error codes, UI keys, margin export sheet translations
+  - include:
+      file: db/changelog/data/insert/20260829_v413_manpower_client_billing_translations.yaml
+      relativeToChangelogFile: false
+  # WP-15: Medical clinic schema (patients, MRN sequence, visits, prescriptions)
+  - include:
+      file: db/changelog/schema/create/20260829_v414_medical_clinic_schema.yaml
+      relativeToChangelogFile: false
+  # WP-15: Grant medical clinic menus to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v414_medical_clinic_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-15: Medical clinic translations (error codes, UI keys, rx print)
+  - include:
+      file: db/changelog/data/insert/20260829_v415_medical_clinic_translations.yaml
+      relativeToChangelogFile: false
+  # WP-21: Medical EMR depth schema (allergies, conditions, vitals, documents, consents)
+  - include:
+      file: db/changelog/schema/create/20260829_v416_medical_emr_depth_schema.yaml
+      relativeToChangelogFile: false
+  # WP-21: Medical EMR depth translations (chart, vitals, allergies, consents)
+  - include:
+      file: db/changelog/data/insert/20260829_v417_medical_emr_depth_translations.yaml
+      relativeToChangelogFile: false
+  # WP-22: Medical appointments schema (doctor rosters, appointments)
+  - include:
+      file: db/changelog/schema/create/20260829_v418_medical_appointments_schema.yaml
+      relativeToChangelogFile: false
+  # WP-22: Grant clinic-appointments menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v418_appointments_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-22: Medical appointments translations
+  - include:
+      file: db/changelog/data/insert/20260829_v419_appointments_translations.yaml
+      relativeToChangelogFile: false
+  # WP-23: Pharmacy and narcotics schema
+  - include:
+      file: db/changelog/schema/create/20260829_v420_pharmacy_narcotics_schema.yaml
+      relativeToChangelogFile: false
+  # WP-23: Grant clinic-pharmacy menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v420_pharmacy_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-23: Pharmacy and narcotics translations
+  - include:
+      file: db/changelog/data/insert/20260829_v421_pharmacy_translations.yaml
+      relativeToChangelogFile: false
+  # WP-24: Medical lab and imaging orders schema
+  - include:
+      file: db/changelog/schema/create/20260829_v422_medical_lab_imaging_schema.yaml
+      relativeToChangelogFile: false
+  # WP-24: Grant clinic-lab menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v422_lab_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-24: Medical lab and imaging translations
+  - include:
+      file: db/changelog/data/insert/20260829_v423_lab_translations.yaml
+      relativeToChangelogFile: false
+  # WP-25: Medical insurance and claims schema
+  - include:
+      file: db/changelog/schema/create/20260829_v424_medical_insurance_claims_schema.yaml
+      relativeToChangelogFile: false
+  # WP-25: Grant clinic-insurance menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v424_insurance_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-25: Medical insurance translations
+  - include:
+      file: db/changelog/data/insert/20260829_v425_insurance_translations.yaml
+      relativeToChangelogFile: false
+  # WP-26: Hospital ops schema (wards, rooms, beds, admissions, OT, nursing)
+  - include:
+      file: db/changelog/schema/create/20260829_v426_hospital_ops_schema.yaml
+      relativeToChangelogFile: false
+  # WP-26: Grant hospital-ops menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v426_hospital_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-26: Hospital ops translations
+  - include:
+      file: db/changelog/data/insert/20260829_v427_hospital_translations.yaml
+      relativeToChangelogFile: false
+  # WP-27: Dental & Specialty Charting schema
+  - include:
+      file: db/changelog/schema/create/20260829_v428_dental_specialty_schema.yaml
+      relativeToChangelogFile: false
+  # WP-27: Grant dental-charting menu to existing users
+  - include:
+      file: db/changelog/data/update/20260829_v428_dental_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # WP-27: Dental & Specialty Charting translations
+  - include:
+      file: db/changelog/data/insert/20260829_v429_dental_translations.yaml
+      relativeToChangelogFile: false
+  # Site Custody Register: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260829_v430_site_custody_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260829_v431_site_custody_translations.yaml
+      relativeToChangelogFile: false
+  # Medical Vertical Depth: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260829_v432_medical_depth_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260829_v433_medical_depth_translations.yaml
+      relativeToChangelogFile: false
+  # Data Migration Center: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260829_v434_data_migration_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260829_v435_data_migration_translations.yaml
+      relativeToChangelogFile: false
+  # ERP Reconciliation Center Translations
+  - include:
+      file: db/changelog/data/insert/20260830_v436_reconciliation_center_translations.yaml
+      relativeToChangelogFile: false
+  # Device Signing: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260830_v437_device_signing_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v438_device_signing_translations.yaml
+      relativeToChangelogFile: false
+  # Catalog, Retail & Outbox: Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260830_v439_catalog_retail_outbox_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v440_catalog_retail_outbox_translations.yaml
+      relativeToChangelogFile: false
+  # Security Hardening & Permission Subset: Translations
+  - include:
+      file: db/changelog/data/insert/20260830_v441_security_hardening_translations.yaml
+      relativeToChangelogFile: false
+  # WP-33: Security Pack Schema and Translations (2FA, Password Policy, Devices, IP Rules)
+  - include:
+      file: db/changelog/schema/create/20260830_v442_security_pack_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v443_security_pack_translations.yaml
+      relativeToChangelogFile: false
+  # WP-43: Service Ops Pack Schema and Translations (Rentals, Work Orders, Bookings)
+  - include:
+      file: db/changelog/schema/create/20260830_v444_service_ops_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v445_service_ops_translations.yaml
+      relativeToChangelogFile: false
+  # WP-44: Fleet & Equipment Maintenance Schema and Translations
+  - include:
+      file: db/changelog/schema/create/20260830_v446_fleet_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v447_fleet_translations.yaml
+      relativeToChangelogFile: false
+  # WP-49: Employee Self-Service (ESS) Schema and Translations
+  - include:
+      file: db/changelog/schema/alter/20260830_v448_app_user_employee_id.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260830_v449_ess_translations.yaml
+      relativeToChangelogFile: false
+  # WP-52: AI Intelligence Pack Translations
+  - include:
+      file: db/changelog/data/insert/20260830_v450_ai_intelligence_translations.yaml
+      relativeToChangelogFile: false
+
+
+
 
 

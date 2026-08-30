@@ -62,4 +62,12 @@ public final class BankReconciliationApi {
     public record CashPositionResponse(List<CashPositionLine> accounts,
                                        java.util.Map<String, BigDecimal> totalsByCurrency) {
     }
+
+    public record AgingBucket(String label, long minDays, long maxDays, long lineCount, BigDecimal totalRemaining) {
+    }
+
+    public record AgingResponse(String bankAccountId, String bankName, String currencyCode,
+                                BigDecimal latestStatementBalance,
+                                List<AgingBucket> buckets, BigDecimal totalUnmatched) {
+    }
 }

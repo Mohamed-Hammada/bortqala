@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260820-v324-001
+      author: mohamed.hammada
+      changes:
+        - addColumn:
+            tableName: audit_logs
+            columns:
+              - column:
+                  name: reason
+                  type: VARCHAR(500)
+              - column:
+                  name: is_break_glass
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+              - column:
+                  name: user_agent
+                  type: VARCHAR(255)

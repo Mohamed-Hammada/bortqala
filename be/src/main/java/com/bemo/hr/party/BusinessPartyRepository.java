@@ -2,6 +2,7 @@ package com.bemo.hr.party;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,4 +18,6 @@ public interface BusinessPartyRepository extends JpaRepository<BusinessParty, St
     boolean existsByCodeIgnoreCaseAndIdNot(String code, String id);
 
     List<BusinessParty> findByTaxIdIgnoreCase(String taxId);
+
+    long countByAppIdAndCreatedAtBefore(String appId, Instant before);
 }

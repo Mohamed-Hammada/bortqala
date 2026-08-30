@@ -1,0 +1,284 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('workspace.recruitment') }}</p>
+      <h1>{{ i18n.t('nav.recruitment') }}</h1>
+    </div>
+    <div class="header-actions">
+      @if (tabs() === 'openings') {
+        <button class="button primary" (click)="openNewOpening()">＋ {{ i18n.t('recruitment.createOpening') }}</button>
+      } @else {
+        <button class="button primary" (click)="openNewApplication()">＋ {{ i18n.t('recruitment.addApplication') }}</button>
+      }
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab" [class.active]="tabs() === 'openings'" (click)="switchTab('openings')">
+      {{ i18n.t('recruitment.openings') }} ({{ openings().length }})
+    </button>
+    <button class="tab" [class.active]="tabs() === 'applications'" (click)="switchTab('applications')">
+      {{ i18n.t('recruitment.applications') }} ({{ applications().length }})
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading() && tabs() === 'openings') {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('recruitment.titleAr') }}</th>
+            <th>{{ i18n.t('recruitment.titleEn') }}</th>
+            <th>{{ i18n.t('recruitment.department') }}</th>
+            <th>{{ i18n.t('recruitment.headcount') }}</th>
+            <th>{{ i18n.t('recruitment.status') }}</th>
+            <th>{{ i18n.t('recruitment.applications') }}</th>
+            <th>{{ i18n.t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (opening of openings(); track opening.id) {
+            <tr>
+              <td><strong>{{ opening.titleAr }}</strong></td>
+              <td>{{ opening.titleEn }}</td>
+              <td>{{ departmentName(opening.departmentId) }}</td>
+              <td class="ltr">{{ opening.headcount }}</td>
+              <td><span class="status" [class.success]="opening.status === 'OPEN'" [class.muted]="opening.status === 'CLOSED'">{{ opening.status === 'OPEN' ? i18n.t('recruitment.stage.OFFER') : i18n.t('recruitment.status') }} · {{ opening.status }}</span></td>
+              <td>
+                <span class="ltr">{{ opening.applicationCount }}</span>
+                @if (opening.published) {
+                  <span class="dot success" title="{{ i18n.t('recruitment.published') }}"></span>
+                }
+              </td>
+              <td class="actions-cell">
+                @if (opening.status !== 'CLOSED') {
+                  <button class="button secondary btn-sm" (click)="openEditOpening(opening)">{{ i18n.t('common.edit') }}</button>
+                  <button class="button danger btn-sm" (click)="closeOpening(opening)">{{ i18n.t('recruitment.closeOpening') }}</button>
+                } @else {
+                  <span class="muted">{{ i18n.t('recruitment.closed') }}</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="muted">{{ i18n.t('recruitment.openings') }} —</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (!loading() && tabs() === 'applications') {
+    <div class="filter-bar">
+      <label>{{ i18n.t('recruitment.stage') }}:</label>
+      <select [value]="stageFilter()" (change)="stageFilter.set($any($event.target).value)">
+        <option value="">—</option>
+        @for (stage of stages; track stage) {
+          <option [value]="stage">{{ stageLabel(stage) }}</option>
+        }
+      </select>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('recruitment.fullName') }}</th>
+            <th>{{ i18n.t('recruitment.opening') }}</th>
+            <th>{{ i18n.t('recruitment.phone') }}</th>
+            <th>{{ i18n.t('recruitment.email') }}</th>
+            <th>{{ i18n.t('recruitment.stage') }}</th>
+            <th>{{ i18n.t('recruitment.rating') }}</th>
+            <th>{{ i18n.t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (application of filteredApplications(); track application.id) {
+            <tr>
+              <td><strong>{{ application.fullName }}</strong>
+                @if (application.convertedEmployeeId) {
+                  <span class="badge success" title="{{ i18n.t('recruitment.converted') }}">✓ {{ i18n.t('recruitment.converted') }}</span>
+                }
+              </td>
+              <td>{{ openingTitle(application.openingId) }}</td>
+              <td class="ltr">{{ application.phone ?? '—' }}</td>
+              <td class="ltr">{{ application.email ?? '—' }}</td>
+              <td><span class="status">{{ stageLabel(application.stage) }}</span></td>
+              <td>
+                <select class="rating-select" [value]="application.rating ?? 0"
+                        (change)="onRatingChange(application, $event)">
+                  @for (r of [0, 1, 2, 3, 4, 5]; track r) {
+                    <option [value]="r">{{ r === 0 ? '—' : '★'.repeat(r) }}</option>
+                  }
+                </select>
+              </td>
+              <td class="actions-cell">
+                @if (application.convertedEmployeeId) {
+                  <span class="muted">{{ i18n.t('recruitment.converted') }}</span>
+                } @else {
+                  <button class="button secondary btn-sm" (click)="openMoveStage(application)">{{ i18n.t('recruitment.moveStage') }}</button>
+                  @if (application.stage === 'OFFER' || application.stage === 'INTERVIEW') {
+                    <button class="button primary btn-sm" (click)="openConvert(application)">{{ i18n.t('recruitment.convert') }}</button>
+                  }
+                }
+                <button class="button secondary btn-sm" (click)="showTimeline(application)">{{ i18n.t('recruitment.timeline') }}</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="muted">{{ i18n.t('recruitment.applications') }} —</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <app-modal-dialog [isOpen]="drawerOpen()" [title]="editingId() ? i18n.t('common.edit') : i18n.t('recruitment.createOpening')" size="wide" [showFooter]="false" (close)="closeDrawer()">
+    <form class="form-grid dialog-form-grid" [formGroup]="openingForm" (ngSubmit)="submitOpening()">
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.titleAr') }} *</label>
+        <input type="text" formControlName="titleAr" maxlength="300" />
+      </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.titleEn') }} *</label>
+        <input type="text" formControlName="titleEn" maxlength="300" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('recruitment.department') }}</label>
+        <select formControlName="departmentId">
+          <option value="">—</option>
+          @for (department of departments(); track department.id) {
+            <option [value]="department.id">{{ department.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('recruitment.headcount') }} *</label>
+        <input type="number" class="ltr" formControlName="headcount" min="1" />
+      </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.description') }}</label>
+        <textarea formControlName="description" rows="3"></textarea>
+      </div>
+      <div class="field span-2">
+        <label class="check-line">
+          <input type="checkbox" formControlName="published" />
+          {{ i18n.t('recruitment.published') }}
+        </label>
+      </div>
+      <div class="span-2 actions-right">
+        <button type="button" class="button secondary" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button primary" [disabled]="submitting()">{{ i18n.t('common.save') }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="appDrawerOpen()" [title]="i18n.t('recruitment.addApplication')" size="wide" [showFooter]="false" (close)="closeAppDrawer()">
+    <form class="form-grid dialog-form-grid" [formGroup]="applicationForm" (ngSubmit)="submitApplication()">
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.opening') }} *</label>
+        <select formControlName="openingId">
+          @for (opening of openings(); track opening.id) {
+            <option [value]="opening.id">{{ openingTitle(opening.id) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.fullName') }} *</label>
+        <input type="text" formControlName="fullName" maxlength="200" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('recruitment.phone') }}</label>
+        <input type="tel" class="ltr" formControlName="phone" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('recruitment.email') }}</label>
+        <input type="email" class="ltr" formControlName="email" />
+      </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.source') }}</label>
+        <input type="text" formControlName="source" />
+      </div>
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.cvLabel') }}</label>
+        <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx,.csv" (change)="onCvSelected($event)" />
+        <small>{{ i18n.t('recruitment.cvHint') }}</small>
+        @if (cvError()) {
+          <small class="text-danger">{{ cvError() }}</small>
+        }
+        @if (cvFile.value) {
+          <span class="cv-chip">
+            <strong>{{ i18n.t('recruitment.cvLabel') }}</strong> {{ cvFile.value.name }}
+            <button type="button" class="button secondary cv-remove" (click)="removeCv()">{{ i18n.t('recruitment.cvRemove') }}</button>
+          </span>
+        }
+      </div>
+      @if (warnings().length > 0) {
+        <div class="span-2 alert warn">
+          {{ i18n.t('recruitment.duplicateWarning') }}:
+          @for (warning of warnings(); track warning) {
+            <span>· {{ warning }}</span>
+          }
+        </div>
+      }
+      <div class="span-2 actions-right">
+        <button type="button" class="button secondary" (click)="closeAppDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button primary" [disabled]="submitting()">{{ i18n.t('common.save') }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="stageNoteOpen()" [title]="i18n.t('recruitment.moveStage')" [showFooter]="false" (close)="closeStageNote()">
+    <div class="stage-actions">
+      @for (target of activeTransitions(); track target) {
+        <button class="button secondary" (click)="moveTo(target)">
+          {{ target === 'REJECTED' ? '✕ ' : '→ ' }} {{ stageLabel(target) }}
+        </button>
+      }
+    </div>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="convertingId() !== null" [title]="i18n.t('recruitment.convert')" [showFooter]="false" (close)="closeConvert()">
+    <form class="form-grid dialog-form-grid" [formGroup]="convertForm" (ngSubmit)="doConvert()">
+      <div class="field span-2">
+        <label>{{ i18n.t('recruitment.department') }}</label>
+        <select formControlName="departmentId">
+          <option value="">—</option>
+          @for (department of departments(); track department.id) {
+            <option [value]="department.id">{{ department.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="span-2 actions-right">
+        <button type="button" class="button secondary" (click)="closeConvert()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button primary" [disabled]="submitting()">{{ i18n.t('recruitment.convert') }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="eventsFor() !== null" [title]="i18n.t('recruitment.timeline')" (close)="closeTimeline()">
+    <div class="timeline">
+      @for (event of events(); track event.id) {
+        <div class="timeline-item">
+          <div class="timeline-point"></div>
+          <div class="timeline-body">
+            <p>
+              <span class="status">{{ stageLabel(event.fromStage) }}</span>
+              → <span class="status">{{ stageLabel(event.toStage) }}</span>
+            </p>
+            <p class="muted">{{ formatDate(event.eventAt) }} · {{ event.actor }}</p>
+            @if (event.note) {
+              <p class="muted">{{ event.note }}</p>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="muted">{{ i18n.t('recruitment.timeline') }} —</p>
+      }
+    </div>
+  </app-modal-dialog>
+</section>

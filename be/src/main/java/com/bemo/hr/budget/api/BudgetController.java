@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/budget")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR')")
+@PreAuthorize("@auth.hasPermission('budget.read')")
 public class BudgetController {
 
     private final BudgetService budgetService;
@@ -47,20 +47,20 @@ public class BudgetController {
     }
 
     @PostMapping("/budgets")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('budget.manage')")
     public BudgetApi.BudgetResponse createBudget(@Valid @RequestBody BudgetApi.BudgetPayload payload) {
         return budgetService.createBudget(payload);
     }
 
     @PutMapping("/budgets/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('budget.manage')")
     public BudgetApi.BudgetResponse updateBudget(@PathVariable String id,
                                                  @Valid @RequestBody BudgetApi.BudgetPayload payload) {
         return budgetService.updateBudget(id, payload);
     }
 
     @DeleteMapping("/budgets/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('budget.manage')")
     public void deleteBudget(@PathVariable String id) {
         budgetService.deleteBudget(id);
     }
@@ -76,7 +76,7 @@ public class BudgetController {
     }
 
     @PostMapping("/budgets/{id}/revisions")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('budget.manage')")
     public com.bemo.hr.budget.BudgetRevision reviseBudget(@PathVariable String id, @Valid @RequestBody ReviseBudgetPayload payload, Authentication auth) {
         return budgetService.reviseBudget(id, payload.newAmount(), payload.reason(), auth.getName());
     }
@@ -87,25 +87,25 @@ public class BudgetController {
     }
 
     @PostMapping("/budgets/{id}/revisions/{revisionId}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('budget.manage')")
     public com.bemo.hr.budget.BudgetRevision approveRevision(@PathVariable String id, @PathVariable String revisionId, Authentication auth) {
         return budgetService.approveRevision(id, revisionId, auth.getName());
     }
 
     @PostMapping("/budgets/{id}/revisions/{revisionId}/reject")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('budget.manage')")
     public com.bemo.hr.budget.BudgetRevision rejectRevision(@PathVariable String id, @PathVariable String revisionId, Authentication auth) {
         return budgetService.rejectRevision(id, revisionId, auth.getName());
     }
 
     @PostMapping("/transfers")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('budget.manage')")
     public com.bemo.hr.budget.BudgetTransfer createTransfer(@RequestBody CreateTransferPayload payload) {
         return budgetService.createTransfer(payload.transferNumber(), payload.sourceBudgetId(), payload.targetBudgetId(), payload.transferAmount(), payload.reason());
     }
 
     @PostMapping("/transfers/{id}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('budget.manage')")
     public com.bemo.hr.budget.BudgetTransfer approveTransfer(@PathVariable String id) {
         return budgetService.approveTransfer(id);
     }

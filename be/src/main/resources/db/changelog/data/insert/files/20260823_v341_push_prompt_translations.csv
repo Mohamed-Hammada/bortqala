@@ -1,0 +1,13 @@
+id;translation_key;locale;text_value
+v341-001-en;auth.pushPromptTitle;en-US;Enable notifications on this device?
+v341-001-ar;auth.pushPromptTitle;ar-EG;تفعيل الإشعارات على هذا الجهاز؟
+v341-002-en;auth.pushPromptHint;en-US;Get instant alerts for approvals, payroll and important notices even when the app is closed.
+v341-002-ar;auth.pushPromptHint;ar-EG;احصل على تنبيهات فورية للموافقات والرواتب والملاحظات المهمة حتى لو كان التطبيق مغلقاً.
+v341-003-en;auth.pushPromptEnable;en-US;🔔 Enable notifications
+v341-003-ar;auth.pushPromptEnable;ar-EG;🔔 تفعيل الإشعارات
+v341-004-en;auth.pushPromptNotNow;en-US;Not now
+v341-004-ar;auth.pushPromptNotNow;ar-EG;ليس الآن
+v341-005-en;auth.pushPromptNeverAsk;en-US;Don't ask again on this device
+v341-005-ar;auth.pushPromptNeverAsk;ar-EG;عدم السؤال مرة أخرى على هذا الجهاز
+v341-006-en;auth.pushPromptDeniedHint;en-US;Notifications are blocked in your browser settings for this site. Enable them in site settings and try again.
+v341-006-ar;auth.pushPromptDeniedHint;ar-EG;الإشعارات محظورة في إعدادات المتصفح لهذا الموقع. فعّلها من إعدادات الموقع ثم أعد المحاولة.

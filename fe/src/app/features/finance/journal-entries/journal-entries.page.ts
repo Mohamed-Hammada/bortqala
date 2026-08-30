@@ -25,6 +25,8 @@ export interface JournalEntryLine {
   costCenterId?: string;
   projectId?: string;
   departmentId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
 }
 
 export interface JournalEntry {
@@ -39,6 +41,9 @@ export interface JournalEntry {
   postedBy?: string;
   postedAt?: number;
   operationId?: string;
+  projectId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
   version: number;
   lines: JournalEntryLine[];
   totalDebit: number;
@@ -89,6 +94,7 @@ export class JournalEntriesPage {
 
   readonly entries = signal<JournalEntry[]>([]);
   readonly accounts = signal<Account[]>([]);
+  readonly projects = signal<{ id: string; code: string; name: string }[]>([]);
   readonly totalElements = signal<number>(0);
   readonly pagination = new TablePagination();
 
@@ -101,11 +107,13 @@ export class JournalEntriesPage {
     entryDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
     description: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     reference: new FormControl('', { nonNullable: true }),
+    projectId: new FormControl('', { nonNullable: true }),
+    costCodeId: new FormControl('', { nonNullable: true }),
   });
 
-  readonly lines = signal<{ accountId: string; debit: number; credit: number; memo: string; costCenterId?: string; projectId?: string; departmentId?: string }[]>([
-    { accountId: '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
-    { accountId: '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
+  readonly lines = signal<{ accountId: string; debit: number; credit: number; memo: string; costCenterId?: string; projectId?: string; departmentId?: string; wbsNodeId?: string; costCodeId?: string }[]>([
+    { accountId: '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '', wbsNodeId: '', costCodeId: '' },
+    { accountId: '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '', wbsNodeId: '', costCodeId: '' },
   ]);
 
   readonly lineErrors = computed(() => {
@@ -127,7 +135,17 @@ export class JournalEntriesPage {
   constructor() {
     void this.load(0);
     void this.loadAccounts();
+    void this.loadProjects();
     void this.loadNumberingSettings();
+  }
+
+  async loadProjects() {
+    try {
+      const res = await firstValueFrom(this.http.get<any>('/api/v1/projects'));
+      this.projects.set(res?.content || (Array.isArray(res) ? res : []));
+    } catch {
+      this.projects.set([]);
+    }
   }
 
   async loadNumberingSettings() {
@@ -190,11 +208,13 @@ export class JournalEntriesPage {
       entryDate: new Date().toISOString().substring(0, 10),
       description: '',
       reference: '',
+      projectId: '',
+      costCodeId: '',
     });
     this.applyNumberingValidators();
     this.lines.set([
-      { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
-      { accountId: this.accounts()[1]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
+      { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '', wbsNodeId: '', costCodeId: '' },
+      { accountId: this.accounts()[1]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '', wbsNodeId: '', costCodeId: '' },
     ]);
     this.dialogError.set(null);
     this.submitAttempted.set(false);
@@ -208,7 +228,7 @@ export class JournalEntriesPage {
   }
 
   addLine() {
-    this.lines.update((arr) => [...arr, { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' }]);
+    this.lines.update((arr) => [...arr, { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '', wbsNodeId: '', costCodeId: '' }]);
   }
 
   removeLine(index: number) {
@@ -257,6 +277,8 @@ export class JournalEntriesPage {
         entryDate: dateMs,
         description: formVal.description,
         reference: formVal.reference,
+        projectId: formVal.projectId || null,
+        costCodeId: formVal.costCodeId || null,
         lines: this.lines(),
       };
       await firstValueFrom(this.http.post('/api/v1/finance/journal-entries', payload));

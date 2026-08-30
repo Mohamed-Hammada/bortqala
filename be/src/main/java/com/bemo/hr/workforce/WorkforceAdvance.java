@@ -121,6 +121,13 @@ public class WorkforceAdvance {
         return restored;
     }
 
+    public void updateStatus(String status) {
+        if (status != null && !status.isBlank()) {
+            this.status = status.strip().toUpperCase();
+        }
+    }
+
+
     public void applyPolicySnapshot(WorkforceAdvancePolicy policy) {
         if (policy == null) return;
         this.appliedPolicyId = policy.getId();

@@ -1,0 +1,33 @@
+id;translation_key;locale;text_value
+v397-001-en;compliance.provider;en-US;E-invoicing provider
+v397-001-ar;compliance.provider;ar-EG;مزود الفوترة الإلكترونية
+v397-002-en;compliance.provider.egyptEta;en-US;Egypt ETA
+v397-002-ar;compliance.provider.egyptEta;ar-EG;الضريبة المصرية ETA
+v397-003-en;compliance.provider.ksaZatca;en-US;KSA ZATCA
+v397-003-ar;compliance.provider.ksaZatca;ar-EG;زاتكا السعودية ZATCA
+v397-004-en;compliance.provider.none;en-US;Disabled
+v397-004-ar;compliance.provider.none;ar-EG;معطل
+v397-005-en;compliance.provider.badge;en-US;Provider
+v397-005-ar;compliance.provider.badge;ar-EG;المزود
+v397-006-en;compliance.provider.environment;en-US;Environment
+v397-006-ar;compliance.provider.environment;ar-EG;البيئة
+v397-007-en;compliance.provider.settingsTitle;en-US;E-invoicing settings
+v397-007-ar;compliance.provider.settingsTitle;ar-EG;إعدادات الفوترة الإلكترونية
+v397-008-en;compliance.provider.save;en-US;Save provider settings
+v397-008-ar;compliance.provider.save;ar-EG;حفظ إعدادات المزود
+v397-009-en;compliance.provider.saved;en-US;Provider settings saved
+v397-009-ar;compliance.provider.saved;ar-EG;تم حفظ إعدادات المزود
+v397-010-en;compliance.provider.notImplemented;en-US;This provider is not yet implemented
+v397-010-ar;compliance.provider.notImplemented;ar-EG;هذا المزود غير مدعوم بعد
+v397-011-en;compliance.provider.confirmSwitch;en-US;Switching providers changes how future invoices are submitted. Continue?
+v397-011-ar;compliance.provider.confirmSwitch;ar-EG;تغيير المزود يغير طريقة إرسال الفواتير المستقبلية. هل تريد المتابعة؟
+v397-012-en;ZATCA_NOT_IMPLEMENTED;en-US;ZATCA e-invoicing is not yet implemented
+v397-012-ar;ZATCA_NOT_IMPLEMENTED;ar-EG;الفوترة الإلكترونية لزاتكا غير مدعومة بعد
+v397-013-en;EINVOICING_DISABLED;en-US;E-invoicing is not configured for this tenant
+v397-013-ar;EINVOICING_DISABLED;ar-EG;الفوترة الإلكترونية غير مفعّلة لهذا الكيان
+v397-014-en;EINVOICING_NOT_IMPLEMENTED;en-US;This e-invoicing operation is not yet implemented
+v397-014-ar;EINVOICING_NOT_IMPLEMENTED;ar-EG;هذه العملية غير مدعومة بعد في الفوترة الإلكترونية
+v397-015-en;compliance.provider.environmentTest;en-US;Test environment
+v397-015-ar;compliance.provider.environmentTest;ar-EG;بيئة اختبار
+v397-016-en;compliance.provider.environmentProduction;en-US;Production environment
+v397-016-ar;compliance.provider.environmentProduction;ar-EG;بيئة إنتاج

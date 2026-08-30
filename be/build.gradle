@@ -74,6 +74,8 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    maxHeapSize = '2048m'
+    forkEvery = 150
     finalizedBy tasks.named('jacocoTestReport')
 
     // Docker/Testcontainers unavailable in some local environments; skip those suites
@@ -98,6 +100,26 @@ tasks.named('test') {
         ].each { exclude it }
     }
 }
+
+tasks.withType(org.springframework.boot.gradle.tasks.aot.ProcessTestAot).configureEach {
+    def skipDockerTests = providers.gradleProperty('skipDockerTests')
+        .map { it.trim().isEmpty() || it.toBoolean() }
+        .getOrElse(false)
+    if (skipDockerTests) {
+        enabled = false
+    }
+}
+
+tasks.matching { it.name.toLowerCase().contains('aottest') }.configureEach {
+    def skipDockerTests = providers.gradleProperty('skipDockerTests')
+        .map { it.trim().isEmpty() || it.toBoolean() }
+        .getOrElse(false)
+    if (skipDockerTests) {
+        enabled = false
+    }
+}
+
+
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

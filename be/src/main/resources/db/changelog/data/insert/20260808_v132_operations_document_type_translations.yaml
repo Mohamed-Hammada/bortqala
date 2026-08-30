@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260808-v132-operations-document-type-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "REM-005: Arabic/English labels for the stock-movement document type selector added to the operations transaction form."
       changes:
         - loadData:

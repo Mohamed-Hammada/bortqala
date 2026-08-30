@@ -64,7 +64,7 @@ public class ManufacturingService {
         log.debug("createBom called with bomCode={}", payload.bomCode());
         if (bomHeaderRepository.existsByBomCodeIgnoreCase(payload.bomCode().strip())) {
             log.warn("Validation failed: BOM code already exists: {}", payload.bomCode());
-            throw new BusinessRuleException("كود قائمة المواد مستخدم بالفعل.", "MFG_BOM_CODE_EXISTS", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Bill of materials code already exists.", "MFG_BOM_CODE_EXISTS", HttpStatus.CONFLICT);
         }
         LocalDate effFrom = payload.effectiveFrom() != null ? Instant.ofEpochMilli(payload.effectiveFrom()).atZone(ZoneOffset.UTC).toLocalDate() : null;
         LocalDate effTo = payload.effectiveTo() != null ? Instant.ofEpochMilli(payload.effectiveTo()).atZone(ZoneOffset.UTC).toLocalDate() : null;
@@ -107,10 +107,10 @@ public class ManufacturingService {
         log.debug("createProductionOrder called with orderNumber={}", payload.orderNumber());
         if (productionOrderRepository.existsByOrderNumberIgnoreCase(payload.orderNumber().strip())) {
             log.warn("Validation failed: order number already exists: {}", payload.orderNumber());
-            throw new BusinessRuleException("رقم أمر الإنتاج مستخدم بالفعل.", "MFG_ORDER_NUMBER_EXISTS", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Production order number already exists.", "MFG_ORDER_NUMBER_EXISTS", HttpStatus.CONFLICT);
         }
         BomHeader bom = bomHeaderRepository.findById(payload.bomId())
-                .orElseThrow(() -> new NotFoundException("قائمة المواد غير موجودة", "MFG_BOM_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Bill of materials not found", "MFG_BOM_NOT_FOUND"));
 
         LocalDate startDate = Instant.ofEpochMilli(payload.startDate()).atZone(ZoneOffset.UTC).toLocalDate();
         requireApplicableBom(bom, startDate);
@@ -161,7 +161,7 @@ public class ManufacturingService {
         ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() != ProductionOrder.Status.PLANNED) {
             log.warn("Validation failed: order {} status is {} but PLANNED required", id, order.getStatus());
-            throw new BusinessRuleException("يمكن بدء أمر الإنتاج فقط من حالة مخطط.", "MFG_ORDER_START_FROM_PLANNED_ONLY", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Production orders can only be started from PLANNED status.", "MFG_ORDER_START_FROM_PLANNED_ONLY", HttpStatus.CONFLICT);
         }
         BomHeader bom = bomHeaderRepository.findById(order.getBomId())
                 .orElseThrow(() -> new NotFoundException("BOM not found", "MFG_BOM_NOT_FOUND"));
@@ -169,13 +169,13 @@ public class ManufacturingService {
 
         if (bom.getLines().isEmpty()) {
             log.warn("Validation failed: BOM {} has no lines for order {}", bom.getId(), id);
-            throw new BusinessRuleException("لا يمكن بدء أمر إنتاج بقائمة مواد خالية من المكونات.", "MFG_BOM_NO_LINES", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot start a production order with an empty bill of materials.", "MFG_BOM_NO_LINES", HttpStatus.CONFLICT);
         }
 
         ManufacturingApi.MaterialReadinessResponse readiness = readinessFromBom(order, bom);
         if (!readiness.allMaterialsAvailable()) {
             log.warn("Validation failed: material shortage for order {}", id);
-            throw new BusinessRuleException("نقص في الرصيد المتاح للمواد الخام المطلوبة لتنفيذ أمر الإنتاج.", "MFG_MATERIAL_SHORTAGE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Insufficient available stock of raw materials required for the production order.", "MFG_MATERIAL_SHORTAGE", HttpStatus.CONFLICT);
         }
 
         String actor = getCurrentUser();
@@ -204,18 +204,18 @@ public class ManufacturingService {
         ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() != ProductionOrder.Status.IN_PROGRESS) {
             log.warn("Validation failed: order {} status is {} but IN_PROGRESS required", id, order.getStatus());
-            throw new BusinessRuleException("يمكن إكمال أمر الإنتاج فقط إذا كان قيد التنفيذ.", "MFG_ORDER_COMPLETE_FROM_IN_PROGRESS_ONLY", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Production orders can only be completed when in IN_PROGRESS status.", "MFG_ORDER_COMPLETE_FROM_IN_PROGRESS_ONLY", HttpStatus.CONFLICT);
         }
 
         if (payload.actualOutputQuantity() == null || payload.actualOutputQuantity().signum() <= 0) {
             log.warn("Validation failed: actualOutputQuantity must be positive for order {}", id);
-            throw new BusinessRuleException("كمية الإنتاج الفعلية يجب أن تكون أكبر من صفر.", "MFG_ACTUAL_OUTPUT_POSITIVE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Actual output quantity must be greater than zero.", "MFG_ACTUAL_OUTPUT_POSITIVE", HttpStatus.CONFLICT);
         }
 
         String finishedItemId = order.getFinishedItemId();
         if (finishedItemId == null || finishedItemId.isBlank()) {
             log.warn("Validation failed: finishedItemId is required for order {}", id);
-            throw new BusinessRuleException("يجب ربط الصنف التام بأمر الإنتاج أو قائمة المواد لاستلام المنتجات.", "MFG_FINISHED_ITEM_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("A finished item must be linked to the production order or bill of materials to receive products.", "MFG_FINISHED_ITEM_REQUIRED", HttpStatus.CONFLICT);
         }
 
         LocalDate completionDate = Instant.ofEpochMilli(payload.completionDate()).atZone(ZoneOffset.UTC).toLocalDate();
@@ -249,11 +249,11 @@ public class ManufacturingService {
         ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() == ProductionOrder.Status.COMPLETED) {
             log.warn("Validation failed: cannot cancel completed order {}", id);
-            throw new BusinessRuleException("لا يمكن إلغاء أمر إنتاج م مكتمل.", "MFG_ORDER_CANNOT_CANCEL_COMPLETED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot cancel a completed production order.", "MFG_ORDER_CANNOT_CANCEL_COMPLETED", HttpStatus.CONFLICT);
         }
         if (order.getStatus() == ProductionOrder.Status.CANCELLED) {
             log.warn("Validation failed: order {} already cancelled", id);
-            throw new BusinessRuleException("أمر الإنتاج ملغي بالفعل.", "MFG_ORDER_ALREADY_CANCELLED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Production order is already cancelled.", "MFG_ORDER_ALREADY_CANCELLED", HttpStatus.CONFLICT);
         }
 
         String actor = getCurrentUser();
@@ -330,7 +330,7 @@ public class ManufacturingService {
 
     private ProductionOrder requireOrder(String id) {
         return productionOrderRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("أمر الإنتاج غير موجود", "MFG_PRODUCTION_ORDER_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Production order not found", "MFG_PRODUCTION_ORDER_NOT_FOUND"));
     }
 
     private ProductionOrder requireOrderForUpdate(String id) {

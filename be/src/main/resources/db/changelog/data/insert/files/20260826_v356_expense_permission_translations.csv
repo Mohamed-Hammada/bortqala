@@ -1,0 +1,9 @@
+id;translation_key;locale;text_value
+v356-001-en;perm.expense.claims.read;en-US;View expense claims
+v356-001-ar;perm.expense.claims.read;ar-EG;عرض مطالبات المصروفات
+v356-002-en;perm.expense.claims.manage;en-US;Manage expense claims
+v356-002-ar;perm.expense.claims.manage;ar-EG;إدارة مطالبات المصروفات
+v356-003-en;expense.read;en-US;View expenses
+v356-003-ar;expense.read;ar-EG;عرض المصروفات
+v356-004-en;expense.manage;en-US;Manage expenses
+v356-004-ar;expense.manage;ar-EG;إدارة المصروفات

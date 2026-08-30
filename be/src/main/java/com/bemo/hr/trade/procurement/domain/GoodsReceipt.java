@@ -63,6 +63,18 @@ public class GoodsReceipt {
         this.lines.add(line);
     }
 
+    /**
+     * Draft GRN produced from an OCR capture: no purchase-order link (placeholder), DRAFT status so
+     * nothing can hit stock, inventory or partner ledgers until the normal confirm flow runs.
+     */
+    public static GoodsReceipt draftFromOcr(String grnNumber, LocalDate receiptDate, String supplierId,
+                                            String warehouseId, String notes, List<GoodsReceiptLine> lines) {
+        GoodsReceipt draft = new GoodsReceipt(
+                grnNumber, receiptDate, "OCR-DRAFT", supplierId, warehouseId, notes, lines);
+        draft.status = "DRAFT";
+        return draft;
+    }
+
     @PrePersist
     void prePersist() {
         createdAt = System.currentTimeMillis();

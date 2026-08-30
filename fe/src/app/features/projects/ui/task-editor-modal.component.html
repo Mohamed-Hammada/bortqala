@@ -1,0 +1,234 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        {{ task ? i18n.t('schedule.editTask') : i18n.t('schedule.createTask') }}
+      </h3>
+      <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <!-- Tabs Header -->
+    <div class="modal-tabs">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'details'"
+        (click)="activeTab = 'details'"
+      >
+        📋 {{ i18n.t('schedule.tabTasks') }}
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'dependencies'"
+        [disabled]="!task"
+        (click)="activeTab = 'dependencies'"
+      >
+        🔗 {{ i18n.t('schedule.dependencies') }}
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'resources'"
+        [disabled]="!task"
+        (click)="activeTab = 'resources'"
+      >
+        👥 {{ i18n.t('schedule.resources') }}
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- 1. Task Details Tab -->
+      <div *ngIf="activeTab === 'details'" class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('schedule.taskCode') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="taskCode" placeholder="TSK-01" required />
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">{{ i18n.t('schedule.taskName') }} *</label>
+          <input type="text" class="form-control" [(ngModel)]="name" required />
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">{{ i18n.t('schedule.taskNameEn') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="nameEn" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('schedule.durationDays') }}</label>
+          <input type="number" min="0" class="form-control" [(ngModel)]="durationDays" [disabled]="isMilestone" />
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="isMilestone" />
+            <span>{{ i18n.t('schedule.isMilestone') }}</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('schedule.plannedStart') }}</label>
+          <input type="date" class="form-control" [(ngModel)]="plannedStartDate" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('schedule.plannedEnd') }}</label>
+          <input type="date" class="form-control" [(ngModel)]="plannedEndDate" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('schedule.constraintType') }}</label>
+          <select class="form-select" [(ngModel)]="constraintType">
+            <option value="ASAP">{{ i18n.t('schedule.asap') }}</option>
+            <option value="ALAP">{{ i18n.t('schedule.alap') }}</option>
+            <option value="MUST_START_ON">{{ i18n.t('schedule.mustStartOn') }}</option>
+            <option value="MUST_FINISH_ON">{{ i18n.t('schedule.mustFinishOn') }}</option>
+            <option value="START_NO_EARLIER_THAN">{{ i18n.t('schedule.startNoEarlierThan') }}</option>
+            <option value="FINISH_NO_LATER_THAN">{{ i18n.t('schedule.finishNoLaterThan') }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('schedule.constraintDate') }}</label>
+          <input type="date" class="form-control" [(ngModel)]="constraintDate" />
+        </div>
+      </div>
+
+      <!-- 2. Dependencies Tab -->
+      <div *ngIf="activeTab === 'dependencies'" class="dependencies-tab">
+        <div class="add-dep-bar">
+          <div class="form-group dep-pred">
+            <label class="form-label">{{ i18n.t('schedule.predecessor') }}</label>
+            <select class="form-select" [(ngModel)]="newPredTaskId">
+              <option value="">-- {{ i18n.t('schedule.predecessor') }} --</option>
+              <option *ngFor="let t of availablePredecessors" [value]="t.id">
+                {{ t.taskCode }} - {{ t.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group dep-type">
+            <label class="form-label">{{ i18n.t('schedule.dependencyType') }}</label>
+            <select class="form-select" [(ngModel)]="newDepType">
+              <option value="FS">{{ i18n.t('schedule.depFS') }}</option>
+              <option value="SS">{{ i18n.t('schedule.depSS') }}</option>
+              <option value="FF">{{ i18n.t('schedule.depFF') }}</option>
+              <option value="SF">{{ i18n.t('schedule.depSF') }}</option>
+            </select>
+          </div>
+
+          <div class="form-group dep-lag">
+            <label class="form-label">{{ i18n.t('schedule.lagDays') }}</label>
+            <input type="number" class="form-control" [(ngModel)]="newLagDays" />
+          </div>
+
+          <button type="button" class="btn btn-secondary btn-add-dep" [disabled]="!newPredTaskId" (click)="onAddDependency()">
+            ➕ {{ i18n.t('schedule.addDependency') }}
+          </button>
+        </div>
+
+        <div class="dep-list">
+          <table class="table" *ngIf="taskDependencies.length > 0">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('schedule.predecessor') }}</th>
+                <th>{{ i18n.t('schedule.dependencyType') }}</th>
+                <th>{{ i18n.t('schedule.lagDays') }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let dep of taskDependencies">
+                <td>{{ getTaskName(dep.predecessorTaskId) }}</td>
+                <td>
+                  <span class="badge badge-dep">{{ dep.dependencyType }}</span>
+                </td>
+                <td>{{ dep.lagDays }}</td>
+                <td class="text-end">
+                  <button type="button" class="btn-icon danger" (click)="onRemoveDependency(dep.id)">🗑</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p *ngIf="taskDependencies.length === 0" class="empty-hint">
+            {{ i18n.t('schedule.dependencies') }} — 0
+          </p>
+        </div>
+      </div>
+
+      <!-- 3. Resources Tab -->
+      <div *ngIf="activeTab === 'resources'" class="resources-tab">
+        <div class="add-res-bar">
+          <div class="form-group res-type">
+            <label class="form-label">{{ i18n.t('schedule.resourceType') }}</label>
+            <select class="form-select" [(ngModel)]="newResType">
+              <option value="LABOR">{{ i18n.t('schedule.resourceLabor') }}</option>
+              <option value="EQUIPMENT">{{ i18n.t('schedule.resourceEquipment') }}</option>
+              <option value="SUBCONTRACTOR">{{ i18n.t('schedule.resourceSubcontractor') }}</option>
+              <option value="MATERIAL">{{ i18n.t('schedule.resourceMaterial') }}</option>
+            </select>
+          </div>
+
+          <div class="form-group res-name">
+            <label class="form-label">{{ i18n.t('schedule.resourceName') }}</label>
+            <input type="text" class="form-control" [(ngModel)]="newResName" placeholder="e.g. Excavator 20T" />
+          </div>
+
+          <div class="form-group res-qty">
+            <label class="form-label">{{ i18n.t('schedule.quantityAllocated') }}</label>
+            <input type="number" min="0.1" step="0.5" class="form-control" [(ngModel)]="newResQty" />
+          </div>
+
+          <button type="button" class="btn btn-secondary btn-add-res" [disabled]="!newResName" (click)="onAddResource()">
+            ➕ {{ i18n.t('schedule.addResource') }}
+          </button>
+        </div>
+
+        <div class="res-list">
+          <table class="table" *ngIf="task && task.resourceAssignments && task.resourceAssignments.length > 0">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('schedule.resourceType') }}</th>
+                <th>{{ i18n.t('schedule.resourceName') }}</th>
+                <th>{{ i18n.t('schedule.quantityAllocated') }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let res of task.resourceAssignments">
+                <td>
+                  <span class="badge badge-res">{{ res.resourceType }}</span>
+                </td>
+                <td>{{ res.resourceName }}</td>
+                <td>{{ res.quantityAllocated }}</td>
+                <td class="text-end">
+                  <button type="button" class="btn-icon danger" (click)="onRemoveResource(res.id)">🗑</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p *ngIf="!task || !task.resourceAssignments || task.resourceAssignments.length === 0" class="empty-hint">
+            {{ i18n.t('schedule.resources') }} — 0
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="close.emit()">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button
+        *ngIf="activeTab === 'details'"
+        type="button"
+        class="btn btn-primary"
+        [disabled]="isSaving || !taskCode || !name"
+        (click)="onSave()"
+      >
+        <span *ngIf="isSaving" class="spinner"></span>
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>

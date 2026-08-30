@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260807-v126-procurement-hardening-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "Localizes three-way-match resolution feedback added by the final procurement hardening patch."
       changes:
         - loadData:

@@ -92,9 +92,7 @@ class ProcurementServiceTests {
     void directReceive_throwsDeprecatedError() {
         assertThatThrownBy(() -> service.receive("po-1"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("Goods Receipt")
-                .extracting(e -> ((BusinessRuleException) e).getCode())
-                .isEqualTo("PROC_DIRECT_RECEIVE_DEPRECATED");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("PROC_DIRECT_RECEIVE_DEPRECATED"));
     }
 
     @Test

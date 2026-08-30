@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260821_v333_pbac_permissions_seed
+      author: wolfn
+      validCheckSum: ANY
+      changes:
+        - loadData:
+            tableName: sec_permissions
+            file: db/changelog/data/insert/files/20260821_v333_sec_permissions.csv
+            separator: ";"
+            columns:
+              - column: { name: id, type: STRING }
+              - column: { name: permission_key, type: STRING }
+              - column: { name: module, type: STRING }
+              - column: { name: submodule, type: STRING }
+              - column: { name: description_key, type: STRING }
+              - column: { name: action, type: STRING }
+              - column: { name: is_system, type: BOOLEAN }
+              - column: { name: created_at, type: NUMERIC }

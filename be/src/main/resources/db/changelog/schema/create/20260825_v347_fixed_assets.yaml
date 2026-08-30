@@ -1,0 +1,187 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260825-v347-fixed-assets-table
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-04: fixed assets (B-4) register with straight-line depreciation cache and disposal fields."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: fixed_assets
+      changes:
+        - createTable:
+            tableName: fixed_assets
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: acquisition_date
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: acquisition_cost
+                  type: DECIMAL(18,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: salvage_value
+                  type: DECIMAL(18,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: useful_life_months
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: method
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: accumulated_depreciation
+                  type: DECIMAL(18,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_posted_year_month
+                  type: VARCHAR(7)
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: disposal_date
+                  type: BIGINT
+              - column:
+                  name: disposal_proceeds
+                  type: DECIMAL(18,2)
+              - column:
+                  name: branch_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_center_id
+                  type: VARCHAR(36)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_fixed_assets_status
+            tableName: fixed_assets
+            columns:
+              - column:
+                  name: status
+        - createIndex:
+            indexName: idx_fixed_assets_cost_center
+            tableName: fixed_assets
+            columns:
+              - column:
+                  name: cost_center_id
+
+  - changeSet:
+      id: 20260825-v347-fixed-assets-depreciation-posts-table
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-04: depreciation posting evidence — one row per asset per month guarantees exactly-once journals."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: fixed_asset_depreciation_posts
+      changes:
+        - createTable:
+            tableName: fixed_asset_depreciation_posts
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: asset_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: year_month
+                  type: VARCHAR(7)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: DECIMAL(18,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: journal_entry_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: posted_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: fixed_asset_depreciation_posts
+            columnNames: app_id, asset_id, year_month
+            constraintName: uq_fixed_asset_dep_post_asset_month
+        - createIndex:
+            indexName: idx_fixed_asset_dep_posts_asset
+            tableName: fixed_asset_depreciation_posts
+            columns:
+              - column:
+                  name: asset_id
+
+  - changeSet:
+      id: 20260825-v347-fixed-assets-grant-menus
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-04: grant the new fixed-assets menu to users with explicit allowed_menus lists."
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: app_users
+      changes:
+        - sql:
+            sql: "UPDATE app_users SET allowed_menus = CASE WHEN allowed_menus IS NULL OR TRIM(allowed_menus) = '' THEN 'fixed-assets' ELSE CONCAT(allowed_menus, ',fixed-assets') END WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%fixed-assets%'"

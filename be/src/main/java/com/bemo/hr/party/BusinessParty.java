@@ -63,6 +63,12 @@ public class BusinessParty {
     private String ownerUserId;
     @Column(name = "approval_instance_id", length = 36)
     private String approvalInstanceId;
+    @Column(name = "credit_limit", precision = 19, scale = 4)
+    private java.math.BigDecimal creditLimit;
+    @Column(name = "credit_hold", nullable = false)
+    private boolean creditHold;
+    @Column(name = "payment_terms_days")
+    private Integer paymentTermsDays;
     @Column(name = "bank_verified", nullable = false)
     private boolean bankVerified;
     @Column(name = "bank_verified_at")
@@ -129,6 +135,12 @@ public class BusinessParty {
         this.supplierCategory = nullable(supplierCategory);
         this.riskLevel = nullable(riskLevel);
         this.ownerUserId = nullable(ownerUserId);
+    }
+
+    public void updateCreditProfile(java.math.BigDecimal creditLimit, boolean creditHold, Integer paymentTermsDays) {
+        this.creditLimit = creditLimit != null ? creditLimit : java.math.BigDecimal.ZERO;
+        this.creditHold = creditHold;
+        this.paymentTermsDays = paymentTermsDays != null ? paymentTermsDays : 30;
     }
 
     public void beginSupplierRequest() {

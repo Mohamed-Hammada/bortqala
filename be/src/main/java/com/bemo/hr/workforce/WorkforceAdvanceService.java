@@ -46,14 +46,14 @@ public class WorkforceAdvanceService {
         log.debug("create called with recipientType={}, amount={}", request.recipientType(), request.amount());
         String recipientType = normalizeAndValidateRecipient(request);
         if (request.amount() == null || request.amount().signum() <= 0) {
-            throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.", "ADVANCE_AMOUNT_POSITIVE_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Advance amount must be greater than zero.", "ADVANCE_AMOUNT_POSITIVE_REQUIRED", HttpStatus.CONFLICT);
         }
         LocalDate policyDate;
         try {
             policyDate = request.firstInstallmentDate() == null || request.firstInstallmentDate().isBlank()
                     ? LocalDate.now() : LocalDate.parse(request.firstInstallmentDate());
         } catch (Exception exception) {
-            throw new BusinessRuleException("تاريخ أول قسط غير صالح.", "ADVANCE_FIRST_INSTALLMENT_DATE_INVALID", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("First installment date is invalid.", "ADVANCE_FIRST_INSTALLMENT_DATE_INVALID", HttpStatus.CONFLICT);
         }
         WorkforceAdvancePolicy policy = effectivePolicy(recipientType, request.workerId(), request.employeeId(), policyDate);
         String deductionMode = valueOrDefault(request.deductionMode(), policy != null ? policy.getDeductionMode() : "AUTO");
@@ -79,7 +79,7 @@ public class WorkforceAdvanceService {
 
         if ("EMPLOYEE".equals(recipientType)) {
             operationsService.recordAdvanceIssuance(request.employeeId(), request.amount(), "ADVANCE",
-                    "سلفة مجدولة رقم " + saved.getId() + (request.reason() == null ? "" : " — " + request.reason()),
+                    "Scheduled advance #" + saved.getId() + (request.reason() == null ? "" : " — " + request.reason()),
                     Instant.now(), createdBy);
         }
 
@@ -134,13 +134,13 @@ public class WorkforceAdvanceService {
         log.debug("savePolicy called with scopeType={}, scopeId={}", request.scopeType(), request.scopeId());
         String scopeType = request.scopeType().strip().toUpperCase(java.util.Locale.ROOT);
         if (!List.of("GLOBAL", "CATEGORY", "WORKER", "EMPLOYEE_CATEGORY", "EMPLOYEE").contains(scopeType)) {
-            throw new BusinessRuleException("نطاق سياسة السلف غير صالح.", "ADVANCE_POLICY_SCOPE_INVALID", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Advance policy scope is invalid.", "ADVANCE_POLICY_SCOPE_INVALID", HttpStatus.CONFLICT);
         }
         if (!"GLOBAL".equals(scopeType) && (request.scopeId() == null || request.scopeId().isBlank())) {
-            throw new BusinessRuleException("اختر الفئة أو العامل أو الموظف للاستثناء.", "ADVANCE_POLICY_EXCEPTION_TARGET_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Select a category, worker, or employee for the exception.", "ADVANCE_POLICY_EXCEPTION_TARGET_REQUIRED", HttpStatus.CONFLICT);
         }
         if (request.maxDeductionPercent().signum() <= 0 || request.maxDeductionPercent().compareTo(new BigDecimal("100")) > 0)
-            throw new BusinessRuleException("نسبة الخصم يجب أن تكون بين 1 و100.", "ADVANCE_POLICY_DEDUCTION_PERCENT_RANGE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Deduction percentage must be between 1 and 100.", "ADVANCE_POLICY_DEDUCTION_PERCENT_RANGE", HttpStatus.CONFLICT);
         LocalDate effectiveFrom;
         LocalDate effectiveTo = null;
         try {
@@ -148,19 +148,25 @@ public class WorkforceAdvanceService {
             if (request.effectiveTo() != null && !request.effectiveTo().isBlank())
                 effectiveTo = LocalDate.parse(request.effectiveTo());
         } catch (Exception exception) {
-            throw new BusinessRuleException("تاريخ بداية أو نهاية السياسة غير صالح.", "ADVANCE_POLICY_DATE_INVALID", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Policy start or end date is invalid.", "ADVANCE_POLICY_DATE_INVALID", HttpStatus.CONFLICT);
         }
         if (effectiveTo != null && effectiveTo.isBefore(effectiveFrom))
-            throw new BusinessRuleException("نهاية السياسة لا يمكن أن تسبق بدايتها.", "ADVANCE_POLICY_END_BEFORE_START", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Policy end date cannot be before start date.", "ADVANCE_POLICY_END_BEFORE_START", HttpStatus.CONFLICT);
         String scopeId = "GLOBAL".equals(scopeType) ? null : request.scopeId();
         List<WorkforceAdvancePolicy> versions = policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream()
                 .filter(item -> item.getScopeType().equals(scopeType) && java.util.Objects.equals(item.getScopeId(), scopeId))
                 .toList();
+        boolean laterOpenVersionExists = versions.stream()
+                .anyMatch(item -> item.isActive() && item.getEffectiveTo() == null
+                        && item.getEffectiveFrom().isAfter(effectiveFrom));
+        if (laterOpenVersionExists)
+            throw new BusinessRuleException("An open policy version with a later effective date already exists for this scope.", "ADVANCE_POLICY_EXISTS", HttpStatus.CONFLICT);
         int version = versions.stream().mapToInt(WorkforceAdvancePolicy::getVersion).max().orElse(0) + 1;
         versions.stream().filter(item -> item.isActive() && item.getEffectiveTo() == null
                 && !effectiveFrom.isBefore(item.getEffectiveFrom())).forEach(item -> item.closeBefore(effectiveFrom));
-        WorkforceAdvancePolicy policy = new WorkforceAdvancePolicy(scopeType, scopeId, request.deductionMode(),
-                request.deductionFrequency(), request.maxDeductionPercent(), request.defaultInstallments(),
+        WorkforceAdvancePolicy policy = new WorkforceAdvancePolicy(scopeType, scopeId,
+                normalizeDeductionMode(request.deductionMode()),
+                normalizeDeductionFrequency(request.deductionFrequency()), request.maxDeductionPercent(), request.defaultInstallments(),
                 request.deferralPeriods(), request.active(), version, effectiveFrom, effectiveTo);
         WorkforceAdvancePolicy saved = policyRepository.save(policy);
         log.info("AdvancePolicy {} created (version {})", saved.getId(), version);
@@ -206,14 +212,126 @@ public class WorkforceAdvanceService {
         try {
             effectiveDate = LocalDate.parse(date);
         } catch (Exception exception) {
-            throw new BusinessRuleException("تاريخ السياسة غير صالح.", "ADVANCE_POLICY_EFFECTIVE_DATE_INVALID", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Policy effective date is invalid.", "ADVANCE_POLICY_EFFECTIVE_DATE_INVALID", HttpStatus.CONFLICT);
         }
         WorkforceAdvancePolicy policy = effectivePolicy(
                 valueOrDefault(recipientType, employeeId == null ? "WORKER" : "EMPLOYEE").toUpperCase(),
                 workerId, employeeId, effectiveDate);
         if (policy == null)
-            throw new BusinessRuleException("لا توجد سياسة سلف فعالة للمستفيد في التاريخ المحدد.", "ADVANCE_POLICY_NOT_FOUND", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("No active advance policy found for the beneficiary on the specified date.", "ADVANCE_POLICY_NOT_FOUND", HttpStatus.CONFLICT);
         return mapPolicy(policy);
+    }
+
+    @Transactional(readOnly = true)
+    public WorkforceApi.ResolvedDeductionPolicyResponse resolveDeductionPolicy(String employeeId, String categoryId, LocalDate date) {
+        log.debug("resolveDeductionPolicy called with employeeId={}, categoryId={}, date={}", employeeId, categoryId, date);
+        WorkforceAdvancePolicy policy = null;
+        String source = "DEFAULTS";
+        if (employeeId != null && !employeeId.isBlank()) {
+            policy = effectivePolicy("EMPLOYEE", null, employeeId, date);
+            if (policy != null) {
+                source = "EMPLOYEE".equals(policy.getScopeType()) ? "EMPLOYEE"
+                        : "EMPLOYEE_CATEGORY".equals(policy.getScopeType()) ? "CATEGORY" : "GLOBAL";
+            }
+        } else {
+            String effectiveCategoryId = categoryId == null || categoryId.isBlank() ? null : categoryId;
+            policy = policiesEffectiveOn(date).stream()
+                    .filter(item -> "EMPLOYEE_CATEGORY".equals(item.getScopeType())
+                            && java.util.Objects.equals(effectiveCategoryId, item.getScopeId()))
+                    .max(Comparator.comparingInt(WorkforceAdvancePolicy::getVersion))
+                    .orElseGet(() -> policiesEffectiveOn(date).stream()
+                            .filter(item -> "GLOBAL".equals(item.getScopeType()))
+                            .max(Comparator.comparingInt(WorkforceAdvancePolicy::getVersion))
+                            .orElse(null));
+            if (policy != null) source = "EMPLOYEE_CATEGORY".equals(policy.getScopeType()) ? "CATEGORY" : "GLOBAL";
+        }
+        String mode = policy == null ? "AUTO" : policy.getDeductionMode();
+        String cadence = policy == null ? "MONTHLY" : mapCadenceOut(policy.getDeductionFrequency());
+        return new WorkforceApi.ResolvedDeductionPolicyResponse(
+                mode, cadence, source,
+                policy == null ? null : policy.getId(),
+                policy == null ? null : (long) policy.getVersion(),
+                "MANUAL".equalsIgnoreCase(mode));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isManualDeductionPolicy(String employeeId, LocalDate date) {
+        log.debug("isManualDeductionPolicy called with employeeId={}, date={}", employeeId, date);
+        WorkforceAdvancePolicy policy = effectivePolicy("EMPLOYEE", null, employeeId, date);
+        return policy != null && "MANUAL".equalsIgnoreCase(policy.getDeductionMode());
+    }
+
+    @Transactional
+    public WorkforceApi.ManualDeductionResult applyManualDeduction(WorkforceApi.ManualDeductionRequest request, String actor) {
+        log.debug("applyManualDeduction called with employeeId={}, periodId={}", request.employeeId(), request.periodId());
+        Employee employee = employeeRepository.findById(request.employeeId())
+                .orElseThrow(() -> new NotFoundException("Employee not found."));
+        String periodId = request.periodId() == null ? "" : request.periodId().strip();
+        if (periodId.isEmpty())
+            throw new BusinessRuleException("Period reference is required for manual deduction.", "ADVANCE_POLICY_INVALID", HttpStatus.CONFLICT);
+        if (!isManualDeductionPolicy(employee.getId(), LocalDate.now()))
+            throw new BusinessRuleException("Manual deduction is only available when the resolved policy mode is MANUAL.", "ADVANCE_MANUAL_NOT_DUE", HttpStatus.CONFLICT);
+
+        List<WorkforceAdvance> advances = advanceRepository.findByEmployeeIdOrderByCreatedAtAsc(employee.getId()).stream()
+                .filter(item -> "ACTIVE".equals(item.getStatus()))
+                .toList();
+        List<String> advanceIds = advances.stream().map(WorkforceAdvance::getId).toList();
+        for (String advanceId : advanceIds) {
+            boolean alreadyApplied = ledgerRepository.findByAdvanceId(advanceId).stream()
+                    .anyMatch(entry -> "PAYROLL_DEDUCTION".equals(entry.getEntryType())
+                            && entry.getNotes() != null && entry.getNotes().endsWith(periodId));
+            if (alreadyApplied) {
+                log.info("Manual deduction for employee {} period {} already applied (idempotent replay)", employee.getId(), periodId);
+                return new WorkforceApi.ManualDeductionResult(employee.getId(), periodId, BigDecimal.ZERO, true, List.of());
+            }
+        }
+
+        BigDecimal due = BigDecimal.ZERO;
+        List<WorkforceApi.ManualDeductionLine> lines = new java.util.ArrayList<>();
+        for (WorkforceAdvance advance : advances) {
+            if (!"AUTO".equalsIgnoreCase(advance.getDeductionMode())) continue;
+            BigDecimal dueForAdvance = installmentRepository.findByAdvanceId(advance.getId()).stream()
+                    .filter(installment -> !LocalDate.parse(installment.getDueDate()).isAfter(LocalDate.now()))
+                    .map(WorkforceAdvanceInstallment::remainingAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .min(advance.getRemainingBalance());
+            if (dueForAdvance.signum() > 0) {
+                due = due.add(dueForAdvance);
+                lines.add(new WorkforceApi.ManualDeductionLine(advance.getId(), dueForAdvance));
+            }
+        }
+        if (due.signum() <= 0)
+            throw new BusinessRuleException("No advance installment is due for this employee in the current period.", "ADVANCE_NOTHING_DUE", HttpStatus.CONFLICT);
+
+        applyEmployeePayrollSettlement(employee.getId(), due, periodId, actor);
+        auditService.record("APPLY_MANUAL_DEDUCTION", "ADVANCE", employee.getId(), actor,
+                "{\"periodId\":\"" + periodId + "\",\"amount\":" + due + ",\"lines\":" + lines.size() + "}", null);
+        log.info("Manual deduction applied for employee {} period {} amount {}", employee.getId(), periodId, due);
+        return new WorkforceApi.ManualDeductionResult(employee.getId(), periodId, due, false, lines);
+    }
+
+    private List<WorkforceAdvancePolicy> policiesEffectiveOn(LocalDate date) {
+        return policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream()
+                .filter(item -> item.isEffectiveOn(date)).toList();
+    }
+
+    private String normalizeDeductionMode(String mode) {
+        String value = mode == null ? "" : mode.strip().toUpperCase(java.util.Locale.ROOT);
+        if (value.isEmpty() || "AUTO".equals(value) || "AUTO_IN_PAYROLL".equals(value)) return "AUTO";
+        if ("MANUAL".equals(value) || "MANUAL_BUTTON".equals(value)) return "MANUAL";
+        throw new BusinessRuleException("Deduction mode must be AUTO or MANUAL.", "ADVANCE_POLICY_INVALID", HttpStatus.CONFLICT);
+    }
+
+    private String normalizeDeductionFrequency(String frequency) {
+        String value = frequency == null ? "" : frequency.strip().toUpperCase(java.util.Locale.ROOT);
+        if (value.isEmpty()) return "HALF_MONTH";
+        if ("MONTHLY".equals(value) || "MID_MONTH_SPLIT".equals(value)) return value;
+        if ("HALF_MONTH".equals(value)) return "HALF_MONTH";
+        throw new BusinessRuleException("Deduction cadence must be MONTHLY or MID_MONTH_SPLIT.", "ADVANCE_POLICY_INVALID", HttpStatus.CONFLICT);
+    }
+
+    private String mapCadenceOut(String frequency) {
+        return "HALF_MONTH".equalsIgnoreCase(frequency) ? "MID_MONTH_SPLIT" : frequency;
     }
 
     private WorkforceApi.AdvancePolicyResponse mapPolicy(WorkforceAdvancePolicy policy) {
@@ -222,7 +340,7 @@ public class WorkforceAdvanceService {
             case "CATEGORY", "EMPLOYEE_CATEGORY" -> attendanceCategoryRepository.findById(policy.getScopeId())
                     .map(com.bemo.hr.employee.domain.AttendanceCategory::getName).orElse("—");
             case "EMPLOYEE" -> employeeRepository.findById(policy.getScopeId()).map(Employee::getFullName).orElse("—");
-            default -> "الإعداد العام";
+            default -> "General settings";
         };
         return new WorkforceApi.AdvancePolicyResponse(policy.getId(), policy.getScopeType(), policy.getScopeId(), scopeName,
                 policy.getDeductionMode(), policy.getDeductionFrequency(), policy.getMaxDeductionPercent(),
@@ -239,29 +357,29 @@ public class WorkforceAdvanceService {
         String type = valueOrDefault(request.recipientType(), "WORKER").strip().toUpperCase();
         switch (type) {
             case "WORKER" -> workerRepository.findById(requiredRecipientId(request.workerId()))
-                    .orElseThrow(() -> new NotFoundException("العامل غير موجود.", "WORKER_NOT_FOUND"));
+                    .orElseThrow(() -> new NotFoundException("Worker not found.", "WORKER_NOT_FOUND"));
             case "CONTRACTOR" -> contractorRepository.findById(requiredRecipientId(request.contractorId()))
-                    .orElseThrow(() -> new NotFoundException("المقاول غير موجود.", "CONTRACTOR_NOT_FOUND"));
+                    .orElseThrow(() -> new NotFoundException("Contractor not found.", "CONTRACTOR_NOT_FOUND"));
             case "EMPLOYEE" -> {
                 Employee employee = employeeRepository.findById(requiredRecipientId(request.employeeId()))
-                        .orElseThrow(() -> new NotFoundException("الموظف غير موجود.", "EMPLOYEE_NOT_FOUND"));
+                        .orElseThrow(() -> new NotFoundException("Employee not found.", "EMPLOYEE_NOT_FOUND"));
                 if (!employee.isActive())
-                    throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.", "ADVANCE_INACTIVE_EMPLOYEE", HttpStatus.CONFLICT);
+                    throw new BusinessRuleException("Cannot issue an advance to an inactive employee.", "ADVANCE_INACTIVE_EMPLOYEE", HttpStatus.CONFLICT);
                 var category = attendanceCategoryRepository.findById(employee.getCategoryId())
-                        .orElseThrow(() -> new NotFoundException("فئة الموظف غير موجودة.", "HRCFG_EMPLOYEE_CATEGORY_NOT_FOUND"));
+                        .orElseThrow(() -> new NotFoundException("Employee category not found.", "HRCFG_EMPLOYEE_CATEGORY_NOT_FOUND"));
                 if (!category.isAllowsEmployeeAdvances()) {
-                    throw new BusinessRuleException("فئة هذا الموظف لا تسمح بصرف السلف.", "ADVANCE_CATEGORY_NOT_ALLOWED", HttpStatus.CONFLICT);
+                    throw new BusinessRuleException("This employee category does not allow advances.", "ADVANCE_CATEGORY_NOT_ALLOWED", HttpStatus.CONFLICT);
                 }
             }
             default ->
-                    throw new BusinessRuleException("نوع المستفيد غير صالح.", "ADVANCE_BENEFICIARY_TYPE_INVALID", HttpStatus.CONFLICT);
+                    throw new BusinessRuleException("Beneficiary type is invalid.", "ADVANCE_BENEFICIARY_TYPE_INVALID", HttpStatus.CONFLICT);
         }
         return type;
     }
 
     private String requiredRecipientId(String id) {
         if (id == null || id.isBlank())
-            throw new BusinessRuleException("اختر المستفيد من السلفة.", "ADVANCE_BENEFICIARY_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Select the advance beneficiary.", "ADVANCE_BENEFICIARY_REQUIRED", HttpStatus.CONFLICT);
         return id;
     }
 
@@ -269,7 +387,7 @@ public class WorkforceAdvanceService {
     public WorkforceApi.AdvanceResponse pause(String id, String user) {
         log.debug("pause called with id={}", id);
         WorkforceAdvance adv = advanceRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Advance not found", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
         adv.pause();
         auditService.record("PAUSE", "ADVANCE", adv.getId(), user, "Paused advance deductions", null);
         log.info("WorkforceAdvance {} paused successfully", id);
@@ -280,7 +398,7 @@ public class WorkforceAdvanceService {
     public WorkforceApi.AdvanceResponse resume(String id, String user) {
         log.debug("resume called with id={}", id);
         WorkforceAdvance adv = advanceRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Advance not found", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
         adv.resume();
         auditService.record("RESUME", "ADVANCE", adv.getId(), user, "Resumed advance deductions", null);
         log.info("WorkforceAdvance {} resumed successfully", id);
@@ -291,26 +409,26 @@ public class WorkforceAdvanceService {
     public WorkforceApi.AdvanceResponse repay(String id, WorkforceApi.AdvanceRepayRequest request, String user) {
         log.debug("repay called with id={}, amount={}, repaymentType={}", id, request.amount(), request.repaymentType());
         WorkforceAdvance adv = advanceRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Advance not found", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
 
         BigDecimal amount = request.amount();
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessRuleException("يجب أن يكون مبلغ السداد أكبر من صفر", "ADVANCE_REPAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Repayment amount must be greater than zero", "ADVANCE_REPAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
         }
         if (amount.compareTo(adv.getRemainingBalance()) > 0) {
-            throw new BusinessRuleException("مبلغ السداد لا يمكن أن يتجاوز الرصيد المتبقي (" + adv.getRemainingBalance() + " ج.م)");
+            throw new BusinessRuleException("Repayment amount cannot exceed the remaining balance (" + adv.getRemainingBalance() + " EGP)", "ADVANCE_REPAYMENT_EXCEEDS_BALANCE", HttpStatus.CONFLICT);
         }
         if ("FULL".equalsIgnoreCase(request.repaymentType()) && amount.compareTo(adv.getRemainingBalance()) != 0) {
-            throw new BusinessRuleException("عند السداد الكامل، يجب أن يساوي المبلغ الرصيد المتبقي (" + adv.getRemainingBalance() + " ج.م)");
+            throw new BusinessRuleException("For full repayment, the amount must equal the remaining balance (" + adv.getRemainingBalance() + " EGP)", "ADVANCE_REPAYMENT_FULL_MISMATCH", HttpStatus.CONFLICT);
         }
 
         BigDecimal oldBalance = adv.getRemainingBalance();
         adv.repay(amount);
 
         String notes = request.notes() != null ? request.notes() : "";
-        if (request.paymentMethod() != null) notes = "طريقة السداد: " + request.paymentMethod() + " | " + notes;
-        if (request.receiptRef() != null) notes = "رقم الإيصال: " + request.receiptRef() + " | " + notes;
-        if (request.repaymentDate() != null) notes = "تاريخ السداد: " + request.repaymentDate() + " | " + notes;
+        if (request.paymentMethod() != null) notes = "Payment method: " + request.paymentMethod() + " | " + notes;
+        if (request.receiptRef() != null) notes = "Receipt number: " + request.receiptRef() + " | " + notes;
+        if (request.repaymentDate() != null) notes = "Repayment date: " + request.repaymentDate() + " | " + notes;
 
         WorkforceAdvanceLedgerEntry entry = new WorkforceAdvanceLedgerEntry(
                 adv.getId(), "REPAYMENT", amount, adv.getRemainingBalance(),
@@ -320,7 +438,7 @@ public class WorkforceAdvanceService {
         applyToInstallments(adv, amount, "MANUAL-" + adv.getId());
         if ("EMPLOYEE".equals(adv.getRecipientType())) {
             operationsService.recordAdvanceSettlement(adv.getEmployeeId(), amount.negate(),
-                    "سداد سلفة مجدولة رقم " + adv.getId() + " — " + notes,
+                    "Scheduled advance repayment #" + adv.getId() + " — " + notes,
                     request.repaymentDate() == null || request.repaymentDate().isBlank()
                             ? Instant.now() : LocalDate.parse(request.repaymentDate())
                                               .atStartOfDay(java.time.ZoneId.systemDefault()).toInstant(),
@@ -354,7 +472,7 @@ public class WorkforceAdvanceService {
             applyToInstallments(advance, applied, periodReference);
             ledgerRepository.save(new WorkforceAdvanceLedgerEntry(
                     advance.getId(), "PAYROLL_DEDUCTION", applied, advance.getRemainingBalance(),
-                    "خصم راتب " + periodReference, actor));
+                    "Salary deduction " + periodReference, actor));
             advanceRepository.save(advance);
             remaining = remaining.subtract(applied);
         }
@@ -400,7 +518,7 @@ public class WorkforceAdvanceService {
             reverseInstallments(advance, restored);
             ledgerRepository.save(new WorkforceAdvanceLedgerEntry(
                     advance.getId(), "PAYROLL_REVERSAL", restored, advance.getRemainingBalance(),
-                    "تراجع خصم راتب " + periodReference, actor));
+                    "Salary deduction reversal " + periodReference, actor));
             advanceRepository.save(advance);
             remaining = remaining.subtract(restored);
         }

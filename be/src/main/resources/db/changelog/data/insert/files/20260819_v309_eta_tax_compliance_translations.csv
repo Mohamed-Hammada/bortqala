@@ -1,0 +1,105 @@
+id;translation_key;locale;text_value
+v309-001;eta.eyebrow;ar-EG;الامتثال الضريبي والفاتورة الإلكترونية
+v309-002;eta.eyebrow;en-US;Tax Compliance & E-Invoicing
+v309-003;eta.title;ar-EG;الفاتورة والإيصال الإلكتروني (مصلحة الضرائب المصرية)
+v309-004;eta.title;en-US;Egyptian Tax Authority E-Invoice & E-Receipt
+v309-005;eta.description;ar-EG;إدارة إرسال الفواتير والإيصالات إلكترونياً واعتمادها لدى منظومة مصلحة الضرائب المصرية ETA
+v309-006;eta.description;en-US;Manage electronic invoice and receipt submissions and validation with ETA
+v309-007;eta.tabSubmissions;ar-EG;طابور الإرسال والوثائق
+v309-008;eta.tabSubmissions;en-US;Submissions Queue
+v309-009;eta.tabConfig;ar-EG;إعدادات الربط والاعتماد
+v309-010;eta.tabConfig;en-US;ETA Configuration
+v309-011;eta.tabMappings;ar-EG;أكواد السلع والخدمات (EGS / GS1)
+v309-012;eta.tabMappings;en-US;Item Tax Mappings (EGS / GS1)
+v309-013;eta.kpiTotalSubmitted;ar-EG;إجمالي المرسل
+v309-014;eta.kpiTotalSubmitted;en-US;Total Submissions
+v309-015;eta.kpiValid;ar-EG;معتمد وصحيح
+v309-016;eta.kpiValid;en-US;Valid / Accepted
+v309-017;eta.kpiInvalid;ar-EG;مرفوض / غير صالح
+v309-018;eta.kpiInvalid;en-US;Invalid / Rejected
+v309-019;eta.kpiPending;ar-EG;قيد الإرسال والمعالجة
+v309-020;eta.kpiPending;en-US;Pending / In Progress
+v309-021;eta.kpiTotalTaxReported;ar-EG;إجمالي الضريبة المقررة
+v309-022;eta.kpiTotalTaxReported;en-US;Total Tax Reported
+v309-023;eta.internalId;ar-EG;رقم الفاتورة الداخلي
+v309-024;eta.internalId;en-US;Internal Invoice No.
+v309-025;eta.etaUuid;ar-EG;المعرف الإلكتروني ETA UUID
+v309-026;eta.etaUuid;en-US;ETA UUID
+v309-027;eta.docType;ar-EG;نوع الوثيقة
+v309-028;eta.docType;en-US;Document Type
+v309-029;eta.docTypeInvoice;ar-EG;فاتورة ضريبية (I)
+v309-030;eta.docTypeInvoice;en-US;Tax Invoice (I)
+v309-031;eta.docTypeCreditNote;ar-EG;إشعار دائن (C)
+v309-032;eta.docTypeCreditNote;en-US;Credit Note (C)
+v309-033;eta.docTypeDebitNote;ar-EG;إشعار مدين (D)
+v309-034;eta.docTypeDebitNote;en-US;Debit Note (D)
+v309-035;eta.docTypeReceipt;ar-EG;إيصال إلكتروني (R)
+v309-036;eta.docTypeReceipt;en-US;E-Receipt (R)
+v309-037;eta.statusDraft;ar-EG;مسودة
+v309-038;eta.statusDraft;en-US;Draft
+v309-039;eta.statusValidated;ar-EG;تم التحقق محلياً
+v309-040;eta.statusValidated;en-US;Locally Validated
+v309-041;eta.statusSubmitted;ar-EG;مرسل للمنظومة
+v309-042;eta.statusSubmitted;en-US;Submitted to ETA
+v309-043;eta.statusValid;ar-EG;معتمد بنجاح
+v309-044;eta.statusValid;en-US;Valid / Approved
+v309-045;eta.statusInvalid;ar-EG;غير صالح / خطأ
+v309-046;eta.statusInvalid;en-US;Invalid / Rejected
+v309-047;eta.statusCancelled;ar-EG;ملغى
+v309-048;eta.statusCancelled;en-US;Cancelled
+v309-049;eta.actionValidate;ar-EG;تحقق وتجهيز
+v309-050;eta.actionValidate;en-US;Validate & Queue
+v309-051;eta.actionSubmit;ar-EG;إرسال للضرائب
+v309-052;eta.actionSubmit;en-US;Submit to ETA
+v309-053;eta.actionCancel;ar-EG;إلغاء الوثيقة
+v309-054;eta.actionCancel;en-US;Cancel Document
+v309-055;eta.actionRawJson;ar-EG;عرض JSON القانوني
+v309-056;eta.actionRawJson;en-US;View Canonical JSON
+v309-057;eta.issuerTaxId;ar-EG;رقم التسجيل الضريبي للمصدر
+v309-058;eta.issuerTaxId;en-US;Issuer Tax Registration ID
+v309-059;eta.issuerName;ar-EG;اسم الشركة المصدرة
+v309-060;eta.issuerName;en-US;Issuer Company Name
+v309-061;eta.clientId;ar-EG;معرف العميل (Client ID)
+v309-062;eta.clientId;en-US;Client ID
+v309-063;eta.clientSecret;ar-EG;الرمز السري (Client Secret)
+v309-064;eta.clientSecret;en-US;Client Secret
+v309-065;eta.environment;ar-EG;بيئة التشغيل
+v309-066;eta.environment;en-US;Environment
+v309-067;eta.envPreProd;ar-EG;بيئة الاختبار والتجربة (Pre-Production)
+v309-068;eta.envPreProd;en-US;Pre-Production / Sandbox
+v309-069;eta.envProd;ar-EG;البيئة الفعلية الحية (Production)
+v309-070;eta.envProd;en-US;Production Live
+v309-071;eta.saveConfig;ar-EG;حفظ إعدادات المنظومة
+v309-072;eta.saveConfig;en-US;Save ETA Configuration
+v309-073;eta.configSaved;ar-EG;تم حفظ إعدادات منظومة الضرائب المصرية بنجاح
+v309-074;eta.configSaved;en-US;ETA configuration saved successfully
+v309-075;eta.submittedSuccess;ar-EG;تم إرسال الفاتورة لمنظومة الضرائب المصرية بنجاح
+v309-076;eta.submittedSuccess;en-US;Invoice submitted to Egyptian Tax Authority successfully
+v309-077;eta.cancelledSuccess;ar-EG;تم إلغاء الوثيقة لدى منظومة الضرائب
+v309-078;eta.cancelledSuccess;en-US;Document cancelled successfully on ETA
+v309-079;eta.itemMappingSaved;ar-EG;تم حفظ كود الصنف الضريبي بنجاح
+v309-080;eta.itemMappingSaved;en-US;Item tax mapping saved successfully
+v309-081;eta.newItemMapping;ar-EG;ربط صنف بكود ضريبي
+v309-082;eta.newItemMapping;en-US;New Item Tax Mapping
+v309-083;eta.itemCode;ar-EG;كود الصنف الداخلي
+v309-084;eta.itemCode;en-US;Internal Item Code
+v309-085;eta.codeType;ar-EG;نوع الكود الضريبي
+v309-086;eta.codeType;en-US;Code Standard
+v309-087;eta.codeValue;ar-EG;قيمة الكود الضريبي (EGS / GS1)
+v309-088;eta.codeValue;en-US;Tax Code Value
+v309-089;eta.queueInvoice;ar-EG;إدراج فاتورة في طابور الضرائب
+v309-090;eta.queueInvoice;en-US;Queue Invoice for ETA
+v309-091;eta.invoiceSelect;ar-EG;اختر الفاتورة
+v309-092;eta.invoiceSelect;en-US;Select Invoice
+v309-093;eta.cancellationReason;ar-EG;سبب الإلغاء
+v309-094;eta.cancellationReason;en-US;Cancellation Reason
+v309-095;eta.emptyQueue;ar-EG;لا توجد وثائق في طابور الضرائب حالياً
+v309-096;eta.emptyQueue;en-US;No documents in ETA queue
+v309-097;nav.etaTax;ar-EG;الضرائب والفاتورة الإلكترونية (ETA)
+v309-098;nav.etaTax;en-US;Egypt E-Invoicing (ETA)
+v309-099;nav.etaTaxHint;ar-EG;إدارة الفواتير والإيصالات الإلكترونية والربط مع الضرائب المصرية
+v309-100;nav.etaTaxHint;en-US;Egyptian Tax Authority e-invoicing and e-receipt compliance
+v309-101;eta.egsStandard;ar-EG;المعيار المصري EGS
+v309-102;eta.egsStandard;en-US;EGS (Egyptian Standard)
+v309-103;eta.gs1Standard;ar-EG;المعيار العالمي GS1
+v309-104;eta.gs1Standard;en-US;GS1 (Global Standard)

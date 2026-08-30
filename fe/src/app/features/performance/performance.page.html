@@ -1,0 +1,422 @@
+<div class="performance-container">
+  <div class="header-section">
+    <div class="title-area">
+      <h1>{{ i18n.t('performance.title') }}</h1>
+      <p class="subtitle">{{ i18n.t('nav.performanceHint') }}</p>
+    </div>
+    <div class="actions-area">
+      <button class="btn btn-primary" (click)="openInitAppraisal()">
+        <span>➕</span> {{ i18n.t('performance.newAppraisal') }}
+      </button>
+      <button class="btn btn-secondary" (click)="openCreateCycle()">
+        <span>📅</span> {{ i18n.t('performance.newCycle') }}
+      </button>
+      <button class="btn btn-secondary" (click)="openCreateKpi()">
+        <span>🎯</span> {{ i18n.t('performance.newKpi') }}
+      </button>
+    </div>
+  </div>
+
+  <div class="kpi-cards">
+    <div class="kpi-card card-outstanding">
+      <span class="label">{{ i18n.t('performance.bandOutstanding') }}</span>
+      <span class="value">{{ outstandingCount() }}</span>
+    </div>
+    <div class="kpi-card card-meets">
+      <span class="label">{{ i18n.t('performance.bandMeets') }}</span>
+      <span class="value">{{ meetsCount() }}</span>
+    </div>
+    <div class="kpi-card card-needs">
+      <span class="label">{{ i18n.t('performance.bandNeedsImprovement') }}</span>
+      <span class="value">{{ needsImprovementCount() }}</span>
+    </div>
+    <div class="kpi-card card-total">
+      <span class="label">{{ i18n.t('performance.tabAppraisals') }}</span>
+      <span class="value">{{ appraisals().length }}</span>
+    </div>
+  </div>
+
+  <div class="tabs-nav">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'appraisals'"
+      (click)="setTab('appraisals')"
+    >
+      {{ i18n.t('performance.tabAppraisals') }} ({{ appraisals().length }})
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'cycles'"
+      (click)="setTab('cycles')"
+    >
+      {{ i18n.t('performance.tabCycles') }} ({{ cycles().length }})
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'kpis'"
+      (click)="setTab('kpis')"
+    >
+      {{ i18n.t('performance.tabKpis') }} ({{ kpis().length }})
+    </button>
+  </div>
+
+  @if (loading()) {
+    <app-skeleton></app-skeleton>
+  } @else {
+    <!-- Tab 1: Appraisals -->
+    @if (activeTab() === 'appraisals') {
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>{{ i18n.t('performance.cycle') }}:</label>
+          <select
+            [value]="selectedCycleFilter()"
+            (change)="selectedCycleFilter.set($any($event.target).value); loadTabData()"
+          >
+            <option value="">{{ i18n.t('common.all') }}</option>
+            @for (c of cycles(); track c.id) {
+              <option [value]="c.id">{{ i18n.locale() === 'ar-EG' ? c.nameAr : c.nameEn }} ({{ c.periodYear }})</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (appraisals().length === 0) {
+        <app-empty-state
+          icon="📊"
+          [title]="i18n.t('common.noData')"
+          [description]="i18n.t('performance.title')"
+        ></app-empty-state>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('performance.employee') }}</th>
+                <th>{{ i18n.t('performance.cycle') }}</th>
+                <th>{{ i18n.t('performance.reviewer') }}</th>
+                <th>{{ i18n.t('performance.finalScore') }}</th>
+                <th>{{ i18n.t('performance.ratingBand') }}</th>
+                <th>{{ i18n.t('common.status') }}</th>
+                <th>{{ i18n.t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of pagination.slice(appraisals()); track a.id) {
+                <tr>
+                  <td>
+                    <strong>{{ a.employeeName }}</strong>
+                    <div class="code-badge">{{ a.employeeCode }}</div>
+                  </td>
+                  <td>{{ i18n.locale() === 'ar-EG' ? a.cycleNameAr : a.cycleNameEn }}</td>
+                  <td>{{ a.reviewerName || '—' }}</td>
+                  <td>
+                    @if (a.finalScore != null) {
+                      <span class="score-pill">{{ a.finalScore | number: '1.1-2' }}%</span>
+                    } @else {
+                      <span>—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (a.ratingBand) {
+                      <span class="band-badge band-{{ a.ratingBand }}">
+                        {{ a.ratingBand === 'OUTSTANDING' ? i18n.t('performance.bandOutstanding') :
+                           a.ratingBand === 'EXCEEDS_EXPECTATIONS' ? i18n.t('performance.bandExceeds') :
+                           a.ratingBand === 'MEETS_EXPECTATIONS' ? i18n.t('performance.bandMeets') :
+                           a.ratingBand === 'NEEDS_IMPROVEMENT' ? i18n.t('performance.bandNeedsImprovement') :
+                           i18n.t('performance.bandUnsatisfactory') }}
+                      </span>
+                    } @else {
+                      <span>—</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="status-badge status-{{ a.status }}">{{ a.status }}</span>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      @if (a.status !== 'FINALIZED') {
+                        <button class="btn btn-sm btn-outline" (click)="openEvaluateModal(a)">
+                          📝 {{ i18n.t('common.edit') }}
+                        </button>
+                        <button class="btn btn-sm btn-success" (click)="finalizeAppraisal(a)">
+                          🔒 {{ i18n.t('performance.finalize') }}
+                        </button>
+                      } @else {
+                        <button class="btn btn-sm btn-outline" (click)="openEvaluateModal(a)">
+                          👁️ {{ i18n.t('common.view') }}
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <app-table-pagination
+            [total]="appraisals().length"
+            [page]="pagination.currentPage(appraisals().length)"
+            [pageSize]="pagination.pageSize()"
+            (pageChange)="pagination.changePage($event, appraisals().length)"
+            (pageSizeChange)="pagination.changePageSize($event)"
+          ></app-table-pagination>
+        </div>
+      }
+    }
+
+    <!-- Tab 2: Cycles -->
+    @if (activeTab() === 'cycles') {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.nameAr') }}</th>
+              <th>{{ i18n.t('common.nameEn') }}</th>
+              <th>{{ i18n.t('common.year') }}</th>
+              <th>{{ i18n.t('common.startDate') }}</th>
+              <th>{{ i18n.t('common.endDate') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of cycles(); track c.id) {
+              <tr>
+                <td>{{ c.nameAr }}</td>
+                <td>{{ c.nameEn }}</td>
+                <td>{{ c.periodYear }}</td>
+                <td>{{ c.startDate }}</td>
+                <td>{{ c.endDate }}</td>
+                <td>
+                  <span class="status-badge status-{{ c.status }}">{{ c.status }}</span>
+                </td>
+                <td>
+                  @if (c.status === 'ACTIVE') {
+                    <button class="btn btn-sm btn-danger" (click)="lockCycle(c)">
+                      🔒 {{ i18n.t('performance.lockCycle') }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Tab 3: KPIs -->
+    @if (activeTab() === 'kpis') {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.code') }}</th>
+              <th>{{ i18n.t('common.titleAr') }}</th>
+              <th>{{ i18n.t('common.titleEn') }}</th>
+              <th>{{ i18n.t('performance.category') }}</th>
+              <th>{{ i18n.t('performance.targetValue') }}</th>
+              <th>{{ i18n.t('performance.weight') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (k of kpis(); track k.id) {
+              <tr>
+                <td><strong>{{ k.code }}</strong></td>
+                <td>{{ k.titleAr }}</td>
+                <td>{{ k.titleEn }}</td>
+                <td><span class="category-pill">{{ k.category }}</span></td>
+                <td>{{ k.targetValue | number: '1.0-2' }}</td>
+                <td><span class="weight-badge">{{ k.weightPercentage }}%</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- Init Appraisal Modal -->
+  <app-modal-dialog
+    [isOpen]="isInitAppraisalOpen()"
+    [title]="i18n.t('performance.newAppraisal')"
+    size="normal"
+    (closed)="isInitAppraisalOpen.set(false)"
+  >
+    <form [formGroup]="initAppraisalForm" (ngSubmit)="submitInitAppraisal()">
+      <div class="form-group">
+        <label>{{ i18n.t('performance.cycle') }} *</label>
+        <select formControlName="cycleId" class="form-control">
+          @for (c of cycles(); track c.id) {
+            <option [value]="c.id">{{ i18n.locale() === 'ar-EG' ? c.nameAr : c.nameEn }} ({{ c.periodYear }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('performance.employee') }} *</label>
+        <select formControlName="employeeId" class="form-control">
+          <option value="">-- {{ i18n.t('common.select') }} --</option>
+          @for (e of employees(); track e.id) {
+            <option [value]="e.id">{{ e.fullName }} ({{ e.employeeCode }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('performance.reviewer') }}</label>
+        <select formControlName="reviewerId" class="form-control">
+          <option value="">-- {{ i18n.t('common.select') }} --</option>
+          @for (e of employees(); track e.id) {
+            <option [value]="e.id">{{ e.fullName }} ({{ e.employeeCode }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="isInitAppraisalOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="initAppraisalForm.invalid">
+          {{ i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Evaluate Modal -->
+  <app-modal-dialog
+    [isOpen]="isEvaluateOpen()"
+    [title]="i18n.t('performance.tabAppraisals')"
+    size="wide"
+    (closed)="isEvaluateOpen.set(false)"
+  >
+    <form [formGroup]="evaluateForm" (ngSubmit)="submitEvaluation()">
+      <div class="form-group">
+        <label>{{ i18n.t('performance.feedback') }} *</label>
+        <textarea formControlName="managerFeedback" rows="3" class="form-control"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('performance.devPlan') }}</label>
+        <textarea formControlName="developmentPlan" rows="3" class="form-control"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="isEvaluateOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        @if (selectedAppraisal()?.status !== 'FINALIZED') {
+          <button type="submit" class="btn btn-primary" [disabled]="evaluateForm.invalid">
+            {{ i18n.t('common.save') }}
+          </button>
+        }
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Create Cycle Modal -->
+  <app-modal-dialog
+    [isOpen]="isCreateCycleOpen()"
+    [title]="i18n.t('performance.newCycle')"
+    size="normal"
+    (closed)="isCreateCycleOpen.set(false)"
+  >
+    <form [formGroup]="createCycleForm" (ngSubmit)="submitCreateCycle()">
+      <div class="form-group">
+        <label>{{ i18n.t('common.nameAr') }} *</label>
+        <input type="text" formControlName="nameAr" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('common.nameEn') }} *</label>
+        <input type="text" formControlName="nameEn" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('common.year') }} *</label>
+        <input type="number" formControlName="periodYear" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('common.startDate') }} *</label>
+        <input type="date" formControlName="startDate" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('common.endDate') }} *</label>
+        <input type="date" formControlName="endDate" class="form-control" />
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="isCreateCycleOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="createCycleForm.invalid">
+          {{ i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Create KPI Modal -->
+  <app-modal-dialog
+    [isOpen]="isCreateKpiOpen()"
+    [title]="i18n.t('performance.newKpi')"
+    size="normal"
+    (closed)="isCreateKpiOpen.set(false)"
+  >
+    <form [formGroup]="createKpiForm" (ngSubmit)="submitCreateKpi()">
+      <div class="form-group">
+        <label>{{ i18n.t('performance.cycle') }} *</label>
+        <select formControlName="cycleId" class="form-control">
+          @for (c of cycles(); track c.id) {
+            <option [value]="c.id">{{ i18n.locale() === 'ar-EG' ? c.nameAr : c.nameEn }} ({{ c.periodYear }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('common.code') }} *</label>
+        <input type="text" formControlName="code" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('common.titleAr') }} *</label>
+        <input type="text" formControlName="titleAr" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('common.titleEn') }} *</label>
+        <input type="text" formControlName="titleEn" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('performance.category') }} *</label>
+        <select formControlName="category" class="form-control">
+          <option value="OPERATIONAL">{{ i18n.t('performance.catOperational') }}</option>
+          <option value="STRATEGIC">{{ i18n.t('performance.catStrategic') }}</option>
+          <option value="FINANCIAL">{{ i18n.t('performance.catFinancial') }}</option>
+          <option value="BEHAVIORAL">{{ i18n.t('performance.catBehavioral') }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('performance.targetValue') }} *</label>
+        <input type="number" formControlName="targetValue" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>{{ i18n.t('performance.weight') }} *</label>
+        <input type="number" formControlName="weightPercentage" class="form-control" />
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="isCreateKpiOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="createKpiForm.invalid">
+          {{ i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+</div>

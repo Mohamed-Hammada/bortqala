@@ -1,0 +1,101 @@
+<section class="backups-card card">
+  <div class="card-header">
+    <div>
+      <h2>{{ i18n.t('backups.title') }}</h2>
+      <p class="subtitle">{{ i18n.t('dr.rpoTarget') }}: 15 {{ i18n.t('dr.minutes') }} | {{ i18n.t('dr.rtoTarget') }}: 60 {{ i18n.t('dr.minutes') }}</p>
+    </div>
+    <button
+      type="button"
+      class="btn primary"
+      (click)="triggerBackup()"
+      [disabled]="loading() || actionLoading() !== null"
+    >
+      {{ i18n.t('backups.triggerBackup') }}
+    </button>
+  </div>
+
+  @if (message()) {
+    <div class="alert success" role="status">
+      {{ message() }}
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert error" role="alert">
+      {{ error() }}
+      <button type="button" class="btn primary" (click)="loadData()">{{ i18n.t('common.retry') }}</button>
+    </div>
+  }
+
+  @if (drStatus(); as dr) {
+    <div class="dr-metrics-grid">
+      <div class="dr-card">
+        <span class="label">{{ i18n.t('dr.rpoTarget') }}</span>
+        <span class="value">{{ dr.targetRpoMinutes }} {{ i18n.t('dr.minutes') }}</span>
+        <small class="hint">{{ i18n.t('dr.actualRpo') }}: {{ dr.actualRpoMinutes }} {{ i18n.t('dr.minutes') }}</small>
+      </div>
+      <div class="dr-card">
+        <span class="label">{{ i18n.t('dr.rtoTarget') }}</span>
+        <span class="value">{{ dr.targetRtoMinutes }} {{ i18n.t('dr.minutes') }}</span>
+        <small class="hint">{{ i18n.t('dr.actualRto') }}: {{ dr.actualRtoMinutes }} {{ i18n.t('dr.minutes') }}</small>
+      </div>
+      <div class="dr-card">
+        <span class="label">{{ i18n.t('backups.colStatus') }}</span>
+        <span class="value" [class.success]="dr.status === 'COMPLIANT'" [class.warning]="dr.status !== 'COMPLIANT'">
+          {{ dr.status }}
+        </span>
+        <small class="hint">{{ dr.recentDrills.length }} {{ i18n.t('dr.drillsCount') }}</small>
+      </div>
+    </div>
+  }
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('backups.colSnapshotName') }}</th>
+          <th>{{ i18n.t('backups.colBackupType') }}</th>
+          <th>{{ i18n.t('backups.colEncryption') }}</th>
+          <th>{{ i18n.t('backups.colChecksum') }}</th>
+          <th>{{ i18n.t('backups.colStatus') }}</th>
+          <th>{{ i18n.t('backups.colDrillStatus') }}</th>
+          <th>{{ i18n.t('backups.colActions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of backups(); track b.id) {
+          <tr>
+            <td><strong>{{ b.snapshotName }}</strong></td>
+            <td><span class="badge neutral">{{ b.backupType }}</span></td>
+            <td><span class="badge info">{{ b.encryptionAlgorithm }}</span></td>
+            <td><code class="checksum">{{ b.sha256Checksum.slice(0, 16) }}...</code></td>
+            <td>
+              <span class="badge" [class.success]="b.status === 'VERIFIED' || b.status === 'COMPLETED'">
+                {{ b.status }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class.success]="b.verificationDrillStatus === 'PASSED'" [class.warning]="b.verificationDrillStatus === 'PENDING'">
+                {{ b.verificationDrillStatus }}
+              </span>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="btn small primary"
+                (click)="runDrill(b)"
+                [disabled]="actionLoading() !== null || b.verificationDrillStatus === 'PASSED'"
+              >
+                {{ i18n.t('backups.runRestoreDrill') }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty-cell">{{ i18n.t('common.noResults') }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

@@ -1,0 +1,203 @@
+id;translation_key;locale;text_value
+v415-001;PATIENT_NOT_FOUND;ar-EG;سجل المريض غير موجود
+v415-002;PATIENT_NOT_FOUND;en-US;Patient record not found
+v415-003;PATIENT_MRN_EXISTS;ar-EG;رقم الملف الطبي مسجل مسبقاً
+v415-004;PATIENT_MRN_EXISTS;en-US;Medical record number already exists
+v415-005;PATIENT_PHONE_REQUIRED;ar-EG;رقم هاتف المريض مطلوب
+v415-006;PATIENT_PHONE_REQUIRED;en-US;Patient phone number is required
+v415-007;PATIENT_NAME_REQUIRED;ar-EG;اسم المريض بالكامل مطلوب
+v415-008;PATIENT_NAME_REQUIRED;en-US;Patient full name is required
+v415-009;PATIENT_NATIONAL_ID_INVALID;ar-EG;الرقم القومي المصري غير صحيح أو غير متطابق
+v415-010;PATIENT_NATIONAL_ID_INVALID;en-US;Egyptian national ID is invalid or malformed
+v415-011;CLINIC_VISIT_NOT_FOUND;ar-EG;زيارة العيادة غير موجودة
+v415-012;CLINIC_VISIT_NOT_FOUND;en-US;Clinic visit not found
+v415-013;CLINIC_VISIT_INVALID_STATUS;ar-EG;حالة زيارة العيادة غير صالحة لهذا الإجراء
+v415-014;CLINIC_VISIT_INVALID_STATUS;en-US;Invalid clinic visit status transition
+v415-015;CLINIC_VISIT_ALREADY_COMPLETED;ar-EG;الزيارة مكتملة مسبقاً ولا يمكن تعديلها
+v415-016;CLINIC_VISIT_ALREADY_COMPLETED;en-US;Clinic visit is already completed
+v415-017;CLINIC_VISIT_ALREADY_CANCELLED;ar-EG;الزيارة ملغاة مسبقاً
+v415-018;CLINIC_VISIT_ALREADY_CANCELLED;en-US;Clinic visit is already cancelled
+v415-019;CLINIC_DOCTOR_REQUIRED;ar-EG;يرجى اختيار الطبيب المعالج
+v415-020;CLINIC_DOCTOR_REQUIRED;en-US;Attending doctor is required
+v415-021;CLINIC_PRESCRIPTION_EMPTY;ar-EG;الروشتة الطبية يجب أن تحتوي على صنف دوائي واحد على الأقل
+v415-022;CLINIC_PRESCRIPTION_EMPTY;en-US;Prescription must contain at least one medication
+v415-023;CLINIC_COMMISSION_INVALID_PERIOD;ar-EG;فترة حساب عمولة الطبيب غير صالحة
+v415-024;CLINIC_COMMISSION_INVALID_PERIOD;en-US;Invalid doctor commission period
+v415-025;workspace.medical;ar-EG;القطاع الطبي والعيادات
+v415-026;workspace.medical;en-US;Medical & Clinics
+v415-027;nav.clinicPatients;ar-EG;سجلات المرضى
+v415-028;nav.clinicPatients;en-US;Patient Records
+v415-029;nav.clinicPatientsHint;ar-EG;إدارة السجلات الطبية وبيانات المرضى
+v415-030;nav.clinicPatientsHint;en-US;Manage patient master index and medical charts
+v415-031;nav.clinicQueue;ar-EG;طابور العيادة
+v415-032;nav.clinicQueue;en-US;Clinic Queue
+v415-033;nav.clinicQueueHint;ar-EG;إدارة قائمة الانتظار وغرف الكشف واستدعاء المرضى
+v415-034;nav.clinicQueueHint;en-US;Manage waiting line, consultation rooms and patient calling
+v415-035;nav.clinicCommissions;ar-EG;عمولات الأطباء
+v415-036;nav.clinicCommissions;en-US;Doctor Commissions
+v415-037;nav.clinicCommissionsHint;ar-EG;كشوف عمولات الأطباء الشهرية ونسب الزيارات
+v415-038;nav.clinicCommissionsHint;en-US;Monthly doctor commission statements and visit shares
+v415-039;clinic.patientsTitle;ar-EG;سجلات المرضى
+v415-040;clinic.patientsTitle;en-US;Patient Master Index
+v415-041;clinic.patientsSubtitle;ar-EG;إدارة ملفات المرضى وتحديث البيانات الطبية والتاريخ المرضي
+v415-042;clinic.patientsSubtitle;en-US;Manage patient profiles, medical history and emergency contacts
+v415-043;clinic.newPatient;ar-EG;تسجيل مريض جديد
+v415-044;clinic.newPatient;en-US;Register New Patient
+v415-045;clinic.searchPlaceholder;ar-EG;بحث بالاسم أو رقم الهاتف أو الرقم القومي أو رقم الملف...
+v415-046;clinic.searchPlaceholder;en-US;Search by name, phone, national ID or MRN...
+v415-047;clinic.mrn;ar-EG;رقم الملف (MRN)
+v415-048;clinic.mrn;en-US;MRN
+v415-049;clinic.nationalId;ar-EG;الرقم القومي (14 رقم)
+v415-050;clinic.nationalId;en-US;Egyptian National ID (14 digits)
+v415-051;clinic.fullName;ar-EG;الاسم بالكامل
+v415-052;clinic.fullName;en-US;Full Name
+v415-053;clinic.phone;ar-EG;رقم الهاتف
+v415-054;clinic.phone;en-US;Phone Number
+v415-055;clinic.gender;ar-EG;النوع
+v415-056;clinic.gender;en-US;Gender
+v415-057;clinic.birthDate;ar-EG;تاريخ الميلاد
+v415-058;clinic.birthDate;en-US;Birth Date
+v415-059;clinic.bloodGroup;ar-EG;فصيلة الدم
+v415-060;clinic.bloodGroup;en-US;Blood Group
+v415-061;clinic.allergies;ar-EG;الحساسية والتحذيرات
+v415-062;clinic.allergies;en-US;Allergies & Alerts
+v415-063;clinic.notes;ar-EG;ملاحظات طبية
+v415-064;clinic.notes;en-US;Medical Notes
+v415-065;clinic.emergencyContact;ar-EG;جهة اتصال الطوارئ
+v415-066;clinic.emergencyContact;en-US;Emergency Contact
+v415-067;clinic.emergencyPhone;ar-EG;هاتف الطوارئ
+v415-068;clinic.emergencyPhone;en-US;Emergency Phone
+v415-069;clinic.duplicateWarning;ar-EG;تنبيه: مريض مسجل مسبقاً
+v415-070;clinic.duplicateWarning;en-US;Warning: Duplicate Patient Found
+v415-071;clinic.duplicateFoundMessage;ar-EG;يوجد مريض مسجل بنفس رقم الهاتف أو الرقم القومي:
+v415-072;clinic.duplicateFoundMessage;en-US;A patient with the same phone or national ID already exists:
+v415-073;clinic.openExistingChart;ar-EG;فتح الملف الحالي
+v415-074;clinic.openExistingChart;en-US;Open Existing Chart
+v415-075;clinic.continueRegistering;ar-EG;متابعة التسجيل كملف جديد
+v415-076;clinic.continueRegistering;en-US;Continue Registering New
+v415-077;clinic.queueTitle;ar-EG;طابور انتظار العيادة
+v415-078;clinic.queueTitle;en-US;Clinic Consultation Queue
+v415-079;clinic.queueSubtitle;ar-EG;إدارة تدفق المرضى وغرف الكشف ومتابعة الطابور اليومي
+v415-080;clinic.queueSubtitle;en-US;Manage patient flow, consultation rooms and daily token queue
+v415-081;clinic.waitingQueue;ar-EG;في الانتظار
+v415-082;clinic.waitingQueue;en-US;Waiting
+v415-083;clinic.inRoom;ar-EG;في غرفة الكشف
+v415-084;clinic.inRoom;en-US;In Room
+v415-085;clinic.completedToday;ar-EG;تم الكشف
+v415-086;clinic.completedToday;en-US;Completed
+v415-087;clinic.cancelledToday;ar-EG;ملغي
+v415-088;clinic.cancelledToday;en-US;Cancelled
+v415-089;clinic.callNext;ar-EG;استدعاء التالي
+v415-090;clinic.callNext;en-US;Call Next
+v415-091;clinic.call;ar-EG;استدعاء
+v415-092;clinic.call;en-US;Call
+v415-093;clinic.complete;ar-EG;إتمام الكشف
+v415-094;clinic.complete;en-US;Complete Visit
+v415-095;clinic.cancel;ar-EG;إلغاء الزيارة
+v415-096;clinic.cancel;en-US;Cancel Visit
+v415-097;clinic.tokenNumber;ar-EG;رقم الدور
+v415-098;clinic.tokenNumber;en-US;Token #
+v415-099;clinic.doctor;ar-EG;الطبيب المعالج
+v415-100;clinic.doctor;en-US;Attending Doctor
+v415-101;clinic.status;ar-EG;الحالة
+v415-102;clinic.status;en-US;Status
+v415-103;clinic.actions;ar-EG;الإجراءات
+v415-104;clinic.actions;en-US;Actions
+v415-105;clinic.visitDetailTitle;ar-EG;تفاصيل الكشف الطبي والروشتة
+v415-106;clinic.visitDetailTitle;en-US;Consultation & Prescription
+v415-107;clinic.chiefComplaint;ar-EG;الشكوى الرئيسية والأعراض
+v415-108;clinic.chiefComplaint;en-US;Chief Complaint & Symptoms
+v415-109;clinic.diagnosis;ar-EG;التشخيص (كود ICD)
+v415-110;clinic.diagnosis;en-US;Diagnosis (ICD Code)
+v415-111;clinic.diagnosisNotes;ar-EG;ملاحظات التشخيص والخطة العلاجية
+v415-112;clinic.diagnosisNotes;en-US;Diagnosis Notes & Plan
+v415-113;clinic.feeCharged;ar-EG;قيمة الكشف (ج.م)
+v415-114;clinic.feeCharged;en-US;Fee Charged (EGP)
+v415-115;clinic.insuranceCovered;ar-EG;تغطية التأمين (ج.م)
+v415-116;clinic.insuranceCovered;en-US;Insurance Covered (EGP)
+v415-117;clinic.patientShare;ar-EG;حصة المريض (ج.م)
+v415-118;clinic.patientShare;en-US;Patient Share (EGP)
+v415-119;clinic.paymentMethod;ar-EG;طريقة الدفع
+v415-120;clinic.paymentMethod;en-US;Payment Method
+v415-121;clinic.prescriptions;ar-EG;الروشتة والعلاج الدوائي
+v415-122;clinic.prescriptions;en-US;Prescriptions & Medications
+v415-123;clinic.addDrug;ar-EG;إضافة صنف دوائي
+v415-124;clinic.addDrug;en-US;Add Medication
+v415-125;clinic.drugName;ar-EG;اسم الدواء
+v415-126;clinic.drugName;en-US;Drug Name
+v415-127;clinic.dose;ar-EG;الجرعة
+v415-128;clinic.dose;en-US;Dose
+v415-129;clinic.frequency;ar-EG;التكرار
+v415-130;clinic.frequency;en-US;Frequency
+v415-131;clinic.duration;ar-EG;المدة
+v415-132;clinic.duration;en-US;Duration
+v415-133;clinic.instructions;ar-EG;تعليمات الاستخدام
+v415-134;clinic.instructions;en-US;Instructions
+v415-135;clinic.savePrescription;ar-EG;حفظ الروشتة والكشف
+v415-136;clinic.savePrescription;en-US;Save Prescription & Visit
+v415-137;clinic.printRx;ar-EG;طباعة الروشتة
+v415-138;clinic.printRx;en-US;Print Prescription
+v415-139;clinic.clinicName;ar-EG;العيادات الطبية التخصصية
+v415-140;clinic.clinicName;en-US;Specialized Medical Clinics
+v415-141;clinic.rxHeader;ar-EG;روشتة علاجية
+v415-142;clinic.rxHeader;en-US;Medical Prescription
+v415-143;clinic.date;ar-EG;التاريخ
+v415-144;clinic.date;en-US;Date
+v415-145;clinic.doctorName;ar-EG;اسم الطبيب
+v415-146;clinic.doctorName;en-US;Doctor Name
+v415-147;clinic.signature;ar-EG;التوقيع والختم
+v415-148;clinic.signature;en-US;Signature & Stamp
+v415-149;clinic.commissionsTitle;ar-EG;كشف عمولات الأطباء
+v415-150;clinic.commissionsTitle;en-US;Doctor Commission Statement
+v415-151;clinic.commissionsSubtitle;ar-EG;حساب عمولات الأطباء الشهرية بناءً على عدد الزيارات المكتملة والإيراد المحقق
+v415-152;clinic.commissionsSubtitle;en-US;Monthly doctor commission calculation based on completed visits and revenue
+v415-153;clinic.doctorSelect;ar-EG;اختر الطبيب
+v415-154;clinic.doctorSelect;en-US;Select Doctor
+v415-155;clinic.periodSelect;ar-EG;الفترة (الشهر / السنة)
+v415-156;clinic.periodSelect;en-US;Period (Month / Year)
+v415-157;clinic.visitsCount;ar-EG;إجمالي عدد الكشوفات
+v415-158;clinic.visitsCount;en-US;Completed Visits Count
+v415-159;clinic.totalRevenue;ar-EG;إجمالي قيمة الكشوفات (ج.م)
+v415-160;clinic.totalRevenue;en-US;Total Revenue (EGP)
+v415-161;clinic.commissionRate;ar-EG;نسبة العمولة
+v415-162;clinic.commissionRate;en-US;Commission Rate
+v415-163;clinic.commissionAmount;ar-EG;مستحق العمولة (ج.م)
+v415-164;clinic.commissionAmount;en-US;Commission Payable (EGP)
+v415-165;clinic.calculateCommission;ar-EG;عرض كشف العمولة
+v415-166;clinic.calculateCommission;en-US;Generate Statement
+v415-167;clinic.tvQueueTitle;ar-EG;شاشة عرض الطابور والنداء الآلي
+v415-168;clinic.tvQueueTitle;en-US;Queue TV Display
+v415-169;clinic.nowServing;ar-EG;الآن في غرفة الكشف
+v415-170;clinic.nowServing;en-US;Now Serving
+v415-171;clinic.nextInLine;ar-EG;التالي في الانتظار
+v415-172;clinic.nextInLine;en-US;Next in Line
+v415-173;clinic.noActiveVisits;ar-EG;لا توجد كشوفات حالية
+v415-174;clinic.noActiveVisits;en-US;No active visits in queue
+v415-175;clinic.male;ar-EG;ذكر
+v415-176;clinic.male;en-US;Male
+v415-177;clinic.female;ar-EG;أنثى
+v415-178;clinic.female;en-US;Female
+v415-179;clinic.cash;ar-EG;نقداً
+v415-180;clinic.cash;en-US;Cash
+v415-181;clinic.card;ar-EG;بطاقة بنكية
+v415-182;clinic.card;en-US;Credit/Debit Card
+v415-183;clinic.insurance;ar-EG;تأمين طبي
+v415-184;clinic.insurance;en-US;Medical Insurance
+v415-185;clinic.waitingStatus;ar-EG;في الانتظار
+v415-186;clinic.waitingStatus;en-US;Waiting
+v415-187;clinic.inRoomStatus;ar-EG;في الغرفة
+v415-188;clinic.inRoomStatus;en-US;In Room
+v415-189;clinic.doneStatus;ar-EG;مكتمل
+v415-190;clinic.doneStatus;en-US;Done
+v415-191;clinic.cancelledStatus;ar-EG;ملغي
+v415-192;clinic.cancelledStatus;en-US;Cancelled
+v415-193;clinic.walkinQueue;ar-EG;حجز كشف وكوبون دور
+v415-194;clinic.walkinQueue;en-US;Queue Walk-in Visit
+v415-195;clinic.quickRegisterWalkin;ar-EG;حجز دور سريع
+v415-196;clinic.quickRegisterWalkin;en-US;Quick Queue Walk-in
+v415-197;clinic.selectPatient;ar-EG;اختر المريض
+v415-198;clinic.selectPatient;en-US;Select Patient
+v415-199;clinic.governorate;ar-EG;المحافظة
+v415-200;clinic.governorate;en-US;Governorate
+v415-201;common.currencyEgp;ar-EG;ج.م
+v415-202;common.currencyEgp;en-US;EGP

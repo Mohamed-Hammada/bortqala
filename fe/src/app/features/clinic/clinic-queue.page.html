@@ -1,0 +1,303 @@
+<div class="clinic-queue-page" [class.tv-mode]="tvMode()">
+  <!-- Header (hidden in TV mode) -->
+  @if (!tvMode()) {
+    <div class="page-header">
+      <div class="header-titles">
+        <h1 class="page-title">{{ i18n.t('clinic.queueTitle') }}</h1>
+        <p class="page-subtitle">{{ i18n.t('clinic.queueSubtitle') }}</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" type="button" (click)="toggleTvMode()">
+          {{ i18n.t('clinic.tvQueueTitle') }}
+        </button>
+        <button class="btn btn-primary" type="button" (click)="openWalkinModal()">
+          + {{ i18n.t('clinic.quickRegisterWalkin') }}
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="tv-header">
+      <h2>{{ i18n.t('clinic.clinicName') }} — {{ i18n.t('clinic.tvQueueTitle') }}</h2>
+      <button class="btn btn-sm btn-ghost" type="button" (click)="toggleTvMode()">
+        {{ i18n.t('common.close') }}
+      </button>
+    </div>
+  }
+
+  <!-- TV Display Screen Layout -->
+  @if (tvMode()) {
+    <div class="tv-board">
+      <div class="tv-card now-serving-card">
+        <div class="tv-card-label">{{ i18n.t('clinic.nowServing') }}</div>
+        @if (inRoomVisits().length > 0) {
+          @for (visit of inRoomVisits(); track visit.id) {
+            <div class="tv-token-big">#{{ visit.token }}</div>
+            <div class="tv-patient-name">{{ visit.patientName }}</div>
+            <div class="tv-doctor-badge">{{ visit.doctorName }}</div>
+          }
+        } @else {
+          <div class="tv-empty">{{ i18n.t('clinic.noActiveVisits') }}</div>
+        }
+      </div>
+
+      <div class="tv-card next-in-line-card">
+        <div class="tv-card-label">{{ i18n.t('clinic.nextInLine') }}</div>
+        <div class="tv-next-list">
+          @if (waitingVisits().length === 0) {
+            <div class="tv-empty">{{ i18n.t('common.noResults') }}</div>
+          } @else {
+            @for (visit of waitingVisits(); track visit.id) {
+              <div class="tv-next-item">
+                <span class="tv-next-token">#{{ visit.token }}</span>
+                <span class="tv-next-name">{{ visit.patientName }}</span>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Normal Queue Board Columns -->
+    <div class="queue-grid">
+      <!-- Waiting Column -->
+      <div class="queue-column card">
+        <div class="column-header">
+          <h3>
+            {{ i18n.t('clinic.waitingQueue') }}
+            <span class="count-badge">{{ waitingVisits().length }}</span>
+          </h3>
+        </div>
+        <div class="column-body">
+          @if (waitingVisits().length === 0) {
+            <div class="empty-placeholder">{{ i18n.t('common.noResults') }}</div>
+          } @else {
+            @for (visit of waitingVisits(); track visit.id) {
+              <div class="visit-card">
+                <div class="card-top">
+                  <span class="token-pill">#{{ visit.token }}</span>
+                  <span class="badge badge-warning">{{ i18n.t('clinic.waitingStatus') }}</span>
+                </div>
+                <div class="card-patient-name">{{ visit.patientName }}</div>
+                <div class="card-patient-meta">{{ visit.patientMrn }} · {{ visit.patientPhone }}</div>
+                <div class="card-actions">
+                  <button class="btn btn-sm btn-primary" type="button" (click)="callPatient(visit)">
+                    {{ i18n.t('clinic.call') }}
+                  </button>
+                  <button class="btn btn-sm btn-ghost text-danger" type="button" (click)="cancelVisit(visit)">
+                    {{ i18n.t('clinic.cancel') }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- In Room Column -->
+      <div class="queue-column card active-column">
+        <div class="column-header">
+          <h3>
+            {{ i18n.t('clinic.inRoom') }}
+            <span class="count-badge primary">{{ inRoomVisits().length }}</span>
+          </h3>
+        </div>
+        <div class="column-body">
+          @if (inRoomVisits().length === 0) {
+            <div class="empty-placeholder">{{ i18n.t('clinic.noActiveVisits') }}</div>
+          } @else {
+            @for (visit of inRoomVisits(); track visit.id) {
+              <div class="visit-card in-room">
+                <div class="card-top">
+                  <span class="token-pill primary">#{{ visit.token }}</span>
+                  <span class="badge badge-primary">{{ i18n.t('clinic.inRoomStatus') }}</span>
+                </div>
+                <div class="card-patient-name">{{ visit.patientName }}</div>
+                <div class="card-patient-meta">{{ visit.patientMrn }} · {{ visit.patientPhone }}</div>
+                <div class="card-actions">
+                  <button class="btn btn-sm btn-success" type="button" (click)="openConsultModal(visit)">
+                    {{ i18n.t('clinic.complete') }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Completed Column -->
+      <div class="queue-column card">
+        <div class="column-header">
+          <h3>
+            {{ i18n.t('clinic.completedToday') }}
+            <span class="count-badge success">{{ completedVisits().length }}</span>
+          </h3>
+        </div>
+        <div class="column-body">
+          @if (completedVisits().length === 0) {
+            <div class="empty-placeholder">{{ i18n.t('common.noResults') }}</div>
+          } @else {
+            @for (visit of completedVisits(); track visit.id) {
+              <div class="visit-card completed">
+                <div class="card-top">
+                  <span class="token-pill neutral">#{{ visit.token }}</span>
+                  <span class="badge badge-success">{{ i18n.t('clinic.doneStatus') }}</span>
+                </div>
+                <div class="card-patient-name">{{ visit.patientName }}</div>
+                <div class="card-patient-meta">{{ visit.patientMrn }} · {{ visit.patientShare }} {{ i18n.t('common.currencyEgp') }}</div>
+                <div class="card-actions">
+                  <button class="btn btn-sm btn-ghost" type="button" (click)="openConsultModal(visit)">
+                    {{ i18n.t('common.view') }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Quick Walk-in Queue Modal -->
+  <app-modal-dialog
+    [isOpen]="walkinModalOpen()"
+    [title]="i18n.t('clinic.quickRegisterWalkin')"
+    (close)="walkinModalOpen.set(false)"
+  >
+    <form [formGroup]="walkinForm" (ngSubmit)="submitWalkinQueue()" class="walkin-form">
+      <div class="form-group">
+        <label class="form-label required">{{ i18n.t('clinic.selectPatient') }}</label>
+        <select class="form-control" formControlName="patientId">
+          <option value="">— {{ i18n.t('clinic.selectPatient') }} —</option>
+          @for (p of patientsList(); track p.id) {
+            <option [value]="p.id">{{ p.fullName }} ({{ p.mrn }} · {{ p.phone }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col">
+          <label class="form-label required">{{ i18n.t('clinic.feeCharged') }}</label>
+          <input type="number" class="form-control" formControlName="feeCharged" />
+        </div>
+        <div class="form-group col">
+          <label class="form-label">{{ i18n.t('clinic.insuranceCovered') }}</label>
+          <input type="number" class="form-control" formControlName="insuranceCovered" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('clinic.paymentMethod') }}</label>
+        <select class="form-control" formControlName="paymentMethod">
+          <option value="CASH">{{ i18n.t('clinic.cash') }}</option>
+          <option value="CARD">{{ i18n.t('clinic.card') }}</option>
+          <option value="INSURANCE">{{ i18n.t('clinic.insurance') }}</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="walkinModalOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary">
+          {{ i18n.t('clinic.walkinQueue') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Consultation & Prescription Modal -->
+  <app-modal-dialog
+    [isOpen]="consultModalOpen()"
+    [title]="i18n.t('clinic.visitDetailTitle')"
+    (close)="consultModalOpen.set(false)"
+  >
+    <div class="consult-modal-content">
+      <div class="printable-prescription" id="printable-rx">
+        <div class="rx-header">
+          <h2>{{ i18n.t('clinic.clinicName') }}</h2>
+          <p>{{ i18n.t('clinic.rxHeader') }}</p>
+        </div>
+        <div class="rx-patient-info">
+          <div><strong>{{ i18n.t('clinic.fullName') }}:</strong> {{ activeConsultVisit()?.patientName }}</div>
+          <div><strong>{{ i18n.t('clinic.mrn') }}:</strong> {{ activeConsultVisit()?.patientMrn }}</div>
+          <div><strong>{{ i18n.t('clinic.date') }}:</strong> {{ activeConsultVisit()?.visitDate }}</div>
+          <div><strong>{{ i18n.t('clinic.doctor') }}:</strong> {{ activeConsultVisit()?.doctorName }}</div>
+        </div>
+      </div>
+
+      <form [formGroup]="consultForm" (ngSubmit)="submitCompleteVisit()" class="consult-form">
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('clinic.chiefComplaint') }}</label>
+          <textarea class="form-control" rows="2" formControlName="chiefComplaint"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col">
+            <label class="form-label">{{ i18n.t('clinic.diagnosis') }}</label>
+            <input type="text" class="form-control" formControlName="diagnosisIcd" placeholder="e.g. J00, R51" />
+          </div>
+          <div class="form-group col">
+            <label class="form-label">{{ i18n.t('clinic.paymentMethod') }}</label>
+            <select class="form-control" formControlName="paymentMethod">
+              <option value="CASH">{{ i18n.t('clinic.cash') }}</option>
+              <option value="CARD">{{ i18n.t('clinic.card') }}</option>
+              <option value="INSURANCE">{{ i18n.t('clinic.insurance') }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('clinic.diagnosisNotes') }}</label>
+          <textarea class="form-control" rows="2" formControlName="diagnosisNotes"></textarea>
+        </div>
+
+        <!-- Prescriptions Section -->
+        <div class="prescriptions-section">
+          <div class="section-title-bar">
+            <h4>{{ i18n.t('clinic.prescriptions') }}</h4>
+            <button type="button" class="btn btn-sm btn-secondary" (click)="addPrescriptionLine()">
+              + {{ i18n.t('clinic.addDrug') }}
+            </button>
+          </div>
+
+          <div formArrayName="prescriptions" class="rx-lines-container">
+            @for (line of prescriptionsArray.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="rx-line-row">
+                <div class="rx-col drug-col">
+                  <input type="text" class="form-control" formControlName="drugName" [placeholder]="i18n.t('clinic.drugName')" />
+                </div>
+                <div class="rx-col">
+                  <input type="text" class="form-control" formControlName="dose" [placeholder]="i18n.t('clinic.dose')" />
+                </div>
+                <div class="rx-col">
+                  <input type="text" class="form-control" formControlName="frequency" [placeholder]="i18n.t('clinic.frequency')" />
+                </div>
+                <div class="rx-col">
+                  <input type="text" class="form-control" formControlName="duration" [placeholder]="i18n.t('clinic.duration')" />
+                </div>
+                <div class="rx-col">
+                  <input type="text" class="form-control" formControlName="instructions" [placeholder]="i18n.t('clinic.instructions')" />
+                </div>
+                <button type="button" class="btn btn-sm btn-ghost text-danger" (click)="removePrescriptionLine(i)">
+                  ✕
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="printPrescription()">
+            {{ i18n.t('clinic.printRx') }}
+          </button>
+          <button type="button" class="btn btn-ghost" (click)="consultModalOpen.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button type="submit" class="btn btn-success">
+            {{ i18n.t('clinic.complete') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </app-modal-dialog>
+</div>

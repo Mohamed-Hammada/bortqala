@@ -1,0 +1,82 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('finance.paylinks') }}</p>
+      <h1>{{ i18n.t('finance.paylinks') }}</h1>
+    </div>
+    @if (gatewayEnabled()) {
+      <button class="button" (click)="showCreate.set(true)">{{ i18n.t('finance.paylinkCreate') }}</button>
+    }
+  </header>
+
+  @if (!gatewayEnabled()) {
+    <div class="alert warning">{{ i18n.t('finance.paylinkGatewayOff') }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  } @else if (links().length === 0) {
+    <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+  } @else {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('finance.paylinkKind') }}</th>
+            <th>{{ i18n.t('finance.paylinkAmount') }}</th>
+            <th>{{ i18n.t('finance.paylinkStatus') }}</th>
+            <th>{{ i18n.t('finance.paylinkExpiry') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (link of links(); track link.id) {
+            <tr>
+              <td>{{ link.kind }}</td>
+              <td>{{ link.amount | number:'1.2-2' }} {{ link.currency }}</td>
+              <td><span class="status-badge" [style.color]="statusColor(link.status)">{{ link.status }}</span></td>
+              <td>{{ link.expiresAtEpochMs ? (link.expiresAtEpochMs | date:'medium') : '—' }}</td>
+              <td class="actions">
+                @if (link.status === 'PENDING') {
+                  <button class="button small secondary" (click)="copyLink(link.token)">{{ i18n.t('finance.paylinkCopy') }}</button>
+                  <button class="button small secondary" (click)="shareWhatsApp(link.token, link.amount)">{{ i18n.t('finance.paylinkShare') }}</button>
+                  <button class="button small danger" (click)="cancelLink(link.id)">{{ i18n.t('finance.paylinkCancel') }}</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (showCreate()) {
+    <div class="modal-overlay" (click)="showCreate.set(false)">
+      <div class="modal card" (click)="$event.stopPropagation()">
+        <h2>{{ i18n.t('finance.paylinkCreate') }}</h2>
+        <div class="form-group">
+          <label>{{ i18n.t('finance.paylinkKind') }}</label>
+          <select [value]="newKind()" (change)="newKind.set($any($event.target).value)">
+            <option value="INVOICE">{{ i18n.t('finance.paylinkInvoice') }}</option>
+            <option value="PARTY_BALANCE">{{ i18n.t('finance.paylinkPartyBalance') }}</option>
+            <option value="CUSTOM">{{ i18n.t('finance.paylinkCustom') }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('finance.paylinkAmount') }}</label>
+          <input type="number" [value]="newAmount()" (input)="newAmount.set(+$any($event.target).value)" min="1" />
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('finance.paylinkPageDesc') }}</label>
+          <input type="text" [value]="newDescription()" (input)="newDescription.set($any($event.target).value)" />
+        </div>
+        <div class="modal-actions">
+          <button class="button secondary" (click)="showCreate.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="button" [disabled]="creating() || newAmount() <= 0" (click)="createLink()">
+            {{ creating() ? i18n.t('common.executing') : i18n.t('common.save') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

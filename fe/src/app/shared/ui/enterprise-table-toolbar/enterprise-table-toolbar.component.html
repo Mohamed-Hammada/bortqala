@@ -27,7 +27,7 @@
     <div class="panel presets">
       <div class="save-row"><input #nameInput [value]="presetName()" (input)="presetName.set(nameInput.value)" [placeholder]="i18n.t('enterpriseTable.presetName', undefined, 'Filter view name')" />
         <button type="button" [disabled]="!presetName().trim()" (click)="savePreset()">{{ i18n.t('common.save', undefined, 'Save') }}</button></div>
-      @for (preset of presets(); track preset.name) { <div class="preset-row"><button type="button" (click)="applyPreset(preset)">{{ preset.name }}</button><button type="button" (click)="deletePreset(preset.name)" aria-label="Delete">×</button></div> }
+      @for (preset of presets(); track preset.name) { <div class="preset-row"><button type="button" (click)="applyPreset(preset)">{{ preset.name }}</button><button type="button" (click)="deletePreset(preset.name)" [attr.aria-label]="i18n.t('common.delete')">×</button></div> }
     </div>
   }
 </div>

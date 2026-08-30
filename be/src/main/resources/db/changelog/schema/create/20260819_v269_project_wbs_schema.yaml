@@ -1,0 +1,132 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819-v269-project-wbs-schema
+      author: bemo-erp
+      comment: "P0.1 Project Kernel & Hierarchical WBS/BOQ: projects, wbs_nodes, project_cost_codes, project_party_roles tables with constraints and indexes."
+      changes:
+        - createTable:
+            tableName: projects
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: name_en, type: VARCHAR(255) }
+              - column: { name: description, type: TEXT }
+              - column: { name: company_id, type: VARCHAR(36) }
+              - column: { name: branch_id, type: VARCHAR(36) }
+              - column: { name: owner_party_id, type: VARCHAR(36) }
+              - column: { name: project_manager_id, type: VARCHAR(36) }
+              - column: { name: site_address, type: VARCHAR(500) }
+              - column: { name: contract_number, type: VARCHAR(100) }
+              - column: { name: contract_value, type: "NUMERIC(18, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: currency_code, type: VARCHAR(10), defaultValue: "EGP", constraints: { nullable: false } }
+              - column: { name: start_date, type: DATE }
+              - column: { name: end_date, type: DATE }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "DRAFT", constraints: { nullable: false } }
+              - column: { name: budget_blocking, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: projects
+            columnNames: app_id, code
+            constraintName: uq_projects_app_code
+
+        - createIndex:
+            tableName: projects
+            indexName: idx_projects_app_status
+            columns:
+              - column: { name: app_id }
+              - column: { name: status }
+
+        - createIndex:
+            tableName: projects
+            indexName: idx_projects_app_company
+            columns:
+              - column: { name: app_id }
+              - column: { name: company_id }
+
+        - createTable:
+            tableName: project_cost_codes
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: name_en, type: VARCHAR(255) }
+              - column: { name: category, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: description, type: TEXT }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: project_cost_codes
+            columnNames: app_id, code
+            constraintName: uq_project_cost_codes_app_code
+
+        - createTable:
+            tableName: wbs_nodes
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: project_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: parent_id, type: VARCHAR(36) }
+              - column: { name: wbs_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: wbs_path, type: VARCHAR(500), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: name_en, type: VARCHAR(255) }
+              - column: { name: description, type: TEXT }
+              - column: { name: node_type, type: VARCHAR(30), defaultValue: "WORK_PACKAGE", constraints: { nullable: false } }
+              - column: { name: level, type: INT, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: unit_of_measure, type: VARCHAR(30) }
+              - column: { name: planned_quantity, type: "NUMERIC(18, 4)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: unit_rate, type: "NUMERIC(18, 4)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: planned_amount, type: "NUMERIC(18, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: cost_code_id, type: VARCHAR(36) }
+              - column: { name: start_date, type: DATE }
+              - column: { name: end_date, type: DATE }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "PLANNED", constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: wbs_nodes
+            columnNames: app_id, project_id, wbs_code
+            constraintName: uq_wbs_nodes_app_proj_code
+
+        - createIndex:
+            tableName: wbs_nodes
+            indexName: idx_wbs_nodes_app_proj_parent
+            columns:
+              - column: { name: app_id }
+              - column: { name: project_id }
+              - column: { name: parent_id }
+
+        - createTable:
+            tableName: project_party_roles
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: project_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: party_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: role_type, type: VARCHAR(40), constraints: { nullable: false } }
+              - column: { name: notes, type: TEXT }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: project_party_roles
+            columnNames: app_id, project_id, party_id, role_type
+            constraintName: uq_project_party_roles_app_proj_party_role
+
+      rollback:
+        - dropTable: { tableName: project_party_roles }
+        - dropTable: { tableName: wbs_nodes }
+        - dropTable: { tableName: project_cost_codes }
+        - dropTable: { tableName: projects }

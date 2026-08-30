@@ -98,7 +98,7 @@ public class DayAnomaly {
 
     public void decide(DayAnomalyDecision decision, String reason, String operationId, String actor) {
         if (status != DayAnomalyStatus.OPEN)
-            throw new BusinessRuleException("حالة الشذوذ ليست مفتوحة لاتخاذ قرار.", "ANOM_NOT_OPEN_FOR_DECISION", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Anomaly status is not open for decision.", "ANOM_NOT_OPEN_FOR_DECISION", HttpStatus.CONFLICT);
         this.decision = decision;
         this.reason = reason;
         this.operationId = operationId;
@@ -109,7 +109,7 @@ public class DayAnomaly {
 
     public void reverse(String actor) {
         if (status != DayAnomalyStatus.RESOLVED)
-            throw new BusinessRuleException("يمكن عكس حالة شذوذ معالجة فقط.", "ANOM_REVERSE_RESOLVED_ONLY", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Only resolved anomalies can be reversed.", "ANOM_REVERSE_RESOLVED_ONLY", HttpStatus.CONFLICT);
         status = DayAnomalyStatus.REVERSED;
         reversedBy = actor;
         reversedAt = Instant.now();
@@ -117,7 +117,7 @@ public class DayAnomaly {
 
     public void reopen(String actor) {
         if (status != DayAnomalyStatus.DEFERRED && status != DayAnomalyStatus.REVERSED) {
-            throw new BusinessRuleException("اعكس القرار المعالج أولاً، أو أعد فتح الحالة المؤجلة/المعكوسة.", "ANOM_REOPEN_BEFORE_DECISION", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Reverse the resolved decision first, or reopen the deferred/reversed status.", "ANOM_REOPEN_BEFORE_DECISION", HttpStatus.CONFLICT);
         }
         status = DayAnomalyStatus.OPEN;
         reopenedBy = actor;

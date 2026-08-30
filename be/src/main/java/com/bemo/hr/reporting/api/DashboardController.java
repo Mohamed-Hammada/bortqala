@@ -1,6 +1,7 @@
 package com.bemo.hr.reporting.api;
 
 import com.bemo.hr.reporting.application.DashboardService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -10,6 +11,7 @@ import java.time.YearMonth;
 
 @RestController
 @RequestMapping("/api/v1/dashboard")
+@PreAuthorize("@auth.hasPermission('dashboard.view')")
 public class DashboardController {
     private final DashboardService dashboardService;
 
@@ -73,6 +75,12 @@ public class DashboardController {
         int y = (year != null && year >= 2000 && year <= 2100) ? year : current.getYear();
         int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
         return dashboardService.trends(months, y, m);
+    }
+    @GetMapping("/clock-in-histogram")
+    java.util.List<DashboardApi.ClockInBucket> clockInHistogram(
+            @RequestParam(defaultValue = "6") int months,
+            @RequestParam(name = "categoryId", required = false) String categoryId) {
+        return dashboardService.clockInHistogram(months, categoryId);
     }
 }
 

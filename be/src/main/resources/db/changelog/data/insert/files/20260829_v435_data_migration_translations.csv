@@ -1,0 +1,61 @@
+id;translation_key;locale;text_value
+v435-001;migration.title;ar-EG;مركز ترحيل وتهيئة البيانات
+v435-002;migration.title;en-US;Data Migration & Onboarding Center
+v435-003;migration.subtitle;ar-EG;استيراد البيانات الأساسية والأرصدة الافتتاحية مع المطابقة اللحظية مع الأستاذ العام
+v435-004;migration.subtitle;en-US;Import master data and opening balances with pre-flight general ledger reconciliation
+v435-005;migration.selectEntity;ar-EG;نوع البيانات المراد استيرادها
+v435-006;migration.selectEntity;en-US;Data Entity Type
+v435-007;migration.downloadTemplate;ar-EG;تحميل نموذج الإكسل الرسمي
+v435-008;migration.downloadTemplate;en-US;Download Official Excel Template
+v435-009;migration.uploadTitle;ar-EG;رفع ملف البيانات
+v435-010;migration.uploadTitle;en-US;Upload Data File
+v435-011;migration.dropzoneHint;ar-EG;اسحب وأفلت ملف CSV أو Excel هنا للبدء في المعالجة
+v435-012;migration.dropzoneHint;en-US;Drag and drop CSV or Excel file here to begin processing
+v435-013;migration.validateButton;ar-EG;فحص البيانات واكتشاف الأخطاء
+v435-014;migration.validateButton;en-US;Validate Rows & Detect Errors
+v435-015;migration.dryRunButton;ar-EG;محاكاة ومطابقة مع الأستاذ العام
+v435-016;migration.dryRunButton;en-US;Simulate & Reconcile with GL
+v435-017;migration.commitButton;ar-EG;اعتماد وترحيل البيانات نهائياً
+v435-018;migration.commitButton;en-US;Commit & Post Migration Batch
+v435-019;migration.rollbackButton;ar-EG;تراجع كامل وإلغاء الدفعة
+v435-020;migration.rollbackButton;en-US;Atomic Rollback & Void Batch
+v435-021;migration.reconciliationPassed;ar-EG;تمت المطابقة بنجاح: إجمالي الأستاذ المساعد يطابق رصيد الأستاذ العام
+v435-022;migration.reconciliationPassed;en-US;Reconciliation Succeeded: Subledger totals equal GL Opening Balance perfectly
+v435-023;migration.subledgerVsGl;ar-EG;مطابقة الأستاذ المساعد مع الأستاذ العام
+v435-024;migration.subledgerVsGl;en-US;Subledger vs General Ledger Reconciliation
+v435-025;migration.historyTitle;ar-EG;سجل دفعات الترحيل السابقة
+v435-026;migration.historyTitle;en-US;Migration Batch History & Rollbacks
+v435-027;MIGRATION_BATCH_NOT_FOUND;ar-EG;دفعة الترحيل المطلوبة غير موجودة
+v435-028;MIGRATION_BATCH_NOT_FOUND;en-US;The requested migration batch was not found
+v435-029;MIGRATION_BATCH_ALREADY_COMMITTED;ar-EG;تم اعتماد دفعة الترحيل هذه مسبقاً ولا يمكن تعديلها
+v435-030;MIGRATION_BATCH_ALREADY_COMMITTED;en-US;This migration batch has already been committed and cannot be modified
+v435-031;MIGRATION_BATCH_ALREADY_ROLLED_BACK;ar-EG;تم التراجع عن دفعة الترحيل هذه مسبقاً
+v435-032;MIGRATION_BATCH_ALREADY_ROLLED_BACK;en-US;This migration batch has already been rolled back
+v435-033;common.success;ar-EG;تمت العملية بنجاح
+v435-034;common.success;en-US;Operation completed successfully
+v435-035;migration.batchId;ar-EG;رقم الدفعة
+v435-036;migration.batchId;en-US;Batch ID
+v435-037;migration.status;ar-EG;الحالة
+v435-038;migration.status;en-US;Status
+v435-039;migration.records;ar-EG;عدد السجلات
+v435-040;migration.records;en-US;Records
+v435-041;migration.glAccount;ar-EG;حساب الأستاذ العام
+v435-042;migration.glAccount;en-US;GL Account
+v435-043;migration.totalSubledgerAmount;ar-EG;إجمالي مبلغ الأستاذ المساعد
+v435-044;migration.totalSubledgerAmount;en-US;Total Subledger Amount
+v435-045;migration.reconciledGlOpening;ar-EG;رصيد الأستاذ العام الافتتاحي المطابق
+v435-046;migration.reconciledGlOpening;en-US;Reconciled GL Opening Balance
+v435-047;migration.entityType;ar-EG;نوع الكيان
+v435-048;migration.entityType;en-US;Entity Type
+v435-049;migration.fileName;ar-EG;اسم الملف
+v435-050;migration.fileName;en-US;File Name
+v435-051;migration.amountEgp;ar-EG;المبلغ (ج.م)
+v435-052;migration.amountEgp;en-US;Amount (EGP)
+v435-053;migration.glMatch;ar-EG;مطابقة الأستاذ العام
+v435-054;migration.glMatch;en-US;GL Match
+v435-055;migration.actions;ar-EG;الإجراءات
+v435-056;migration.actions;en-US;Actions
+v435-057;migration.balanced;ar-EG;مطابق ✓
+v435-058;migration.balanced;en-US;Balanced ✓
+v435-059;migration.variance;ar-EG;يوجد فارق ✕
+v435-060;migration.variance;en-US;Variance ✕

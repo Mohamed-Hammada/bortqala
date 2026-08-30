@@ -91,9 +91,27 @@ describe('OperationsStore', () => {
     httpMock.expectOne('/api/v1/operations/cycle-counts').flush([]);
     httpMock.expectOne('/api/v1/inventory/warehouses').flush([]);
     httpMock.expectOne('/api/v1/operations/transfers').flush([]);
+    httpMock.expectOne('/api/v1/operations/analytics/aging').flush(null);
+    httpMock.expectOne('/api/v1/operations/analytics/dead-stock').flush([]);
+    httpMock.expectOne('/api/v1/operations/analytics/reorder-alerts').flush([]);
 
     expect(await promise).toBe(true);
     expect(store.valuation()?.policy.valuationMethod).toBe('FIFO');
+  });
+
+  it('reloads the valuation report with as-of and warehouse filters', async () => {
+    const promise = store.loadValuation({ asOf: 1754784000000, warehouseId: 'wh-1' });
+    const req = httpMock.expectOne('/api/v1/operations/valuation/report?asOf=1754784000000&warehouseId=wh-1');
+    req.flush({ policy: null, totalInventoryValue: 40, items: [], movementCosts: [],
+      glInventoryAccountBalance: 35, inventoryVarianceFromGl: 5 });
+    await promise;
+    expect(store.valuation()?.inventoryVarianceFromGl).toBe(5);
+  });
+
+  it('downloads the valuation export from the exports endpoint', async () => {
+    const promise = store.exportValuation();
+    httpMock.expectOne('/api/v1/exports/inventory-valuation.xlsx').flush(new Blob());
+    await promise;
   });
 
   it('creates and transitions a warehouse transfer while updating local state', async () => {
@@ -117,5 +135,14 @@ describe('OperationsStore', () => {
     });
     expect(await promise).toBe(true);
     expect(store.bins()[0].binCode).toBe('A-01');
+  });
+
+  it('looks up item by barcode', async () => {
+    const promise = store.lookupBarcode('123456');
+    httpMock.expectOne('/api/v1/operations/analytics/barcode-lookup?barcode=123456').flush({
+      itemId: 'item-1', itemCode: 'ITM-01', itemName: 'Cement', matchedBarcode: '123456', matchType: 'PRIMARY',
+    });
+    const result = await promise;
+    expect(result?.itemCode).toBe('ITM-01');
   });
 });

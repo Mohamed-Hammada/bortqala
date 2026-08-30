@@ -28,14 +28,14 @@ public class EmployeeController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('employees.edit')")
     @ResponseStatus(HttpStatus.CREATED)
     EmployeeApi.Response create(@Valid @RequestBody EmployeeApi.UpsertRequest request) {
         return hrConfigurationService.createEmployee(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('employees.edit')")
     EmployeeApi.Response update(@PathVariable String id, @Valid @RequestBody EmployeeApi.UpsertRequest request) {
         return hrConfigurationService.updateEmployee(id, request);
     }
@@ -46,7 +46,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('employees.deactivate')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) {
         hrConfigurationService.deactivateEmployee(id);

@@ -2,6 +2,8 @@ package com.bemo.hr.operations.api;
 
 import com.bemo.hr.operations.application.ItemLotSerialService;
 import com.bemo.hr.operations.domain.ItemLotSerial;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,6 +64,38 @@ public class ItemLotSerialController {
     public ItemLotSerial receiveReturn(@PathVariable String id, @RequestBody LotSerialMovementPayload payload) {
         return service.receiveReturn(id, payload.quantity(), payload.documentReference());
     }
+
+    /**
+     * FEFO auto-pick: issues from the earliest-expiring lots for an item+warehouse.
+     * Blocks expired lots automatically. Returns the list of lots that were issued.
+     */
+    @PostMapping("/pick/fefo")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public List<ItemLotSerial> pickFefo(@RequestBody PickRequest request) {
+        return service.pickFefo(request.itemId(), request.warehouseId(), request.quantity(), request.documentReference());
+    }
+
+    /**
+     * FIFO auto-pick: issues from the oldest lots for an item+warehouse.
+     */
+    @PostMapping("/pick/fifo")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public List<ItemLotSerial> pickFifo(@RequestBody PickRequest request) {
+        return service.pickFifo(request.itemId(), request.warehouseId(), request.quantity(), request.documentReference());
+    }
+
+    /**
+     * Expiry warnings: lots expiring within N days.
+     */
+    @GetMapping("/expiring/{itemId}/{warehouseId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'VIEWER')")
+    public List<ItemLotSerial> getExpiringLots(
+            @PathVariable String itemId, @PathVariable String warehouseId,
+            @RequestParam(defaultValue = "30") int withinDays) {
+        return service.getLotsExpiringWithinDays(itemId, warehouseId, withinDays);
+    }
+
+    public record PickRequest(String itemId, String warehouseId, BigDecimal quantity, String documentReference) {}
 
     public record CreateLotSerialPayload(String itemId, String lotNumber, String serialNumber, String expirationDate,
                                          String manufactureDate) {

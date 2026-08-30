@@ -11,6 +11,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.shared.security.TenantFeatureService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +47,7 @@ public class AccessCatalogService {
         this.tenantFeatureService = tenantFeatureService;
     }
 
+    @Cacheable(cacheNames = "accessCatalog", key = "'default'")
     public AccessApi.AccessCatalogResponse catalog() {
         List<AccessApi.AccessRoleResponse> roles = catalog.roles().stream().map(this::toRole).toList();
         List<AccessApi.AccessPageResponse> pages = catalog.pages().stream().map(this::toPage).toList();
@@ -96,15 +98,34 @@ public class AccessCatalogService {
         Set<String> granted = catalog.permissionsOfRoles(selected);
         Set<String> menus = menuCodes == null ? Set.of() : new LinkedHashSet<>(menuCodes);
 
-        if (!actorRoles.contains("SUPER_ADMIN") && selected.contains("SUPER_ADMIN")) {
-            throw new BusinessRuleException("Only a Super Admin can assign the Super Admin role.",
-                    "AUTH_SUPER_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN", HttpStatus.CONFLICT);
-        }
         if (targetUserId != null && targetUserId.equals(actorUserId) && currentUserRoles != null
                 && !currentUserRoles.equals(selected)) {
             throw new BusinessRuleException("You cannot change your own roles.",
                     "ACCESS_SELF_ROLE_MODIFICATION", HttpStatus.CONFLICT);
         }
+
+        boolean actorIsSuperAdmin = actorRoles.contains("SUPER_ADMIN");
+
+        if (!actorIsSuperAdmin && selected.contains("SUPER_ADMIN")) {
+            throw new BusinessRuleException("Only a Super Admin can assign the Super Admin role.",
+                    "AUTH_SUPER_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN", HttpStatus.CONFLICT);
+        }
+
+        boolean targetHadAdmin = currentUserRoles != null && currentUserRoles.contains("ADMIN");
+        if (!actorIsSuperAdmin && selected.contains("ADMIN") && !targetHadAdmin) {
+            throw new BusinessRuleException("Only a Super Admin can create or assign Admin accounts.",
+                    "AUTH_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN", HttpStatus.CONFLICT);
+        }
+
+        if (!actorIsSuperAdmin && !actorRoles.contains("ADMIN")) {
+            Set<String> actorGranted = catalog.permissionsOfRoles(actorRoles);
+            if (!actorGranted.containsAll(granted)) {
+                throw new BusinessRuleException("You cannot grant permissions that you do not possess.",
+                        "ACCESS_PERMISSION_SUBSET_VIOLATION", HttpStatus.CONFLICT);
+            }
+        }
+
+
 
         List<AccessApi.AccessConflictResponse> conflicts = evaluateConflicts(granted, selected);
         for (AccessApi.AccessConflictResponse conflict : conflicts) {

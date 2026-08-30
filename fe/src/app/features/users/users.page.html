@@ -6,6 +6,7 @@
       <p>{{ i18n.t('users.description') }}</p>
     </div>
     <div class="header-actions">
+      <a routerLink="/access/policy-groups" class="button secondary">🛡️ {{ i18n.t('policy.tabGroups') }}</a>
       <button class="button secondary" (click)="exportCsv()">⇩ Excel</button>
       <button class="button primary" (click)="openNew()">＋ {{ i18n.t('users.add') }}</button>
     </div>
@@ -20,7 +21,7 @@
 
   @if (!store.loading()) {
   <!-- User-first overview. Role reference is available without dominating the page. -->
-  <div class="users-overview" aria-label="Users overview">
+  <div class="users-overview" [attr.aria-label]="i18n.t('users.overview')">
     <article class="users-kpi">
       <strong>{{ store.items().length }}</strong>
       <span>{{ i18n.t('users.user') }}</span>
@@ -104,6 +105,7 @@
         <tr>
           <th>{{ i18n.t('users.user') }}</th>
           <th>{{ i18n.t('users.roles') }}</th>
+          <th>{{ i18n.t('policy.tabGroups') }}</th>
           <th>{{ i18n.t('users.allowedMenus') }}</th>
           <th>{{ i18n.t('users.status') }}</th>
           <th></th>
@@ -124,7 +126,19 @@
               </div>
             </td>
             <td>
-              <span class="status neutral">🖥️ {{ allowedMenuCount(item) }} / {{ menuOptions.length }}</span>
+              <div class="policy-pill-list">
+                @for (p of item.policyAssignments; track p.id) {
+                  <span class="policy-group-pill" [title]="p.policyGroupName">
+                    🛡️ {{ p.policyGroupName }}
+                    @if (p.scopeBranchId) { <small class="scope-tag">({{ p.scopeBranchId }})</small> }
+                  </span>
+                } @empty {
+                  <span class="hint">—</span>
+                }
+              </div>
+            </td>
+            <td>
+              <span class="status neutral">🖥️ {{ allowedMenuCount(item) }} / {{ menuOptions().length }}</span>
             </td>
             <td>
               <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
@@ -133,6 +147,13 @@
             </td>
             <td>
               <div class="table-row-actions">
+                <button
+                  class="button secondary"
+                  (click)="openPolicyModal(item)"
+                  [title]="i18n.t('policy.userAssignments')"
+                >
+                  🛡️ {{ i18n.t('policy.tabAssignments') }}
+                </button>
                 <button
                   class="button secondary"
                   (click)="openEdit(item)"
@@ -146,7 +167,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="4">
+            <td colspan="6">
               <div class="empty-state">
                 <strong>{{ i18n.t('users.noResults') }}</strong>
                 {{ i18n.t('users.noResultsHint') }}
@@ -256,7 +277,7 @@
                 }
               </select>
           <!-- BORTQALA_FEEDBACK_20260816_CATEGORY_LINK -->
-          <a class="field-inline-link" href="/categories">{{ i18n.locale().toLowerCase().startsWith('ar') ? 'إدارة التصنيفات / إضافة تصنيف جديد' : 'Manage categories / Add a category' }}</a>
+          <a class="field-inline-link" href="/categories">{{ i18n.t('users.manageCategories') }}</a>
             </div>
 
             @if (accessLoading()) {
@@ -350,6 +371,86 @@
               </div>
             </section>
 
+            <section class="advanced-subsection policy-assignment-section">
+              <div class="advanced-subsection-head">
+                <div>
+                  <strong>🛡️ {{ i18n.t('policy.tabGroups') }}</strong>
+                  <small class="hint-block">{{ i18n.t('policy.subtitle') }}</small>
+                </div>
+                <div class="policy-head-meta">
+                  <span class="selection-count">{{ activePolicyAssignmentsCount() }} / {{ userPolicyAssignments().length }}</span>
+                  <div class="quick-actions inline-actions">
+                    <button type="button" class="permission-action" (click)="selectAllPolicies()">
+                      {{ i18n.t('policy.selectAll') }}
+                    </button>
+                    <button type="button" class="permission-action" (click)="clearAllPolicies()">
+                      {{ i18n.t('policy.deselectAll') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              @if (userPolicyAssignments().length > 4) {
+                <div class="policy-search-bar">
+                  <input
+                    type="search"
+                    [value]="policySearch()"
+                    (input)="policySearch.set($any($event.target).value)"
+                    [placeholder]="i18n.t('policy.searchPermissions')"
+                    [attr.aria-label]="i18n.t('policy.searchPermissions')"
+                  />
+                </div>
+              }
+
+              <div class="policy-group-cards-grid">
+                @for (pg of filteredPolicyAssignments(); track pg.policyGroupId) {
+                  <div class="policy-group-selection-card" [class.selected]="pg.selected">
+                    <label class="policy-group-card-header">
+                      <input
+                        type="checkbox"
+                        [checked]="pg.selected"
+                        (change)="togglePolicyAssignment(pg.policyGroupId)"
+                      />
+                      <div class="policy-group-header-text">
+                        <strong>{{ pg.groupName }}</strong>
+                        @if (pg.description) {
+                          <small>{{ pg.description }}</small>
+                        }
+                      </div>
+                      <span class="permission-count-badge">
+                        {{ pg.permissionsCount }} {{ i18n.t('policy.tabMatrix') }}
+                      </span>
+                    </label>
+
+                    @if (pg.selected) {
+                      <div class="policy-scope-inputs-row">
+                        <div class="scope-input-group">
+                          <label><small>{{ i18n.t('policy.scopeBranch') }}</small></label>
+                          <input
+                            type="text"
+                            [value]="pg.scopeBranchId"
+                            (input)="updateBranchScope(pg.policyGroupId, $any($event.target).value)"
+                            [placeholder]="i18n.t('policy.branchAll')"
+                          />
+                        </div>
+                        <div class="scope-input-group">
+                          <label><small>{{ i18n.t('policy.scopeCostCenter') }}</small></label>
+                          <input
+                            type="text"
+                            [value]="pg.scopeCostCenterId"
+                            (input)="updateCostCenterScope(pg.policyGroupId, $any($event.target).value)"
+                            [placeholder]="i18n.t('policy.costCenterAll')"
+                          />
+                        </div>
+                      </div>
+                    }
+                  </div>
+                } @empty {
+                  <div class="empty-hint">{{ i18n.t('policy.noGroups') }}</div>
+                }
+              </div>
+            </section>
+
             <section class="advanced-subsection">
               <strong class="advanced-subsection-title">{{ i18n.t('users.sectionSpecialPermissions') }}</strong>
               <div class="user-settings-grid">
@@ -400,6 +501,25 @@
               </div>
             }
 
+            @if (!editingId() && roleTemplates().length > 0) {
+              <div class="job-template-block">
+                <label for="user-job-template">{{ i18n.t('users.jobTemplate') }}</label>
+                <select
+                  id="user-job-template"
+                  [value]="activeTemplateCode()"
+                  (change)="applyJobTemplate($any($event.target).value)"
+                >
+                  <option value="">—</option>
+                  @for (template of roleTemplates(); track template.code) {
+                    <option [value]="template.code" [selected]="template.code === activeTemplateCode()">
+                      {{ i18n.t(template.nameKey) }}
+                    </option>
+                  }
+                </select>
+                <small>{{ i18n.t('users.jobTemplateHint') }}</small>
+              </div>
+            }
+
             <div class="module-groups-grid">
               @for (group of menuGroups; track group.titleKey) {
                 <div class="module-group-card">
@@ -418,16 +538,21 @@
                   </label>
                   <div class="module-group-items">
                     @for (id of group.ids; track id) {
-                      <label class="menu-item-check" [class.menu-disabled]="adminOverrideActive()">
+                      <label
+                        class="menu-item-check"
+                        [class.menu-disabled]="adminOverrideActive()"
+                        [class.feature-locked]="menuFeature(id)"
+                        [attr.title]="menuFeature(id) ? i18n.t('users.menuNotEnabledForVertical') : null"
+                      >
                         <input
                           type="checkbox"
                           [checked]="hasMenu(id)"
-                          [disabled]="adminOverrideActive()"
+                          [disabled]="adminOverrideActive() || !!menuFeature(id)"
                           (change)="toggleMenu(id, $event)"
                         />
                         <span>{{ getMenuLabel(id) }}</span>
                         @if (menuFeature(id)) {
-                          <span class="chip chip-warn" [attr.title]="menuFeature(id)">{{ i18n.t('access.menuFeatureDisabled') }}</span>
+                          <span class="chip chip-warn">{{ i18n.t('access.menuFeatureDisabled') }}</span>
                         } @else if (menuRoleMismatch(id)) {
                           <span class="chip chip-warn">{{ i18n.t('access.menuRoleMismatch') }}</span>
                         }
@@ -611,6 +736,15 @@
       </button>
     </div>
   </app-modal-dialog>
+
+  @if (policyModalUserId()) {
+    <app-user-policy-assignment-modal
+      [userId]="policyModalUserId()!"
+      [userName]="policyModalUserName()"
+      (closed)="closePolicyModal()"
+      (saved)="closePolicyModal(); store.load()"
+    ></app-user-policy-assignment-modal>
+  }
 
 </section>
 <!-- BORTQALA_RUNTIME_20260816_V2_USER_REASON_FIELD -->

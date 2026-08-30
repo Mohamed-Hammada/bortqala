@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260807-v127-hardcoded-notification-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "Localizes notification and confirm strings surfaced by the TypeScript hardcoded-UI scan."
       changes:
         - loadData:

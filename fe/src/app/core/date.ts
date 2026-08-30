@@ -27,6 +27,15 @@ export function formatDate(value: number): string {
   }).format(new Date(value));
 }
 
+export function formatDateHijri(value: number): string {
+  return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+    timeZone: COMPANY_TIME_ZONE,
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(value));
+}
+
 export function formatDateTime(value: number): string {
   return new Intl.DateTimeFormat('ar-EG', {
     timeZone: COMPANY_TIME_ZONE,

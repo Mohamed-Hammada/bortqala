@@ -1,0 +1,174 @@
+<div class="page-header">
+  <h1>{{ i18n.t('expenses.title') }}</h1>
+  <button class="button" (click)="openCreate()">{{ i18n.t('expenses.newClaim') }}</button>
+</div>
+
+@if (loading()) {
+  <div class="loading">{{ i18n.t('common.loading') }}</div>
+} @else if (error()) {
+  <div class="load-error">
+    <h2>{{ i18n.t('audit.loadErrorTitle') }}</h2>
+    <p>{{ error() }}</p>
+    <button class="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+  </div>
+} @else {
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab() === 'mine'" (click)="activeTab.set('mine')">
+      {{ i18n.t('expenses.myClaims') }} ({{ claims().length }})
+    </button>
+    @if (isHrOrAdmin()) {
+      <button class="tab" [class.active]="activeTab() === 'pending'" (click)="activeTab.set('pending')">
+        {{ i18n.t('expenses.pendingApprovals') }} ({{ pendingClaims().length }})
+      </button>
+    }
+  </div>
+
+  @if (filteredClaims().length === 0) {
+    <div class="empty">
+      {{ activeTab() === 'pending' ? i18n.t('expenses.noPending') : i18n.t('expenses.empty') }}
+    </div>
+  } @else {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('expenses.category') }}</th>
+            <th>{{ i18n.t('expenses.spentOn') }}</th>
+            <th>{{ i18n.t('expenses.amount') }}</th>
+            <th>{{ i18n.t('expenses.description') }}</th>
+            <th>{{ i18n.t('expenses.status') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (claim of filteredClaims(); track claim.id) {
+            <tr>
+              <td>{{ categoryLabel(claim.category) }}</td>
+              <td>{{ claim.spentOn }}</td>
+              <td class="amount-cell">
+                {{ formatAmount(claim.amount, claim.currency) }}
+                @if (claim.limitExceeded) {
+                  <span class="badge badge-limit" title="{{ i18n.t('expenses.limitExceededHint') }}">
+                    {{ i18n.t('expenses.limitExceeded') }}
+                  </span>
+                }
+              </td>
+              <td class="desc-cell">{{ claim.description || '—' }}</td>
+              <td>
+                <span class="badge" [class]="'badge-' + claim.status.toLowerCase()">
+                  {{ statusLabel(claim.status) }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                @if (claim.status === 'DRAFT') {
+                  <button class="button small" (click)="submitClaim(claim)" [disabled]="processing() === claim.id">
+                    {{ i18n.t('common.submit') }}
+                  </button>
+                  <button class="button small secondary" (click)="openEdit(claim)">{{ i18n.t('common.edit') }}</button>
+                }
+                @if (claim.status === 'SUBMITTED' && isHrOrAdmin()) {
+                  <button class="button small success" (click)="openApproveReject(claim, 'approve')" [disabled]="processing() === claim.id">
+                    {{ i18n.t('common.approve') }}
+                  </button>
+                  <button class="button small danger" (click)="openApproveReject(claim, 'reject')" [disabled]="processing() === claim.id">
+                    {{ i18n.t('common.reject') }}
+                  </button>
+                }
+                @if (claim.status === 'APPROVED' && isFinance()) {
+                  <button class="button small" (click)="openReimburse(claim)" [disabled]="processing() === claim.id">
+                    {{ i18n.t('expenses.reimbursementRef') }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}
+
+@if (drawerOpen()) {
+  <app-modal-dialog (close)="closeDrawer()">
+    <h2>{{ editingId() ? i18n.t('common.edit') : i18n.t('expenses.newClaim') }}</h2>
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="field">
+        <label>{{ i18n.t('expenses.category') }}</label>
+        <select formControlName="category">
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ categoryLabel(cat) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('expenses.spentOn') }}</label>
+        <input type="date" formControlName="spentOn" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('expenses.amount') }}</label>
+        <input type="number" formControlName="amount" step="0.01" min="0.01" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('expenses.description') }}</label>
+        <textarea formControlName="description" rows="3"></textarea>
+      </div>
+      <div class="drawer-actions">
+        <button type="button" class="button secondary" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button" [disabled]="form.invalid || submitting()">
+          {{ submitting() ? i18n.t('common.saving') : i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+}
+
+@if (reimburseOpen() && reimburseTarget()) {
+  <app-modal-dialog (close)="reimburseOpen.set(false)">
+    <h2>{{ i18n.t('expenses.confirmReimburse') }}</h2>
+    <form [formGroup]="reimburseForm" (ngSubmit)="doReimburse()">
+      <div class="field">
+        <label>{{ i18n.t('expenses.reimbursementRef') }}</label>
+        <input formControlName="reference" />
+      </div>
+      <div class="drawer-actions">
+        <button type="button" class="button secondary" (click)="reimburseOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+        <button type="submit" class="button" [disabled]="reimburseForm.invalid || processing() === reimburseTarget()?.id">
+          {{ i18n.t('common.confirm') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+}
+
+@if (rejectOpen() && rejectTarget()) {
+  <app-modal-dialog (close)="rejectOpen.set(false)">
+    <h2>{{ i18n.t('expenses.rejectSuccess') }}</h2>
+    <div class="field">
+      <label>{{ i18n.t('expenses.decisionNote') }}</label>
+      <textarea [formControl]="rejectNote" rows="3"></textarea>
+    </div>
+    <div class="drawer-actions">
+      <button class="button secondary" (click)="rejectOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+      <button class="button danger" (click)="rejectClaim()" [disabled]="processing() === rejectTarget()?.id">
+        {{ i18n.t('common.reject') }}
+      </button>
+    </div>
+  </app-modal-dialog>
+}
+
+@if (approveOpen() && approveTarget()) {
+  <app-modal-dialog (close)="approveOpen.set(false)">
+    <h2>{{ i18n.t('expenses.limitExceededApproveTitle') }}</h2>
+    <p class="muted">{{ i18n.t('expenses.limitExceededHint') }}</p>
+    <div class="field">
+      <label>{{ i18n.t('expenses.decisionNote') }} *</label>
+      <textarea [formControl]="approveNote" rows="3"></textarea>
+    </div>
+    <div class="drawer-actions">
+      <button class="button secondary" (click)="approveOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+      <button class="button success" (click)="approveFromModal()" [disabled]="processing() === approveTarget()?.id || !approveNote.value.trim()">
+        {{ i18n.t('common.approve') }}
+      </button>
+    </div>
+  </app-modal-dialog>
+}

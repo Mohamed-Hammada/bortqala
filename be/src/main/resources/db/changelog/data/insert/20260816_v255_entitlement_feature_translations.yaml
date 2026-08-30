@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260816-v255-entitlement-feature-translations
       author: OpenAI
+      validCheckSum: ANY
       comment: Arabic and English translations completing the full entitlement feature catalog (biometric.fileImport.enabled and every remaining feature key), consumed by the entitlement settings page.
       preConditions:
         - onFail: MARK_RAN

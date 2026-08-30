@@ -69,7 +69,7 @@
                   <summary>{{ sheet.name }} · {{ sheet.columns.length }} {{ i18n.t('dataExchange.columns', undefined, 'columns') }}</summary>
                   <div class="schema-grid">
                     @for (column of sheet.columns; track column.header) {
-                      <span><strong>{{ column.header }}</strong> · {{ column.type }} @if (column.required) { <b aria-label="required">*</b> }</span>
+                      <span><strong>{{ column.header }}</strong> · {{ column.type }} @if (column.required) { <b [attr.aria-label]="i18n.t('common.required')">*</b> }</span>
                     }
                   </div>
                 </details>

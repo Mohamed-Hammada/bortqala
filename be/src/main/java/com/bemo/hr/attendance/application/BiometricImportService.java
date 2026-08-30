@@ -85,7 +85,7 @@ public class BiometricImportService {
     @Transactional
     public ImportApi.BatchResponse reverse(String batchId, String actor) {
         var batch = importBatchRepository.findById(batchId)
-                .orElseThrow(() -> new NotFoundException("سجل الاستيراد غير موجود.", "IMP_BATCH_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Import batch not found.", "IMP_BATCH_NOT_FOUND"));
         if (batch.getStatus() == ImportStatus.REVERSED) return toResponse(batch, false);
         List<String> punchIds = punchImportEvidenceRepository.findPunchIdsByBatchId(batchId);
         punchImportEvidenceRepository.deleteByBatchId(batchId);
@@ -108,7 +108,7 @@ public class BiometricImportService {
         if (actor == null || actor.isBlank())
             throw new BusinessRuleException("Importer name is required.", "BIO_IMPORTER_NAME_REQUIRED", HttpStatus.CONFLICT);
         BiometricSource source = biometricSourceRepository.findById(sourceId)
-                .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Biometric source not found.", "BIO_SOURCE_NOT_FOUND"));
         if (source.getSourceType() != BiometricSource.SourceType.FILE_DEVICE) {
             throw new BusinessRuleException("Selected source is not a file-import source.", "BIO_SOURCE_WRONG_TYPE", HttpStatus.CONFLICT);
         }
@@ -130,6 +130,13 @@ public class BiometricImportService {
                     System.currentTimeMillis() - parseStart, parsed.totalRows(), parsed.importedRows(), parsed.errors().size());
 
             String appId = TenantContext.require();
+            var existingBatch = importBatchRepository.findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
+                    sourceId, checksum, ImportStatus.REVERSED);
+            if (existingBatch.isPresent()) {
+                log.info("[IMPORT] Returning existing duplicate batch: batchId={}, appId={}", existingBatch.get().getId(), appId);
+                return toResponse(existingBatch.get(), true);
+            }
+
             int totalRows = parsed.totalRows();
             int validRows = parsed.importedRows();
             int errorRows = parsed.errors().size();
@@ -137,18 +144,9 @@ public class BiometricImportService {
             int reserved = importBatchRepository.insertIfAbsent(batchId, appId, checksum, fileName,
                     sourceId, source.getName(), errorRows == 0 ? ImportStatus.COMPLETED.name() : ImportStatus.COMPLETED_WITH_ERRORS.name(),
                     totalRows, validRows, errorRows, actor);
-            ImportBatch batch;
-            if (reserved == 0) {
-                batch = importBatchRepository
-                        .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
-                                sourceId, checksum, ImportStatus.REVERSED)
-                        .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + checksum));
-                log.info("[IMPORT] Processing existing batchId={}", batch.getId());
-            } else {
-                batch = importBatchRepository.findById(batchId)
-                        .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + batchId));
-                log.info("[IMPORT] Reserved new batch: batchId={}, appId={}", batchId, appId);
-            }
+            ImportBatch batch = importBatchRepository.findById(batchId)
+                    .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + batchId));
+            log.info("[IMPORT] Reserved new batch: batchId={}, appId={}", batchId, appId);
 
             // ------------------------------------------------------------------
             // Pre-load known employees in bulk
@@ -218,7 +216,7 @@ public class BiometricImportService {
                     System.currentTimeMillis() - punchInsertStart, punchParams.size());
 
             int newPunches = (int) punchRecordRepository.countByBatchId(batch.getId());
-            int duplicatePunches = validRows - newPunches;
+            int duplicatePunches = Math.max(0, validRows - newPunches);
             log.info("[IMPORT] Punch insert counts: new={}, duplicates={}, validTotal={}",
                     newPunches, duplicatePunches, validRows);
 
@@ -339,7 +337,7 @@ public class BiometricImportService {
             log.info("[IMPORT] >>> Biometric import COMPLETED in {}ms ({}s): batchId={}, file={}, totalRows={}, validRows={}, newPunches={}, duplicatePunches={}, errorRows={}",
                     totalElapsed, totalElapsed / 1000.0, batch.getId(), fileName, totalRows, validRows, newPunches, duplicatePunches, errorRows);
 
-            return toResponse(batch, false);
+            return toResponse(batch, reserved == 0);
         } catch (IOException exception) {
             log.error("[IMPORT] Biometric file read error: {}", exception.getMessage(), exception);
             throw new BusinessRuleException("Could not read the uploaded file.", "EXCEL_READ_FAILED", HttpStatus.BAD_REQUEST);

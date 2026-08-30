@@ -1,0 +1,460 @@
+<div class="fleet-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ i18n.t('fleet.title') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('fleet.subtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      @if (activeTab() === 'vehicles') {
+        <button class="btn btn-primary" (click)="openCreateVehicle()">
+          + {{ i18n.t('fleet.newVehicle') }}
+        </button>
+      } @else if (activeTab() === 'fuel') {
+        <button class="btn btn-primary" (click)="openFuelModal()">
+          + {{ i18n.t('fleet.newFuelLog') }}
+        </button>
+      } @else if (activeTab() === 'schedules') {
+        <button class="btn btn-secondary" (click)="openRecordModal()">
+          {{ i18n.t('fleet.recordMaintenance') }}
+        </button>
+        <button class="btn btn-primary" (click)="openScheduleModal()">
+          + {{ i18n.t('fleet.newSchedule') }}
+        </button>
+      } @else if (activeTab() === 'docs') {
+        <button class="btn btn-primary" (click)="openDocModal()">
+          + {{ i18n.t('fleet.newDocument') }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="fleet-tabs">
+    <button class="tab-btn" [class.active]="activeTab() === 'vehicles'" (click)="setTab('vehicles')">
+      {{ i18n.t('fleet.tabVehicles') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'fuel'" (click)="setTab('fuel')">
+      {{ i18n.t('fleet.tabFuelLogs') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'schedules'" (click)="setTab('schedules')">
+      {{ i18n.t('fleet.tabMaintenance') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'docs'" (click)="setTab('docs')">
+      {{ i18n.t('fleet.tabDocuments') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'costs'" (click)="setTab('costs')">
+      {{ i18n.t('fleet.tabCostReport') }}
+    </button>
+  </div>
+
+  <!-- Tab 1: Vehicles -->
+  @if (activeTab() === 'vehicles') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('fleet.plateNumber') }}</th>
+              <th>{{ i18n.t('fleet.makeAndModel') }}</th>
+              <th>{{ i18n.t('fleet.year') }}</th>
+              <th>{{ i18n.t('fleet.vehicleType') }}</th>
+              <th>{{ i18n.t('fleet.driver') }}</th>
+              <th>{{ i18n.t('fleet.odometer') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of fleet.vehicles(); track v.id) {
+              <tr>
+                <td class="font-mono font-bold">{{ v.plateNumber }}</td>
+                <td>{{ v.make }} {{ v.model }}</td>
+                <td>{{ v.year }}</td>
+                <td>{{ v.vehicleType }}</td>
+                <td>{{ v.defaultDriverName || '—' }}</td>
+                <td class="font-mono">{{ v.currentOdometer | number:'1.1-2' }} {{ i18n.t('fleet.unitKm') }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="v.status === 'ACTIVE'" [class.badge-warning]="v.status === 'MAINTENANCE'" [class.badge-muted]="v.status === 'RETIRED'">
+                    {{ v.status }}
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <button class="btn btn-xs btn-outline-primary" (click)="openFuelModal(v)">
+                    {{ i18n.t('fleet.newFuelLog') }}
+                  </button>
+                  <button class="btn btn-xs btn-ghost" (click)="toggleVehicleStatus(v)">
+                    {{ v.status === 'ACTIVE' ? i18n.t('common.hold') : i18n.t('common.active') }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 2: Fuel Logs -->
+  @if (activeTab() === 'fuel') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.date') }}</th>
+              <th>{{ i18n.t('fleet.plateNumber') }}</th>
+              <th>{{ i18n.t('fleet.liters') }}</th>
+              <th>{{ i18n.t('fleet.odometer') }}</th>
+              <th>{{ i18n.t('fleet.efficiency') }}</th>
+              <th>{{ i18n.t('common.total') }}</th>
+              <th>{{ i18n.t('fleet.station') }}</th>
+              <th>{{ i18n.t('fleet.driver') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of fleet.fuelLogs(); track log.id) {
+              <tr>
+                <td>{{ log.logDate }}</td>
+                <td class="font-mono font-bold">{{ getVehiclePlate(log.vehicleId) }}</td>
+                <td>{{ log.liters | number:'1.2-2' }} {{ i18n.t('fleet.unitLiters') }}</td>
+                <td class="font-mono">{{ log.odometer | number:'1.1-2' }} {{ i18n.t('fleet.unitKm') }}</td>
+                <td>
+                  @if (log.efficiencyKmPerLiter) {
+                    <span class="efficiency-badge">{{ log.efficiencyKmPerLiter | number:'1.2-2' }} {{ i18n.t('fleet.unitKmPerLiter') }}</span>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+                <td class="font-bold">{{ log.totalCost | number:'1.2-2' }}</td>
+                <td>{{ log.stationName || '—' }}</td>
+                <td>{{ log.driverName || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 3: Maintenance -->
+  @if (activeTab() === 'schedules') {
+    <div class="content-section">
+      <h2 class="section-title">{{ i18n.t('fleet.tabMaintenance') }}</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('fleet.plateNumber') }}</th>
+              <th>{{ i18n.t('common.title') }}</th>
+              <th>{{ i18n.t('fleet.maintenanceKind') }}</th>
+              <th>{{ i18n.t('fleet.intervalKm') }}</th>
+              <th>{{ i18n.t('fleet.intervalDays') }}</th>
+              <th>{{ i18n.t('fleet.dueStatus') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of fleet.schedules(); track s.id) {
+              <tr>
+                <td class="font-mono font-bold">{{ getVehiclePlate(s.vehicleId) }}</td>
+                <td>{{ s.title }}</td>
+                <td>{{ s.maintenanceKind }}</td>
+                <td>{{ s.intervalKm ? (s.intervalKm | number:'1.0-0') : '—' }} {{ s.intervalKm ? i18n.t('fleet.unitKm') : '' }}</td>
+                <td>{{ s.intervalDays ? s.intervalDays : '—' }} {{ s.intervalDays ? i18n.t('common.days') : '' }}</td>
+                <td>
+                  @if (s.isDue) {
+                    <span class="badge badge-danger">{{ i18n.t('fleet.overdue') }}</span>
+                  } @else {
+                    <span class="badge badge-success">{{ i18n.t('common.active') }}</span>
+                  }
+                </td>
+                <td>
+                  <button class="btn btn-xs btn-outline-success" (click)="openRecordModal(s)">
+                    {{ i18n.t('fleet.recordMaintenance') }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 4: Documents & Renewals -->
+  @if (activeTab() === 'docs') {
+    <div class="content-section">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('fleet.plateNumber') }}</th>
+              <th>{{ i18n.t('fleet.docType') }}</th>
+              <th>{{ i18n.t('fleet.docNumber') }}</th>
+              <th>{{ i18n.t('common.date') }}</th>
+              <th>{{ i18n.t('fleet.expiryDate') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (doc of fleet.documents(); track doc.id) {
+              <tr>
+                <td class="font-mono font-bold">{{ getVehiclePlate(doc.vehicleId) }}</td>
+                <td>{{ doc.documentType }}</td>
+                <td class="font-mono">{{ doc.documentNumber }}</td>
+                <td>{{ doc.issueDate || '—' }}</td>
+                <td>{{ doc.expiryDate }}</td>
+                <td>
+                  @if (doc.isExpired) {
+                    <span class="badge badge-danger">{{ i18n.t('fleet.overdue') }}</span>
+                  } @else if (doc.isDueSoon) {
+                    <span class="badge badge-warning">{{ i18n.t('fleet.dueSoon') }}</span>
+                  } @else {
+                    <span class="badge badge-success">{{ i18n.t('common.active') }}</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-row">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 5: Fleet Cost Report -->
+  @if (activeTab() === 'costs') {
+    <div class="cost-summary-grid">
+      <div class="stat-card">
+        <span class="stat-label">{{ i18n.t('fleet.totalFuelCost') }}</span>
+        <span class="stat-value highlight">{{ fleet.costSummary()?.totalFuelCost | number:'1.2-2' }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">{{ i18n.t('fleet.totalMaintCost') }}</span>
+        <span class="stat-value highlight">{{ fleet.costSummary()?.totalMaintenanceCost | number:'1.2-2' }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">{{ i18n.t('fleet.totalFleetCost') }}</span>
+        <span class="stat-value font-bold">{{ fleet.costSummary()?.grandTotalCost | number:'1.2-2' }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">{{ i18n.t('fleet.costPerKm') }}</span>
+        <span class="stat-value">{{ fleet.costSummary()?.costPerKilometer | number:'1.2-2' }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Create Vehicle -->
+  @if (showVehicleModal()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3 class="modal-title">{{ i18n.t('fleet.newVehicle') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('fleet.plateNumber') }}</label>
+          <input type="text" class="form-input" [ngModel]="vehicleForm().plateNumber" (ngModelChange)="vehicleForm().plateNumber = $event" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('common.name') }}</label>
+            <input type="text" class="form-input" [ngModel]="vehicleForm().make" (ngModelChange)="vehicleForm().make = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.description') }}</label>
+            <input type="text" class="form-input" [ngModel]="vehicleForm().model" (ngModelChange)="vehicleForm().model = $event" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.year') }}</label>
+            <input type="number" class="form-input" [ngModel]="vehicleForm().year" (ngModelChange)="vehicleForm().year = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.vehicleType') }}</label>
+            <select class="form-select" [ngModel]="vehicleForm().vehicleType" (ngModelChange)="vehicleForm().vehicleType = $event">
+              <option value="SEDAN">{{ i18n.t('fleet.typeSedan') }}</option>
+              <option value="TRUCK">{{ i18n.t('fleet.typeTruck') }}</option>
+              <option value="VAN">{{ i18n.t('fleet.typeVan') }}</option>
+              <option value="BUS">{{ i18n.t('fleet.typeBus') }}</option>
+              <option value="HEAVY_EQUIPMENT">{{ i18n.t('fleet.typeHeavyEquipment') }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('fleet.odometer') }}</label>
+          <input type="number" class="form-input" [ngModel]="vehicleForm().initialOdometer" (ngModelChange)="vehicleForm().initialOdometer = $event" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="showVehicleModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveVehicle()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Log Fuel -->
+  @if (showFuelModal()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3 class="modal-title">{{ i18n.t('fleet.newFuelLog') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('fleet.plateNumber') }}</label>
+          <select class="form-select" [ngModel]="fuelForm().vehicleId" (ngModelChange)="fuelForm().vehicleId = $event">
+            @for (v of fleet.vehicles(); track v.id) {
+              <option [value]="v.id">{{ v.plateNumber }} ({{ v.make }} {{ v.model }})</option>
+            }
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.liters') }}</label>
+            <input type="number" class="form-input" [ngModel]="fuelForm().liters" (ngModelChange)="fuelForm().liters = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.odometer') }}</label>
+            <input type="number" class="form-input" [ngModel]="fuelForm().odometer" (ngModelChange)="fuelForm().odometer = $event" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('common.total') }}</label>
+            <input type="number" class="form-input" [ngModel]="fuelForm().totalCost" (ngModelChange)="fuelForm().totalCost = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.station') }}</label>
+            <input type="text" class="form-input" [ngModel]="fuelForm().stationName" (ngModelChange)="fuelForm().stationName = $event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="showFuelModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveFuelLog()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: New Schedule -->
+  @if (showScheduleModal()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3 class="modal-title">{{ i18n.t('fleet.newSchedule') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('fleet.plateNumber') }}</label>
+          <select class="form-select" [ngModel]="scheduleForm().vehicleId" (ngModelChange)="scheduleForm().vehicleId = $event">
+            @for (v of fleet.vehicles(); track v.id) {
+              <option [value]="v.id">{{ v.plateNumber }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.title') }}</label>
+          <input type="text" class="form-input" [ngModel]="scheduleForm().title" (ngModelChange)="scheduleForm().title = $event" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.intervalKm') }}</label>
+            <input type="number" class="form-input" [ngModel]="scheduleForm().intervalKm" (ngModelChange)="scheduleForm().intervalKm = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.intervalDays') }}</label>
+            <input type="number" class="form-input" [ngModel]="scheduleForm().intervalDays" (ngModelChange)="scheduleForm().intervalDays = $event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="showScheduleModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveSchedule()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Record Maintenance -->
+  @if (showRecordModal()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3 class="modal-title">{{ i18n.t('fleet.recordMaintenance') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('fleet.plateNumber') }}</label>
+          <select class="form-select" [ngModel]="recordForm().vehicleId" (ngModelChange)="recordForm().vehicleId = $event">
+            @for (v of fleet.vehicles(); track v.id) {
+              <option [value]="v.id">{{ v.plateNumber }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('common.title') }}</label>
+          <input type="text" class="form-input" [ngModel]="recordForm().title" (ngModelChange)="recordForm().title = $event" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.odometer') }}</label>
+            <input type="number" class="form-input" [ngModel]="recordForm().odometer" (ngModelChange)="recordForm().odometer = $event" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.price') }}</label>
+            <input type="number" class="form-input" [ngModel]="recordForm().cost" (ngModelChange)="recordForm().cost = $event" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="showRecordModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveRecord()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Add Document -->
+  @if (showDocModal()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <h3 class="modal-title">{{ i18n.t('fleet.newDocument') }}</h3>
+        <div class="form-group">
+          <label>{{ i18n.t('fleet.plateNumber') }}</label>
+          <select class="form-select" [ngModel]="docForm().vehicleId" (ngModelChange)="docForm().vehicleId = $event">
+            @for (v of fleet.vehicles(); track v.id) {
+              <option [value]="v.id">{{ v.plateNumber }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.docType') }}</label>
+            <select class="form-select" [ngModel]="docForm().documentType" (ngModelChange)="docForm().documentType = $event">
+              <option value="LICENSE">{{ i18n.t('fleet.docLicense') }}</option>
+              <option value="INSURANCE">{{ i18n.t('fleet.docInsurance') }}</option>
+              <option value="INSPECTION_PASS">{{ i18n.t('fleet.docInspection') }}</option>
+              <option value="PERMIT">{{ i18n.t('fleet.docPermit') }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('fleet.docNumber') }}</label>
+            <input type="text" class="form-input" [ngModel]="docForm().documentNumber" (ngModelChange)="docForm().documentNumber = $event" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('fleet.expiryDate') }}</label>
+          <input type="date" class="form-input" [ngModel]="docForm().expiryDate" (ngModelChange)="docForm().expiryDate = $event" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="showDocModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn-primary" (click)="saveDoc()">{{ i18n.t('common.save') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

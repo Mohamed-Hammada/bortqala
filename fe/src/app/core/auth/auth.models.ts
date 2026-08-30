@@ -1,3 +1,5 @@
+import { UserPolicyAssignmentDto } from './security-policy.models';
+
 export type RoleCode =
   | 'SUPER_ADMIN'
   | 'ADMIN'
@@ -17,6 +19,7 @@ export type RoleCode =
   | 'WORKFORCE_MANAGER'
   | 'WORKFORCE_REVIEWER'
   | 'WORKFORCE_FINANCE'
+  | 'PROJECT_MANAGER'
   | 'AUDITOR';
 export type ThemePreference = 'LIGHT' | 'DARK' | 'SYSTEM';
 export type TableDensity = 'COMFORTABLE' | 'COMPACT' | 'DENSE';
@@ -84,6 +87,7 @@ export interface AuthUser {
   active: boolean;
   version: number;
   activeFeatures?: string[];
+  policyAssignments?: UserPolicyAssignmentDto[];
 }
 
 export interface MeSessionInfo {
@@ -112,7 +116,7 @@ export interface MeResponse {
 
 export interface LoginResponse {
   accessToken: string;
-  tokenType: 'Bearer';
+  tokenType: 'Bearer' | '2FA_REQUIRED' | string;
   expiresAt: number;
   mustChangePassword: boolean;
   app: { id: string; code: string; name: string; adminDashboardCustomizationEnabled?: boolean };
@@ -122,7 +126,7 @@ export interface LoginResponse {
 
 export interface RefreshResponse {
   accessToken: string;
-  tokenType: 'Bearer';
+  tokenType: 'Bearer' | string;
   expiresAt: number;
 }
 

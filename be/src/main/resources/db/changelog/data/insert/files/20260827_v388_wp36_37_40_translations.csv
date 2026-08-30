@@ -1,0 +1,113 @@
+id;translation_key;locale;text_value
+v388-001-en;settings.integrations;en-US;Integrations & API
+v388-001-ar;settings.integrations;ar-EG;التكامل وواجهة برمجة التطبيقات
+v388-002-en;settings.integrationsHint;en-US;Manage API keys, webhooks and third-party integrations
+v388-002-ar;settings.integrationsHint;ar-EG;إدارة مفاتيح API والـ webhooks والتكاملات الخارجية
+v388-003-en;integrations.apiKeys;en-US;API Keys
+v388-003-ar;integrations.apiKeys;ar-EG;مفاتيح API
+v388-004-en;integrations.apiKeysHint;en-US;Create and manage programmatic access keys
+v388-004-ar;integrations.apiKeysHint;ar-EG;إنشاء وإدارة مفاتيح الوصول البرمجي
+v388-005-en;integrations.createKey;en-US;Create API Key
+v388-005-ar;integrations.createKey;ar-EG;إنشاء مفتاح API
+v388-006-en;integrations.keyName;en-US;Key Name
+v388-006-ar;integrations.keyName;ar-EG;اسم المفتاح
+v388-007-en;integrations.scopes;en-US;Scopes
+v388-007-ar;integrations.scopes;ar-EG;النطاقات
+v388-008-en;integrations.scopesHint;en-US;Comma-separated permissions e.g. invoices:read employees:read
+v388-008-ar;integrations.scopesHint;ar-EG;صلاحيات مفصولة بفاصلة مثل invoices:read employees:read
+v388-009-en;integrations.rateLimit;en-US;Rate Limit (per min)
+v388-009-ar;integrations.rateLimit;ar-EG;حد الطلبات (للدقيقة)
+v388-010-en;integrations.keyCreated;en-US;API key created - copy it now, it will not be shown again
+v388-010-ar;integrations.keyCreated;ar-EG;تم إنشاء مفتاح API - انسخه الآن، لن يظهر مرة أخرى
+v388-011-en;integrations.copyKey;en-US;Copy Key
+v388-011-ar;integrations.copyKey;ar-EG;نسخ المفتاح
+v388-012-en;integrations.revoke;en-US;Revoke
+v388-012-ar;integrations.revoke;ar-EG;إلغاء الصلاحية
+v388-013-en;integrations.noKeys;en-US;No API keys configured
+v388-013-ar;integrations.noKeys;ar-EG;لم يتم إعداد مفاتيح API
+v388-014-en;integrations.webhooks;en-US;Webhooks
+v388-014-ar;integrations.webhooks;ar-EG;الـ Webhooks
+v388-015-en;integrations.webhooksHint;en-US;Receive event notifications via HTTP callbacks
+v388-015-ar;integrations.webhooksHint;ar-EG;استلام إشعارات الأحداث عبر استدعاءات HTTP
+v388-016-en;integrations.createWebhook;en-US;Create Webhook
+v388-016-ar;integrations.createWebhook;ar-EG;إنشاء Webhook
+v388-017-en;integrations.webhookUrl;en-US;Endpoint URL
+v388-017-ar;integrations.webhookUrl;ar-EG;عنوان URL للنقطة النهائية
+v388-018-en;integrations.webhookEvents;en-US;Events
+v388-018-ar;integrations.webhookEvents;ar-EG;الأحداث
+v388-019-en;integrations.webhookEventsHint;en-US;Comma-separated e.g. invoice.paid payment.recorded
+v388-019-ar;integrations.webhookEventsHint;ar-EG;مفصولة بفاصلة مثل invoice.paid payment.recorded
+v388-020-en;integrations.noWebhooks;en-US;No webhook endpoints configured
+v388-020-ar;integrations.noWebhooks;ar-EG;لم يتم إعداد نقاط نهاية webhooks
+v388-021-en;integrations.deliveries;en-US;Recent Deliveries
+v388-021-ar;integrations.deliveries;ar-EG;التسليمات الأخيرة
+v388-022-en;integrations.redrive;en-US;Redeliver
+v388-022-ar;integrations.redrive;ar-EG;إعادة التسليم
+v388-023-en;integrations.noDeliveries;en-US;No deliveries yet
+v388-023-ar;integrations.noDeliveries;ar-EG;لا توجد تسليمات بعد
+v388-024-en;integrations.pending;en-US;Pending
+v388-024-ar;integrations.pending;ar-EG;قيد الانتظار
+v388-025-en;integrations.delivered;en-US;Delivered
+v388-025-ar;integrations.delivered;ar-EG;تم التسليم
+v388-026-en;integrations.failed;en-US;Failed
+v388-026-ar;integrations.failed;ar-EG;فشل
+v388-027-en;integrations.dead;en-US;Dead
+v388-027-ar;integrations.dead;ar-EG;متوقف
+v388-028-en;palette.title;en-US;Command Palette
+v388-028-ar;palette.title;ar-EG;لوحة الأوامر
+v388-029-en;palette.placeholder;en-US;Search screens, actions, documents…
+v388-029-ar;palette.placeholder;ar-EG;البحث عن شاشات وإجراءات ومستندات…
+v388-030-en;palette.noResults;en-US;No results found
+v388-030-ar;palette.noResults;ar-EG;لم يتم العثور على نتائج
+v388-031-en;palette.navigateHint;en-US;Press Enter to navigate
+v388-031-ar;palette.navigateHint;ar-EG;اضغط Enter للانتقال
+v388-032-en;gridViews.save;en-US;Save View
+v388-032-ar;gridViews.save;ar-EG;حفظ العرض
+v388-033-en;gridViews.saved;en-US;Saved Views
+v388-033-ar;gridViews.saved;ar-EG;العروض المحفوظة
+v388-034-en;gridViews.default;en-US;Default
+v388-034-ar;gridViews.default;ar-EG;الافتراضي
+v388-035-en;gridViews.viewName;en-US;View Name
+v388-035-ar;gridViews.viewName;ar-EG;اسم العرض
+v388-036-en;gridViews.shareWith;en-US;Share with roles
+v388-036-ar;gridViews.shareWith;ar-EG;المشاركة مع الأدوار
+v388-037-en;gridViews.noViews;en-US;No saved views
+v388-037-ar;gridViews.noViews;ar-EG;لا توجد عروض محفوظة
+v388-038-en;bulkEdit.selected;en-US;{count} selected
+v388-038-ar;bulkEdit.selected;ar-EG;{count} محدد
+v388-039-en;bulkEdit.changeField;en-US;Change {field}
+v388-039-ar;bulkEdit.changeField;ar-EG;تغيير {field}
+v388-040-en;bulkEdit.confirmTitle;en-US;Bulk Update Confirmation
+v388-040-ar;bulkEdit.confirmTitle;ar-EG;تأكيد التحديث الجماعي
+v388-041-en;bulkEdit.before;en-US;Before
+v388-041-ar;bulkEdit.before;ar-EG;قبل
+v388-042-en;bulkEdit.after;en-US;After
+v388-042-ar;bulkEdit.after;ar-EG;بعد
+v388-043-en;bulkEdit.succeeded;en-US;Succeeded
+v388-043-ar;bulkEdit.succeeded;ar-EG;نجح
+v388-044-en;bulkEdit.failed;en-US;Failed
+v388-044-ar;bulkEdit.failed;ar-EG;فشل
+v388-045-en;help.title;en-US;Help
+v388-045-ar;help.title;ar-EG;المساعدة
+v388-046-en;help.reports;en-US;Reports let you review attendance periods, resolve exceptions, and approve or export results. Use the period selector to choose a month or custom range, then work through each section top to bottom.
+v388-046-ar;help.reports;ar-EG;تسمح لك التقارير بمراجعة فترات الحضور وحل الاستثناءات والموافقة على النتائج أو تصديرها. استخدم محدد الفترة لاختيار شهر أو نطاق مخصص، ثم اعمل عبر كل قسم من أعلى إلى أسفل.
+v388-047-en;help.payroll;en-US;Payroll processes salary calculations for a selected period. Review the calculation breakdown, approve the run, then record payments. Maker/checker separation ensures the person who calculates cannot self-approve.
+v388-047-ar;help.payroll;ar-EG;تقومPayroll بمعالجة حسابات الرواتب لفترة محددة. راجع تفصيل الحسابات، واعتمد التشغيل، ثم سجّل المدفوعات. فصل الصانع عن المراجع يضمن عدم تأكيد الشخص الذي قام بالحساب لنفسه.
+v388-048-en;help.procurement;en-US;Manage purchase orders, goods receipts, invoices and payments. Three-way matching compares PO quantities and prices against received goods and invoices to flag variances.
+v388-048-ar;help.procurement;ar-EG;إدارة أوامر الشراء وإيصالات البضائع والفواتير والمدفوعات. المطابقة الثلاثية تقارن كميات وأسعار أمر الشراء مع البضائع المستلمة والفواتير لتحديد الانحرافات.
+v388-049-en;common.enable;en-US;Enable
+v388-049-ar;common.enable;ar-EG;تفعيل
+v388-050-en;common.disable;en-US;Disable
+v388-050-ar;common.disable;ar-EG;تعطيل
+v388-051-en;integrations.active;en-US;Active
+v388-051-ar;integrations.active;ar-EG;نشط
+v388-052-en;integrations.disabled;en-US;Disabled
+v388-052-ar;integrations.disabled;ar-EG;معطل
+v388-053-en;integrations.revoked;en-US;Revoked
+v388-053-ar;integrations.revoked;ar-EG;ملغي الصلاحية
+v388-054-en;integrations.webhookCreated;en-US;Webhook endpoint created
+v388-054-ar;integrations.webhookCreated;ar-EG;تم إنشاء نقطة نهاية Webhook
+v388-055-en;integrations.httpStatus;en-US;Status Code
+v388-055-ar;integrations.httpStatus;ar-EG;رمز الحالة
+v388-056-en;palette.escHint;en-US;Esc to close
+v388-056-ar;palette.escHint;ar-EG;Esc للإغلاق

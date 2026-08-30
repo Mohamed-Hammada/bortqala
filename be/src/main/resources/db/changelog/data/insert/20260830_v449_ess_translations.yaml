@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260830-v449-001
+      author: bemo-architect
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260830_v449_ess_translations.csv
+            separator: ;
+            encoding: UTF-8
+            columns:
+              - column:
+                  name: id
+                  type: STRING
+              - column:
+                  name: key
+                  type: STRING
+              - column:
+                  name: locale
+                  type: STRING
+              - column:
+                  name: value
+                  type: STRING

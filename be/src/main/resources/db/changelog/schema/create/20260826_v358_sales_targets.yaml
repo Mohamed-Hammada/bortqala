@@ -1,0 +1,123 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260826_v358_sales_targets_schema
+      author: wolfn
+      validCheckSum: ANY
+      comment: "WP-12: sales_targets + commission_rules tables"
+      changes:
+        - createTable:
+            tableName: sales_targets
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scope
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_ref_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: period
+                  type: VARCHAR(7)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: metric
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_value
+                  type: NUMERIC(15,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - createIndex:
+            tableName: sales_targets
+            indexName: idx_sales_targets_app_period
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: period
+        - addUniqueConstraint:
+            tableName: sales_targets
+            constraintName: uq_sales_targets_app_scope_ref_period
+            columnNames: app_id, scope, target_ref_id, period
+        - createTable:
+            tableName: commission_rules
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: basis
+                  type: VARCHAR(15)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: percent
+                  type: NUMERIC(5,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: min_amount
+                  type: NUMERIC(15,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valid_from
+                  type: BIGINT
+              - column:
+                  name: valid_to
+                  type: BIGINT
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - createIndex:
+            tableName: commission_rules
+            indexName: idx_commission_rules_app_active
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: active
+        - sql:
+            sql: UPDATE app_users SET allowed_menus = CASE WHEN allowed_menus IS NULL THEN 'sales-targets' WHEN allowed_menus LIKE '%sales-targets%' THEN allowed_menus ELSE allowed_menus || ',sales-targets' END;

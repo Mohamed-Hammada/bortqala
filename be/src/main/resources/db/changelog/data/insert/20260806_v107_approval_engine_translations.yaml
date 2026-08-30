@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v107-approval-engine-translations
       author: Antigravity
+      validCheckSum: ANY
       comment: "Bilingual translations for configurable approval workflow engine machine exception keys and UI labels."
       changes:
         - loadData:

@@ -1,0 +1,45 @@
+id;translation_key;locale;text_value
+v372-001-en;finance.paylinks;en-US;Payment Links
+v372-001-ar;finance.paylinks;ar-EG;روابط الدفع
+v372-002-en;finance.paylinkCreate;en-US;Create Payment Link
+v372-002-ar;finance.paylinkCreate;ar-EG;إنشاء رابط دفع
+v372-003-en;finance.paylinkAmount;en-US;Amount (EGP)
+v372-003-ar;finance.paylinkAmount;ar-EG;المبلغ (ج.م)
+v372-004-en;finance.paylinkKind;en-US;Link Type
+v372-004-ar;finance.paylinkKind;ar-EG;نوع الرابط
+v372-005-en;finance.paylinkInvoice;en-US;Invoice
+v372-005-ar;finance.paylinkInvoice;ar-EG;فاتورة
+v372-006-en;finance.paylinkPartyBalance;en-US;Party Balance
+v372-006-ar;finance.paylinkPartyBalance;ar-EG;رصيد جهة
+v372-007-en;finance.paylinkCustom;en-US;Custom
+v372-007-ar;finance.paylinkCustom;ar-EG;مخصص
+v372-008-en;finance.paylinkExpiry;en-US;Expires At
+v372-008-ar;finance.paylinkExpiry;ar-EG;ينتهي في
+v372-009-en;finance.paylinkStatus;en-US;Status
+v372-009-ar;finance.paylinkStatus;ar-EG;الحالة
+v372-010-en;finance.paylinkCopy;en-US;Copy Link
+v372-010-ar;finance.paylinkCopy;ar-EG;نسخ الرابط
+v372-011-en;finance.paylinkShare;en-US;Share on WhatsApp
+v372-011-ar;finance.paylinkShare;ar-EG;مشاركة عبر واتساب
+v372-012-en;finance.paylinkGatewayOff;en-US;Payment gateways are not configured
+v372-012-ar;finance.paylinkGatewayOff;ar-EG;بوابات الدفع غير مُعدّة
+v372-013-en;finance.paylinkExpired;en-US;This payment link has expired
+v372-013-ar;finance.paylinkExpired;ar-EG;انتهت صلاحية هذا الرابط
+v372-014-en;finance.paylinkPageTitle;en-US;Pay Now
+v372-014-ar;finance.paylinkPageTitle;ar-EG;ادفع الآن
+v372-015-en;finance.paylinkPageCompany;en-US;Company
+v372-015-ar;finance.paylinkPageCompany;ar-EG;الشركة
+v372-016-en;finance.paylinkPageAmount;en-US;Amount Due
+v372-016-ar;finance.paylinkPageAmount;ar-EG;المبلغ المستحق
+v372-017-en;finance.paylinkPagePayBtn;en-US;Pay with Gateway
+v372-017-ar;finance.paylinkPagePayBtn;ar-EG;ادفع عبر بوابة الدفع
+v372-018-en;finance.paylinkPageExpired;en-US;This link has expired
+v372-018-ar;finance.paylinkPageExpired;ar-EG;انتهت صلاحية هذا الرابط
+v372-019-en;finance.paylinkPagePaid;en-US;Payment confirmed
+v372-019-ar;finance.paylinkPagePaid;ar-EG;تم تأكيد الدفع
+v372-020-en;finance.paylinkPageDesc;en-US;Description
+v372-020-ar;finance.paylinkPageDesc;ar-EG;الوصف
+v372-021-en;finance.paylinkNotFound;en-US;Payment link not found
+v372-021-ar;finance.paylinkNotFound;ar-EG;رابط الدفع غير موجود
+v372-022-en;finance.paylinkCancel;en-US;Cancel Link
+v372-022-ar;finance.paylinkCancel;ar-EG;إلغاء الرابط

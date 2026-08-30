@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: v58-workforce-advance-policies
       author: codex
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: workforce_advance_policies

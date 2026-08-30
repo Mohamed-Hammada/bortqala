@@ -18,7 +18,9 @@ import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.workforce.WorkforceAdvanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +58,47 @@ public class PayrollService {
     private final PayrollGlPostingService payrollGlPostingService;
     private final PayrollPaymentAccountingService payrollPaymentAccountingService;
 
+    /**
+     * Maker/checker segregation of duties for payroll. Defaults to enforced; deployments that
+     * operate with a single trusted operator may set {@code hr.payroll.sod-enabled=false}.
+     */
+    @Value("${hr.payroll.sod-enabled:true}")
+    private String sodEnabled;
+
+    private boolean sodActive() {
+        return !"false".equalsIgnoreCase(sodEnabled);
+    }
+
+    private boolean isSuperAdminActor() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()));
+    }
+
+    private void assertApproverIsNotPreparer(PayrollRunHeader run, String actor) {
+        if (!sodActive() || isSuperAdminActor() || actor == null) {
+            return;
+        }
+        if (actor.equals(run.getCalculatedBy())) {
+            log.warn("SoD violation blocked: preparer {} attempted to approve/post payroll run {}", actor, run.getId());
+            throw new BusinessRuleException(
+                    "The user who calculated this payroll cannot approve or post it.",
+                    "PAYROLL_SOD_SELF_APPROVAL", HttpStatus.CONFLICT);
+        }
+    }
+
+    private void assertDisburserIsNotApprover(PayrollRunHeader run, String actor) {
+        if (!sodActive() || isSuperAdminActor() || actor == null) {
+            return;
+        }
+        if (actor.equals(run.getApprovedBy())) {
+            log.warn("SoD violation blocked: approver {} attempted to disburse payroll run {}", actor, run.getId());
+            throw new BusinessRuleException(
+                    "The user who approved or posted this payroll cannot disburse its payments.",
+                    "PAYROLL_SOD_DISBURSEMENT_CONFLICT", HttpStatus.CONFLICT);
+        }
+    }
+
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
         log.debug("getPaymentExplanation called with paymentId={}", paymentId);
         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
@@ -88,17 +131,26 @@ public class PayrollService {
                   + ",\"overtimeMultiplier\":" + snapshot.getOvertimeMultiplier() + "}";
         explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                 payment.getId(), "SNAPSHOT_CALCULATION", "base + overtime - lateness - advances + adjustments", calculationInputs,
-                gross, "إجمالي الراتب المستحق المستخرج من سجل الحضور والانصراف", "Gross base salary derived from locked attendance records"
+                gross, "Gross base salary derived from locked attendance records", "Gross base salary derived from locked attendance records"
         ));
         if (adv.compareTo(BigDecimal.ZERO) > 0) {
             explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                     payment.getId(), "ADVANCE_DEDUCTION", "Gross - Active Advance Installment", "{\"advanceDeduction\":" + adv + "}",
-                    adv, "استقطاع قسط السلفة الشهرية النشطة للموظف", "Deduction of active monthly advance installment"
+                    adv, "Deduction of active monthly advance installment", "Deduction of active monthly advance installment"
+            ));
+        } else if (workforceAdvanceService.isManualDeductionPolicy(payment.getEmployeeId(),
+                YearMonth.of(payment.getPeriodYear(), payment.getPeriodMonth()).atEndOfMonth())) {
+            explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
+                    payment.getId(), "ADVANCE_DEDUCTION", "Skipped - manual deduction policy",
+                    "{\"advanceDeduction\":0,\"skipped\":true,\"reason\":\"MANUAL_DEDUCTION_POLICY\"}",
+                    BigDecimal.ZERO,
+                    "لم يتم خصم السلفة تلقائياً: سياسة الخصم اليدوي مفعلة لهذا الموظف",
+                    "No automatic advance deduction: the MANUAL deduction policy is active for this employee"
             ));
         }
         explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                 payment.getId(), "NET_PAYABLE", "Gross - Deductions = Net Payable", "{\"netAmount\":" + net + "}",
-                net, "صافي الراتب المستحق للصرف بعد خصم الاستقطاعات والسلف", "Net payable amount after all deductions and advances"
+                net, "Net payable amount after all deductions and advances", "Net payable amount after all deductions and advances"
         ));
     }
 
@@ -214,8 +266,13 @@ public class PayrollService {
             } else {
                 // Derived immutable estimation with advance safety
                 BigDecimal availableForAdvance = gross.subtract(deductions).max(BigDecimal.ZERO);
-                advances = workforceAdvanceService.calculateEmployeePayrollDeduction(
-                        emp.getId(), end, availableForAdvance, activeAdvances);
+                if (workforceAdvanceService.isManualDeductionPolicy(emp.getId(), end)) {
+                    // WP-07: MANUAL deduction policy blocks automatic payroll collection
+                    advances = BigDecimal.ZERO;
+                } else {
+                    advances = workforceAdvanceService.calculateEmployeePayrollDeduction(
+                            emp.getId(), end, availableForAdvance, activeAdvances);
+                }
                 net = gross.subtract(advances).subtract(deductions).max(BigDecimal.ZERO);
             }
 
@@ -320,7 +377,7 @@ public class PayrollService {
 
         if (!emp.isActive() || (emp.getBaseSalary() != null && emp.getBaseSalary().signum() <= 0 && emp.getCategoryId() == null)) {
             log.warn("Validation failed: Employee incomplete profile employeeId={}", request.employeeId());
-            throw new BusinessRuleException("الموظف غير كلي البيانات (الراتب الأساسي أو الفئة). يرجى استكمال بياناته من صفحة /employees أولاً.", "PAYROLL_EMPLOYEE_INCOMPLETE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Employee profile is incomplete (missing base salary or category). Please complete their profile at /employees first.", "PAYROLL_EMPLOYEE_INCOMPLETE", HttpStatus.CONFLICT);
         }
 
         var periodKind = request.periodKind() == null || request.periodKind().isBlank() ? "FULL_MONTH" : request.periodKind();
@@ -338,10 +395,9 @@ public class PayrollService {
             throw new BusinessRuleException("This salary has already been paid.",
                     "PAYROLL_DUPLICATE_PAYMENT", HttpStatus.CONFLICT);
         }
-        if (entity.getPaymentStatus() != PaymentStatus.POSTED
-                && entity.getPaymentStatus() != PaymentStatus.REVERSED) {
-            log.warn("Validation failed: Only posted or reversed salary can be paid employeeId={}", request.employeeId());
-            throw new BusinessRuleException("Only a posted or reversed salary can be paid.",
+        if (entity.getPaymentStatus() != PaymentStatus.POSTED) {
+            log.warn("Validation failed: Only posted salary can be paid employeeId={}", request.employeeId());
+            throw new BusinessRuleException("Only a posted salary can be paid.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
         if (entity.getPayrollRunId() == null || entity.getPayrollSnapshotId() == null
@@ -358,6 +414,7 @@ public class PayrollService {
             throw new BusinessRuleException("The payroll run must be posted before payment.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
+        assertDisburserIsNotApprover(run, actor);
 
         LocalDate pStart = entity.getPeriodStart();
         LocalDate pEnd = entity.getPeriodEnd();
@@ -377,7 +434,7 @@ public class PayrollService {
             operationsService.recordAdvanceSettlement(
                     emp.getId(),
                     advances.negate(),
-                    "تسوية سلفة تلقائية مع صرف مرتب " + periodReference,
+                    "Automatic advance settlement for payroll " + periodReference,
                     paidAtInstant,
                     actor
             );
@@ -419,6 +476,9 @@ public class PayrollService {
         if (request.targetStatus() == PaymentStatus.POSTED && run.getStatus() == PayrollRunHeader.Status.POSTED) {
             payrollGlPostingService.getGlPosting(periodId);
             return getSheet(request.periodYear(), request.periodMonth(), null);
+        }
+        if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED) {
+            assertApproverIsNotPreparer(run, actor);
         }
         boolean freezeSnapshots = request.targetStatus() == PaymentStatus.CALCULATED;
         var sheet = buildSheet(request.periodYear(), request.periodMonth(), null, freezeSnapshots, actor, run.getId());
@@ -462,11 +522,15 @@ public class PayrollService {
             run.updateTotals(sheet.summary().totalGrossAmount(), runDeductions,
                     sheet.rows().stream().map(PayrollApi.PayrollRow::netAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add));
+            run.markCalculatedBy(actor);
         } else {
             if (request.targetStatus() == PaymentStatus.POSTED) {
                 payrollGlPostingService.postApprovedRun(run, actor);
             }
             run.transitionTo(PayrollRunHeader.Status.valueOf(request.targetStatus().name()));
+        }
+        if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED) {
+            run.markApprovedBy(actor);
         }
         payrollRunHeaderRepository.save(run);
 
@@ -496,7 +560,7 @@ public class PayrollService {
     public PayrollApi.SheetResponse reversePayment(PayrollApi.ReversePaymentRequest request, String actor) {
         log.debug("reversePayment called with paymentId={}, actor={}", request.paymentId(), actor);
         var payment = salaryPaymentRepository.findByIdForUpdate(request.paymentId())
-                .orElseThrow(() -> new NotFoundException("قيد الراتب غير موجود.", "PAYROLL_ENTRY_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Salary entry not found.", "PAYROLL_ENTRY_NOT_FOUND"));
 
         if (payment.getVersion() != request.expectedVersion()) {
             log.warn("Validation failed: Stale version for reversal paymentId={}", request.paymentId());
@@ -505,7 +569,7 @@ public class PayrollService {
         }
         if (payment.getPaymentStatus() == PaymentStatus.REVERSED) {
             log.warn("Validation failed: Payment already reversed paymentId={}", request.paymentId());
-            throw new BusinessRuleException("هذا القيد متراجع عنه بالفعل.", "PAYROLL_ENTRY_ALREADY_REVERSED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("This entry is already reversed.", "PAYROLL_ENTRY_ALREADY_REVERSED", HttpStatus.CONFLICT);
         }
         if (payment.getPaymentStatus() != PaymentStatus.PAID) {
             log.warn("Validation failed: Only paid salary can be reversed paymentId={}", request.paymentId());
@@ -525,7 +589,7 @@ public class PayrollService {
             operationsService.recordAdvanceSettlement(
                     payment.getEmployeeId(),
                     deductedAdvances,
-                    "إلغاء واسترداد تسوية سلفة للتراجع عن صرف مرتب " + periodReference + " (السبب: " + request.reason() + ")",
+                    "Cancel and reverse advance settlement for payroll reversal " + periodReference + " (reason: " + request.reason() + ")",
                     Instant.now(),
                     actor
             );
