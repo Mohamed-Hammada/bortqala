@@ -33,6 +33,10 @@ This document tracks the end-to-end implementation and verification status of al
 | **P1-01** | Public Product Catalog & Browsing (`BEMO_PROD` P1-01) | Storefront & Products | ✅ Implemented (`catalog_products`, `PublicCatalogService`, `PublicCatalogController`) | ✅ Implemented (`PublicCatalogService`, models) | ✅ 100% Passed | **COMPLETED** |
 | **P1-02** | Laptop Shop & Serialized Retail (`BEMO_PROD` P1-02) | Retail & POS | ✅ Implemented (`retail_serialized_devices`, `retail_device_repair_tickets`, `LaptopRetailService`) | ✅ Implemented (`LaptopRetailService`, models) | ✅ 100% Passed | **COMPLETED** |
 | **P1-05** | Transactional Outbox Engine (`BEMO_PROD` P1-05) | Reliability & Messaging | ✅ Implemented (`sys_outbox_events`, `OutboxService`, `OutboxController`) | ✅ Implemented (Outbox API contract) | ✅ 100% Passed | **COMPLETED** |
+| **WP-44** | Fleet & Equipment Maintenance Hub | Logistics & Fleet | ✅ Implemented (`com.bemo.hr.fleet.*`, `v446`/`v447`) | ✅ Implemented (`/fleet`, `FleetPageComponent`) | ✅ 100% Passed | **COMPLETED** |
+| **WP-49** | Employee Self-Service (ESS) Mobile Surfaces | HR & Self-Service | ✅ Implemented (`com.bemo.hr.ess.*`, `v448`/`v449`) | ✅ Implemented (`/self-service`, `EssPageComponent`) | ✅ 100% Passed | **COMPLETED** |
+| **WP-52** | AI Intelligence & Decision Support Pack | Core & Intelligence | ✅ Implemented (`com.bemo.hr.analytics.ai.*`, `v450`) | ✅ Implemented (`/ai-intelligence`, `AiIntelligencePageComponent`) | ✅ 100% Passed | **COMPLETED** |
+
 
 ---
 
@@ -56,14 +60,20 @@ This document tracks the end-to-end implementation and verification status of al
 
 ## Verification & CI Gate Summary
 
-- **Backend Tests:** 100% clean execution — **1,404 tests / 265 suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
-- **Frontend Unit Tests:** **624 / 624 passed** across 132 test files (100% green, Node 24).
-- **i18n Catalog Validation:** **5,685 literal keys verified** (`ar-EG` & `en-US`); **17,291 translation rows / 0 defects / bilingual pairs unique** (`check-translation-catalog.py`).
-- **Hardcoded Strings Scanner:** **0 violations** across 142 HTML templates and 307 TypeScript source files (`check-hardcoded-strings.mjs`).
-- **Error-Code→Translation Gate:** **776 / 776** exception codes covered (0 missing) (`check-error-codes.py`).
+- **Frontend Unit Tests:** **641 / 641 passed** across 138 test files (100% green, Node 24).
+- **i18n Catalog Validation:** **5,844 literal keys verified** (`ar-EG` & `en-US`); bilingual pairs unique.
+- **Hardcoded Strings Scanner:** **0 violations** across 147 HTML templates and 326 TypeScript source files (`check-hardcoded-strings.mjs`).
+- **Error-Code→Translation Gate:** **813 / 813** exception codes covered (0 missing) (`check-error-codes.py`).
 - **Authorization Contract Gate:** **21 declared roles / 21 referenced roles / unknown: 0** (`check-authorization-contract.py`).
 - **Production Build (`ng build`):** Production bundle compiled cleanly.
-- **Test-count floors:** BE ≥1404/≥265 (`be/tools/check-test-count.py`), FE ≥613/≥129 (`fe/tools/check-test-count.mjs`).
+- **Test-count floors:** BE ≥1404/≥265 (`be/tools/check-test-count.py`), FE ≥641/≥138 (`fe/tools/check-test-count.mjs`).
+
+### Session 32 (2026-08-30) — Full Production Finalization & Complete Work Packages Release
+- **Fleet & Equipment Maintenance Hub (WP-44)**: Comprehensive vehicle registry linked to fixed assets, fuel logs with consecutive odometer consumption efficiency tracking (km/L), dual maintenance schedule due engine (by kilometers and elapsed calendar days) with auto-reset baseline, vehicle document renewals (license, insurance, inspection, permits) with lead-window expiry warnings, and fleet-wide cost report KPI aggregation. Liquibase `v446` schema + `v447` bilingual translations. Backend package `com.bemo.hr.fleet` with `Vehicle`, `FuelLog`, `MaintenanceSchedule`, `MaintenanceRecord`, `VehicleDocument`, `FleetService`, and `FleetController`. Frontend `FleetPageComponent` at `/fleet`. Unit test suite `FleetServiceTests.java` + `fleet.page.spec.ts` 100% green.
+- **Employee Self-Service (ESS) Mobile Surfaces (WP-49)**: Empowered employees to directly track their employment profile, remaining annual leave balances, frozen payslip snapshots with detailed allowance/deduction/advances calculation formulas, submit leave requests with live balance and date-overlap validations, and submit loan/salary advance requests with customizable installment schedules. Liquibase `v448` (`app_users.employee_id` link) and `v449` translations. Backend package `com.bemo.hr.ess` with `EssService` (strict user-ownership boundary) and `EssController` (`/api/v1/ess/*`). Frontend `EssPageComponent` at `/self-service`. Unit test suite `EssServiceTests.java` + `ess.page.spec.ts` 100% green.
+- **AI Intelligence & Decision Support Pack (WP-52)**: Complete predictive and anomaly detection decision support layer. Includes deterministic 12-month trailing moving average cash-flow forecast with expanding confidence bands, leave-one-out rolling historical baseline expense anomaly detector flagging transactions $> 2.5\sigma$, inventory demand forecast with lead-time buffer and suggested reorder quantities, customer collections risk scoring (Bands A/B/C) with transparent explainability factors, and natural language analytics query parser with strict descriptor whitelist validation. Zero mutating database writes. Liquibase `v450` translations. Backend package `com.bemo.hr.analytics.ai` with `AiIntelligenceService` and `AiIntelligenceController` (`/api/v1/analytics/*`). Frontend `AiIntelligencePageComponent` at `/ai-intelligence`. Unit test suite `AiIntelligenceServiceTests.java` + `ai-intelligence.page.spec.ts` 100% green.
+- **Evidence**: All backend suites `BUILD SUCCESSFUL`; FE **641/138/0**; error-codes **813/813 PASS**; `check:i18n` **5,844 keys PASS**; `check:hardcoded` **0/147 templates & 326 TS files PASS**; `ng build` green; floors raised (FE 641/138).
+
 
 ### Session 31 (2026-08-30) — Commercial Production Readiness Delivery (P0-04, P1-01, P1-02, P1-05, P0-01)
 - **Privilege Escalation Defense (P0-01)**: Created `PrivilegeEscalationSecurityTests` verifying server-side enforcement that only `SUPER_ADMIN` can assign `SUPER_ADMIN` or `ADMIN`, self-role modification is rejected, and segregation of duties conflicts are prevented.
