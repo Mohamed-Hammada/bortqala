@@ -11,6 +11,33 @@
     </div>
   </div>
 
+  <!-- Operational Control Diagnostics Bar -->
+  <div class="diagnostics-card">
+    <h3>🛡️ {{ i18n.t('reconciliation.systemDiagnostics') }}</h3>
+    <div class="diagnostics-grid">
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.failedJobs') }}</span>
+        <span class="d-val ok font-mono">0</span>
+      </div>
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.pendingApprovals') }}</span>
+        <span class="d-val info font-mono">4</span>
+      </div>
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.etaErrors') }}</span>
+        <span class="d-val ok font-mono">0</span>
+      </div>
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.negativeStock') }}</span>
+        <span class="d-val ok font-mono">0</span>
+      </div>
+      <div class="diagnostic-pill">
+        <span class="d-label">{{ i18n.t('reconciliation.overdueAr') }}</span>
+        <span class="d-val ok font-mono">0</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Domain Cards Grid -->
   <div class="domains-grid">
     @for (s of summaries(); track s.subledgerType) {

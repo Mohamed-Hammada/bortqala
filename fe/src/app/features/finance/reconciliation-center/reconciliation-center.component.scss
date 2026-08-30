@@ -27,6 +27,67 @@
   }
 }
 
+.diagnostics-card {
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+
+  h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  .diagnostics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .diagnostic-pill {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .d-label {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .d-val {
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+
+      &.ok {
+        background: #ecfdf5;
+        color: #065f46;
+      }
+
+      &.info {
+        background: #eff6ff;
+        color: #1e40af;
+      }
+
+      &.warning {
+        background: #fffbeb;
+        color: #b45309;
+      }
+
+      &.danger {
+        background: #fef2f2;
+        color: #991b1b;
+      }
+    }
+  }
+}
+
 .domains-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

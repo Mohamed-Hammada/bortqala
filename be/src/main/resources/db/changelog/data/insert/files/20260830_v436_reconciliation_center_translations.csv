@@ -43,3 +43,15 @@ v436-041;reconciliation.glAmount;ar-EG;المبلغ المرحل للأستاذ 
 v436-042;reconciliation.glAmount;en-US;GL Posted Amount
 v436-043;reconciliation.discrepancyReason;ar-EG;سبب عدم المطابقة
 v436-044;reconciliation.discrepancyReason;en-US;Discrepancy Cause
+v436-045;reconciliation.systemDiagnostics;ar-EG;مؤشرات الرقابة والامتثال التشغيلي
+v436-046;reconciliation.systemDiagnostics;en-US;Operational Control & Governance Diagnostics
+v436-047;reconciliation.failedJobs;ar-EG;الوظائف والمهام المعلقة
+v436-048;reconciliation.failedJobs;en-US;Failed / Pending Jobs
+v436-049;reconciliation.pendingApprovals;ar-EG;موافقات معلقة
+v436-050;reconciliation.pendingApprovals;en-US;Pending Approvals
+v436-051;reconciliation.etaErrors;ar-EG;أخطاء الفاتورة الإلكترونية
+v436-052;reconciliation.etaErrors;en-US;ETA Tax Errors
+v436-053;reconciliation.negativeStock;ar-EG;تجاوزات المخزون السالب
+v436-054;reconciliation.negativeStock;en-US;Negative Stock Exceptions
+v436-055;reconciliation.overdueAr;ar-EG;فواتير متأخرة التحصيل
+v436-056;reconciliation.overdueAr;en-US;Overdue Receivables

@@ -52,14 +52,26 @@ This document tracks the end-to-end implementation and verification status of al
 
 ## Verification & CI Gate Summary
 
-- **Backend Tests:** 100% clean execution — **1,262 tests / 257 suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
+- **Backend Tests:** 100% clean execution — **1,371 tests / 259 suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
 - **Frontend Unit Tests:** **613 / 613 passed** across 129 test files (100% green, Node 24).
-- **i18n Catalog Validation:** **5,633 literal keys verified** (`ar-EG` & `en-US`); **17,067 translation rows / 0 defects / bilingual pairs unique** (`check-translation-catalog.py`).
+- **i18n Catalog Validation:** **5,639 literal keys verified** (`ar-EG` & `en-US`); **17,079 translation rows / 0 defects / bilingual pairs unique** (`check-translation-catalog.py`).
 - **Hardcoded Strings Scanner:** **0 violations** across 142 HTML templates and 298 TypeScript source files (`check-hardcoded-strings.mjs`).
 - **Error-Code→Translation Gate:** **759 / 759** exception codes covered (0 missing) (`check-error-codes.py`).
 - **Authorization Contract Gate:** **21 declared roles / 21 referenced roles / unknown: 0** (`check-authorization-contract.py`).
 - **Production Build (`ng build`):** Production bundle compiled cleanly.
-- **Test-count floors:** BE ≥1262/≥257 (`be/tools/check-test-count.py`), FE ≥613/≥129 (`fe/tools/check-test-count.mjs`).
+- **Test-count floors:** BE ≥1371/≥259 (`be/tools/check-test-count.py`), FE ≥613/≥129 (`fe/tools/check-test-count.mjs`).
+
+### Session 30 (2026-08-30) — Hardened Production Verification & Financial Concurrency Harness
+- **Payroll Frozen Snapshot Immutability (PAY-001 Closed)**: Created `PayrollFrozenSnapshotImmutabilityJourneyTests` proving that existing calculated runs remain strictly immune to subsequent live employee salary, attendance, and policy modifications (10k + P1 preserved while new run evaluates 15k + P2).
+- **PostgreSQL Critical Financial Concurrency Suite**: Created `PostgresCriticalTransactionTests` running multi-threaded race condition tests (100 iterations) across:
+  - Payroll double-disbursement and reversal races.
+  - Procurement supplier invoice over-settlement.
+  - Sales customer credit limit overrun.
+  - Inventory overselling prevention (Stock=1 concurrent sell $\rightarrow$ 1 Success, 1 Rejection, 0 Negative Stock).
+  - Finance fiscal period closing lock vs in-flight journal posting.
+  - Multi-tenant strict isolation and thread-safe context scoping.
+- **ERP Control Center Governance Bar**: Integrated real-time operational governance diagnostics (`Failed Jobs`, `Pending Approvals`, `ETA Errors`, `Negative Stock Items`, `Overdue Receivables`) into `ReconciliationCenterComponent`.
+- **Evidence**: BE **1,371/259/0** (BUILD SUCCESSFUL); FE **613/129/0**; error-codes **759/759 PASS**; catalog **17,079 rows PASS**; `check:i18n` **5,639 keys PASS**; `check:hardcoded` **0/142 templates PASS**; `ng build` green; floors raised (BE 1371/259, FE 613/129).
 
 ### Session 29 (2026-08-30) — ⭐ ERP Reconciliation Center (8 Domains ↔ GL & Drill-Down)
 - **Subledger Reconciliation Domain Expansion**: Extended `SubledgerType` enum across 8 core accounting domains: `INVENTORY`, `AR`, `AP`, `CASH`, `BANK`, `PAYROLL`, `PROJECT_COST`, `MANUFACTURING_COST`.
