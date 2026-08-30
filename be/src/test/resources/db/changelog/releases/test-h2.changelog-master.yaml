@@ -1459,3 +1459,7 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260829_v435_data_migration_translations.yaml
       relativeToChangelogFile: false
+  # ERP Reconciliation Center Translations
+  - include:
+      file: db/changelog/data/insert/20260830_v436_reconciliation_center_translations.yaml
+      relativeToChangelogFile: false

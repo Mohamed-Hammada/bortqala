@@ -1,0 +1,45 @@
+id;translation_key;locale;text_value
+v436-001;reconciliation.title;ar-EG;مركز مطابقة وتدقيق الأستاذ العام
+v436-002;reconciliation.title;en-US;ERP Reconciliation Center
+v436-003;reconciliation.subtitle;ar-EG;المطابقة اللحظية بين السجلات التشغيلية المساعدة وحسابات رقابة الأستاذ العام
+v436-004;reconciliation.subtitle;en-US;Real-time automated reconciliation between operational subledgers and GL control accounts
+v436-005;reconciliation.domain;ar-EG;النطاق المحاسبي
+v436-006;reconciliation.domain;en-US;Accounting Domain
+v436-007;reconciliation.subledgerBalance;ar-EG;رصيد الأستاذ المساعد
+v436-008;reconciliation.subledgerBalance;en-US;Subledger Balance
+v436-009;reconciliation.glBalance;ar-EG;رصيد الأستاذ العام
+v436-010;reconciliation.glBalance;en-US;GL Control Balance
+v436-011;reconciliation.variance;ar-EG;الفارق / الانحراف
+v436-012;reconciliation.variance;en-US;Variance
+v436-013;reconciliation.status;ar-EG;حالة المطابقة
+v436-014;reconciliation.status;en-US;Status
+v436-015;reconciliation.discrepancies;ar-EG;المعاملات المعلقة
+v436-016;reconciliation.discrepancies;en-US;Discrepancies
+v436-017;reconciliation.balanced;ar-EG;مطابق تماماً ✓
+v436-018;reconciliation.balanced;en-US;Fully Reconciled ✓
+v436-019;reconciliation.drilldown;ar-EG;فحص وتحليل الفروقات
+v436-020;reconciliation.drilldown;en-US;Drill Down Discrepancies
+v436-021;reconciliation.inventory;ar-EG;المخزون ↔ الأستاذ العام
+v436-022;reconciliation.inventory;en-US;Inventory ↔ GL
+v436-023;reconciliation.ar;ar-EG;العملاء والمدينون ↔ الأستاذ العام
+v436-024;reconciliation.ar;en-US;Accounts Receivable ↔ GL
+v436-025;reconciliation.ap;ar-EG;الموردون والدائنون ↔ الأستاذ العام
+v436-026;reconciliation.ap;en-US;Accounts Payable ↔ GL
+v436-027;reconciliation.cash;ar-EG;الخزائن النقدية ↔ الأستاذ العام
+v436-028;reconciliation.cash;en-US;Petty Cash ↔ GL
+v436-029;reconciliation.bank;ar-EG;الحسابات البنكية ↔ الأستاذ العام
+v436-030;reconciliation.bank;en-US;Bank Accounts ↔ GL
+v436-031;reconciliation.payroll;ar-EG;الرواتب والأجور ↔ الأستاذ العام
+v436-032;reconciliation.payroll;en-US;Payroll Expenses & Accruals ↔ GL
+v436-033;reconciliation.projectCost;ar-EG;تكاليف المشاريع ↔ الأستاذ العام
+v436-034;reconciliation.projectCost;en-US;Project WIP Costs ↔ GL
+v436-035;reconciliation.manufacturingCost;ar-EG;تكاليف التصنيع ↔ الأستاذ العام
+v436-036;reconciliation.manufacturingCost;en-US;Manufacturing WIP Costs ↔ GL
+v436-037;reconciliation.documentNumber;ar-EG;رقم المستند
+v436-038;reconciliation.documentNumber;en-US;Document Number
+v436-039;reconciliation.subledgerAmount;ar-EG;مبلغ المستند التشغيلي
+v436-040;reconciliation.subledgerAmount;en-US;Subledger Amount
+v436-041;reconciliation.glAmount;ar-EG;المبلغ المرحل للأستاذ العام
+v436-042;reconciliation.glAmount;en-US;GL Posted Amount
+v436-043;reconciliation.discrepancyReason;ar-EG;سبب عدم المطابقة
+v436-044;reconciliation.discrepancyReason;en-US;Discrepancy Cause

@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260830-v436-001
+      author: bemo-erp
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260830_v436_reconciliation_center_translations.csv
+            separator: ';'
+            quotchar: '"'
+            columns:
+              - column: { name: id, type: STRING }
+              - column: { name: translation_key, type: STRING }
+              - column: { name: locale, type: STRING }
+              - column: { name: text_value, type: STRING }

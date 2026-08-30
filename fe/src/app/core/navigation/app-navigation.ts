@@ -598,6 +598,18 @@ export const NAV_ITEMS: NavItem[] = [
     roles: FINANCE_ROLES,
   },
   {
+    menuId: 'reconciliation-center',
+    labelKey: 'reconciliation.title',
+    descriptionKey: 'reconciliation.subtitle',
+    path: '/finance/reconciliation',
+    icon: 'dashboard',
+    workspace: 'workspace.financeAccounting',
+    roles: FINANCE_ROLES,
+    permissionMenuId: 'accounts',
+    allowAsLandingPage: false,
+    showInPermissionEditor: false,
+  },
+  {
     menuId: 'eta-tax',
     labelKey: 'nav.etaTax',
     descriptionKey: 'nav.etaTaxHint',

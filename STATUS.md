@@ -52,14 +52,22 @@ This document tracks the end-to-end implementation and verification status of al
 
 ## Verification & CI Gate Summary
 
-- **Backend Tests:** 100% clean execution — **1,260 tests / 256 suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
-- **Frontend Unit Tests:** **611 / 611 passed** across 128 test files (100% green, Node 24).
-- **i18n Catalog Validation:** **5,608 literal keys verified** (`ar-EG` & `en-US`); **16,995 translation rows / 0 defects / bilingual pairs unique** (`check-translation-catalog.py`).
-- **Hardcoded Strings Scanner:** **0 violations** across 141 HTML templates and 297 TypeScript source files (`check-hardcoded-strings.mjs`).
+- **Backend Tests:** 100% clean execution — **1,262 tests / 257 suites / 0 failures / 0 skipped** (`BUILD SUCCESSFUL`, `./gradlew test -PskipDockerTests`).
+- **Frontend Unit Tests:** **613 / 613 passed** across 129 test files (100% green, Node 24).
+- **i18n Catalog Validation:** **5,633 literal keys verified** (`ar-EG` & `en-US`); **17,067 translation rows / 0 defects / bilingual pairs unique** (`check-translation-catalog.py`).
+- **Hardcoded Strings Scanner:** **0 violations** across 142 HTML templates and 298 TypeScript source files (`check-hardcoded-strings.mjs`).
 - **Error-Code→Translation Gate:** **759 / 759** exception codes covered (0 missing) (`check-error-codes.py`).
 - **Authorization Contract Gate:** **21 declared roles / 21 referenced roles / unknown: 0** (`check-authorization-contract.py`).
 - **Production Build (`ng build`):** Production bundle compiled cleanly.
-- **Test-count floors:** BE ≥1260/≥256 (`be/tools/check-test-count.py`), FE ≥611/≥128 (`fe/tools/check-test-count.mjs`).
+- **Test-count floors:** BE ≥1262/≥257 (`be/tools/check-test-count.py`), FE ≥613/≥129 (`fe/tools/check-test-count.mjs`).
+
+### Session 29 (2026-08-30) — ⭐ ERP Reconciliation Center (8 Domains ↔ GL & Drill-Down)
+- **Subledger Reconciliation Domain Expansion**: Extended `SubledgerType` enum across 8 core accounting domains: `INVENTORY`, `AR`, `AP`, `CASH`, `BANK`, `PAYROLL`, `PROJECT_COST`, `MANUFACTURING_COST`.
+- **Authoritative Provider Implementations**: Updated `FinancialReconciliationProviders` with providers comparing subledger registries with corresponding General Ledger control account balances and calculating transaction-level variances (`SourceDifference`).
+- **REST Controller & Drill-Down**: Created `ReconciliationCenterController` (`/api/v1/finance/reconciliation-center/overview` and `/drilldown`), unit test suite `ReconciliationCenterControllerTests`.
+- **Database Migrations**: Liquibase `v436` bilingual translations (`20260830_v436_reconciliation_center_translations.yaml` + CSV), registered in both `next` and `test-h2` changelog masters.
+- **Frontend Architecture & UI**: Created `ReconciliationCenterComponent` (`/finance/reconciliation`), interactive cards for all 8 domains with balanced badges and variance warnings, modal/drawer discrepancy drill-down detailing offending unposted documents and GL amount mismatches.
+- **Evidence**: BE **1,262/257/0** (BUILD SUCCESSFUL); FE **613/129/0**; error-codes **759/759 PASS**; catalog **17,067 rows PASS**; `check:i18n` **5,633 keys PASS**; `check:hardcoded` **0/142 templates PASS**; `ng build` green; floors raised (BE 1262/257, FE 613/129).
 
 ### Session 28 (2026-08-30) — Market-Readiness Core Engine Delivery (Steps 2 – 6)
 - **Step 2 (Priority 2: Universal Idempotency Engine & Resilience)**: `IdempotencyHeaderFilter` providing universal HTTP `Idempotency-Key` header handling with SHA-256 request payload hashing, atomic lease locking, cache replay, and `409 Conflict` in-progress / hash-mismatch protection. Unit suite `IdempotencyHeaderFilterTests`.

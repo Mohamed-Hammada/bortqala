@@ -1027,4 +1027,7 @@ databaseChangeLog:
       file: db/changelog/schema/create/20260829_v434_data_migration_schema.yaml
   - include:
       file: db/changelog/data/insert/20260829_v435_data_migration_translations.yaml
+  # ERP Reconciliation Center Translations
+  - include:
+      file: db/changelog/data/insert/20260830_v436_reconciliation_center_translations.yaml
 

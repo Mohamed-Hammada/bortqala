@@ -365,6 +365,18 @@ export const routes: Routes = [
           import('./features/finance/payment-links/payment-links.page').then((module) => module.PaymentLinksPage),
       },
       {
+        path: 'finance/reconciliation',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'accounts',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR', 'ADMIN', 'SUPER_ADMIN'],
+        },
+        loadComponent: () =>
+          import('./features/finance/reconciliation-center/reconciliation-center.component').then(
+            (module) => module.ReconciliationCenterComponent,
+          ),
+      },
+      {
         path: 'whatsapp',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'SUPER_ADMIN'], menuId: 'settings' },
