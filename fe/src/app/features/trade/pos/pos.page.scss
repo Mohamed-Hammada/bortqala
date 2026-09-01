@@ -517,4 +517,33 @@
       font-size: 0.75rem;
     }
   }
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .receipt-modal-card, .receipt-modal-card .thermal-receipt, .receipt-modal-card .thermal-receipt * {
+      visibility: visible;
+    }
+    .receipt-modal-card {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 80mm !important;
+      max-width: 80mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+    .modal-header, .modal-footer, .btn-close {
+      display: none !important;
+    }
+    .thermal-receipt {
+      width: 80mm !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+  }
 }

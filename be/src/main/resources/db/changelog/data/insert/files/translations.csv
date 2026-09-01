@@ -17815,3 +17815,19 @@ t-008907-ar;journal.dimensionsTooltip;ar-EG;عرض أو إخفاء مراكز ا
 t-008907-en;journal.dimensionsTooltip;en-US;Toggle cost center, project, and dimension fields
 t-008908-ar;employees.noCategoriesHint;ar-EG;يجب إنشاء تصنيف وظيفي واحد على الأقل قبل إضافة موظف.
 t-008908-en;employees.noCategoriesHint;en-US;Create at least one employee category before adding an employee.
+t-008909-ar;payroll.exportWps;ar-EG;تصدير ملف البنوك (WPS / SIF)
+t-008909-en;payroll.exportWps;en-US;Export WPS / Bank SIF
+t-008910-ar;payroll.wpsModalTitle;ar-EG;تصدير ملف حماية الأجور والتحويل البنكي (WPS SIF)
+t-008910-en;payroll.wpsModalTitle;en-US;Export WPS / Bank SIF Clearing File
+t-008911-ar;payroll.wpsModalDescription;ar-EG;قم باختيار صيغة ملف التحويل البنكي المتوافقة مع البنوك المصرية (غرفة المقاصة الآلية ACH) أو بنوك الخليج (GCC SIF).
+t-008911-en;payroll.wpsModalDescription;en-US;Choose the bank clearing file format compatible with Egyptian Banks (ACH) or GCC Banks (Standard SIF).
+t-008912-ar;payroll.wpsFormat;ar-EG;صيغة الملف
+t-008912-en;payroll.wpsFormat;en-US;File Format
+t-008913-ar;payroll.wpsFormatEgypt;ar-EG;ملف البنوك المصرية (Egyptian Banks WPS / ACH CSV)
+t-008913-en;payroll.wpsFormatEgypt;en-US;Egyptian Banks WPS / ACH (.csv)
+t-008914-ar;payroll.wpsFormatGcc;ar-EG;ملف نظام حماية الأجور الخليجي (GCC SIF .sif)
+t-008914-en;payroll.wpsFormatGcc;en-US;GCC Wages Protection System (.sif)
+t-008915-ar;payroll.wpsDownloadButton;ar-EG;تحميل ملف البنك
+t-008915-en;payroll.wpsDownloadButton;en-US;Download Bank File
+t-008916-ar;payroll.wpsExportSuccess;ar-EG;تم تحميل وتصدير ملف التحويل البنكي بنجاح
+t-008916-en;payroll.wpsExportSuccess;en-US;WPS bank clearing file exported successfully

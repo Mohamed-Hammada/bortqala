@@ -1,7 +1,9 @@
 package com.bemo.hr.payroll.api;
 
+import com.bemo.hr.payroll.application.EgyptianStatutoryPayrollService;
 import com.bemo.hr.payroll.application.PayrollCalculationPolicyService;
 import com.bemo.hr.payroll.application.PayrollService;
+import com.bemo.hr.payroll.application.PayrollWpsExportService;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.security.AuthService;
 import jakarta.validation.Valid;
@@ -33,6 +35,8 @@ public class PayrollController {
     private final PayrollService payrollService;
     private final AuthService authService;
     private final PayrollCalculationPolicyService payrollCalculationPolicyService;
+    private final EgyptianStatutoryPayrollService egyptianStatutoryPayrollService;
+    private final PayrollWpsExportService payrollWpsExportService;
 
     @GetMapping
     public PayrollApi.SheetResponse getSheet(
@@ -40,6 +44,51 @@ public class PayrollController {
             @RequestParam int month,
             @RequestParam(required = false) String categoryId) {
         return payrollService.getSheet(year, month, categoryId);
+    }
+
+    @PostMapping("/calculate-statutory")
+    public PayrollApi.StatutoryTaxResponse calculateStatutoryTax(
+            @Valid @RequestBody PayrollApi.StatutoryTaxRequest request) {
+        var res = egyptianStatutoryPayrollService.calculate(request.grossSalary());
+        var brackets = res.taxBracketsBreakdown().stream()
+                .map(b -> new PayrollApi.StatutoryTaxBracketResponse(
+                        b.bracketNumber(), b.bracketRange(), b.ratePercent(), b.taxableAmountInBracket(), b.computedTax()))
+                .toList();
+        return new PayrollApi.StatutoryTaxResponse(
+                res.monthlyGrossSalary(),
+                res.monthlyInsurableWage(),
+                res.monthlyEmployeeSocialInsurance(),
+                res.monthlyEmployerSocialInsurance(),
+                res.monthlyMartyrsFund(),
+                res.annualTaxableIncome(),
+                res.annualIncomeTax(),
+                res.monthlyIncomeTax(),
+                res.totalEmployeeStatutoryDeductions(),
+                res.monthlyNetSalary(),
+                brackets
+        );
+    }
+
+    @GetMapping("/wps-export")
+    public ResponseEntity<byte[]> exportWps(
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam(defaultValue = "EG_WPS") PayrollWpsExportService.WpsFormat format,
+            @RequestParam(required = false) String employerId,
+            @RequestParam(required = false) String bankCode,
+            @RequestParam(required = false) String categoryId) {
+        var sheet = payrollService.getSheet(year, month, categoryId);
+        byte[] content = payrollWpsExportService.generateWpsFile(sheet, format, employerId, bankCode);
+
+        var headers = new HttpHeaders();
+        String ext = format == PayrollWpsExportService.WpsFormat.GCC_SIF ? "sif" : "csv";
+        String mimeType = format == PayrollWpsExportService.WpsFormat.GCC_SIF ? "text/plain" : "text/csv; charset=UTF-8";
+        headers.setContentType(MediaType.parseMediaType(mimeType));
+
+        String filename = String.format("wps-clearing-%04d%02d-%s.%s", year, month, format.name().toLowerCase(), ext);
+        headers.setContentDisposition(ContentDisposition.attachment().filename(filename, StandardCharsets.UTF_8).build());
+
+        return new ResponseEntity<>(content, headers, HttpStatus.OK);
     }
 
     @PostMapping("/pay")

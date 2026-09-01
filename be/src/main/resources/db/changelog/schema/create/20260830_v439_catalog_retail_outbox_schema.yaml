@@ -100,7 +100,7 @@ databaseChangeLog:
               - column: { name: event_type, type: VARCHAR(80), constraints: { nullable: false } }
               - column: { name: aggregate_type, type: VARCHAR(80), constraints: { nullable: false } }
               - column: { name: aggregate_id, type: VARCHAR(60), constraints: { nullable: false } }
-              - column: { name: payload_json, type: BLOB, constraints: { nullable: false } }
+              - column: { name: payload_json, type: text, constraints: { nullable: false } }
               - column: { name: status, type: VARCHAR(30), defaultValue: "PENDING", constraints: { nullable: false } }
               - column: { name: retry_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
               - column: { name: max_retries, type: INT, defaultValueNumeric: 5, constraints: { nullable: false } }

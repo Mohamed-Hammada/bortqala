@@ -54,6 +54,18 @@ export class PayrollPage {
   readonly selectedRow = signal<PayrollRow | null>(null);
   readonly explanationOpen = signal(false);
   readonly explanations = signal<SalaryPaymentExplanation[]>([]);
+  readonly wpsModalOpen = signal(false);
+  readonly selectedWpsFormat = signal<'EG_WPS' | 'GCC_SIF'>('EG_WPS');
+
+  openWpsExportModal(): void {
+    this.wpsModalOpen.set(true);
+  }
+
+  async exportWps(format: 'EG_WPS' | 'GCC_SIF'): Promise<void> {
+    await this.store.exportWps(this.year(), this.month(), format, this.selectedCategory());
+    this.wpsModalOpen.set(false);
+    this.notification.success(this.i18n.t('payroll.wpsExportSuccess'));
+  }
 
   async openExplanationModal(row: PayrollRow): Promise<void> {
     if (!row.id) {

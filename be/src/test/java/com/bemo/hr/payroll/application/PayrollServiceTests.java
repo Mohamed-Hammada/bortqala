@@ -78,6 +78,8 @@ class PayrollServiceTests {
     private PayrollRunLineRepository payrollRunLineRepository;
     @Mock
     private PayrollGlPostingService payrollGlPostingService;
+    @Mock
+    private EgyptianStatutoryPayrollService egyptianStatutoryPayrollService;
 
     @InjectMocks
     private PayrollService payrollService;
@@ -89,6 +91,11 @@ class PayrollServiceTests {
                 new PayrollCalculationPolicy("Test", LocalDate.of(2000, 1, 1), null,
                         new BigDecimal("240"), new BigDecimal("1.5")));
         lenient().when(payrollSnapshotService.find(anyString(), anyString())).thenReturn(Optional.empty());
+        lenient().when(egyptianStatutoryPayrollService.calculate(any())).thenReturn(
+                new EgyptianStatutoryPayrollService.StatutoryCalculationResult(
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                        List.of()));
     }
 
     @AfterEach

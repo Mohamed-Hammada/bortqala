@@ -138,4 +138,33 @@ public final class PayrollApi {
             BigDecimal workingHourDivisor, BigDecimal overtimeMultiplier, long version
     ) {
     }
+
+    public record StatutoryTaxRequest(
+            @NotNull BigDecimal grossSalary
+    ) {
+    }
+
+    public record StatutoryTaxBracketResponse(
+            int bracketNumber,
+            String bracketRange,
+            BigDecimal ratePercent,
+            BigDecimal taxableAmountInBracket,
+            BigDecimal computedTax
+    ) {
+    }
+
+    public record StatutoryTaxResponse(
+            BigDecimal monthlyGrossSalary,
+            BigDecimal monthlyInsurableWage,
+            BigDecimal monthlyEmployeeSocialInsurance,
+            BigDecimal monthlyEmployerSocialInsurance,
+            BigDecimal monthlyMartyrsFund,
+            BigDecimal annualTaxableIncome,
+            BigDecimal annualIncomeTax,
+            BigDecimal monthlyIncomeTax,
+            BigDecimal totalEmployeeStatutoryDeductions,
+            BigDecimal monthlyNetSalary,
+            List<StatutoryTaxBracketResponse> taxBracketsBreakdown
+    ) {
+    }
 }

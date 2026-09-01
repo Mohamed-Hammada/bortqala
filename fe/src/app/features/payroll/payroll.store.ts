@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { downloadBlob } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
-import { BulkPaymentRequest, PaymentRequest, PayrollGlPosting, ReversePaymentRequest, SheetResponse, SalaryPaymentExplanation, StatusTransitionRequest } from './payroll.models';
+import { BulkPaymentRequest, PaymentRequest, PayrollGlPosting, ReversePaymentRequest, SheetResponse, SalaryPaymentExplanation, StatusTransitionRequest, StatutoryTaxResponse, WpsFormat } from './payroll.models';
 
 @Injectable()
 export class PayrollStore {
@@ -18,6 +18,16 @@ export class PayrollStore {
       );
     } catch {
       return [];
+    }
+  }
+
+  async calculateStatutory(grossSalary: number): Promise<StatutoryTaxResponse | null> {
+    try {
+      return await firstValueFrom(
+        this.httpClient.post<StatutoryTaxResponse>('/api/v1/payroll/calculate-statutory', { grossSalary }),
+      );
+    } catch {
+      return null;
     }
   }
 
@@ -138,5 +148,15 @@ export class PayrollStore {
       this.httpClient.get('/api/v1/payroll/export', { params, responseType: 'blob' }),
     );
     downloadBlob(blob, `payroll-${year}-${String(month).padStart(2, '0')}.xlsx`);
+  }
+
+  async exportWps(year: number, month: number, format: WpsFormat = 'EG_WPS', categoryId?: string): Promise<void> {
+    const params: Record<string, string | number> = { year, month, format };
+    if (categoryId) params['categoryId'] = categoryId;
+    const blob = await firstValueFrom(
+      this.httpClient.get('/api/v1/payroll/wps-export', { params, responseType: 'blob' }),
+    );
+    const ext = format === 'GCC_SIF' ? 'sif' : 'csv';
+    downloadBlob(blob, `wps-clearing-${year}-${String(month).padStart(2, '0')}-${format.toLowerCase()}.${ext}`);
   }
 }

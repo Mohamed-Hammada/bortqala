@@ -119,3 +119,27 @@ export interface ReversePaymentRequest {
   reason: string;
   expectedVersion: number;
 }
+
+export type WpsFormat = 'EG_WPS' | 'GCC_SIF';
+
+export interface StatutoryTaxBracket {
+  bracketNumber: number;
+  bracketRange: string;
+  ratePercent: number;
+  taxableAmountInBracket: number;
+  computedTax: number;
+}
+
+export interface StatutoryTaxResponse {
+  monthlyGrossSalary: number;
+  monthlyInsurableWage: number;
+  monthlyEmployeeSocialInsurance: number;
+  monthlyEmployerSocialInsurance: number;
+  monthlyMartyrsFund: number;
+  annualTaxableIncome: number;
+  annualIncomeTax: number;
+  monthlyIncomeTax: number;
+  totalEmployeeStatutoryDeductions: number;
+  monthlyNetSalary: number;
+  taxBracketsBreakdown: StatutoryTaxBracket[];
+}

@@ -94,4 +94,17 @@ describe('PayrollPage', () => {
     expect(component.year()).toBe(2026);
     expect(component.month()).toBe(9);
   });
+
+  it('triggers WPS export with chosen format', async () => {
+    const fixture = TestBed.createComponent(PayrollPage);
+    const component = fixture.componentInstance;
+
+    const exportSpy = vi.spyOn(component.store, 'exportWps').mockResolvedValue();
+    component.openWpsExportModal();
+    expect(component.wpsModalOpen()).toBe(true);
+
+    await component.exportWps('EG_WPS');
+    expect(exportSpy).toHaveBeenCalledWith(2026, expect.any(Number), 'EG_WPS', '');
+    expect(component.wpsModalOpen()).toBe(false);
+  });
 });

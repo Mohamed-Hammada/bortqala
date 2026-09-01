@@ -475,4 +475,8 @@ export class PosPage implements OnInit, OnDestroy {
       },
     });
   }
+
+  printReceipt(): void {
+    window.print();
+  }
 }

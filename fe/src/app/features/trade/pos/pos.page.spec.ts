@@ -45,6 +45,39 @@ describe('PosPage', () => {
     expect(component.activeSession()?.sessionNumber).toBe('POS-SES-2026-001');
   });
 
+  it('opens receipt modal and triggers printReceipt', () => {
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+    const txn = {
+      id: 'txn-1',
+      transactionNumber: 'POS-TXN-2026-0001',
+      sessionId: 'ses-1',
+      terminalId: 'term-1',
+      cashierUserId: 'cashier-1',
+      customerId: null,
+      transactionType: 'SALE' as const,
+      paymentMethod: 'CASH' as const,
+      subtotal: 200,
+      discountAmount: 0,
+      taxAmount: 28,
+      totalAmount: 228,
+      cashTendered: 250,
+      changeAmount: 22,
+      status: 'COMPLETED' as const,
+      originalTransactionId: null,
+      clientOfflineId: null,
+      createdAt: Date.now(),
+      lines: [],
+    };
+
+    component.viewReceipt(txn);
+    expect(component.showReceiptModal()).toBe(true);
+    expect(component.activeReceipt()).toBe(txn);
+
+    component.printReceipt();
+    expect(printSpy).toHaveBeenCalled();
+    printSpy.mockRestore();
+  });
+
   it('adds item to cart and computes subtotal, 14% VAT, and total', () => {
     component.addItemToCart({
       itemId: 'item-101',

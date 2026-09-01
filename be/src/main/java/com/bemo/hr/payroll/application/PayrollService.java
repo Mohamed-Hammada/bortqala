@@ -57,6 +57,7 @@ public class PayrollService {
     private final PayrollRunLineRepository payrollRunLineRepository;
     private final PayrollGlPostingService payrollGlPostingService;
     private final PayrollPaymentAccountingService payrollPaymentAccountingService;
+    private final EgyptianStatutoryPayrollService egyptianStatutoryPayrollService;
 
     /**
      * Maker/checker segregation of duties for payroll. Defaults to enforced; deployments that
@@ -133,6 +134,42 @@ public class PayrollService {
                 payment.getId(), "SNAPSHOT_CALCULATION", "base + overtime - lateness - advances + adjustments", calculationInputs,
                 gross, "Gross base salary derived from locked attendance records", "Gross base salary derived from locked attendance records"
         ));
+
+        // Egyptian Statutory Deductions
+        if (egyptianStatutoryPayrollService != null && gross.compareTo(BigDecimal.ZERO) > 0) {
+            var statutory = egyptianStatutoryPayrollService.calculate(gross);
+            if (statutory.monthlyEmployeeSocialInsurance().compareTo(BigDecimal.ZERO) > 0) {
+                explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
+                        payment.getId(), "STATUTORY_SOCIAL_INSURANCE",
+                        "Insurable Wage × 11% (Law 148/2019)",
+                        "{\"insurableWage\":" + statutory.monthlyInsurableWage() + ",\"employeeRate\":0.11,\"employerContribution\":" + statutory.monthlyEmployerSocialInsurance() + "}",
+                        statutory.monthlyEmployeeSocialInsurance(),
+                        "حصة الموظف في التأمينات الاجتماعية (11%) وحصة صاحب العمل (" + statutory.monthlyEmployerSocialInsurance() + " ج.م)",
+                        "Employee Social Insurance (11%) and Employer Liability (" + statutory.monthlyEmployerSocialInsurance() + " EGP)"
+                ));
+            }
+            if (statutory.monthlyIncomeTax().compareTo(BigDecimal.ZERO) > 0) {
+                explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
+                        payment.getId(), "STATUTORY_INCOME_TAX",
+                        "Law 30/2023 Progressive Brackets",
+                        "{\"annualTaxable\":" + statutory.annualTaxableIncome() + ",\"annualTax\":" + statutory.annualIncomeTax() + ",\"monthlyTax\":" + statutory.monthlyIncomeTax() + "}",
+                        statutory.monthlyIncomeTax(),
+                        "ضريبة كسب العمل الشهرية وفقاً للشرائح التصاعدية بالقانون 30 لسنة 2023 بعد الإعفاء الشخصي 20 ألف ج.م",
+                        "Monthly Salary Income Tax per Law 30/2023 progressive brackets after 20k EGP personal exemption"
+                ));
+            }
+            if (statutory.monthlyMartyrsFund().compareTo(BigDecimal.ZERO) > 0) {
+                explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
+                        payment.getId(), "STATUTORY_MARTYRS_FUND",
+                        "Gross × 0.05%",
+                        "{\"rate\":0.0005,\"deduction\":" + statutory.monthlyMartyrsFund() + "}",
+                        statutory.monthlyMartyrsFund(),
+                        "مساهمة صندوق تكريم شهداء وضحايا ومفقودي ومصابي العمليات الحربية والإرهابية وذوي الإعاقة (0.05%)",
+                        "Contribution to Martyrs' Families and Disabilities Support Fund (0.05%)"
+                ));
+            }
+        }
+
         if (adv.compareTo(BigDecimal.ZERO) > 0) {
             explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                     payment.getId(), "ADVANCE_DEDUCTION", "Gross - Active Advance Installment", "{\"advanceDeduction\":" + adv + "}",

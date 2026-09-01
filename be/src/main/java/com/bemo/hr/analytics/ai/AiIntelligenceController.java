@@ -43,7 +43,7 @@ public class AiIntelligenceController {
     }
 
     @PostMapping("/nl-query")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'OPERATIONS_MANAGER', 'AUDITOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'GENERAL_MANAGER', 'AUDITOR')")
     public ResponseEntity<AiIntelligenceApi.NlQueryResponse> executeNlQuery(
             @Valid @RequestBody AiIntelligenceApi.NlQueryRequest request) {
         return ResponseEntity.ok(aiService.executeNlQuery(request));

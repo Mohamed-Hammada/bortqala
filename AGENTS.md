@@ -1,4 +1,17 @@
 # AGENT SESSION SUMMARY — September 1, 2026
+## Session 14: Egyptian Statutory Payroll Calculation Engine & Multi-Format WPS SIF Bank Clearing Export
+- **Egyptian Statutory Payroll Engine**:
+  - `EgyptianStatutoryPayrollService.java`: Comprehensive implementation of Egyptian Income Tax (Law No. 30 of 2023) featuring the 20,000 EGP personal annual exemption and 7-tier progressive tax brackets (0%, 2.5%, 10%, 15%, 20%, 22.5%, 25%), Social Insurance (Law No. 148 of 2019) with 11% employee contribution (capped between 2,000 and 12,600 EGP insurable wage) and 18.75% employer contribution, and the Martyrs' & Disability Support Fund (0.05% deduction).
+  - Integrated calculation breakdown into `PayrollService.getPaymentExplanation()` and dynamic simulation endpoint `POST /api/v1/payroll/calculate-statutory`.
+- **WPS SIF Bank Clearing Multi-Format Export**:
+  - `PayrollWpsExportService.java`: Dual-format bank clearing export supporting Egyptian Banks ACH CSV (`EG_WPS`) with UTF-8 BOM, national ID, routing, IBAN, and payment references, as well as GCC Standard Wages Protection System (`GCC_SIF`) with standard `SCR` header and `EDR` records.
+  - Endpoint `GET /api/v1/payroll/wps-export` with MIME/Content-Disposition headers.
+  - Frontend `PayrollStore.exportWps()` integration, toolbar action button, and modal selection dialog in `PayrollPage`.
+- **Database & Schema Quality**:
+  - Fixed Liquibase binary/blob definitions in `20260828_v406_recruitment_cv_files.yaml`, `20260729_v60_workforce_import_workflow.yaml`, and `20260830_v439_catalog_retail_outbox_schema.yaml` ensuring cross-database PostgreSQL/H2 compatibility.
+- **Verification**: 100% clean test execution — 644 frontend unit tests across 138 suites pass, `check:i18n` verified with 5,859 keys, `check:hardcoded` verified with 0 violations across 147 HTML and 326 TS files, full backend unit test suite passes with `BUILD SUCCESSFUL`, production bundle builds cleanly (`ng build`).
+
+# AGENT SESSION SUMMARY — September 1, 2026
 ## Session 13: Consolidated UI/UX Audit, Global Shortcut Gate & Platform Polish
 - **Global Shell & Keyboard Shortcuts**:
   - `SHORTCUT-001`: Pure gate unification for global keyboard shortcuts (`Ctrl/Cmd+K`, `/`, `?`, `G → X`, `Esc`) in `shortcut-guard.util.ts`, removing rogue direct paths and strictly enforcing modal suppression via `DialogStateService.modalOpen()`.

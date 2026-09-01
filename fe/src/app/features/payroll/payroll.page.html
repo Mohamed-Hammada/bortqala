@@ -2,13 +2,16 @@
   <!-- Page Header -->
   <header class="page-header">
     <div>
-      <p class="eyebrow">{{ i18n.t('payroll.eyebrow', undefined, 'المالية والاستحقاقات') }}</p>
-      <h1>{{ i18n.t('payroll.title', undefined, 'كشوف وسجل صرف المرتبات والقبض (ERP Payroll)') }}</h1>
-      <p>{{ i18n.t('payroll.description', undefined, 'إدارة ودورة حياة صرف أجور الموظفين والعمال مع القيود المحاسبية وتتبع المصادر.') }}</p>
+      <p class="eyebrow">{{ i18n.t('payroll.eyebrow') }}</p>
+      <h1>{{ i18n.t('payroll.title') }}</h1>
+      <p>{{ i18n.t('payroll.description') }}</p>
     </div>
     <div class="toolbar">
       <button class="button secondary" type="button" (click)="exportExcel()" [disabled]="store.loading() || rows().length === 0">
-        📊 {{ i18n.t('payroll.exportExcel', undefined, 'تصدير كشف الصرف (Excel)') }}
+        📊 {{ i18n.t('payroll.exportExcel') }}
+      </button>
+      <button class="button secondary" type="button" (click)="openWpsExportModal()" [disabled]="store.loading() || rows().length === 0">
+        🏦 {{ i18n.t('payroll.exportWps') }}
       </button>
       @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER'])) {
         <button
@@ -454,5 +457,27 @@
   }
   <div modal-actions>
     <button type="button" class="button secondary" (click)="explanationOpen.set(false)">{{ i18n.t('common.close') }}</button>
+  </div>
+</app-modal-dialog>
+
+<!-- WPS SIF Bank Export Modal -->
+<app-modal-dialog [isOpen]="wpsModalOpen()" [title]="i18n.t('payroll.wpsModalTitle')" size="normal" (close)="wpsModalOpen.set(false)">
+  <div style="display:grid;gap:1.2rem;padding:.5rem 0;">
+    <p style="margin:0;color:#475569;">{{ i18n.t('payroll.wpsModalDescription') }}</p>
+
+    <div class="field">
+      <label for="wps-format-select">{{ i18n.t('payroll.wpsFormat') }}</label>
+      <select id="wps-format-select" #wpsFormatSelect>
+        <option value="EG_WPS" selected>{{ i18n.t('payroll.wpsFormatEgypt') }}</option>
+        <option value="GCC_SIF">{{ i18n.t('payroll.wpsFormatGcc') }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div modal-actions>
+    <button type="button" class="button secondary" (click)="wpsModalOpen.set(false)">{{ i18n.t('common.cancel') }}</button>
+    <button type="button" class="button primary" (click)="exportWps(wpsFormatSelect.value === 'GCC_SIF' ? 'GCC_SIF' : 'EG_WPS')">
+      {{ i18n.t('payroll.wpsDownloadButton') }}
+    </button>
   </div>
 </app-modal-dialog>
