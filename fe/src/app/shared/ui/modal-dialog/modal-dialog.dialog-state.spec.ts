@@ -60,4 +60,36 @@ describe('ModalDialogComponent × DialogStateService (WP-13)', () => {
     fixture.destroy();
     expect(state.modalOpen()).toBe(false);
   });
+
+  it('restores focus to the trigger element when closed', async () => {
+    const trigger = document.createElement('button');
+    trigger.id = 'test-trigger';
+    document.body.appendChild(trigger);
+    trigger.focus();
+    expect(document.activeElement).toBe(trigger);
+
+    const { fixture } = createOpen();
+    expect(state.modalOpen()).toBe(true);
+
+    fixture.componentRef.setInput('isOpen', false);
+    fixture.detectChanges();
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
+  it('ignores Escape when preventEscapeClose is true', () => {
+    const fixture = TestBed.createComponent(ModalDialogComponent);
+    const closed: number[] = [];
+    fixture.componentInstance.close.subscribe(() => closed.push(1));
+    fixture.componentRef.setInput('isOpen', true);
+    fixture.componentRef.setInput('preventEscapeClose', true);
+    fixture.detectChanges();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(closed.length).toBe(0);
+    fixture.destroy();
+  });
 });
