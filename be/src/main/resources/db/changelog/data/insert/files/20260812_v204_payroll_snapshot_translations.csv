@@ -1,9 +1,0 @@
-id;translation_key;locale;text_value
-v204-001;PAYROLL_POLICY_DATES_INVALID;en-US;Payroll policy effective dates are invalid.
-v204-002;PAYROLL_POLICY_DATES_INVALID;ar-EG;تواريخ سريان سياسة الرواتب غير صحيحة.
-v204-003;PAYROLL_POLICY_DIVISOR_INVALID;en-US;Payroll working-hour divisor must be positive.
-v204-004;PAYROLL_POLICY_DIVISOR_INVALID;ar-EG;يجب أن يكون مقسوم ساعات العمل في سياسة الرواتب أكبر من صفر.
-v204-005;PAYROLL_POLICY_MULTIPLIER_INVALID;en-US;Payroll overtime multiplier cannot be negative.
-v204-006;PAYROLL_POLICY_MULTIPLIER_INVALID;ar-EG;لا يجوز أن يكون معامل العمل الإضافي سالباً.
-v204-007;PAYROLL_POLICY_DATES_OVERLAP;en-US;Payroll policy effective dates overlap an active policy.
-v204-008;PAYROLL_POLICY_DATES_OVERLAP;ar-EG;تتداخل تواريخ سياسة الرواتب مع سياسة نشطة.

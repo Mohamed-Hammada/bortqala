@@ -123,9 +123,7 @@ databaseChangeLog:
               UPDATE translations SET text_value = 'فقط مسؤول النظام الأعلى يمكنه تغيير صلاحية تخصيص لوحة المعلومات للمسؤولين.' WHERE translation_key = 'AUTH_DASHBOARD_CUSTOMIZATION_SUPER_ADMIN_ONLY' AND locale = 'ar-EG';
               UPDATE translations SET text_value = 'فقط مسؤول النظام الأعلى يمكنه تعديل أو تعطيل حسابات المسؤول الأعلى.' WHERE translation_key = 'AUTH_SUPER_ADMIN_ACCOUNT_PROTECTED' AND locale = 'ar-EG';
               UPDATE translations SET text_value = 'فقط مسؤول النظام الأعلى يمكنه منح دور المسؤول الأعلى.' WHERE translation_key = 'AUTH_SUPER_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN' AND locale = 'ar-EG';
-               UPDATE translations SET text_value = 'تصدير كشف الصرف' WHERE translation_key = 'payroll.exportExcel' AND locale = 'ar-EG';
-               INSERT INTO translations (id, translation_key, locale, text_value) VALUES ('v129-nav-001', 'nav.settingsHint', 'ar-EG', 'إعدادات النظام والتفضيلات');
-               INSERT INTO translations (id, translation_key, locale, text_value) VALUES ('v129-nav-002', 'nav.settingsHint', 'en-US', 'System settings and preferences');
+              UPDATE translations SET text_value = 'تصدير كشف الصرف' WHERE translation_key = 'payroll.exportExcel' AND locale = 'ar-EG';
       rollback:
         - sql:
             sql: |

@@ -1,5 +1,0 @@
-id;translation_key;locale;text_value
-v407-001-en;WEBHOOK_SIGNATURE_INVALID;en-US;Webhook signature is invalid.
-v407-001-ar;WEBHOOK_SIGNATURE_INVALID;ar-EG;توقيع الويب هوك غير صالح.
-v407-002-en;SSO_USER_INACTIVE;en-US;The single sign-on account is disabled.
-v407-002-ar;SSO_USER_INACTIVE;ar-EG;حساب الدخول الموحد معطل.

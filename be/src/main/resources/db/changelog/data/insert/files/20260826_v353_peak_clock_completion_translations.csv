@@ -1,7 +1,0 @@
-id;translation_key;locale;text_value
-v353-001-ar;dashboard.peakAllCategories;ar-EG;كل الفئات
-v353-001-en;dashboard.peakAllCategories;en-US;All categories
-v353-002-ar;export.sheet.clockInHistogram;ar-EG;ساعات الحضور الأكثر ازدحاماً
-v353-002-en;export.sheet.clockInHistogram;en-US;Peak clock-in hours
-v353-003-ar;export.column.hour;ar-EG;الساعة
-v353-003-en;export.column.hour;en-US;Hour

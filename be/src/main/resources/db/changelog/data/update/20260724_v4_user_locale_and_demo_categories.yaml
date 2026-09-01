@@ -9,31 +9,4 @@ databaseChangeLog:
               UPDATE user_preferences SET locale = 'en-US' WHERE LOWER(locale) = 'en-us';
               UPDATE user_preferences SET locale = 'ar-EG' WHERE LOWER(locale) = 'ar-eg';
 
-  - changeSet:
-      id: seed_thirty_day_translations
-      author: Mohamed-Hammada
-      validCheckSum: ANY
-      preConditions:
-        - onFail: MARK_RAN
-        - sqlCheck:
-            expectedResult: 0
-            sql: SELECT COUNT(*) FROM translations WHERE translation_key = 'reports.thirtyDays'
-      changes:
-        - insert:
-            tableName: translations
-            columns:
-              - column: { name: id, value: ar-084 }
-              - column: { name: translation_key, value: reports.thirtyDays }
-              - column: { name: locale, value: ar-EG }
-              - column: { name: text_value, value: "كل 30 يوم" }
-        - insert:
-            tableName: translations
-            columns:
-              - column: { name: id, value: en-084 }
-              - column: { name: translation_key, value: reports.thirtyDays }
-              - column: { name: locale, value: en-US }
-              - column: { name: text_value, value: "Every 30 days" }
-      rollback:
-        - delete:
-            tableName: translations
-            where: id IN ('ar-084', 'en-084')
+

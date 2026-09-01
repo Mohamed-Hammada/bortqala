@@ -8,11 +8,7 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/update/20260724_v4_user_locale_and_demo_categories.yaml
   - include:
-      file: db/changelog/data/insert/20260724_v5_session_expiry_translation.yaml
-  - include:
       file: db/changelog/schema/update/20260724_v6_app_session_timeout.yaml
-  - include:
-      file: db/changelog/data/insert/20260724_v7_login_error_translation.yaml
   - include:
       file: db/changelog/schema/update/20260724_v8_excel_export_preferences.yaml
   - include:
@@ -26,15 +22,7 @@ databaseChangeLog:
   - include:
       file: db/changelog/schema/create/20260724_v13_employee_code_sequences.yaml
   - include:
-      file: db/changelog/data/insert/20260724_v14_operations_translations.yaml
-  - include:
-      file: db/changelog/data/insert/20260724_v15_license_translations.yaml
-  - include:
       file: db/changelog/schema/update/20260724_v16_fix_inventory_item_unique_constraint.yaml
-  - include:
-      file: db/changelog/data/insert/20260725_v17_operations_enum_translations.yaml
-  - include:
-      file: db/changelog/data/insert/20260725_v18_full_ui_translations.yaml
   - include:
       file: db/changelog/schema/update/20260725_v19_server_pagination_and_menu_permissions.yaml
   - include:
@@ -68,13 +56,9 @@ databaseChangeLog:
   - include:
       file: db/changelog/schema/create/20260728_v35_workforce_contractors_schema.yaml
   - include:
-      file: db/changelog/data/insert/20260728_v36_workforce_translations.yaml
-  - include:
       file: db/changelog/data/update/20260728_v37_update_allowed_menus.yaml
   - include:
       file: db/changelog/data/update/20260728_v38_audit_payroll_erp_fixes.yaml
-  - include:
-      file: db/changelog/data/insert/20260728_v39_error_translations.yaml
   - include:
       file: db/changelog/schema/update/20260729_v40_parties_extended_fields.yaml
   - include:
@@ -102,13 +86,9 @@ databaseChangeLog:
   - include:
       file: db/changelog/schema/update/20260729_v51_supplier_payment_notes.yaml
   - include:
-      file: db/changelog/data/insert/20260729_v52_complete_ui_translations.yaml
-  - include:
       file: db/changelog/schema/create/20260729_v53_procurement_sequences_and_keyboard_copy.yaml
   - include:
       file: db/changelog/data/update/20260729_v54_seed_procurement_sequences.yaml
-  - include:
-      file: db/changelog/data/insert/20260729_v55_keyboard_shortcuts.yaml
   - include:
       file: db/changelog/schema/create/20260729_v56_dashboard_customization.yaml
   - include:
@@ -127,7 +107,5 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260729_v63_procurement_exchange_rate_snapshots.yaml
   - include:
       file: db/changelog/schema/update/20260729_v64_advance_policy_versions.yaml
-  - include:
-      file: db/changelog/data/insert/20260729_v65_user_dialog_translations.yaml
   - include:
       file: db/changelog/schema/create/20260729_v66_live_biometric_devices.yaml

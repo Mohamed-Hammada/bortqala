@@ -1,7 +1,0 @@
-id;translation_key;locale;text_value
-v216-001;BUSINESS_PARTY_NOT_FOUND;en-US;Business party was not found.
-v216-002;BUSINESS_PARTY_NOT_FOUND;ar-EG;لم يتم العثور على طرف الأعمال.
-v216-003;JOURNAL_REJECTION_REASON_REQUIRED;en-US;A rejection reason is required.
-v216-004;JOURNAL_REJECTION_REASON_REQUIRED;ar-EG;سبب الرفض مطلوب.
-v216-005;JOURNAL_STATE_INVALID;en-US;The journal action is not allowed in its current state.
-v216-006;JOURNAL_STATE_INVALID;ar-EG;إجراء القيد غير مسموح في حالته الحالية.

@@ -1,38 +1,5 @@
 databaseChangeLog:
   - changeSet:
-      id: 20260728-38-audit-payroll-erp-fixes
-      author: hr-platform
-      validCheckSum: ANY
-      changes:
-        - sql:
-            splitStatements: true
-            sql: |
-              -- Mandatory translations
-              INSERT INTO translations (id, translation_key, locale, text_value)
-              VALUES ('i18n-v38-ar-01', 'payroll.maxAdvanceDeduction', 'ar-EG', 'أقصى خصم سلفة متاح ({balance} ج.م)')
-              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
-
-              INSERT INTO translations (id, translation_key, locale, text_value)
-              VALUES ('i18n-v38-en-01', 'payroll.maxAdvanceDeduction', 'en-US', 'Max advance deduction available ({balance} EGP)')
-              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
-
-              INSERT INTO translations (id, translation_key, locale, text_value)
-              VALUES ('i18n-v38-ar-02', 'reports.emptyNoRecords', 'ar-EG', 'لا توجد سجلات حضور / لا ينطبق')
-              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
-
-              INSERT INTO translations (id, translation_key, locale, text_value)
-              VALUES ('i18n-v38-en-02', 'reports.emptyNoRecords', 'en-US', 'No attendance records / N/A')
-              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
-
-              INSERT INTO translations (id, translation_key, locale, text_value)
-              VALUES ('i18n-v38-ar-03', 'action.expandAll', 'ar-EG', 'فتح كل القوائم')
-              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
-
-              INSERT INTO translations (id, translation_key, locale, text_value)
-              VALUES ('i18n-v38-en-03', 'action.expandAll', 'en-US', 'Expand All')
-              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
-
-  - changeSet:
       id: 20260728-38-advance-long-term-fields
       author: Mohamed-Hammada
       changes:

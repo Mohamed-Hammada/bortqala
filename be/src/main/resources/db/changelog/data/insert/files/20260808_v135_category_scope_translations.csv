@@ -1,9 +1,0 @@
-id;translation_key;locale;text_value
-v135-001;categories.categoryScope;ar-EG;"نطاق الفئة"
-v135-002;categories.categoryScope;en-US;"Category scope"
-v135-003;scope.employee;ar-EG;"موظفون فقط"
-v135-004;scope.employee;en-US;"Employees only"
-v135-005;scope.worker;ar-EG;"عمال فقط"
-v135-006;scope.worker;en-US;"Workers only"
-v135-007;scope.both;ar-EG;"موظفون وعمال"
-v135-008;scope.both;en-US;"Employees and workers"

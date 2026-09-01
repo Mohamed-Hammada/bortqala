@@ -1,5 +1,0 @@
-id;translation_key;locale;text_value
-v125-001;nav.budgetsHint;ar-EG;الرقابة على الميزانيات ومراقبة الالتزامات
-v125-002;nav.budgetsHint;en-US;Budget planning and commitment control
-v125-003;procurement.departmentHint;ar-EG;اختياري؛ يُفعّل الرقابة على الميزانية عند إصدار الأمر
-v125-004;procurement.departmentHint;en-US;Optional - enables budget control when the order is issued

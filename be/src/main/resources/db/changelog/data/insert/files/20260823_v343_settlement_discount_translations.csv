@@ -1,9 +1,0 @@
-id;translation_key;locale;text_value
-v343-001-en;PROC_SETTLEMENT_DISCOUNT_INVALID;en-US;Settlement discount cannot be negative.
-v343-001-ar;PROC_SETTLEMENT_DISCOUNT_INVALID;ar-EG;لا يمكن أن يكون خصم التسوية سالباً.
-v343-002-en;PROC_SETTLEMENT_DISCOUNT_EXCEEDS;en-US;Payment plus settlement discount exceeds the outstanding balance of the invoice.
-v343-002-ar;PROC_SETTLEMENT_DISCOUNT_EXCEEDS;ar-EG;المبلغ المدفوع مضافاً إليه خصم التسوية يتجاوز الرصيد المتبقي من الفاتورة.
-v343-003-en;procurement.settlementDiscount;en-US;Settlement discount
-v343-003-ar;procurement.settlementDiscount;ar-EG;خصم التسوية
-v343-004-en;procurement.settlementDiscountHint;en-US;Optional. Cash paid plus this discount must equal or stay below the outstanding balance, and the discount is booked to the partner ledger and closes the invoice.
-v343-004-ar;procurement.settlementDiscountHint;ar-EG;اختياري. المبلغ النقدي مضافاً إليه هذا الخصم يجب أن يساوي أو يقل عن الرصيد المتبقي، ويُقيَّد الخصم في دفتر الحساب ويُغلق الفاتورة.

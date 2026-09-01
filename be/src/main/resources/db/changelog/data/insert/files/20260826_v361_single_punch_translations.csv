@@ -1,7 +1,0 @@
-id;translation_key;locale;text_value
-v361-001-en;categories.singlePunchCountsHint;en-US;When enabled a single fingerprint punch counts as attended for the day
-v361-001-ar;categories.singlePunchCountsHint;ar-EG;عند التنشيث تُعتبر بصمة واحدة كافية لإثبات الحضور ليوم واحد
-v361-002-en;review.ruleAutoAttended;en-US;Auto-attended by rule
-v361-002-ar;review.ruleAutoAttended;ar-EG;حضور تلقائي بالقاعدة
-v361-003-en;review.ruleBlocking;en-US;Blocking exception
-v361-003-ar;review.ruleBlocking;ar-EG;استثناء يدوي

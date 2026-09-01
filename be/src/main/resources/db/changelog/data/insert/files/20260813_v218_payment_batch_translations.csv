@@ -1,9 +1,0 @@
-id;translation_key;locale;text_value
-v218-001;BATCH_SOURCE_DUPLICATE;en-US;Source document already exists in this payment batch.
-v218-002;BATCH_SOURCE_DUPLICATE;ar-EG;المستند المصدر موجود بالفعل في دفعة المدفوعات.
-v218-003;BATCH_SOURCE_INELIGIBLE;en-US;The source is not eligible for payment.
-v218-004;BATCH_SOURCE_INELIGIBLE;ar-EG;المصدر غير مؤهل للدفع.
-v218-005;BATCH_ITEMS_REQUIRED;en-US;Payment batch requires at least one source.
-v218-006;BATCH_ITEMS_REQUIRED;ar-EG;دفعة المدفوعات تتطلب مصدراً واحداً على الأقل.
-v218-007;BATCH_STATE_INVALID;en-US;Payment batch action is not allowed in its current state.
-v218-008;BATCH_STATE_INVALID;ar-EG;إجراء دفعة المدفوعات غير مسموح في حالتها الحالية.

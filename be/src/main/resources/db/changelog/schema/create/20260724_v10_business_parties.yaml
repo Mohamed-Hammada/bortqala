@@ -32,18 +32,3 @@ databaseChangeLog:
       rollback:
         - dropTable: { tableName: business_parties }
 
-  - changeSet:
-      id: seed_business_party_translations
-      author: Mohamed-Hammada
-      validCheckSum: ANY
-      changes:
-        - loadData:
-            tableName: translations
-            file: db/changelog/data/insert/files/business_party_translations_v10.csv
-            relativeToChangelogFile: false
-            encoding: UTF-8
-            separator: ;
-      rollback:
-        - delete:
-            tableName: translations
-            where: id LIKE 'x10-%'

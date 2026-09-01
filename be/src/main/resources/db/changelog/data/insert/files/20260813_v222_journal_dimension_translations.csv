@@ -1,9 +1,0 @@
-id;translation_key;locale;text_value
-v222-001;JOURNAL_DIMENSION_REQUIRED;en-US;Income and expense journal lines require a cost center, project, or department.
-v222-002;JOURNAL_DIMENSION_REQUIRED;ar-EG;تتطلب أسطر الإيرادات والمصروفات مركز تكلفة أو مشروعاً أو قسماً.
-v222-003;journal.costCenter;en-US;Cost center
-v222-004;journal.costCenter;ar-EG;مركز التكلفة
-v222-005;journal.project;en-US;Project
-v222-006;journal.project;ar-EG;المشروع
-v222-007;journal.department;en-US;Department
-v222-008;journal.department;ar-EG;القسم

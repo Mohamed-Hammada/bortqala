@@ -1,7 +1,0 @@
-id;translation_key;locale;text_value
-v214-001;SUBLEDGER_FISCAL_PERIOD_MISMATCH;en-US;The selected fiscal period does not cover the event date.
-v214-002;SUBLEDGER_FISCAL_PERIOD_MISMATCH;ar-EG;الفترة المالية المحددة لا تغطي تاريخ الحدث.
-v214-003;SUBLEDGER_POSTING_NOT_FOUND;en-US;Original posting was not found.
-v214-004;SUBLEDGER_POSTING_NOT_FOUND;ar-EG;لم يتم العثور على الترحيل الأصلي.
-v214-005;SUBLEDGER_REVERSAL_STATE_INVALID;en-US;Only a posted subledger entry can be reversed.
-v214-006;SUBLEDGER_REVERSAL_STATE_INVALID;ar-EG;يمكن عكس قيد دفتر مساعد مرحل فقط.

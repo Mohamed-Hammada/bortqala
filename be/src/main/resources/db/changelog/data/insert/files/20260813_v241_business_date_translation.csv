@@ -1,5 +1,0 @@
-id;translation_key;locale;text_value
-v241-001;AR_AS_OF_DATE_REQUIRED;en-US;An explicit as-of business date is required.
-v241-002;AR_AS_OF_DATE_REQUIRED;ar-EG;يلزم تحديد تاريخ أعمال صريح للاحتساب.
-v241-003;sales.ar.asOfDate;en-US;As-of date
-v241-004;sales.ar.asOfDate;ar-EG;التاريخ المحتسب حتى

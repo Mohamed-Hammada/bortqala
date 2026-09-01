@@ -1,5 +1,0 @@
-id;translation_key;locale;text_value
-v239-001;SUBLEDGER_POSTING_PROFILE_REQUIRED;en-US;No effective posting profile is configured for this business event.
-v239-002;SUBLEDGER_POSTING_PROFILE_REQUIRED;ar-EG;لم يتم إعداد ملف ترحيل ساري لهذا الحدث التجاري.
-v239-003;SUBLEDGER_POSTING_PROFILE_INVALID;en-US;The posting profile account mapping is incomplete.
-v239-004;SUBLEDGER_POSTING_PROFILE_INVALID;ar-EG;ربط الحسابات في ملف الترحيل غير مكتمل.

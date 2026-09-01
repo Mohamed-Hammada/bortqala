@@ -1,5 +1,0 @@
-id;translation_key;locale;text_value
-v149-001-en;audit.loadErrorTitle;en-US;Unable to load audit logs
-v149-001-ar;audit.loadErrorTitle;ar-EG;تعذر تحميل سجلات التدقيق
-v149-002-en;audit.loadErrorHint;en-US;Check the connection and try again.
-v149-002-ar;audit.loadErrorHint;ar-EG;تحقق من الاتصال وحاول مرة أخرى.
