@@ -56,4 +56,14 @@ describe('app navigation information architecture', () => {
     expect(ids).not.toContain('users');
     expect(ids).not.toContain('notifications-send');
   });
+
+  it('guarantees each menu item belongs to exactly one workspace without duplication', () => {
+    const seenMenuIds = new Set<string>();
+    for (const item of NAV_ITEMS) {
+      expect(seenMenuIds.has(item.menuId)).toBe(false);
+      seenMenuIds.add(item.menuId);
+      expect(item.workspace).toBeDefined();
+      expect(WORKSPACE_ORDER).toContain(item.workspace);
+    }
+  });
 });
