@@ -212,9 +212,6 @@ export class OperationsPage {
   close(): void {
     this.drawer.set(null);
   }
-  @HostListener('document:keydown.escape') onEscape(): void {
-    this.close();
-  }
   async saveItem(): Promise<void> {
     if (this.itemForm.invalid) return this.itemForm.markAllAsTouched();
     const raw = this.itemForm.getRawValue();

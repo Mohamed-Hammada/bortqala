@@ -65,6 +65,29 @@ describe('resolveShortcutAction', () => {
     expect(resolveShortcutAction('d', 'd', gate({ code: 'KeyD', chordWaiting: true }))).toBe('CHORD_RESOLVE');
     expect(resolveShortcutAction('d', 'd', gate({ code: 'KeyD', typing: true }))).toBe('IGNORE');
     expect(resolveShortcutAction('d', 'd', gate({ code: 'KeyD', alt: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('d', 'd', gate({ code: 'KeyD', ctrl: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('d', 'd', gate({ code: 'KeyD', meta: true }))).toBe('IGNORE');
     expect(resolveShortcutAction('x', 'x', gate({ code: 'KeyX' }))).toBe('IGNORE');
+  });
+
+  it('suppresses chords and single key shortcuts when any shell panel is open', () => {
+    expect(resolveShortcutAction('g', 'g', gate({ code: 'KeyG', paletteOpen: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('g', 'g', gate({ code: 'KeyG', quickNavOpen: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('g', 'g', gate({ code: 'KeyG', shortcutHelpOpen: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('g', 'g', gate({ code: 'KeyG', logoutOptionsOpen: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('/', '/', gate({ paletteOpen: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('?', '?', gate({ shortcutHelpOpen: true }))).toBe('IGNORE');
+  });
+
+  it('suppresses single key shortcuts when typing in inputs', () => {
+    expect(resolveShortcutAction('/', '/', gate({ typing: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('?', '?', gate({ typing: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('g', 'g', gate({ code: 'KeyG', typing: true }))).toBe('IGNORE');
+  });
+
+  it('ignores Alt combinations for global navigation keys', () => {
+    expect(resolveShortcutAction('k', 'k', gate({ ctrl: true, alt: true, code: 'KeyK' }))).toBe('IGNORE');
+    expect(resolveShortcutAction('/', '/', gate({ ctrl: true, alt: true }))).toBe('IGNORE');
+    expect(resolveShortcutAction('?', '?', gate({ alt: true }))).toBe('IGNORE');
   });
 });

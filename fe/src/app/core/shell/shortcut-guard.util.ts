@@ -65,10 +65,7 @@ export function resolveShortcutAction(
     return 'IGNORE';
   }
 
-  // Everything below is suppressed while typing or with active modifiers
-  if (!gate.typing && !modifier && !gate.alt && key === '/') return 'OPEN_QUICK_NAV';
-  if (!gate.typing && !modifier && !gate.alt && key === '?') return 'OPEN_HELP';
-
+  // Everything below is suppressed while typing, with active modifiers, or while any shell overlay is open
   if (
     gate.typing ||
     modifier ||
@@ -80,6 +77,9 @@ export function resolveShortcutAction(
   ) {
     return 'IGNORE';
   }
+
+  if (key === '/') return 'OPEN_QUICK_NAV';
+  if (key === '?') return 'OPEN_HELP';
 
   if (gate.chordWaiting) return 'CHORD_RESOLVE';
   if (gate.code === 'KeyG') return 'CHORD_START';
