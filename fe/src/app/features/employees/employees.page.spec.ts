@@ -332,4 +332,27 @@ describe('EmployeesPage WP-20 form groups', () => {
     expect(component.previewFields('salary')).toContain('baseSalary');
     spy.mockRestore();
   });
+
+  it('renders real accordion buttons with aria-expanded attribute', () => {
+    const { component, fixture } = createPage();
+    component.drawerOpen.set(true);
+    fixture.detectChanges();
+
+    const headers = document.querySelectorAll('.accordion-header');
+    expect(headers.length).toBe(FORM_GROUPS.length);
+    for (const header of Array.from(headers)) {
+      expect(header.tagName.toLowerCase()).toBe('button');
+      expect(header.getAttribute('aria-expanded')).toBeDefined();
+    }
+  });
+
+  it('disables Add button with tooltip when categories are empty', () => {
+    const { component, fixture } = createPage();
+    component.store.categories.set([]);
+    fixture.detectChanges();
+
+    const addBtn = fixture.nativeElement.querySelector('.toolbar button.primary');
+    expect(addBtn).toBeTruthy();
+    expect(addBtn.disabled).toBe(true);
+  });
 });
