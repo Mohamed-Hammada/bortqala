@@ -181,12 +181,33 @@
       } @else if (store.chartData(); as points) {
         @if (points.length) {
           <div class="bar-chart">
-            <div class="bar-chart-legend">
+            <table class="sr-only">
+              <caption class="sr-only">{{ i18n.t('dashboard.attendanceChart') }}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{{ i18n.t('common.date') }}</th>
+                  <th scope="col">{{ i18n.t('dashboard.present') }}</th>
+                  <th scope="col">{{ i18n.t('dashboard.absent') }}</th>
+                  <th scope="col">{{ i18n.t('dashboard.late') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (point of points; track point.label) {
+                  <tr>
+                    <td>{{ point.label }}</td>
+                    <td>{{ point.present }}</td>
+                    <td>{{ point.absent }}</td>
+                    <td>{{ point.late }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <div class="bar-chart-legend" aria-hidden="true">
               <span class="legend-item present">{{ i18n.t('dashboard.present') }}</span>
               <span class="legend-item absent">{{ i18n.t('dashboard.absent') }}</span>
               <span class="legend-item late">{{ i18n.t('dashboard.late') }}</span>
             </div>
-            <div class="bar-chart-container">
+            <div class="bar-chart-container" aria-hidden="true">
               @for (point of points; track point.label) {
                 <div class="bar-column">
                   <div class="bar-stack">

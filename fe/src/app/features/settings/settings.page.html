@@ -218,10 +218,6 @@
 
   <!-- Tab 2: Session Settings (Admin only) -->
   @if (activeTab() === 'session' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
-    <app-business-vertical-setup></app-business-vertical-setup>
-
-    <app-advances-policy-settings></app-advances-policy-settings>
-
     <form
       class="card settings-card admin-settings"
       [formGroup]="appSettingsForm"
@@ -273,6 +269,10 @@
 
   <!-- Business/domain policy settings are intentionally separated from Session/Security. -->
   @if (activeTab() === 'business' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+    <app-business-vertical-setup></app-business-vertical-setup>
+
+    <app-advances-policy-settings></app-advances-policy-settings>
+
     <form class="card settings-card admin-settings" [formGroup]="appSettingsForm" (ngSubmit)="saveAppSettings()">
       <fieldset class="settings-group">
         <legend class="group-title">{{ i18n.t('settings.businessConfigurationTitle') }}</legend>

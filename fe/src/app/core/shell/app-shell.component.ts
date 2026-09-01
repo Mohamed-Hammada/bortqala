@@ -306,18 +306,13 @@ export class AppShellComponent {
     const typing = target instanceof HTMLElement
       && target.matches('input, textarea, select, [contenteditable="true"], [data-shortcut-capture="true"]');
 
-    if ((event.ctrlKey || event.metaKey) && event.key === 'k' && !typing) {
-      event.preventDefault();
-      this.paletteOpen.set(!this.paletteOpen());
-      return;
-    }
-
     const action = resolveShortcutAction(event.key, event.key.toLocaleLowerCase(), {
       typing,
       ctrl: event.ctrlKey,
       meta: event.metaKey,
       alt: event.altKey,
       code: event.code,
+      paletteOpen: this.paletteOpen(),
       quickNavOpen: this.quickNavOpen(),
       shortcutHelpOpen: this.shortcutHelpOpen(),
       logoutOptionsOpen: this.logoutOptionsOpen(),
@@ -326,6 +321,11 @@ export class AppShellComponent {
     });
 
     switch (action) {
+      case 'OPEN_PALETTE':
+        event.preventDefault();
+        this.closeShortcutPanels();
+        this.paletteOpen.update((open) => !open);
+        return;
       case 'OPEN_QUICK_NAV':
         event.preventDefault();
         this.openQuickNav();

@@ -18,6 +18,36 @@
     <p class="only-available-note">{{ i18n.t('shortcuts.onlyAvailableScreens') }}</p>
   </div>
 
+  @if (hasUnsavedChanges()) {
+    <div class="unsaved-changes-banner" role="status">
+      <div class="unsaved-copy">
+        <span class="unsaved-icon">⚠️</span>
+        <strong>{{ i18n.t('shortcuts.unsavedChangesTitle') }}</strong>
+        <span>{{ i18n.t('shortcuts.unsavedChangesHint') }}</span>
+      </div>
+      <div class="unsaved-actions">
+        <button
+          type="button"
+          class="button secondary"
+          data-testid="shortcut-discard"
+          (click)="discardChanges()"
+          [disabled]="loading() || saving()"
+        >
+          {{ i18n.t('shortcuts.discardChanges') }}
+        </button>
+        <button
+          type="button"
+          class="button primary"
+          data-testid="shortcut-save-unsaved"
+          (click)="save()"
+          [disabled]="loading() || saving()"
+        >
+          {{ i18n.t('shortcuts.save') }}
+        </button>
+      </div>
+    </div>
+  }
+
   <div class="shortcut-toolbar">
     <div class="shortcut-search">
       <input

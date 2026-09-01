@@ -18,8 +18,8 @@ databaseChangeLog:
                      'EGYPT_ETA',
                      'TEST',
                      0,
-                     (CAST(now() AS double precision) * 1000)::bigint,
-                     (CAST(now() AS double precision) * 1000)::bigint
+                     (EXTRACT(EPOCH FROM now()) * 1000)::bigint,
+                     (EXTRACT(EPOCH FROM now()) * 1000)::bigint
               FROM apps a
               WHERE NOT EXISTS (
                   SELECT 1

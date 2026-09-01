@@ -19,8 +19,8 @@ databaseChangeLog:
               - column: { name: sla_first_response_hours, type: int, constraints: { nullable: false }, defaultValueNumeric: 8 }
               - column: { name: sla_resolution_hours, type: int, constraints: { nullable: false }, defaultValueNumeric: 48 }
               - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
-              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
         - createIndex:
             tableName: helpdesk_categories
@@ -47,8 +47,8 @@ databaseChangeLog:
               - column: { name: due_resolution, type: timestamp }
               - column: { name: sla_breach_first_response, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
               - column: { name: sla_breach_resolution, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
-              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
         - createIndex:
             tableName: tickets
@@ -81,7 +81,7 @@ databaseChangeLog:
               - column: { name: attachment_name, type: varchar(255) }
               - column: { name: attachment_type, type: varchar(100) }
               - column: { name: attachment_size, type: bigint }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
         - createIndex:
             tableName: ticket_messages
             indexName: idx_ticket_msg_ticket
@@ -103,8 +103,8 @@ databaseChangeLog:
               - column: { name: helpful_up, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
               - column: { name: helpful_down, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
               - column: { name: author_user_id, type: varchar(100) }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
-              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
         - createIndex:
             tableName: kb_articles

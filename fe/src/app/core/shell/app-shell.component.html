@@ -59,20 +59,23 @@
         <div class="workspace-section favorites-section">
           <p class="workspace-header section-title-static">⭐ {{ i18n.t('nav.favorites', undefined, 'المفضلة') }}</p>
           @for (item of favoriteItems(); track item.path) {
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="active"
-              [appTooltip]="navTooltip(item)"
-              (click)="onNavItemClick(item)"
-              class="nav-item favorite-item"
-            >
-              <div class="icon-container">
-                <app-icon class="nav-icon" [name]="item.icon" />
-              </div>
-              <span class="nav-text"
-                ><strong>{{ i18n.t(item.labelKey) }}</strong
-                ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+            <div class="nav-item-wrapper favorite-item">
+              <a
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                [appTooltip]="navTooltip(item)"
+                (click)="onNavItemClick(item)"
+                class="nav-item"
               >
+                <div class="icon-container">
+                  <app-icon class="nav-icon" [name]="item.icon" />
+                </div>
+                <span class="nav-text"
+                  ><strong>{{ i18n.t(item.labelKey) }}</strong
+                  ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+                >
+                <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
+              </a>
               <button
                 type="button"
                 class="fav-star-btn active"
@@ -82,8 +85,7 @@
               >
                 ★
               </button>
-              <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
-            </a>
+            </div>
           }
         </div>
       }
@@ -93,20 +95,23 @@
         <div class="workspace-section recents-section">
           <p class="workspace-header section-title-static">🕒 {{ i18n.t('nav.recentlyUsed') }}</p>
           @for (item of recentItems(); track item.path) {
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="active"
-              [appTooltip]="navTooltip(item)"
-              (click)="onNavItemClick(item)"
-              class="nav-item recent-item"
-            >
-              <div class="icon-container">
-                <app-icon class="nav-icon" [name]="item.icon" />
-              </div>
-              <span class="nav-text"
-                ><strong>{{ i18n.t(item.labelKey) }}</strong
-                ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+            <div class="nav-item-wrapper recent-item">
+              <a
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                [appTooltip]="navTooltip(item)"
+                (click)="onNavItemClick(item)"
+                class="nav-item"
               >
+                <div class="icon-container">
+                  <app-icon class="nav-icon" [name]="item.icon" />
+                </div>
+                <span class="nav-text"
+                  ><strong>{{ i18n.t(item.labelKey) }}</strong
+                  ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+                >
+                <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
+              </a>
               <button
                 type="button"
                 class="fav-star-btn"
@@ -117,8 +122,7 @@
               >
                 ★
               </button>
-              <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
-            </a>
+            </div>
           }
         </div>
       }
@@ -162,20 +166,23 @@
           @if (!isGroupCollapsed(section.titleKey)) {
             <div class="section-group-items">
               @for (item of section.items; track item.path) {
-                <a
-                  [routerLink]="item.path"
-                  routerLinkActive="active"
-                  [appTooltip]="navTooltip(item)"
-                  (click)="onNavItemClick(item)"
-                  class="nav-item"
-                >
-                  <div class="icon-container">
-                    <app-icon class="nav-icon" [name]="item.icon" />
-                  </div>
-                  <span class="nav-text"
-                    ><strong>{{ i18n.t(item.labelKey) }}</strong
-                    ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+                <div class="nav-item-wrapper">
+                  <a
+                    [routerLink]="item.path"
+                    routerLinkActive="active"
+                    [appTooltip]="navTooltip(item)"
+                    (click)="onNavItemClick(item)"
+                    class="nav-item"
                   >
+                    <div class="icon-container">
+                      <app-icon class="nav-icon" [name]="item.icon" />
+                    </div>
+                    <span class="nav-text"
+                      ><strong>{{ i18n.t(item.labelKey) }}</strong
+                      ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+                    >
+                    <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
+                  </a>
                   <button
                     type="button"
                     class="fav-star-btn"
@@ -186,8 +193,7 @@
                   >
                     ★
                   </button>
-                  <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
-                </a>
+                </div>
               }
             </div>
           }

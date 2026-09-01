@@ -583,4 +583,24 @@ describe('ShortcutSettingsComponent', () => {
 
     expect(component.editingClientId()).toBeNull();
   });
+
+  it('detects unsaved changes when drafts are modified and reverts via discardChanges', () => {
+    expect(component.hasUnsavedChanges()).toBe(false);
+
+    component.addShortcut();
+    expect(component.hasUnsavedChanges()).toBe(true);
+
+    fixture.detectChanges();
+    const discardBtn = fixture.nativeElement.querySelector(
+      '[data-testid="shortcut-discard"]',
+    ) as HTMLButtonElement;
+    expect(discardBtn).toBeTruthy();
+
+    discardBtn.click();
+    fixture.detectChanges();
+
+    expect(component.hasUnsavedChanges()).toBe(false);
+    expect(component.drafts()).toHaveLength(1);
+    expect(component.drafts()[0].pageCode).toBe('DASHBOARD');
+  });
 });

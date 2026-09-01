@@ -17801,3 +17801,11 @@ t-008900-ar;workspace.supplyChainInventory;ar-EG;سلسلة الإمداد وا�
 t-008900-en;workspace.supplyChainInventory;en-US;Supply Chain & Inventory
 t-008901-ar;workspace.workforce;ar-EG;العمالة والمقاولون
 t-008901-en;workspace.workforce;en-US;Workforce & Contractors
+t-008902-ar;shortcuts.discardChanges;ar-EG;تراجع عن التعديلات
+t-008902-en;shortcuts.discardChanges;en-US;Discard changes
+t-008903-ar;shortcuts.discardChangesSuccess;ar-EG;تم التراجع عن التعديلات غير المحفوظة.
+t-008903-en;shortcuts.discardChangesSuccess;en-US;Unsaved changes discarded.
+t-008904-ar;shortcuts.unsavedChangesTitle;ar-EG;لديك تعديلات غير محفوظة
+t-008904-en;shortcuts.unsavedChangesTitle;en-US;You have unsaved changes
+t-008905-ar;shortcuts.unsavedChangesHint;ar-EG;قم بحفظ التعديلات لتطبيقها أو التراجع عنها.
+t-008905-en;shortcuts.unsavedChangesHint;en-US;Save your changes to apply them or discard to cancel.

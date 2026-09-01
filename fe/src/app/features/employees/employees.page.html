@@ -174,10 +174,11 @@
       </button>
 
       @for (group of groups; track group.key) {
-        <details class="accordion-group" [class.expanded]="isGroupExpanded(group.key)" [class.collapsed]="!isGroupExpanded(group.key)">
-          <summary
+        <div class="accordion-group" [class.expanded]="isGroupExpanded(group.key)" [class.collapsed]="!isGroupExpanded(group.key)">
+          <button
+            type="button"
             class="accordion-header"
-            (click)="$event.preventDefault(); toggleGroup(group.key)"
+            (click)="toggleGroup(group.key)"
             [attr.aria-expanded]="isGroupExpanded(group.key)"
           >
             <span class="accordion-chevron">{{ isGroupExpanded(group.key) ? '▾' : '▸' }}</span>
@@ -188,7 +189,7 @@
             } @else if (submitAttempted() && requiredFieldCount(group.key) > 0 && !isGroupExpanded(group.key)) {
               <span class="accordion-badge required-badge">{{ requiredFieldCount(group.key) }} *</span>
             }
-          </summary>
+          </button>
 
           @if (isGroupExpanded(group.key)) {
             <div class="accordion-body">
@@ -300,7 +301,7 @@
               }
             </div>
           }
-        </details>
+        </div>
       }
     </form>
 

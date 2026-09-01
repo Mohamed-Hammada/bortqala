@@ -26,8 +26,8 @@ databaseChangeLog:
               - column: { name: sent_count, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
               - column: { name: failed_count, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
               - column: { name: error_message, type: varchar(2000) }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
-              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
         - createIndex:
             tableName: campaigns
@@ -47,7 +47,7 @@ databaseChangeLog:
               - column: { name: status, type: varchar(20), constraints: { nullable: false }, defaultValue: "QUEUED" }
               - column: { name: error_message, type: varchar(1000) }
               - column: { name: sent_at, type: bigint }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
         - createIndex:
             tableName: campaign_recipients
             indexName: idx_campaign_rec_campaign
@@ -61,8 +61,8 @@ databaseChangeLog:
               - column: { name: title, type: varchar(300), constraints: { nullable: false } }
               - column: { name: description, type: varchar(1000) }
               - column: { name: active, type: boolean, constraints: { nullable: false }, defaultValueBoolean: true }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
-              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
         - createIndex:
             tableName: surveys
@@ -80,7 +80,7 @@ databaseChangeLog:
               - column: { name: options, type: varchar(2000) }
               - column: { name: sort_order, type: int, constraints: { nullable: false }, defaultValueNumeric: 0 }
               - column: { name: required, type: boolean, constraints: { nullable: false }, defaultValueBoolean: false }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
         - createIndex:
             tableName: survey_questions
             indexName: idx_survey_q_survey
@@ -95,7 +95,7 @@ databaseChangeLog:
               - column: { name: question_id, type: varchar(36), constraints: { nullable: false } }
               - column: { name: respondent_token, type: varchar(100), constraints: { nullable: false } }
               - column: { name: answer, type: varchar(4000) }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
         - createIndex:
             tableName: survey_responses
             indexName: idx_survey_resp_survey
@@ -116,8 +116,8 @@ databaseChangeLog:
               - column: { name: definition, type: varchar(8000), constraints: { nullable: false } }
               - column: { name: owner_user_id, type: varchar(100) }
               - column: { name: shared_role, type: varchar(50) }
-              - column: { name: created_at, type: timestamp, constraints: { nullable: false } }
-              - column: { name: updated_at, type: timestamp, constraints: { nullable: false } }
+              - column: { name: created_at, type: bigint, constraints: { nullable: false } }
+              - column: { name: updated_at, type: bigint, constraints: { nullable: false } }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
         - createIndex:
             tableName: saved_reports

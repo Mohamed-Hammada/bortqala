@@ -23,5 +23,10 @@ databaseChangeLog:
             relativeToChangelogFile: false
             encoding: UTF-8
             separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
       rollback:
         - dropTable: { tableName: translations }

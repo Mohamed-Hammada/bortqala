@@ -18,26 +18,30 @@ function gate(overrides: Partial<ShortcutGate> = {}): ShortcutGate {
 }
 
 describe('resolveShortcutAction', () => {
-  it('opens quick-nav via Ctrl+K, Ctrl+/ and plain /', () => {
-    expect(resolveShortcutAction('k', 'k', gate({ ctrl: true, code: 'KeyK' }))).toBe('OPEN_QUICK_NAV');
+  it('opens command palette via Ctrl+K / Cmd+K and quick-nav via Ctrl+/ or plain /', () => {
+    expect(resolveShortcutAction('k', 'k', gate({ ctrl: true, code: 'KeyK' }))).toBe('OPEN_PALETTE');
+    expect(resolveShortcutAction('k', 'k', gate({ meta: true, code: 'KeyK' }))).toBe('OPEN_PALETTE');
+    expect(resolveShortcutAction('k', 'k', gate({ ctrl: true, typing: true }))).toBe('IGNORE');
     expect(resolveShortcutAction('/', '/', gate({ ctrl: true }))).toBe('OPEN_QUICK_NAV');
     expect(resolveShortcutAction('/', '/', gate())).toBe('OPEN_QUICK_NAV');
   });
 
-  it('suppresses every shortcut while a page modal is open (BUG-1/BUG-2)', () => {
+  it('suppresses every shortcut while a page modal is open (BUG-1/BUG-2/SHORTCUT-001)', () => {
     const blocked = gate({ modalOpen: true });
     expect(resolveShortcutAction('k', 'k', { ...blocked, ctrl: true })).toBe('IGNORE');
+    expect(resolveShortcutAction('k', 'k', { ...blocked, meta: true })).toBe('IGNORE');
     expect(resolveShortcutAction('/', '/', blocked)).toBe('IGNORE');
     expect(resolveShortcutAction('?', '?', blocked)).toBe('IGNORE');
     expect(resolveShortcutAction('g', 'g', { ...blocked, code: 'KeyG' })).toBe('IGNORE');
   });
 
   it('lets the page modal own Escape exclusively (BUG-5)', () => {
-    const withModal = gate({ modalOpen: true, quickNavOpen: true, chordWaiting: true });
+    const withModal = gate({ modalOpen: true, paletteOpen: true, quickNavOpen: true, chordWaiting: true });
     expect(resolveShortcutAction('Escape', 'escape', withModal)).toBe('IGNORE');
   });
 
   it('Escape closes shell panels / clears chord only when no modal is open', () => {
+    expect(resolveShortcutAction('Escape', 'escape', gate({ paletteOpen: true }))).toBe('ESCAPE_SHELL_PANEL');
     expect(resolveShortcutAction('Escape', 'escape', gate({ quickNavOpen: true }))).toBe('ESCAPE_SHELL_PANEL');
     expect(resolveShortcutAction('Escape', 'escape', gate({ shortcutHelpOpen: true }))).toBe('ESCAPE_SHELL_PANEL');
     expect(resolveShortcutAction('Escape', 'escape', gate({ logoutOptionsOpen: true }))).toBe('ESCAPE_SHELL_PANEL');

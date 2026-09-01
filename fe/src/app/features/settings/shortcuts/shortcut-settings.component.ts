@@ -59,6 +59,24 @@ export class ShortcutSettingsComponent implements OnInit, AfterViewChecked {
     () => this.profile()?.availableDestinations ?? [],
   );
 
+  readonly hasUnsavedChanges = computed<boolean>(() => {
+    const profile = this.profile();
+    if (!profile) return false;
+    const original = profile.shortcuts;
+    const current = this.drafts();
+    if (original.length !== current.length) return true;
+    for (let i = 0; i < original.length; i++) {
+      if (
+        original[i].pageCode !== current[i].pageCode ||
+        original[i].secondKeyCode !== current[i].secondKeyCode ||
+        original[i].enabled !== current[i].enabled
+      ) {
+        return true;
+      }
+    }
+    return false;
+  });
+
   // Source of truth for duplicate prevention is the CURRENT UI list.
   // This includes saved rows, edited rows, and newly-added unsaved rows.
   readonly usedTargetCodes = computed<Set<string>>(
@@ -170,6 +188,13 @@ export class ShortcutSettingsComponent implements OnInit, AfterViewChecked {
         secondKeyCode: item.secondKeyCode,
         enabled: item.enabled,
       })),
+    );
+  }
+
+  discardChanges(): void {
+    this.loadDraftsFromProfile();
+    this.liveAnnouncement.set(
+      this.i18n.t('shortcuts.discardChangesSuccess'),
     );
   }
 
