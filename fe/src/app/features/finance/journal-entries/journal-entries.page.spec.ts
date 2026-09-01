@@ -231,5 +231,52 @@ describe('JournalEntriesPage', () => {
       page.closeDrawer();
       expect(page.expandedDimensions().size).toBe(0);
     });
+
+    it('preserves analytical dimension values when sub-rows are collapsed and expanded', () => {
+      page.updateLine(0, 'costCenterId', 'CC-101');
+      page.updateLine(0, 'projectId', 'PRJ-202');
+      page.updateLine(0, 'wbsNodeId', 'WBS-303');
+      page.updateLine(0, 'costCodeId', 'COST-404');
+      page.updateLine(0, 'departmentId', 'DEPT-505');
+
+      // Expand then collapse
+      page.toggleDimensions(0);
+      expect(page.isDimensionsExpanded(0)).toBe(true);
+      page.toggleDimensions(0);
+      expect(page.isDimensionsExpanded(0)).toBe(false);
+
+      const line = page.lines()[0];
+      expect(line.costCenterId).toBe('CC-101');
+      expect(line.projectId).toBe('PRJ-202');
+      expect(line.wbsNodeId).toBe('WBS-303');
+      expect(line.costCodeId).toBe('COST-404');
+      expect(line.departmentId).toBe('DEPT-505');
+    });
+
+    it('computes total debit and total credit correctly and reports balance status', () => {
+      page.lines.set([
+        { accountId: 'acc-1', debit: 500.5, credit: 0, memo: '' },
+        { accountId: 'acc-2', debit: 250, credit: 0, memo: '' },
+        { accountId: 'acc-3', debit: 0, credit: 750.5, memo: '' },
+      ]);
+
+      expect(page.calculateSumDebit()).toBe(750.5);
+      expect(page.calculateSumCredit()).toBe(750.5);
+      expect(page.calculateSumDebit() === page.calculateSumCredit()).toBe(true);
+    });
+
+    it('handles 100+ lines efficiently with correct totals', () => {
+      const largeLines = Array.from({ length: 100 }, (_, i) => ({
+        accountId: `acc-${i}`,
+        debit: i % 2 === 0 ? 10 : 0,
+        credit: i % 2 === 1 ? 10 : 0,
+        memo: `Line ${i}`,
+      }));
+      page.lines.set(largeLines);
+
+      expect(page.calculateSumDebit()).toBe(500);
+      expect(page.calculateSumCredit()).toBe(500);
+      expect(page.lineErrors().size).toBe(0);
+    });
   });
 });
