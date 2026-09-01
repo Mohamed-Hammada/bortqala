@@ -8,3 +8,10 @@
 .lines-table select.invalid,
 .lines-table input.invalid { border-color: var(--danger); }
 .btn-sm { font-size: 13px; padding: 4px 8px; }
+.line-actions { display: flex; align-items: center; gap: 6px; }
+.dimension-toggle-btn { font-size: 11px; padding: 3px 6px; white-space: nowrap; }
+.dimension-subrow td { background: var(--surface-muted, rgba(255, 255, 255, 0.02)); padding: 10px 12px; border-bottom: 1px dashed var(--border-color); }
+.dimension-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.dimension-field { display: flex; flex-direction: column; gap: 4px; }
+.dimension-field label { font-size: 11px; font-weight: 700; color: var(--muted); }
+.dimension-field input { font-size: 12px; padding: 4px 6px; }

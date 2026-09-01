@@ -32,7 +32,6 @@
           max="2100"
           [value]="year()"
           (change)="changePeriod(yearSelect.value, monthSelect.value)"
-          (input)="changePeriod(yearSelect.value, monthSelect.value)"
           (keyup.enter)="changePeriod(yearSelect.value, monthSelect.value)"
           [attr.aria-label]="i18n.t('dashboard.year')"
         />

@@ -628,8 +628,15 @@ kbd {
   justify-content: space-between;
 
   &.section-title-static {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: var(--gold, #b8860b);
     font-weight: 800;
+
+    .section-title-icon {
+      font-size: 14px;
+    }
   }
 
   &.group-toggle-btn {

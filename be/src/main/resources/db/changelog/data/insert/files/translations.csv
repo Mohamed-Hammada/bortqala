@@ -17809,3 +17809,9 @@ t-008904-ar;shortcuts.unsavedChangesTitle;ar-EG;لديك تعديلات غير �
 t-008904-en;shortcuts.unsavedChangesTitle;en-US;You have unsaved changes
 t-008905-ar;shortcuts.unsavedChangesHint;ar-EG;قم بحفظ التعديلات لتطبيقها أو التراجع عنها.
 t-008905-en;shortcuts.unsavedChangesHint;en-US;Save your changes to apply them or discard to cancel.
+t-008906-ar;journal.dimensions;ar-EG;الأبعاد التحليلية
+t-008906-en;journal.dimensions;en-US;Dimensions
+t-008907-ar;journal.dimensionsTooltip;ar-EG;عرض أو إخفاء مراكز التكلفة والمشروع والأبعاد التحليلية
+t-008907-en;journal.dimensionsTooltip;en-US;Toggle cost center, project, and dimension fields
+t-008908-ar;employees.noCategoriesHint;ar-EG;يجب إنشاء تصنيف وظيفي واحد على الأقل قبل إضافة موظف.
+t-008908-en;employees.noCategoriesHint;en-US;Create at least one employee category before adding an employee.

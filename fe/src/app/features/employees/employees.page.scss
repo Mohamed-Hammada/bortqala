@@ -287,3 +287,32 @@ code {
   font-weight: 400;
   font-style: italic;
 }
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .toolbar {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+      flex: 1 1 auto;
+    }
+  }
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .search {
+    width: 100%;
+  }
+  .table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

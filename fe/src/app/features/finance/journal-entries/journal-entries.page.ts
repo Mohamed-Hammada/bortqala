@@ -202,6 +202,8 @@ export class JournalEntriesPage {
     void this.loadAccounts();
   }
 
+  readonly expandedDimensions = signal<Set<number>>(new Set());
+
   openNew() {
     this.entryForm.reset({
       entryNumber: '',
@@ -216,6 +218,7 @@ export class JournalEntriesPage {
       { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '', wbsNodeId: '', costCodeId: '' },
       { accountId: this.accounts()[1]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '', wbsNodeId: '', costCodeId: '' },
     ]);
+    this.expandedDimensions.set(new Set());
     this.dialogError.set(null);
     this.submitAttempted.set(false);
     this.drawerOpen.set(true);
@@ -225,6 +228,20 @@ export class JournalEntriesPage {
     this.drawerOpen.set(false);
     this.dialogError.set(null);
     this.submitAttempted.set(false);
+    this.expandedDimensions.set(new Set());
+  }
+
+  toggleDimensions(index: number) {
+    this.expandedDimensions.update((set) => {
+      const next = new Set(set);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
+
+  isDimensionsExpanded(index: number): boolean {
+    return this.expandedDimensions().has(index);
   }
 
   addLine() {
@@ -234,6 +251,14 @@ export class JournalEntriesPage {
   removeLine(index: number) {
     if (this.lines().length <= 2) return;
     this.lines.update((arr) => arr.filter((_, i) => i !== index));
+    this.expandedDimensions.update((set) => {
+      const next = new Set<number>();
+      for (const i of set) {
+        if (i < index) next.add(i);
+        else if (i > index) next.add(i - 1);
+      }
+      return next;
+    });
   }
 
   updateLine(index: number, field: string, value: any) {

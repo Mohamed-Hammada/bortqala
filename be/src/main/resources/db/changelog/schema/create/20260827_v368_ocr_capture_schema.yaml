@@ -22,6 +22,7 @@ databaseChangeLog:
               - column: { name: extracted_payload, type: text }
               - column: { name: confidence_summary, type: varchar(200) }
               - column: { name: error_code, type: varchar(100) }
+              - column: { name: draft_grn_id, type: varchar(36) }
               - column: { name: version, type: bigint, constraints: { nullable: false }, defaultValueNumeric: 0 }
               - column: { name: created_at, type: bigint, constraints: { nullable: false } }
         - createIndex:

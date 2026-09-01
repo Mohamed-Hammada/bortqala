@@ -93,11 +93,17 @@ export class ShortcutSettingsComponent implements OnInit, AfterViewChecked {
     ),
   );
 
-  readonly remainingShortcutKeys = computed<string[]>(() =>
-    Array.from({ length: 26 }, (_, index) =>
+  readonly remainingShortcutKeys = computed<string[]>(() => {
+    const letters = Array.from({ length: 26 }, (_, index) =>
       `Key${String.fromCharCode(65 + index)}`,
-    ).filter((keyCode) => !this.usedShortcutKeys().has(keyCode)),
-  );
+    );
+    const digits = Array.from({ length: 10 }, (_, index) =>
+      `Digit${index}`,
+    );
+    return [...letters, ...digits].filter(
+      (keyCode) => !this.usedShortcutKeys().has(keyCode),
+    );
+  });
 
   readonly canAddShortcut = computed(
     () =>

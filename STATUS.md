@@ -1,5 +1,5 @@
 # Bemo ERP Feature & Architectural Status Matrix
-*Last Updated: 2026-08-29*
+*Last Updated: 2026-09-01*
 
 This document tracks the end-to-end implementation and verification status of all developer stories, architecture requirements, and business modules across:
 1. **`yalla.md`** (Advanced ERP Lifecycle & Dynamic Security Roadmap)
@@ -36,7 +36,7 @@ This document tracks the end-to-end implementation and verification status of al
 | **WP-44** | Fleet & Equipment Maintenance Hub | Logistics & Fleet | ✅ Implemented (`com.bemo.hr.fleet.*`, `v446`/`v447`) | ✅ Implemented (`/fleet`, `FleetPageComponent`) | ✅ 100% Passed | **COMPLETED** |
 | **WP-49** | Employee Self-Service (ESS) Mobile Surfaces | HR & Self-Service | ✅ Implemented (`com.bemo.hr.ess.*`, `v448`/`v449`) | ✅ Implemented (`/self-service`, `EssPageComponent`) | ✅ 100% Passed | **COMPLETED** |
 | **WP-52** | AI Intelligence & Decision Support Pack | Core & Intelligence | ✅ Implemented (`com.bemo.hr.analytics.ai.*`, `v450`) | ✅ Implemented (`/ai-intelligence`, `AiIntelligencePageComponent`) | ✅ 100% Passed | **COMPLETED** |
-
+| **UX-ALL** | Consolidated UI/UX Audit & Shortcut Architecture | Platform & Shell | ✅ Implemented (Liquibase `v368`, translations CSV) | ✅ Implemented (Pure gate shortcuts, Icon SVG system, Sidebar IA, Accessible Accordions, Journal Sub-rows) | ✅ 100% Passed (643 FE / Full BE) | **COMPLETED** |
 
 ---
 
@@ -60,19 +60,20 @@ This document tracks the end-to-end implementation and verification status of al
 
 ## Verification & CI Gate Summary
 
-- **Frontend Unit Tests:** **641 / 641 passed** across 138 test files (100% green, Node 24).
-- **i18n Catalog Validation:** **5,844 literal keys verified** (`ar-EG` & `en-US`); bilingual pairs unique.
+- **Frontend Unit Tests:** **643 / 643 passed** across 138 test files (100% green, Node 24).
+- **i18n Catalog Validation:** **5,851 literal keys verified** (`ar-EG` & `en-US`); bilingual pairs unique.
 - **Hardcoded Strings Scanner:** **0 violations** across 147 HTML templates and 326 TypeScript source files (`check-hardcoded-strings.mjs`).
 - **Error-Code→Translation Gate:** **813 / 813** exception codes covered (0 missing) (`check-error-codes.py`).
 - **Authorization Contract Gate:** **21 declared roles / 21 referenced roles / unknown: 0** (`check-authorization-contract.py`).
 - **Production Build (`ng build`):** Production bundle compiled cleanly.
-- **Test-count floors:** BE ≥1404/≥265 (`be/tools/check-test-count.py`), FE ≥641/≥138 (`fe/tools/check-test-count.mjs`).
+- **Test-count floors:** BE ≥1404/≥265 (`be/tools/check-test-count.py`), FE ≥643/≥138 (`fe/tools/check-test-count.mjs`).
 
-### Session 32 (2026-08-30) — Full Production Finalization & Complete Work Packages Release
-- **Fleet & Equipment Maintenance Hub (WP-44)**: Comprehensive vehicle registry linked to fixed assets, fuel logs with consecutive odometer consumption efficiency tracking (km/L), dual maintenance schedule due engine (by kilometers and elapsed calendar days) with auto-reset baseline, vehicle document renewals (license, insurance, inspection, permits) with lead-window expiry warnings, and fleet-wide cost report KPI aggregation. Liquibase `v446` schema + `v447` bilingual translations. Backend package `com.bemo.hr.fleet` with `Vehicle`, `FuelLog`, `MaintenanceSchedule`, `MaintenanceRecord`, `VehicleDocument`, `FleetService`, and `FleetController`. Frontend `FleetPageComponent` at `/fleet`. Unit test suite `FleetServiceTests.java` + `fleet.page.spec.ts` 100% green.
-- **Employee Self-Service (ESS) Mobile Surfaces (WP-49)**: Empowered employees to directly track their employment profile, remaining annual leave balances, frozen payslip snapshots with detailed allowance/deduction/advances calculation formulas, submit leave requests with live balance and date-overlap validations, and submit loan/salary advance requests with customizable installment schedules. Liquibase `v448` (`app_users.employee_id` link) and `v449` translations. Backend package `com.bemo.hr.ess` with `EssService` (strict user-ownership boundary) and `EssController` (`/api/v1/ess/*`). Frontend `EssPageComponent` at `/self-service`. Unit test suite `EssServiceTests.java` + `ess.page.spec.ts` 100% green.
-- **AI Intelligence & Decision Support Pack (WP-52)**: Complete predictive and anomaly detection decision support layer. Includes deterministic 12-month trailing moving average cash-flow forecast with expanding confidence bands, leave-one-out rolling historical baseline expense anomaly detector flagging transactions $> 2.5\sigma$, inventory demand forecast with lead-time buffer and suggested reorder quantities, customer collections risk scoring (Bands A/B/C) with transparent explainability factors, and natural language analytics query parser with strict descriptor whitelist validation. Zero mutating database writes. Liquibase `v450` translations. Backend package `com.bemo.hr.analytics.ai` with `AiIntelligenceService` and `AiIntelligenceController` (`/api/v1/analytics/*`). Frontend `AiIntelligencePageComponent` at `/ai-intelligence`. Unit test suite `AiIntelligenceServiceTests.java` + `ai-intelligence.page.spec.ts` 100% green.
-- **Evidence**: All backend suites `BUILD SUCCESSFUL`; FE **641/138/0**; error-codes **813/813 PASS**; `check:i18n` **5,844 keys PASS**; `check:hardcoded` **0/147 templates & 326 TS files PASS**; `ng build` green; floors raised (FE 641/138).
+### Session 13 (2026-09-01) — Consolidated UI/UX Audit, Global Shortcut Gate & Platform Polish
+- **Global Shell & Shortcuts (`SHORTCUT-001`)**: Pure gate unification in `shortcut-guard.util.ts` (`Ctrl/Cmd+K`, `/`, `?`, `G → X`, `Esc`), removing rogue direct paths and strictly enforcing modal suppression via `DialogStateService.modalOpen()`. Added dirty tracking (`hasUnsavedChanges`) and discard workflow in `ShortcutSettingsComponent`. Aligned shortcut key code generation (`KeyA..KeyZ` + `Digit0..Digit9`).
+- **Navigation & Icon System (`UX-003`, `UX-008`, `UX-009`)**: Un-nested `<button class="fav-star-btn">` from inside `<a class="nav-item">` in sidebar navigation. Added 11 standard SVG icons (`star`, `clock`, `bell`, `chat`, `wallet`, `cart`, `boxes`, `banknote`, `building`, `factory`, `search`) to `IconComponent` and replaced raw emoji in shell chrome. Configured default collapsed state for secondary/vertical modules on initial load while keeping core operational modules expanded.
+- **Forms, Grids & Data Entry (`UX-004`, `UX-014`, `UX-015`, `UX-020`)**: Replaced `<details>/<summary>` with button-triggered `<div class="accordion-group">` and `<button type="button" class="accordion-header">` in `EmployeesPage`. Refactored `JournalEntriesPage` lines editor to a clean primary row with an expandable analytical dimensions sub-row (`Cost Center`, `Project`, `WBS`, `Cost Code`, `Department`). Added `[appTooltip]` explaining `employees.noCategoriesHint` on disabled Add Employee button. Mobile responsive styles (`@media (max-width: 768px)`) across employee header, toolbar, filter search, and table card.
+- **Settings IA & Analytics (`UX-005`, `UX-007`, `UX-012`)**: Relocated `<app-business-vertical-setup>` and `<app-advances-policy-settings>` to `activeTab() === 'business'`. Removed redundant `(input)` trigger on dashboard year input. Embedded `.sr-only` accessibility fallback tables for dashboard attendance charts.
+- **Evidence**: All backend test suites `BUILD SUCCESSFUL`; FE **643/138/0**; `check:i18n` **5,851 keys PASS**; `check:hardcoded` **0/147 templates & 326 TS files PASS**; `ng build` green; floors raised (FE 643/138).
 
 
 ### Session 31 (2026-08-30) — Commercial Production Readiness Delivery (P0-04, P1-01, P1-02, P1-05, P0-01)

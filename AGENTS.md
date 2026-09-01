@@ -1,3 +1,24 @@
+# AGENT SESSION SUMMARY — September 1, 2026
+## Session 13: Consolidated UI/UX Audit, Global Shortcut Gate & Platform Polish
+- **Global Shell & Keyboard Shortcuts**:
+  - `SHORTCUT-001`: Pure gate unification for global keyboard shortcuts (`Ctrl/Cmd+K`, `/`, `?`, `G → X`, `Esc`) in `shortcut-guard.util.ts`, removing rogue direct paths and strictly enforcing modal suppression via `DialogStateService.modalOpen()`.
+  - `UX-006` / `UX-011`: Dirty tracking (`hasUnsavedChanges`), discard workflow (`discardChanges()`), and Unsaved Changes banner in `ShortcutSettingsComponent`.
+  - `UX-005`: Aligned `remainingShortcutKeys` to supply digits (`Digit0`..`Digit9`) and letters (`KeyA`..`KeyZ`).
+- **Navigation, Sidebar & Icon System**:
+  - `UX-003`: Un-nested `<button class="fav-star-btn">` from inside `<a class="nav-item">` in sidebar navigation.
+  - `UX-009`: Added 11 standard SVG icons to `IconComponent` (`star`, `clock`, `bell`, `chat`, `wallet`, `cart`, `boxes`, `banknote`, `building`, `factory`, `search`) and replaced raw emoji in shell chrome.
+  - `UX-008`: Configured default collapsed state for secondary/vertical modules on initial load while keeping core operational modules expanded.
+- **Forms, Grids & Data Entry**:
+  - `UX-004`: Replaced `<details>/<summary>` with button-triggered `<div class="accordion-group">` and `<button type="button" class="accordion-header">` in `EmployeesPage`.
+  - `UX-020`: Refactored `JournalEntriesPage` lines editor to a clean primary row with an expandable analytical dimensions sub-row (`Cost Center`, `Project`, `WBS`, `Cost Code`, `Department`).
+  - `UX-015`: Added `[appTooltip]` explaining `employees.noCategoriesHint` on disabled Add Employee button.
+  - `UX-014`: Mobile responsive styles (`@media (max-width: 768px)`) across employee header, toolbar, filter search, and table card.
+- **Settings IA & Analytics**:
+  - `UX-005`: Relocated `<app-business-vertical-setup>` and `<app-advances-policy-settings>` to `activeTab() === 'business'`.
+  - `UX-012`: Removed redundant `(input)` trigger on dashboard year input.
+  - `UX-007`: Embedded `.sr-only` accessibility fallback tables for dashboard attendance charts.
+- **Verification**: 100% clean test execution — 643 frontend unit tests across 138 suites pass, `check:i18n` verified with 5,851 keys, `check:hardcoded` verified with 0 violations across 147 HTML and 326 TS files, full backend unit test suite passes with `BUILD SUCCESSFUL`, production bundle builds cleanly (`ng build`).
+
 # AGENT SESSION SUMMARY — August 21, 2026
 ## Session 12: PBAC Dynamic Policy Engine, Preset Tiers & Dynamic Business Vertical Setup (Stories 1–6)
 - **Policy-Based Dynamic Access Control (PBAC)** — Complete implementation of dynamic policy engine & business vertical setup:

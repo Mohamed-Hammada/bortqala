@@ -25,6 +25,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { apiErrorMessage } from '../../core/api-error';
+import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { WorkforceService } from '../workforce/data-access/workforce.service';
 import { AdvancePolicy } from '../workforce/models/workforce.models';
 
@@ -55,6 +56,7 @@ export const FORM_GROUPS: FormGroupDef[] = [
     SkeletonComponent,
     EmptyStateComponent,
     ModalDialogComponent,
+    AppTooltipDirective,
   ],
   providers: [EmployeesStore],
   templateUrl: './employees.page.html',

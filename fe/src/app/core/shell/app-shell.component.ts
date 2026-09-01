@@ -493,17 +493,25 @@ export class AppShellComponent {
   }
 
   private loadStoredCollapsedGroups(): string[] {
+    const defaultCollapsed = [
+      'workspace.medical',
+      'workspace.serviceOps',
+      'workspace.fleet',
+      'workspace.esign',
+      'workspace.documents',
+      'workspace.aiIntelligence',
+      'workspace.platformAdministration',
+    ];
     try {
       const raw = localStorage.getItem(COLLAPSED_GROUPS_KEY);
-      if (!raw) return [];
+      if (!raw) return defaultCollapsed;
       const parsed = JSON.parse(raw) as string[];
-      if (Array.isArray(parsed) && parsed.length >= 5) {
-        localStorage.removeItem(COLLAPSED_GROUPS_KEY);
-        return [];
+      if (Array.isArray(parsed)) {
+        return parsed;
       }
-      return parsed;
+      return defaultCollapsed;
     } catch {
-      return [];
+      return defaultCollapsed;
     }
   }
 

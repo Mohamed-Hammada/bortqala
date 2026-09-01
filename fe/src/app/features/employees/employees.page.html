@@ -20,7 +20,12 @@
         </button>
       }
       <button class="button secondary" (click)="store.export()">⇩ Excel</button
-      ><button class="button primary" (click)="openNew()" [disabled]="!store.categories().length">
+      ><button
+        class="button primary"
+        (click)="openNew()"
+        [disabled]="!store.categories().length"
+        [appTooltip]="!store.categories().length ? i18n.t('employees.noCategoriesHint') : ''"
+      >
         ＋ {{ i18n.t('employees.add') }}
       </button>
     </div>

@@ -18,7 +18,18 @@ export type IconName =
   | 'arrow-up'
   | 'arrow-down'
   | 'eye'
-  | 'eye-off';
+  | 'eye-off'
+  | 'star'
+  | 'clock'
+  | 'bell'
+  | 'chat'
+  | 'wallet'
+  | 'cart'
+  | 'boxes'
+  | 'banknote'
+  | 'building'
+  | 'factory'
+  | 'search';
 
 @Component({
   selector: 'app-icon',

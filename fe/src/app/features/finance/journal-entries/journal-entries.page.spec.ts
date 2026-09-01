@@ -213,5 +213,23 @@ describe('JournalEntriesPage', () => {
       await submit;
       expect(page.submitAttempted()).toBe(true);
     });
+
+    it('toggles dimension sub-row expansion for specific line and adjusts on removal', () => {
+      expect(page.isDimensionsExpanded(0)).toBe(false);
+      page.toggleDimensions(0);
+      expect(page.isDimensionsExpanded(0)).toBe(true);
+
+      page.addLine(); // add line 2
+      page.toggleDimensions(2);
+      expect(page.isDimensionsExpanded(2)).toBe(true);
+
+      // Remove line 1 (middle line), line 2 becomes line 1
+      page.removeLine(1);
+      expect(page.isDimensionsExpanded(0)).toBe(true);
+      expect(page.isDimensionsExpanded(1)).toBe(true);
+
+      page.closeDrawer();
+      expect(page.expandedDimensions().size).toBe(0);
+    });
   });
 });

@@ -57,7 +57,10 @@
       <!-- Section: Favorites -->
       @if (favoriteItems().length > 0) {
         <div class="workspace-section favorites-section">
-          <p class="workspace-header section-title-static">⭐ {{ i18n.t('nav.favorites', undefined, 'المفضلة') }}</p>
+          <p class="workspace-header section-title-static">
+            <app-icon name="star" class="section-title-icon" />
+            <span>{{ i18n.t('nav.favorites', undefined, 'المفضلة') }}</span>
+          </p>
           @for (item of favoriteItems(); track item.path) {
             <div class="nav-item-wrapper favorite-item">
               <a
@@ -93,7 +96,10 @@
       <!-- Section: Recently Used -->
       @if (recentItems().length > 0) {
         <div class="workspace-section recents-section">
-          <p class="workspace-header section-title-static">🕒 {{ i18n.t('nav.recentlyUsed') }}</p>
+          <p class="workspace-header section-title-static">
+            <app-icon name="clock" class="section-title-icon" />
+            <span>{{ i18n.t('nav.recentlyUsed') }}</span>
+          </p>
           @for (item of recentItems(); track item.path) {
             <div class="nav-item-wrapper recent-item">
               <a
@@ -261,7 +267,7 @@
         [attr.aria-label]="i18n.t('shortcuts.showHelp')"
         [appTooltip]="i18n.t('shortcuts.openHelpTooltip')"
       >?</button>
-      <a class="icon-button" routerLink="/support" [attr.aria-label]="i18n.t('support.nav')" [appTooltip]="i18n.t('support.nav')">💬</a>
+      <a class="icon-button" routerLink="/support" [attr.aria-label]="i18n.t('support.nav')" [appTooltip]="i18n.t('support.nav')"><app-icon name="chat" /></a>
       <button
         class="icon-button notification-bell-btn"
         type="button"
@@ -270,7 +276,7 @@
         [appTooltip]="i18n.t('actionCenter.title', undefined, 'مركز الإشعارات')"
         style="position:relative;"
       >
-        🔔
+        <app-icon name="bell" />
         @if (notificationCenter.unreadCount() > 0) {
           <span style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:0.75rem;font-weight:700;padding:2px 6px;border-radius:10px;line-height:1;">
             {{ notificationCenter.unreadCount() }}
@@ -371,7 +377,10 @@
       (click)="$event.stopPropagation()">
       <header class="shortcut-dialog-header action-center-header">
         <div>
-          <h2 style="margin:0;font-size:1.1rem;">🔔 {{ i18n.t('actionCenter.title', undefined, 'مركز الإشعارات والتنبيهات') }}</h2>
+          <h2 style="margin:0;font-size:1.1rem;display:flex;align-items:center;gap:6px;">
+            <app-icon name="bell" />
+            <span>{{ i18n.t('actionCenter.title', undefined, 'مركز الإشعارات والتنبيهات') }}</span>
+          </h2>
         </div>
         <div style="display:flex;gap:.5rem;align-items:center;">
           <button type="button" class="button secondary btn-sm" (click)="notificationCenter.markAllAsRead()">{{ i18n.t('actionCenter.markAllRead', undefined, 'تحديد الكل كمقروء') }}</button>
