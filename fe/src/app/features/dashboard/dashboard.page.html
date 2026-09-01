@@ -544,7 +544,7 @@
             <p>{{ i18n.t('dashboard.categorySummaryHint') }}</p>
           </div>
         </div>
-        @if (data.categories.length) {
+        @if (data.categories && data.categories.length) {
           <div class="table-wrap">
             <table>
               <thead>
@@ -607,7 +607,7 @@
           </div>
           <a routerLink="/imports" class="view-all-link">{{ i18n.t('dashboard.viewAll') }} →</a>
         </div>
-        @if (data.recentImports.length) {
+        @if (data.recentImports && data.recentImports.length) {
           <div class="imports-list">
             @for (item of data.recentImports; track item.id) {
               <div>
