@@ -1,4 +1,5 @@
 import { LANDING_PAGE_ITEMS, NAV_ITEMS, WORKSPACE_ORDER, canAccessNavigationItem } from './app-navigation';
+import { SETTINGS_SUBMENU_GROUPS, MOVED_SETTINGS_TAB_ROUTES } from '../../features/settings/settings-navigation';
 
 describe('settings navigation refactor', () => {
   it('moves non-settings capabilities to their owning workspaces', () => {
@@ -86,5 +87,25 @@ describe('settings navigation refactor', () => {
       expect(item.permissionMenuId).toBe('settings');
       expect(item.showInPermissionEditor).toBe(false);
     }
+  });
+
+  it('verifies Settings IA groups structure and backward-compatible tab redirects', () => {
+    expect(SETTINGS_SUBMENU_GROUPS.length).toBe(2);
+    
+    // Group 1: Personal
+    expect(SETTINGS_SUBMENU_GROUPS[0].labelKey).toBe('settings.groupPersonal');
+    expect(SETTINGS_SUBMENU_GROUPS[0].items.map((i: any) => i.tab)).toEqual([
+      'appearance', 'reports', 'shortcuts',
+    ]);
+
+    // Group 2: Security & Admin
+    expect(SETTINGS_SUBMENU_GROUPS[1].labelKey).toBe('settings.groupSecurityAdmin');
+    expect(SETTINGS_SUBMENU_GROUPS[1].items.map((i: any) => i.tab)).toEqual([
+      'session', 'security', 'business', 'sso', 'privacy', 'integrations',
+    ]);
+
+    // Backward redirects
+    expect(MOVED_SETTINGS_TAB_ROUTES['risk']).toBe('/partner-risk');
+    expect(MOVED_SETTINGS_TAB_ROUTES['subscription']).toBe('/platform-admin?tab=subscription');
   });
 });
