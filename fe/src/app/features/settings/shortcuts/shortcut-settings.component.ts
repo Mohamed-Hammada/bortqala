@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  HostListener,
   OnInit,
   computed,
   inject,
@@ -195,6 +196,14 @@ export class ShortcutSettingsComponent implements OnInit, AfterViewChecked {
         enabled: item.enabled,
       })),
     );
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.hasUnsavedChanges()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
   }
 
   discardChanges(): void {

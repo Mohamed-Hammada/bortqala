@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewChild, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -303,8 +303,14 @@ export class SettingsPage {
     }
   }
 
+  @ViewChild(ShortcutSettingsComponent) shortcutSettings?: ShortcutSettingsComponent;
+
   hasUnsavedChanges(): boolean {
-    return this.form.dirty || this.appSettingsForm.dirty;
+    return (
+      this.form.dirty ||
+      this.appSettingsForm.dirty ||
+      (this.shortcutSettings?.hasUnsavedChanges() ?? false)
+    );
   }
 
   private async loadAppSettings(): Promise<void> {

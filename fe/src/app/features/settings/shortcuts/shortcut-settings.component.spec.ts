@@ -603,4 +603,47 @@ describe('ShortcutSettingsComponent', () => {
     expect(component.drafts()).toHaveLength(1);
     expect(component.drafts()[0].pageCode).toBe('DASHBOARD');
   });
+
+  it('triggers beforeunload prevention when hasUnsavedChanges is true', () => {
+    const event = { preventDefault: vi.fn(), returnValue: '' } as unknown as BeforeUnloadEvent;
+    
+    // Clean state
+    component.onBeforeUnload(event);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+
+    // Dirty state
+    component.addShortcut();
+    expect(component.hasUnsavedChanges()).toBe(true);
+    component.onBeforeUnload(event);
+    expect(event.preventDefault).toHaveBeenCalled();
+  });
+
+  it('save persists drafts atomically and clears dirty state', async () => {
+    component.addShortcut();
+    expect(component.hasUnsavedChanges()).toBe(true);
+
+    vi.spyOn(shortcutService, 'replace').mockImplementation(async () => {
+      shortcutService.profile.set({
+        ...MOCK_PROFILE,
+        version: 1,
+        shortcuts: component.drafts().map((d, idx) => ({
+          id: `sc-${idx + 1}`,
+          pageCode: d.pageCode,
+          menuId: d.pageCode.toLowerCase(),
+          route: `/${d.pageCode.toLowerCase()}`,
+          titleKey: `nav.${d.pageCode.toLowerCase()}`,
+          secondKeyCode: d.secondKeyCode,
+          displayKey: d.secondKeyCode.replace('Key', ''),
+          enabled: d.enabled,
+          defaultShortcut: false,
+          availabilityStatus: 'AVAILABLE',
+          unavailableReasonKey: null,
+        })),
+      });
+      return shortcutService.profile()!;
+    });
+
+    await component.save();
+    expect(component.hasUnsavedChanges()).toBe(false);
+  });
 });
