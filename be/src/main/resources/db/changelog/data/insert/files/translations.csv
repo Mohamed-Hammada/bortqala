@@ -13213,7 +13213,7 @@ t-006606-ar;review.aiDeductButton;ar-EG;✗ خصم {count} يوم غير مسج�
 t-006606-en;review.aiDeductButton;en-US;✗ Deduct {count} unrecorded days (Absent)
 t-006607-ar;review.aiDeductUnrecorded;ar-EG;خصم الأيام غير المسجلة (غياب)
 t-006607-en;review.aiDeductUnrecorded;en-US;Deduct Unrecorded Days (Absent)
-t-006608-ar;review.aiHeading;ar-EG;توجيه ذكي لمسؤول الموارد البشرية (Smart AI Recommendation)
+t-006608-ar;review.aiHeading;ar-EG;توجيه ذكي لمسؤول الموارد البشرية
 t-006608-en;review.aiHeading;en-US;Smart AI Recommendation for HR
 t-006609-ar;review.aiRecommendationHint;ar-EG;تم اكتشاف حالات بصمة واحدة بسبب انقطاع الجهاز. يُوصى بـ اعتماد البصمة الواحدة كـ يوم طبيعي لتوفير وقت المراجعة وتلافي خصم يوم بدون سبب.
 t-006609-en;review.aiRecommendationHint;en-US;Single-punch instances detected. Recommended to accept single punch as normal day to streamline review.
@@ -13221,7 +13221,7 @@ t-006610-ar;review.aiRecommendationTitle;ar-EG;توجيه ذكي لمسؤول ا
 t-006610-en;review.aiRecommendationTitle;en-US;Smart AI Recommendation for HR
 t-006611-ar;review.aiSummary;ar-EG;تُظهر المراجعة {singlePunch} حالة بصمة واحدة، و{noPunch} حالة بدون بصمة، و{manualEntry} حالة تمرير يدوي، و{missingSchedule} حالة جدول مفقود بحاجة للمعالجة.
 t-006611-en;review.aiSummary;en-US;Found {singlePunch} single punch, {noPunch} no punch, {manualEntry} manual entry, and {missingSchedule} missing schedule case(s) requiring processing.
-t-006612-ar;review.allFilterLabel;ar-EG;جميع الصفوف (All Rows)
+t-006612-ar;review.allFilterLabel;ar-EG;جميع الصفوف
 t-006612-en;review.allFilterLabel;en-US;All Rows
 t-006613-ar;review.allReports;ar-EG;كل التقارير
 t-006613-en;review.allReports;en-US;All reports
@@ -13517,15 +13517,15 @@ t-006758-ar;review.groupHolidayHint;ar-EG;كل أفراد الفئة بلا بص
 t-006758-en;review.groupHolidayHint;en-US;Every category member has no punch — no decision is made automatically.
 t-006759-ar;review.groupHolidayProposals;ar-EG;اقتراحات الإجازة الجماعية
 t-006759-en;review.groupHolidayProposals;en-US;Group holiday proposals
-t-006760-ar;review.holidayConfirmed;ar-EG;مؤكد (Confirmed)
+t-006760-ar;review.holidayConfirmed;ar-EG;مؤكد
 t-006760-en;review.holidayConfirmed;en-US;Confirmed
 t-006761-ar;review.holidayNamePrompt;ar-EG;اسم الإجازة
 t-006761-en;review.holidayNamePrompt;en-US;Holiday name
-t-006762-ar;review.holidayPending;ar-EG;معلق (Pending)
+t-006762-ar;review.holidayPending;ar-EG;معلق
 t-006762-en;review.holidayPending;en-US;Pending
 t-006763-ar;review.holidayProposals;ar-EG;اقتراحات إجازة
 t-006763-en;review.holidayProposals;en-US;Holiday proposals
-t-006764-ar;review.holidayRejected;ar-EG;مرفوض (Rejected)
+t-006764-ar;review.holidayRejected;ar-EG;مرفوض
 t-006764-en;review.holidayRejected;en-US;Rejected
 t-006765-ar;review.hourShort;ar-EG;ساعة
 t-006765-en;review.hourShort;en-US;hr
@@ -13581,7 +13581,7 @@ t-006790-ar;review.overtimeMinutesLabel;ar-EG;دقائق الإضافي
 t-006790-en;review.overtimeMinutesLabel;en-US;Overtime Minutes
 t-006791-ar;review.pendingDecision;ar-EG;بانتظار القرار
 t-006791-en;review.pendingDecision;en-US;Pending Decision
-t-006792-ar;review.progressLabel;ar-EG;نسبة مراجعة السجلات (Review Progress)
+t-006792-ar;review.progressLabel;ar-EG;نسبة مراجعة السجلات
 t-006792-en;review.progressLabel;en-US;Review Progress
 t-006793-ar;review.punchCount;ar-EG;{count} بصمة
 t-006793-en;review.punchCount;en-US;{count} punches
@@ -13641,7 +13641,7 @@ t-006820-ar;review.unresolved;ar-EG;غير محلول
 t-006820-en;review.unresolved;en-US;Unresolved
 t-006821-ar;review.unresolvedFilter;ar-EG;غير المحلول
 t-006821-en;review.unresolvedFilter;en-US;Unresolved
-t-006822-ar;review.unresolvedFilterLabel;ar-EG;غير المحلول (Unresolved)
+t-006822-ar;review.unresolvedFilterLabel;ar-EG;غير المحلول
 t-006822-en;review.unresolvedFilterLabel;en-US;Unresolved
 t-006823-ar;review.unresolvedOnly;ar-EG;غير المحلول
 t-006823-en;review.unresolvedOnly;en-US;Unresolved only
