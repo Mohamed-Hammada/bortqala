@@ -14,7 +14,7 @@ Completion rule: every item starts `[ ]`. Change to `[x]` ONLY after implementat
 - [ ] 04 — BUG-004 — Procurement exposed but disabled
 - [ ] 05 — BUG-005 — Manual attendance decision does not persist
 - [ ] 06 — BUG-006 — Employee code duplicated on create
-- [ ] 07 — BUG-007 — BOTH workforce category is not unified
+- [x] 07 — BUG-007 — BOTH workforce category is not unified
 - [ ] 08 — BUG-008 — Worker daily rate does not inherit from category
 - [ ] 09 — BUG-009 — Dev-server/lazy-loaded chunk deployment risk
 - [x] 10 — BUG-010 — Inventory movement lacks distinct document references
@@ -22,8 +22,8 @@ Completion rule: every item starts `[ ]`. Change to `[x]` ONLY after implementat
 - [x] 12 — BUG-012 — Save feedback is too generic
 - [x] 13 — BUG-013 — Required-field validation lacks visible explanation
 - [x] 14 — BUG-014 — Raw translation key visible
-- [ ] 15 — BUG-015 — Mixed Arabic/English terminology
-- [ ] 16 — BUG-016 — Report shortcut action is ambiguous
+- [x] 15 — BUG-015 — Mixed Arabic/English terminology
+- [x] 16 — BUG-016 — Report shortcut action is ambiguous
 - [x] 17 — BUG-017 — Dashboard report-cycle wording is misleading
 - [x] 18 — BUG-018 — Missing accessibility names
 - [x] 19 — BUG-019 — Contractor failure lacks recovery guidance
