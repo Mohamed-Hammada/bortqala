@@ -356,7 +356,7 @@
               <td class="ltr">{{ t.targetValue | number:'1.2-2' }}</td>
               <td class="ltr">{{ t.achievedValue | number:'1.2-2' }}</td>
               <td><div class="progress-bar"><div class="progress-fill" [style.width.%]="targetProgress(t)"></div><span>{{ targetProgress(t) }}%</span></div></td>
-              <td><button class="button danger btn-sm" (click)="deleteTarget(t.id)">✕</button></td>
+              <td><button class="button danger btn-sm" (click)="deleteTarget(t.id)" [attr.aria-label]="i18n.t('common.delete')">✕</button></td>
             </tr>
           } @empty {
             <tr><td colspan="8" class="empty">{{ i18n.t('sales.noTargets') }}</td></tr>
@@ -414,7 +414,7 @@
               <td>{{ r.basis }}</td>
               <td class="ltr">{{ r.percent }}%</td>
               <td class="ltr">{{ r.minAmount | number:'1.2-2' }}</td>
-              <td><button class="button danger btn-sm" (click)="deleteRule(r.id)">✕</button></td>
+              <td><button class="button danger btn-sm" (click)="deleteRule(r.id)" [attr.aria-label]="i18n.t('common.delete')">✕</button></td>
             </tr>
           } @empty {
             <tr><td colspan="5" class="empty">{{ i18n.t('sales.noRules') }}</td></tr>

@@ -95,7 +95,7 @@
                       {{ ((line.budgetQuantity || 0) * (line.budgetUnitRate || 0)) | number:'1.2-2' }}
                     </td>
                     <td class="text-center">
-                      <button type="button" class="btn-icon text-danger" (click)="removeLine($index)">✕</button>
+                      <button type="button" class="btn-icon text-danger" (click)="removeLine($index)" [attr.aria-label]="i18n.t('common.remove')">✕</button>
                     </td>
                   </tr>
                 }

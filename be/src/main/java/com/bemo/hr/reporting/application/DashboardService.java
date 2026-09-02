@@ -84,6 +84,7 @@ public class DashboardService {
         var recent = importBatchRepository.findAllByOrderByImportedAtDesc().stream().limit(5)
                 .map(batch -> new DashboardApi.RecentImport(batch.getId(), batch.getFileName(), batch.getDeviceName(),
                         batch.getImportedRows(), batch.getErrorRows(), batch.getImportedAt())).toList();
+        List<DashboardApi.HalfMonthReport> halfMonthReports = resolveHalfMonthReports(period);
         long unmatched = punchRecordRepository.summarizeUnmatched().stream()
                 .filter(identity -> employeeRepository.findByDeviceUserId((String) identity[0]).isEmpty()).count();
 
@@ -112,7 +113,8 @@ public class DashboardService {
                 operationsService.countPartnerLedgerEntries(),
                 operationsService.countActiveParties(),
                 categoryMetrics,
-                recent
+                recent,
+                halfMonthReports
         );
     }
 
@@ -288,6 +290,20 @@ public class DashboardService {
                     PayCycle.MONTHLY, period.atDay(1), period.atEndOfMonth());
         }
         return existing.orElse(null);
+    }
+
+    /** BUG-017: surface any existing half-month (H1/H2) reports for the period so the dashboard can distinguish a missing monthly report from existing half-month ones. */
+    private List<DashboardApi.HalfMonthReport> resolveHalfMonthReports(YearMonth period) {
+        List<DashboardApi.HalfMonthReport> found = new ArrayList<>();
+        var firstHalf = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                PayCycle.HALF_MONTHLY, period.atDay(1), period.atDay(15));
+        firstHalf.ifPresent(r -> found.add(new DashboardApi.HalfMonthReport(
+                r.getId(), PayCycle.HALF_MONTHLY, r.getStatus(), r.getUnresolvedCount(), true)));
+        var secondHalf = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                PayCycle.HALF_MONTHLY, period.atDay(16), period.atEndOfMonth());
+        secondHalf.ifPresent(r -> found.add(new DashboardApi.HalfMonthReport(
+                r.getId(), PayCycle.HALF_MONTHLY, r.getStatus(), r.getUnresolvedCount(), false)));
+        return found;
     }
 }
 

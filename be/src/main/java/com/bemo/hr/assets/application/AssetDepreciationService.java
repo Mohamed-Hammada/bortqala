@@ -118,7 +118,7 @@ public class AssetDepreciationService {
             try {
                 fiscalPeriodGuard.requireOpen(Instant.ofEpochMilli(postingDate).atZone(ZoneOffset.UTC).toLocalDate());
             } catch (Exception periodException) {
-                log.info("Depreciation skipped for asset {}: fiscal period locked for {}", asset.getId(), yearMonth);
+                log.info("Depreciation skipped for asset {}: fiscal period locked for {} (reason: {})", asset.getId(), yearMonth, periodException.getMessage());
                 results.add(new AssetsApi.DepreciationRunResult(asset.getId(), asset.getName(), charge,
                         "DEPRECIATION_PERIOD_LOCKED", null));
                 continue;

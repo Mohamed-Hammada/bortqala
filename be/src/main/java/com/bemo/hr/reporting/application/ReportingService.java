@@ -303,6 +303,7 @@ public class ReportingService {
                 create(new ReportingApi.CreateRequest(period.atDay(1), period.atEndOfMonth(), PayCycle.MONTHLY), actor);
                 return true;
             } catch (Exception ex) {
+                log.error("recalculateMonth failed for {}/{}: {}", year, month, ex.getMessage(), ex);
                 return false;
             }
         }

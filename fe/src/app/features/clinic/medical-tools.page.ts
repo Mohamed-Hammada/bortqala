@@ -104,7 +104,7 @@ export class MedicalToolsPageComponent implements OnInit {
         this.saving.set(false);
         this.showTelemedModal.set(false);
         this.sessions.update((list) => [created, ...list]);
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('clinic.telemedScheduled'));
       },
       error: () => this.saving.set(false),
     });
@@ -135,7 +135,7 @@ export class MedicalToolsPageComponent implements OnInit {
         this.saving.set(false);
         this.showLicenseModal.set(false);
         this.loadLicenses();
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('clinic.licenseRegistered'));
       },
       error: () => this.saving.set(false),
     });

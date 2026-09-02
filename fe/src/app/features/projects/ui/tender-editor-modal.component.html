@@ -4,7 +4,7 @@
       <h3 class="modal-title">
         {{ tender ? i18n.t('tenders.editTender') : i18n.t('tenders.createTender') }}
       </h3>
-      <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+      <button type="button" class="btn-close" (click)="close.emit()" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
 
     <form (ngSubmit)="onSubmit()">

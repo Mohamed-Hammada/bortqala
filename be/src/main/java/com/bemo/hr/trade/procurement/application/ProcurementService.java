@@ -627,10 +627,10 @@ public class ProcurementService {
     }
 
     private long highestExistingNumber(String documentType) {
-        var numbers = "PURCHASE_ORDER".equals(documentType)
-                ? purchaseOrderRepository.findAll().stream().map(PurchaseOrder::getPoNumber)
-                : goodsReceiptRepository.findAll().stream().map(GoodsReceipt::getGrnNumber);
-        return numbers.mapToLong(this::trailingNumber).max().orElse(0);
+        var lastNumber = "PURCHASE_ORDER".equals(documentType)
+                ? purchaseOrderRepository.findMaxPoNumber().orElse(null)
+                : goodsReceiptRepository.findMaxGrnNumber().orElse(null);
+        return lastNumber == null ? 0 : trailingNumber(lastNumber);
     }
 
     private long trailingNumber(String value) {

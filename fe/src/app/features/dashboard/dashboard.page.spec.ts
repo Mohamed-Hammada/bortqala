@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+﻿import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
@@ -112,6 +112,7 @@ describe('DashboardPage - Hierarchy, Period Filter, Charts & Accessibility', () 
       activePartiesCount: 0,
       categories: [],
       recentImports: [],
+      halfMonthReports: [],
     });
     fixture.detectChanges();
 
@@ -161,6 +162,7 @@ describe('DashboardPage - Hierarchy, Period Filter, Charts & Accessibility', () 
       activePartiesCount: 0,
       categories: [],
       recentImports: [],
+      halfMonthReports: [],
     });
     store.chartData.set([
       { label: '2026-09-01', present: 40, absent: 2, late: 1, exception: 0 },

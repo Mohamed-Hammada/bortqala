@@ -21,14 +21,14 @@ public class ProjectSchedulingController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public ProjectScheduleResponse getSchedule(@PathVariable String projectId) {
         return schedulingService.getSchedule(projectId);
     }
 
     @PostMapping("/tasks")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectScheduleTaskResponse createTask(
             @PathVariable String projectId,
             @Valid @RequestBody CreateScheduleTaskRequest req,
@@ -38,7 +38,7 @@ public class ProjectSchedulingController {
     }
 
     @PutMapping("/tasks/{taskId}")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectScheduleTaskResponse updateTask(
             @PathVariable String projectId,
             @PathVariable String taskId,
@@ -50,7 +50,7 @@ public class ProjectSchedulingController {
 
     @DeleteMapping("/tasks/{taskId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public void deleteTask(
             @PathVariable String projectId,
             @PathVariable String taskId,
@@ -61,7 +61,7 @@ public class ProjectSchedulingController {
 
     @PostMapping("/dependencies")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TaskDependencyResponse addDependency(
             @PathVariable String projectId,
             @Valid @RequestBody CreateDependencyRequest req,
@@ -72,7 +72,7 @@ public class ProjectSchedulingController {
 
     @DeleteMapping("/dependencies/{dependencyId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public void removeDependency(
             @PathVariable String projectId,
             @PathVariable String dependencyId,
@@ -82,14 +82,14 @@ public class ProjectSchedulingController {
     }
 
     @PostMapping("/recalculate-cpm")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectScheduleResponse recalculateCpm(@PathVariable String projectId) {
         return schedulingService.recalculateCpm(projectId);
     }
 
     @PostMapping("/baselines")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ScheduleBaselineResponse createBaseline(
             @PathVariable String projectId,
             @Valid @RequestBody CreateBaselineRequest req,
@@ -99,7 +99,7 @@ public class ProjectSchedulingController {
     }
 
     @GetMapping("/baselines/{baselineId}/comparison")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public List<ScheduleBaselineComparisonResponse> getBaselineComparison(
             @PathVariable String projectId,
             @PathVariable String baselineId) {
@@ -108,7 +108,7 @@ public class ProjectSchedulingController {
 
     @PostMapping("/tasks/{taskId}/resources")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TaskResourceAssignmentResponse assignResource(
             @PathVariable String projectId,
             @PathVariable String taskId,
@@ -120,7 +120,7 @@ public class ProjectSchedulingController {
 
     @DeleteMapping("/resources/{assignmentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public void removeResourceAssignment(
             @PathVariable String projectId,
             @PathVariable String assignmentId,
@@ -130,14 +130,14 @@ public class ProjectSchedulingController {
     }
 
     @GetMapping("/resources/over-allocations")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public List<ResourceOverAllocationResponse> detectOverAllocations(@PathVariable String projectId) {
         return schedulingService.detectOverAllocations(projectId);
     }
 
     @PostMapping("/import-wbs")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectScheduleResponse importFromWbs(
             @PathVariable String projectId,
             Authentication auth) {
@@ -148,7 +148,7 @@ public class ProjectSchedulingController {
 
     @PostMapping("/sync-dpr")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectScheduleResponse syncProgressFromDpr(
             @PathVariable String projectId,
             Authentication auth) {

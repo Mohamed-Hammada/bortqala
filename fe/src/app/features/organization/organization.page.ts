@@ -187,7 +187,7 @@ export class OrganizationPage {
           ? this.http.put(`/api/v1/organization/companies/${id}`, payload)
           : this.http.post('/api/v1/organization/companies', payload),
       );
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('org.companySaved')); 
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {
@@ -205,7 +205,7 @@ export class OrganizationPage {
           ? this.http.put(`/api/v1/organization/branches/${id}`, payload)
           : this.http.post('/api/v1/organization/branches', payload),
       );
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('org.branchSaved')); 
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {
@@ -223,7 +223,7 @@ export class OrganizationPage {
           ? this.http.put(`/api/v1/organization/warehouses/${id}`, payload)
           : this.http.post('/api/v1/organization/warehouses', payload),
       );
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('org.warehouseSaved')); 
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {
@@ -241,7 +241,7 @@ export class OrganizationPage {
           ? this.http.put(`/api/v1/organization/departments/${id}`, payload)
           : this.http.post('/api/v1/organization/departments', payload),
       );
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('org.departmentSaved')); 
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {

@@ -1,0 +1,159 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260902-v450-operations-item-created-success
+      author: bemo-erp
+      comment: "BUG-012: generic 'حفظ ✓' toasts replaced with operation-identifying localized success messages across organization, operations, banks, accounts and users pages."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008920-ar', 'operations.itemCreatedSuccess', 'ar-EG', 'تم إنشاء الصنف بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'operations.itemCreatedSuccess' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008920-en', 'operations.itemCreatedSuccess', 'en-US', 'Item created successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'operations.itemCreatedSuccess' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008921-ar', 'operations.transactionSaved', 'ar-EG', 'تم تسجيل الحركة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'operations.transactionSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008921-en', 'operations.transactionSaved', 'en-US', 'Transaction recorded successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'operations.transactionSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008922-ar', 'operations.advanceSaved', 'ar-EG', 'تم تسجيل السلفة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'operations.advanceSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008922-en', 'operations.advanceSaved', 'en-US', 'Advance recorded successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'operations.advanceSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008923-ar', 'org.companySaved', 'ar-EG', 'تم حفظ الشركة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'org.companySaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008923-en', 'org.companySaved', 'en-US', 'Company saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'org.companySaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008924-ar', 'org.branchSaved', 'ar-EG', 'تم حفظ الفرع بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'org.branchSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008924-en', 'org.branchSaved', 'en-US', 'Branch saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'org.branchSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008925-ar', 'org.warehouseSaved', 'ar-EG', 'تم حفظ المخزن بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'org.warehouseSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008925-en', 'org.warehouseSaved', 'en-US', 'Warehouse saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'org.warehouseSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008926-ar', 'org.departmentSaved', 'ar-EG', 'تم حفظ القسم بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'org.departmentSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008926-en', 'org.departmentSaved', 'en-US', 'Department saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'org.departmentSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008927-ar', 'accounts.costCenterSaved', 'ar-EG', 'تم حفظ مركز التكلفة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'accounts.costCenterSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008927-en', 'accounts.costCenterSaved', 'en-US', 'Cost center saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'accounts.costCenterSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008928-ar', 'accounts.accountSaved', 'ar-EG', 'تم حفظ الحساب بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'accounts.accountSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008928-en', 'accounts.accountSaved', 'en-US', 'Account saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'accounts.accountSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008929-ar', 'banks.bankSaved', 'ar-EG', 'تم حفظ البنك بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'banks.bankSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008929-en', 'banks.bankSaved', 'en-US', 'Bank saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'banks.bankSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008930-ar', 'banks.cashboxSaved', 'ar-EG', 'تم حفظ الخزنة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'banks.cashboxSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008930-en', 'banks.cashboxSaved', 'en-US', 'Cashbox saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'banks.cashboxSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008931-ar', 'banks.cashTxSaved', 'ar-EG', 'تم تسجيل العملية النقدية بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'banks.cashTxSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008931-en', 'banks.cashTxSaved', 'en-US', 'Cash transaction recorded successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'banks.cashTxSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008932-ar', 'banks.chequeSaved', 'ar-EG', 'تم حفظ الشيك بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'banks.chequeSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008932-en', 'banks.chequeSaved', 'en-US', 'Cheque saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'banks.chequeSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008933-ar', 'users.userSaved', 'ar-EG', 'تم حفظ المستخدم بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.userSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008933-en', 'users.userSaved', 'en-US', 'User saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.userSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008934-ar', 'categories.deactivated', 'ar-EG', 'تم تعطيل الفئة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'categories.deactivated' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008934-en', 'categories.deactivated', 'en-US', 'Category deactivated successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'categories.deactivated' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008935-ar', 'accounts.costCenterDeleted', 'ar-EG', 'تم حذف مركز التكلفة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'accounts.costCenterDeleted' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008935-en', 'accounts.costCenterDeleted', 'en-US', 'Cost center deleted successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'accounts.costCenterDeleted' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008936-ar', 'projects.custodyIssued', 'ar-EG', 'تم إصدار العهدة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodyIssued' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008936-en', 'projects.custodyIssued', 'en-US', 'Custody issued successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodyIssued' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008937-ar', 'projects.custodyExpenseRecorded', 'ar-EG', 'تم تسجيل مصروف العهدة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodyExpenseRecorded' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008937-en', 'projects.custodyExpenseRecorded', 'en-US', 'Custody expense recorded successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodyExpenseRecorded' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008938-ar', 'projects.custodyExpenseApproved', 'ar-EG', 'تم اعتماد مصروف العهدة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodyExpenseApproved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008938-en', 'projects.custodyExpenseApproved', 'en-US', 'Custody expense approved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodyExpenseApproved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008939-ar', 'projects.custodyExpenseRejected', 'ar-EG', 'تم رفض مصروف العهدة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodyExpenseRejected' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008939-en', 'projects.custodyExpenseRejected', 'en-US', 'Custody expense rejected', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodyExpenseRejected' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008940-ar', 'projects.custodySettled', 'ar-EG', 'تم تسوية العهدة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodySettled' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008940-en', 'projects.custodySettled', 'en-US', 'Custody settled successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'projects.custodySettled' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008941-ar', 'costControl.budgetVersionSaved', 'ar-EG', 'تم حفظ إصدار الميزانية بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'costControl.budgetVersionSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008941-en', 'costControl.budgetVersionSaved', 'en-US', 'Budget version saved successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'costControl.budgetVersionSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008942-ar', 'costControl.costLedgerSaved', 'ar-EG', 'تم تسجيل قيد التكلفة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'costControl.costLedgerSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008942-en', 'costControl.costLedgerSaved', 'en-US', 'Cost ledger entry recorded successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'costControl.costLedgerSaved' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008943-ar', 'clinic.telemedScheduled', 'ar-EG', 'تم حجز الاستشارة عن بعد بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'clinic.telemedScheduled' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008943-en', 'clinic.telemedScheduled', 'en-US', 'Telemedicine session scheduled successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'clinic.telemedScheduled' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008944-ar', 'clinic.licenseRegistered', 'ar-EG', 'تم تسجيل الترخيص بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'clinic.licenseRegistered' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008944-en', 'clinic.licenseRegistered', 'en-US', 'License registered successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'clinic.licenseRegistered' AND locale = 'en-US');

@@ -10,7 +10,7 @@
           {{ i18n.t('claims.sequenceNumber') }}: #{{ claim.claimSequenceNumber }}
         </span>
       </div>
-      <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+      <button type="button" class="btn-close" (click)="close.emit()" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
 
     <!-- Edit Tabs (Only when editing) -->

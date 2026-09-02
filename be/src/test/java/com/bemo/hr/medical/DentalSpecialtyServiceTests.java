@@ -146,6 +146,25 @@ class DentalSpecialtyServiceTests {
     }
 
     @Test
+    void recordToothCondition_InvalidEnums_FallBackToDefaults() {
+        Patient patient = new Patient("MRN-001", "29501011234567", "Amr Hassan", "01001234567", "MALE", "1995-01-01", "O_POS", null, null, null, null);
+        patient.setId("pat-1");
+
+        when(patientRepository.findByAppIdAndId(APP_ID, "pat-1")).thenReturn(Optional.of(patient));
+        when(dentalRecordRepository.save(any(DentalRecord.class))).thenAnswer(i -> i.getArgument(0));
+
+        RecordToothConditionRequest request = new RecordToothConditionRequest(
+                "vis-1", 16, "NOT_A_CONDITION", "NOT_A_SURFACE", "fallback", System.currentTimeMillis()
+        );
+
+        DentalRecordDto result = dentalSpecialtyService.recordToothCondition("pat-1", request);
+
+        assertThat(result).isNotNull();
+        assertThat(result.condition()).isEqualTo("CARIES");
+        assertThat(result.surface()).isNull();
+    }
+
+    @Test
     void addPlanItemAndMarkDone_SuccessAndIdempotent() {
         DentalTreatmentPlan plan = new DentalTreatmentPlan("pat-1", "Comprehensive Dental Rehab");
         plan.setId("plan-1");

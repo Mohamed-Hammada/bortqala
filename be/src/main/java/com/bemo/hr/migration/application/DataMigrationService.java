@@ -104,7 +104,8 @@ public class DataMigrationService {
                 if (amt != null) {
                     totalAmount = totalAmount.add(new BigDecimal(amt.toString()));
                 }
-            } catch (Exception ignored) {
+            } catch (tools.jackson.core.JacksonException | NumberFormatException | ArithmeticException ex) {
+                log.warn("Skipping unparseable amount for migration record {}", rec.getId(), ex);
             }
         }
 
@@ -204,6 +205,7 @@ public class DataMigrationService {
         try {
             return objectMapper.writeValueAsString(obj);
         } catch (Exception ex) {
+            log.debug("serializeJson fallback to empty: {}", ex.getMessage());
             return "{}";
         }
     }

@@ -666,7 +666,7 @@
             <td><input type="number" min="0.001" class="ltr" [ngModel]="line.quantity" (ngModelChange)="prLines.update(lines => lines.map((l, i) => i === $index ? { ...l, quantity: +$event } : l))" [ngModelOptions]="{ standalone: true }" /></td>
             <td><input type="text" class="ltr" [value]="line.unitOfMeasure" disabled /></td>
             <td><input type="number" min="0" step="0.01" class="ltr" [ngModel]="line.estimatedUnitPrice" (ngModelChange)="prLines.update(lines => lines.map((l, i) => i === $index ? { ...l, estimatedUnitPrice: +$event } : l))" [ngModelOptions]="{ standalone: true }" /></td>
-            <td><button class="button danger btn-sm" type="button" (click)="removePrLine($index)" [disabled]="prLines().length <= 1">✕</button></td>
+            <td><button class="button danger btn-sm" type="button" (click)="removePrLine($index)" [disabled]="prLines().length <= 1" [attr.aria-label]="i18n.t('common.remove')">✕</button></td>
           </tr>
           }
         </tbody>

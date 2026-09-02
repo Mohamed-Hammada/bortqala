@@ -84,6 +84,7 @@ describe('page access consistency', () => {
       'manufacturing.enabled',
       'medical.enabled',
       'payroll.enabled',
+      'procurement.enabled',
       'quality.enabled',
       'sales.enabled',
       'workforce.contractorAccounts.enabled',

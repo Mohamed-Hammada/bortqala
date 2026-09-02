@@ -1,6 +1,7 @@
 package com.bemo.hr.reporting.api;
 
 import com.bemo.hr.reporting.domain.ReportStatus;
+import com.bemo.hr.employee.domain.PayCycle;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -36,8 +37,14 @@ public final class DashboardApi {
             long totalPartnerEntries,
             long activePartiesCount,
             List<CategoryMetric> categories,
-            List<RecentImport> recentImports
+            List<RecentImport> recentImports,
+            List<HalfMonthReport> halfMonthReports
     ) {
+    }
+
+    /** BUG-017: an existing half-month (H1/H2) report for the dashboard period, so monthly vs half-month status can be distinguished. */
+    public record HalfMonthReport(String reportId, PayCycle payCycle, ReportStatus status, int unresolvedCount,
+                                  boolean firstHalf) {
     }
 
     public record CategoryMetric(String categoryId, String categoryName, long employeeDays, long presentDays,

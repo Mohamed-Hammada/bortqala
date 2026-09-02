@@ -9,6 +9,9 @@ import java.util.Optional;
 public interface BusinessPartyRepository extends JpaRepository<BusinessParty, String> {
     List<BusinessParty> findAllByOrderByNameAsc();
 
+    List<BusinessParty> findTop10ByNameContainingIgnoreCaseOrNameEnContainingIgnoreCaseOrCodeContainingIgnoreCaseOrderByNameAsc(
+            String name, String nameEn, String code);
+
     List<BusinessParty> findByPartyTypeOrderByNameAsc(String partyType);
 
     Optional<BusinessParty> findByCodeIgnoreCase(String code);

@@ -199,7 +199,7 @@ export class CategoriesPage {
       onConfirm: () => {
         this.confirmAction.set(null);
         this.store.deactivate(item.id).then(() => {
-          this.notification.info(this.i18n.t('common.save') + ' ✓');
+          this.notification.info(this.i18n.t('categories.deactivated'));
         });
       },
     });

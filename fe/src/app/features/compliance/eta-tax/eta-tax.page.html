@@ -244,7 +244,7 @@
       <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ i18n.t('eta.queueInvoice') }}</h3>
-          <button class="close-btn" (click)="closeQueueModal()">✕</button>
+          <button class="close-btn" (click)="closeQueueModal()" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <form [formGroup]="queueForm" (ngSubmit)="submitQueue()">
           <div class="form-group">
@@ -279,7 +279,7 @@
       <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ i18n.t('eta.actionCancel') }}</h3>
-          <button class="close-btn" (click)="closeCancelModal()">✕</button>
+          <button class="close-btn" (click)="closeCancelModal()" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <form [formGroup]="cancelForm" (ngSubmit)="submitCancel()">
           <div class="form-group">
@@ -301,7 +301,7 @@
       <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ i18n.t('eta.actionRawJson') }}</h3>
-          <button class="close-btn" (click)="closeRawJson()">✕</button>
+          <button class="close-btn" (click)="closeRawJson()" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <div class="json-viewer">
           <pre><code>{{ selectedRawJson() }}</code></pre>
@@ -319,7 +319,7 @@
       <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ i18n.t('eta.newItemMapping') }}</h3>
-          <button class="close-btn" (click)="closeMappingModal()">✕</button>
+          <button class="close-btn" (click)="closeMappingModal()" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <form [formGroup]="mappingForm" (ngSubmit)="saveMapping()">
           <div class="form-group">
@@ -356,7 +356,7 @@
       <div class="modal-box" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ i18n.t('compliance.provider.settingsTitle') }}</h3>
-          <button class="modal-close" (click)="closeProviderModal()">✕</button>
+          <button class="modal-close" (click)="closeProviderModal()" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <form [formGroup]="providerForm" (ngSubmit)="saveProviderSettings()">
           <div class="form-group">

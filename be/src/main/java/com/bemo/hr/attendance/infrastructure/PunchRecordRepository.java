@@ -49,6 +49,15 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
     @Query("select p from PunchRecord p where p.punchedAt >= :from and p.punchedAt < :to order by p.punchedAt")
     List<PunchRecord> findInRange(@Param("from") Instant from, @Param("to") Instant to);
 
+    Optional<PunchRecord> findFirstByDeviceUserIdOrderByPunchedAtDesc(String deviceUserId);
+
+    @Query("select year(p.punchedAt) as y, month(p.punchedAt) as m, p.deviceUserId, " +
+            "count(p.id), min(p.punchedAt), max(p.punchedAt) " +
+            "from PunchRecord p " +
+            "where p.deviceUserId is not null and p.deviceUserId <> '' " +
+            "group by year(p.punchedAt), month(p.punchedAt), p.deviceUserId")
+    List<Object[]> summarizePerMonth();
+
     @Query("select p.deviceUserId, max(p.rawName), count(p), min(p.punchedAt), max(p.punchedAt) " +
             "from PunchRecord p where p.employeeId is null group by p.deviceUserId order by p.deviceUserId")
     List<Object[]> summarizeUnmatched();

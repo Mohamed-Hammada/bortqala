@@ -132,7 +132,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h4>{{ i18n.t('projects.issueCustody') }}</h4>
-        <button class="btn-close" (click)="showIssueModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showIssueModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitIssueCustody()">
         <div class="form-row-2">
@@ -180,7 +180,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h4>{{ i18n.t('projects.addExpense') }}</h4>
-        <button class="btn-close" (click)="showExpenseModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showExpenseModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitExpense()">
         <div class="form-row-2">
@@ -218,7 +218,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h4>{{ i18n.t('projects.settleCustody') }}</h4>
-        <button class="btn-close" (click)="showSettleModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showSettleModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitSettle()">
         <div class="form-group">

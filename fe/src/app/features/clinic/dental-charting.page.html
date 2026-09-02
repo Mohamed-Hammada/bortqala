@@ -392,7 +392,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.toothCondition') }} ({{ i18n.t('clinic.toothNumber') }}: {{ toothForm.toothNumber }})</h3>
-        <button class="btn-close" (click)="showToothModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showToothModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitToothCondition()">
         <div class="form-group">
@@ -439,7 +439,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.planTitle') }}</h3>
-        <button class="btn-close" (click)="showPlanModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showPlanModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitCreatePlan()">
         <div class="form-group">
@@ -463,7 +463,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.addPlanItem') }}</h3>
-        <button class="btn-close" (click)="showPlanItemModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showPlanItemModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitAddPlanItem()">
         <div class="form-row-2">
@@ -497,7 +497,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.examTemplateName') }}</h3>
-        <button class="btn-close" (click)="showTemplateModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showTemplateModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitCreateTemplate()">
         <div class="form-group">

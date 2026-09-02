@@ -224,7 +224,7 @@ export class AccountsPage {
           ? this.http.put(`/api/v1/finance/cost-centers/${id}`, payload)
           : this.http.post('/api/v1/finance/cost-centers', payload),
       );
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('accounts.costCenterSaved')); 
       this.costCenterModalOpen.set(false);
       const ccs = await firstValueFrom(this.http.get<CostCenter[]>('/api/v1/finance/cost-centers'));
       this.costCenters.set(ccs);
@@ -236,7 +236,7 @@ export class AccountsPage {
   async deleteCostCenter(id: string) {
     try {
       await firstValueFrom(this.http.delete(`/api/v1/finance/cost-centers/${id}`));
-      this.notification.success(this.i18n.t('common.delete') + ' ✓');
+      this.notification.success(this.i18n.t('accounts.costCenterDeleted')); 
       const ccs = await firstValueFrom(this.http.get<CostCenter[]>('/api/v1/finance/cost-centers'));
       this.costCenters.set(ccs);
     } catch (e) {
@@ -262,7 +262,7 @@ export class AccountsPage {
           ? this.http.put(`/api/v1/finance/accounts/${id}`, payload)
           : this.http.post('/api/v1/finance/accounts', payload),
       );
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('accounts.accountSaved')); 
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {

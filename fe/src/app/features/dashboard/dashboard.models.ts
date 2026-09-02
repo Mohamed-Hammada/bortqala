@@ -1,4 +1,12 @@
 export type ReportStatus = 'DRAFT' | 'IN_REVIEW' | 'APPROVED' | 'EXPORTED';
+/** BUG-017: existing half-month report for the dashboard period. */
+export interface HalfMonthReport {
+  reportId: string;
+  payCycle: 'HALF_MONTHLY';
+  status: ReportStatus;
+  unresolvedCount: number;
+  firstHalf: boolean;
+}
 export interface CategoryMetric {
   categoryId: string;
   categoryName: string;
@@ -41,6 +49,7 @@ export interface Dashboard {
   activePartiesCount: number;
   categories: CategoryMetric[];
   recentImports: RecentImport[];
+  halfMonthReports: HalfMonthReport[];
 }
 
 export interface AttendanceChartPoint {

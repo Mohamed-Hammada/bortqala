@@ -195,7 +195,7 @@
               </span>
             </div>
             <p *ngIf="a.reactionNotes" class="reaction-text">{{ a.reactionNotes }}</p>
-            <button class="btn-delete" (click)="deleteAllergy(a)">✕</button>
+            <button class="btn-delete" (click)="deleteAllergy(a)" [attr.aria-label]="i18n.t('common.delete')">✕</button>
           </div>
         </div>
         <ng-template #noAllergies>
@@ -218,7 +218,7 @@
               <span class="status-tag">{{ c.status }}</span>
             </div>
             <p *ngIf="c.notes" class="cond-notes">{{ c.notes }}</p>
-            <button class="btn-delete" (click)="deleteCondition(c)">✕</button>
+            <button class="btn-delete" (click)="deleteCondition(c)" [attr.aria-label]="i18n.t('common.delete')">✕</button>
           </div>
         </div>
         <ng-template #noConditions>
@@ -243,7 +243,7 @@
           <span class="doc-date">{{ d.uploadedAt | date:'yyyy-MM-dd' }}</span>
           <p *ngIf="d.notes" class="doc-notes">{{ d.notes }}</p>
         </div>
-        <button class="btn-delete" (click)="deleteDocument(d)">✕</button>
+        <button class="btn-delete" (click)="deleteDocument(d)" [attr.aria-label]="i18n.t('common.delete')">✕</button>
       </div>
     </div>
     <ng-template #noDocs>
@@ -314,7 +314,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.recordVitals') }}</h3>
-        <button class="btn-close" (click)="showVitalsModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showVitalsModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="saveVitals()">
         <div class="form-row-2">
@@ -371,7 +371,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.addAllergy') }}</h3>
-        <button class="btn-close" (click)="showAllergyModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showAllergyModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="saveAllergy()">
         <div class="form-group">
@@ -403,7 +403,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.addCondition') }}</h3>
-        <button class="btn-close" (click)="showConditionModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showConditionModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="saveCondition()">
         <div class="form-group">
@@ -439,7 +439,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.uploadDoc') }}</h3>
-        <button class="btn-close" (click)="showDocModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showDocModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="saveDocument()">
         <div class="form-group">
@@ -472,7 +472,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>{{ i18n.t('clinic.signConsent') }}</h3>
-        <button class="btn-close" (click)="showConsentModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showConsentModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="saveConsent()">
         <div class="form-group">

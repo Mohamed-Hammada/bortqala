@@ -325,6 +325,7 @@ public class DeviceIntegrationService {
             raw.forEach((key, item) -> result.put(String.valueOf(key), item == null ? "" : String.valueOf(item)));
             return Collections.unmodifiableMap(result);
         } catch (Exception ignored) {
+            log.debug("stringMap parse failed for value={}: {}", value, ignored.getMessage());
             return Map.of();
         }
     }
@@ -335,6 +336,7 @@ public class DeviceIntegrationService {
         try {
             return Collections.unmodifiableMap(new LinkedHashMap<>((Map<String, Object>) objectMapper.readValue(value, Map.class)));
         } catch (Exception ignored) {
+            log.debug("objectMap parse failed for value={}: {}", value, ignored.getMessage());
             return Map.of();
         }
     }
@@ -345,6 +347,7 @@ public class DeviceIntegrationService {
             List<?> raw = objectMapper.readValue(value, List.class);
             return raw.stream().map(String::valueOf).toList();
         } catch (Exception ignored) {
+            log.debug("stringList parse failed for value={}: {}", value, ignored.getMessage());
             return List.of();
         }
     }
@@ -363,6 +366,7 @@ public class DeviceIntegrationService {
         try {
             return objectMapper.readValue(objectMapper.writeValueAsString(node), Object.class);
         } catch (Exception ignored) {
+            log.debug("jsonValue conversion failed for node={}: {}", node, ignored.getMessage());
             return node.asText();
         }
     }

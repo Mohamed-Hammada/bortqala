@@ -2,6 +2,7 @@ package com.bemo.hr.platform.application;
 
 import com.bemo.hr.platform.api.PlatformApi;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @Transactional
 public class BulkUpdateService {
@@ -39,6 +41,7 @@ public class BulkUpdateService {
             } catch (BusinessRuleException e) {
                 results.add(new PlatformApi.BulkUpdateResultItem(id, false, e.getMessage()));
             } catch (Exception e) {
+                log.error("Unexpected error updating {} field={}: {}", id, request.field(), e.getMessage(), e);
                 results.add(new PlatformApi.BulkUpdateResultItem(id, false, "Unexpected error"));
             }
         }

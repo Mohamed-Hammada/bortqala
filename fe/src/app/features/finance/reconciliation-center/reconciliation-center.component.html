@@ -88,7 +88,7 @@
               {{ i18n.t('reconciliation.variance') }}: <strong>{{ activeDomain.varianceAmount | number:'1.2-2' }}</strong>
             </p>
           </div>
-          <button type="button" class="btn-close" (click)="closeDrilldown()">✕</button>
+          <button type="button" class="btn-close" (click)="closeDrilldown()" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
 
         <div class="modal-body">

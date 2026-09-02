@@ -22,6 +22,8 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
 
     List<Project> findAllByOrderByCreatedAtDesc();
 
+    List<Project> findTop10ByNameContainingIgnoreCaseOrCodeContainingIgnoreCaseOrderByNameAsc(String name, String code);
+
     List<Project> findByStatusOrderByCreatedAtDesc(ProjectStatus status);
 
     List<Project> findByCompanyIdOrderByCreatedAtDesc(String companyId);

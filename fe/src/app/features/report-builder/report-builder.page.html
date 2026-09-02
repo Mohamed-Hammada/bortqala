@@ -81,7 +81,7 @@
           @for (r of savedReports(); track r.id) {
             <div class="saved-item">
               <span>{{ r.name }} ({{ r.datasetCode }})</span>
-              <button class="btn-delete" (click)="deleteReport(r.id)">✕</button>
+              <button class="btn-delete" (click)="deleteReport(r.id)" [attr.aria-label]="i18n.t('common.delete')">✕</button>
             </div>
           }
         </div>

@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
     List<Employee> findAllByOrderByFullNameAsc();
 
+    List<Employee> findTop10ByFullNameContainingIgnoreCaseOrEmployeeCodeContainingIgnoreCaseOrderByFullNameAsc(String fullName, String employeeCode);
+
     Optional<Employee> findByDeviceUserId(String deviceUserId);
 
     List<Employee> findByDeviceUserIdIn(Collection<String> deviceUserIds);

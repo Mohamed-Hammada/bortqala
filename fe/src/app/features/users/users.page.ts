@@ -904,7 +904,7 @@ export class UsersPage {
       policyAssignments,
     };
     if (await this.store.save(this.editingId(), payload)) {
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('users.userSaved')); 
       this.closeDrawer();
     } else if (this.store.error()) {
       this.notification.error(this.store.error()!);

@@ -240,7 +240,7 @@ export class BanksPage {
           ? this.http.put(`/api/v1/finance/banks/${id}`, payload)
           : this.http.post('/api/v1/finance/banks', payload),
       );
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('banks.bankSaved')); 
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {
@@ -257,7 +257,7 @@ export class BanksPage {
     if (this.cashboxForm.invalid) return;
     try {
       await firstValueFrom(this.http.post('/api/v1/finance/treasury/cashboxes', this.cashboxForm.getRawValue()));
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('banks.cashboxSaved')); 
       this.cashboxModalOpen.set(false);
       await this.load();
     } catch (e) {
@@ -289,7 +289,7 @@ export class BanksPage {
         ...val,
         transactionDate: Date.now(),
       }));
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('banks.cashTxSaved')); 
       this.cashTxModalOpen.set(false);
       await this.load();
       await this.selectCashbox(cb);
@@ -325,7 +325,7 @@ export class BanksPage {
         issueDate: new Date(val.issueDate).getTime(),
         dueDate: new Date(val.dueDate).getTime(),
       }));
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('banks.chequeSaved')); 
       this.chequeModalOpen.set(false);
       await this.load();
     } catch (e) {

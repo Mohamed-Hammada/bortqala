@@ -42,28 +42,30 @@ public class AttendanceExplorerService {
 
     public List<AttendanceExplorerApi.MonthSummaryResponse> months() {
         log.debug("months called");
-        List<PunchRecord> punches = punchRecordRepository.findAll();
-        if (punches.isEmpty()) return List.of();
+        List<Object[]> rows = punchRecordRepository.summarizePerMonth();
+        if (rows.isEmpty()) return List.of();
 
         EmployeeIndex employees = employeeIndex();
-        Map<YearMonth, List<PunchRecord>> byMonth = punches.stream()
-                .collect(Collectors.groupingBy(
-                        punch -> YearMonth.from(punch.getPunchedAt().atZone(zoneId)),
-                        TreeMap::new,
-                        Collectors.toList()));
+        Map<YearMonth, List<Object[]>> byMonth = rows.stream().collect(Collectors.groupingBy(
+                row -> YearMonth.of(((Number) row[0]).intValue(), ((Number) row[1]).intValue()),
+                TreeMap::new,
+                Collectors.toList()));
 
         List<AttendanceExplorerApi.MonthSummaryResponse> result = new ArrayList<>();
-        byMonth.forEach((month, rows) -> {
-            Map<String, List<PunchRecord>> identities = groupByIdentity(rows);
-            long mapped = identities.keySet().stream().filter(id -> employees.resolve(id).isPresent()).count();
+        byMonth.forEach((month, monthRows) -> {
+            long total = monthRows.stream().mapToLong(row -> ((Number) row[3]).longValue()).sum();
+            long identities = monthRows.size();
+            long mapped = monthRows.stream().filter(row -> employees.resolve((String) row[2]).isPresent()).count();
+            Instant min = monthRows.stream().map(row -> (Instant) row[4]).min(Comparator.naturalOrder()).orElseThrow();
+            Instant max = monthRows.stream().map(row -> (Instant) row[5]).max(Comparator.naturalOrder()).orElseThrow();
             result.add(new AttendanceExplorerApi.MonthSummaryResponse(
                     month.toString(),
-                    rows.size(),
-                    identities.size(),
+                    total,
+                    identities,
                     mapped,
-                    identities.size() - mapped,
-                    rows.stream().map(PunchRecord::getPunchedAt).min(Comparator.naturalOrder()).orElseThrow().toEpochMilli(),
-                    rows.stream().map(PunchRecord::getPunchedAt).max(Comparator.naturalOrder()).orElseThrow().toEpochMilli()));
+                    identities - mapped,
+                    min.toEpochMilli(),
+                    max.toEpochMilli()));
         });
         result.sort(Comparator.comparing(AttendanceExplorerApi.MonthSummaryResponse::month).reversed());
         return result;
@@ -166,10 +168,8 @@ public class AttendanceExplorerService {
     }
 
     private YearMonth latestMonthFor(String deviceUserId) {
-        return punchRecordRepository.findAll().stream()
-                .filter(punch -> deviceUserId.equals(punch.getDeviceUserId()))
+        return punchRecordRepository.findFirstByDeviceUserIdOrderByPunchedAtDesc(deviceUserId)
                 .map(PunchRecord::getPunchedAt)
-                .max(Comparator.naturalOrder())
                 .map(instant -> YearMonth.from(instant.atZone(zoneId)))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No attendance punches found for this employee"));
     }

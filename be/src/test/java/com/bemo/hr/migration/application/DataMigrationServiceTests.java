@@ -77,6 +77,26 @@ class DataMigrationServiceTests {
     }
 
     @Test
+    @DisplayName("Dry-run skips malformed records without failing the batch")
+    void dryRunSkipsMalformedRecords() {
+        String batchId = "batch-malformed";
+        DataMigrationBatch batch = new DataMigrationBatch(batchId, MigrationEntityType.OPENING_AR, "ar_opening.xlsx", "admin");
+
+        when(batchRepository.findById(batchId)).thenReturn(Optional.of(batch));
+        when(recordRepository.findByBatchIdOrderByRowNumberAsc(batchId)).thenReturn(List.of(
+                new com.bemo.hr.migration.domain.DataMigrationRecord("r1", batchId, 1, "{not valid json", "VALID", null),
+                new com.bemo.hr.migration.domain.DataMigrationRecord("r2", batchId, 2, "{\"outstandingAmount\":\"25000.00\"}", "VALID", null),
+                new com.bemo.hr.migration.domain.DataMigrationRecord("r3", batchId, 3, "{\"outstandingAmount\":\"not-a-number\"}", "VALID", null)
+        ));
+
+        DataMigrationApi.DryRunResponse response = service.dryRun(batchId);
+
+        // Only the parseable record contributes; malformed rows are logged and skipped.
+        assertThat(response.totalCalculatedAmount()).isEqualByComparingTo(new BigDecimal("25000.00"));
+        assertThat(batch.getStatus()).isEqualTo("DRY_RUN_PASSED");
+    }
+
+    @Test
     @DisplayName("Commit and rollback lifecycle executes atomically")
     void commitAndRollbackLifecycle() {
         String batchId = "batch-456";

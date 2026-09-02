@@ -17,6 +17,9 @@ public interface JournalEntryRepository extends JpaRepository<JournalEntry, Stri
 
     List<JournalEntry> findByStatusInOrderByEntryDateDesc(List<JournalEntry.Status> statuses);
 
+    List<JournalEntry> findTop10ByEntryNumberContainingIgnoreCaseOrDescriptionContainingIgnoreCaseOrderByEntryDateDesc(
+            String entryNumber, String description);
+
     boolean existsByAppIdAndEntryNumber(String appId, String entryNumber);
 
     boolean existsByAppIdAndEntryNumberAndIdNot(String appId, String entryNumber, String id);

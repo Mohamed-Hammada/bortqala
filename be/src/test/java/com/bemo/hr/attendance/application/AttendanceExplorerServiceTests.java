@@ -40,7 +40,7 @@ class AttendanceExplorerServiceTests {
 
     @Test
     void months_returnsEmptyListWhenNoPunches() {
-        when(punchRecordRepository.findAll()).thenReturn(List.of());
+        when(punchRecordRepository.summarizePerMonth()).thenReturn(List.of());
 
         List<AttendanceExplorerApi.MonthSummaryResponse> result = service.months();
 
@@ -52,12 +52,15 @@ class AttendanceExplorerServiceTests {
         Instant t1 = LocalDate.of(2026, 8, 1).atTime(9, 0).atZone(zoneId).toInstant();
         Instant t2 = LocalDate.of(2026, 8, 1).atTime(17, 0).atZone(zoneId).toInstant();
 
-        PunchRecord p1 = new PunchRecord("b1", "d1", "s1", null, "DEV-01", "Raw User", t1, "line1", 1);
-        PunchRecord p2 = new PunchRecord("b1", "d1", "s1", null, "DEV-02", "Unmapped User", t2, "line2", 2);
-
         Employee e1 = new Employee("EMP-001", "Ahmed Ali", "DEV-01", "cat-1", EmploymentType.FIXED, LocalDate.of(2026, 1, 1), null, true);
 
-        when(punchRecordRepository.findAll()).thenReturn(List.of(p1, p2));
+        // summarizePerMonth returns one row per (year, month, deviceUserId, count, min, max)
+        List<Object[]> rows = List.of(
+                new Object[]{2026, 8, "DEV-01", 1L, t1, t1},
+                new Object[]{2026, 8, "DEV-02", 1L, t2, t2}
+        );
+
+        when(punchRecordRepository.summarizePerMonth()).thenReturn(rows);
         when(employeeRepository.findAllByOrderByFullNameAsc()).thenReturn(List.of(e1));
 
         List<AttendanceExplorerApi.MonthSummaryResponse> result = service.months();
@@ -68,6 +71,26 @@ class AttendanceExplorerServiceTests {
         assertThat(result.get(0).employeeCount()).isEqualTo(2);
         assertThat(result.get(0).mappedEmployeeCount()).isEqualTo(1);
         assertThat(result.get(0).unmatchedEmployeeCount()).isEqualTo(1);
+    }
+
+    @Test
+    void employee_withoutMonthResolvesLatestPunchMonthViaBoundedQuery() {
+        Instant latest = LocalDate.of(2026, 8, 20).atTime(9, 0).atZone(zoneId).toInstant();
+        PunchRecord latestPunch = new PunchRecord("b1", "d1", "s1", null, "DEV-01", "Raw User", latest, "line1", 1);
+        PunchRecord inMonth = new PunchRecord("b1", "d1", "s1", null, "DEV-01", "Raw User",
+                LocalDate.of(2026, 8, 20).atTime(17, 0).atZone(zoneId).toInstant(), "line2", 2);
+
+        Employee e1 = new Employee("EMP-001", "Ahmed Ali", "DEV-01", "cat-1", EmploymentType.FIXED, LocalDate.of(2026, 1, 1), null, true);
+
+        when(punchRecordRepository.findFirstByDeviceUserIdOrderByPunchedAtDesc("DEV-01"))
+                .thenReturn(java.util.Optional.of(latestPunch));
+        when(punchRecordRepository.findInRange(any(), any())).thenReturn(List.of(latestPunch, inMonth));
+        when(employeeRepository.findAllByOrderByFullNameAsc()).thenReturn(List.of(e1));
+
+        AttendanceExplorerApi.EmployeeAttendanceResponse response = service.employee("DEV-01", null);
+
+        assertThat(response.month()).isEqualTo("2026-08");
+        assertThat(response.punchCount()).isEqualTo(2);
     }
 
     @Test

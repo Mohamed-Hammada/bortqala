@@ -21,19 +21,19 @@ public class ProjectCostControlController {
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public CostControlSummaryResponse getSummary(@PathVariable String projectId) {
         return costControlService.getSummary(projectId);
     }
 
     @GetMapping("/budget-versions")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public List<ProjectBudgetVersionResponse> listBudgetVersions(@PathVariable String projectId) {
         return costControlService.listBudgetVersions(projectId);
     }
 
     @GetMapping("/budget-versions/{versionId}")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public ProjectBudgetVersionResponse getBudgetVersion(
             @PathVariable String projectId,
             @PathVariable String versionId) {
@@ -42,7 +42,7 @@ public class ProjectCostControlController {
 
     @PostMapping("/budget-versions")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectBudgetVersionResponse createBudgetVersion(
             @PathVariable String projectId,
             @Valid @RequestBody CreateBudgetVersionRequest req,
@@ -52,7 +52,7 @@ public class ProjectCostControlController {
     }
 
     @PostMapping("/budget-versions/{versionId}/approve")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectBudgetVersionResponse approveBudgetVersion(
             @PathVariable String projectId,
             @PathVariable String versionId,
@@ -62,14 +62,14 @@ public class ProjectCostControlController {
     }
 
     @GetMapping("/ledger")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public List<ProjectCostLedgerEntryResponse> listCostLedgerEntries(@PathVariable String projectId) {
         return costControlService.listCostLedgerEntries(projectId);
     }
 
     @PostMapping("/ledger")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectCostLedgerEntryResponse recordCostLedgerEntry(
             @PathVariable String projectId,
             @Valid @RequestBody RecordCostLedgerEntryRequest req,
@@ -79,13 +79,13 @@ public class ProjectCostControlController {
     }
 
     @GetMapping("/forecast-eac")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public List<ProjectForecastEacResponse> listForecastEac(@PathVariable String projectId) {
         return costControlService.listForecastEac(projectId);
     }
 
     @PutMapping("/forecast-eac")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectForecastEacResponse updateForecastEac(
             @PathVariable String projectId,
             @Valid @RequestBody UpdateForecastEacRequest req,

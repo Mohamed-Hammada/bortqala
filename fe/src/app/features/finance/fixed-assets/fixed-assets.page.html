@@ -96,7 +96,7 @@
         <input type="number" class="ltr" formControlName="usefulLifeMonths" min="1" max="480" step="1" />
       </div>
       <div class="modal-form-actions span-2">
-        <button class="button secondary" type="button" (click)="closeDrawer()">✕</button>
+        <button class="button secondary" type="button" (click)="closeDrawer()" [attr.aria-label]="i18n.t('common.close')">✕</button>
         <button class="button primary" type="submit" [disabled]="submitting() || assetForm.invalid">✓</button>
       </div>
     </form>
@@ -119,7 +119,7 @@
           <input type="number" class="ltr" formControlName="proceeds" min="0" step="0.01" />
         </div>
         <div class="modal-form-actions span-2">
-          <button class="button secondary" type="button" (click)="closeDispose()">✕</button>
+          <button class="button secondary" type="button" (click)="closeDispose()" [attr.aria-label]="i18n.t('common.close')">✕</button>
           <button class="button danger" type="submit" [disabled]="submitting() || disposeForm.invalid">{{ i18n.t('asset.dispose') }}</button>
         </div>
       </form>
@@ -133,7 +133,7 @@
         <input type="month" class="ltr" formControlName="yearMonth" />
       </div>
       <div class="modal-form-actions">
-        <button class="button secondary" type="button" (click)="closeRun()">✕</button>
+        <button class="button secondary" type="button" (click)="closeRun()" [attr.aria-label]="i18n.t('common.close')">✕</button>
         <button class="button primary" type="submit" [disabled]="submitting() || runForm.invalid">✓</button>
       </div>
     </form>

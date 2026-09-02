@@ -8,7 +8,7 @@
         <button type="button" class="btn btn-secondary btn-sm" (click)="printCertificate()">
           🖨️ {{ i18n.t('common.export') }}
         </button>
-        <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+        <button type="button" class="btn-close" (click)="close.emit()" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
     </div>
 

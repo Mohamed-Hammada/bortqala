@@ -19,7 +19,9 @@ public interface CustomerInvoiceRepository extends JpaRepository<CustomerInvoice
 
     boolean existsByInvoiceNumberIgnoreCase(String invoiceNumber);
 
-    List<CustomerInvoice> findAllByOrderByInvoiceDateDescCreatedAtDesc();
+List<CustomerInvoice> findAllByOrderByInvoiceDateDescCreatedAtDesc();
+
+    List<CustomerInvoice> findTop10ByInvoiceNumberContainingIgnoreCaseOrderByInvoiceDateDesc(String invoiceNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM CustomerInvoice i WHERE i.id IN :ids")

@@ -2,6 +2,7 @@ package com.bemo.hr.shared.security;
 
 import com.bemo.hr.shared.domain.NotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -38,7 +39,7 @@ public class DemoNoLoginController {
     }
 
     @PostMapping("/auth/demo-login")
-    ResponseEntity<AuthApi.LoginResponse> demoLogin(@RequestBody(required = false) AuthApi.DemoLoginRequest request,
+    ResponseEntity<AuthApi.LoginResponse> demoLogin(@RequestBody(required = false) @Valid AuthApi.DemoLoginRequest request,
                                                     HttpServletResponse servletResponse,
                                                     @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
         if (!demoNoLoginService.isValidSecret(request == null ? null : request.secret())) {

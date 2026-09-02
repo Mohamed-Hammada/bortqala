@@ -75,7 +75,7 @@ public class ExpenseClaimController {
     @PreAuthorize("hasAnyRole('HR_MANAGER','ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ExpenseClaimApi.ClaimResponse> approve(
             @PathVariable String id,
-            @RequestBody(required = false) ExpenseClaimApi.DecisionRequest request) {
+            @RequestBody(required = false) @Valid ExpenseClaimApi.DecisionRequest request) {
         ExpenseClaim claim = expenseClaimService.approve(id, request != null ? request.note() : null);
         return ResponseEntity.ok(toResponse(claim));
     }
@@ -84,7 +84,7 @@ public class ExpenseClaimController {
     @PreAuthorize("hasAnyRole('HR_MANAGER','ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ExpenseClaimApi.ClaimResponse> reject(
             @PathVariable String id,
-            @RequestBody(required = false) ExpenseClaimApi.DecisionRequest request) {
+            @RequestBody(required = false) @Valid ExpenseClaimApi.DecisionRequest request) {
         ExpenseClaim claim = expenseClaimService.reject(id, request != null ? request.note() : null);
         return ResponseEntity.ok(toResponse(claim));
     }

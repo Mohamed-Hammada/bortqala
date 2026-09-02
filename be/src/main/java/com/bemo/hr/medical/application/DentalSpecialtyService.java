@@ -85,7 +85,7 @@ public class DentalSpecialtyService {
         DentalRecord.Condition condition;
         try {
             condition = DentalRecord.Condition.valueOf(request.condition().trim().toUpperCase());
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             condition = DentalRecord.Condition.CARIES;
         }
 
@@ -93,7 +93,9 @@ public class DentalSpecialtyService {
         if (request.surface() != null && !request.surface().isBlank()) {
             try {
                 surface = DentalRecord.Surface.valueOf(request.surface().trim().toUpperCase());
-            } catch (Exception ignored) {}
+            } catch (IllegalArgumentException e) {
+                surface = null;
+            }
         }
 
         DentalRecord record = new DentalRecord(

@@ -249,7 +249,7 @@ public class RentalService {
                 }
             };
         } catch (Exception e) {
-            log.warn("Failed to parse dates for rental charge calculation: {}", e.getMessage());
+            log.warn("Failed to parse dates for rental charge calculation: {}", e.getMessage(), e);
             return contract.getRateAmount() != null ? contract.getRateAmount() : BigDecimal.ZERO;
         }
     }

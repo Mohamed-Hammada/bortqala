@@ -49,7 +49,7 @@
         >
           🚫 {{ i18n.t('common.cancel') }}
         </button>
-        <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+        <button type="button" class="btn-close" (click)="close.emit()" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
     </div>
 
@@ -354,7 +354,7 @@
       <h3 class="modal-title">
         {{ editingBoqItem() ? i18n.t('tenders.editBoqItem') : i18n.t('tenders.addBoqItem') }}
       </h3>
-      <button type="button" class="btn-close" (click)="showBoqModal.set(false)">✕</button>
+      <button type="button" class="btn-close" (click)="showBoqModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -400,7 +400,7 @@
   <div class="modal-card modal-md" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">{{ i18n.t('tenders.inviteBidder') }}</h3>
-      <button type="button" class="btn-close" (click)="showInviteModal.set(false)">✕</button>
+      <button type="button" class="btn-close" (click)="showInviteModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -434,7 +434,7 @@
   <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">{{ i18n.t('tenders.submitBid') }}: {{ submittingBidder()?.bidderName }}</h3>
-      <button type="button" class="btn-close" (click)="showSubmitBidModal.set(false)">✕</button>
+      <button type="button" class="btn-close" (click)="showSubmitBidModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
     <div class="modal-body">
       <table class="table">
@@ -476,7 +476,7 @@
   <div class="modal-card modal-sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">{{ i18n.t('tenders.technicalScore') }}</h3>
-      <button type="button" class="btn-close" (click)="showTechEvalModal.set(false)">✕</button>
+      <button type="button" class="btn-close" (click)="showTechEvalModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -500,7 +500,7 @@
   <div class="modal-card modal-md" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">{{ i18n.t('tenders.addClarification') }}</h3>
-      <button type="button" class="btn-close" (click)="showClarifModal.set(false)">✕</button>
+      <button type="button" class="btn-close" (click)="showClarifModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -530,7 +530,7 @@
   <div class="modal-card modal-md" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">{{ i18n.t('tenders.answer') }}</h3>
-      <button type="button" class="btn-close" (click)="showAnswerModal.set(false)">✕</button>
+      <button type="button" class="btn-close" (click)="showAnswerModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
     <div class="modal-body">
       <p><strong>{{ answeringClarif()?.question }}</strong></p>
@@ -561,7 +561,7 @@
   <div class="modal-card modal-md" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">🏆 {{ i18n.t('tenders.awardTender') }}</h3>
-      <button type="button" class="btn-close" (click)="showAwardModal.set(false)">✕</button>
+      <button type="button" class="btn-close" (click)="showAwardModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">

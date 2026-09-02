@@ -334,7 +334,7 @@
       <div class="modal-card">
         <div class="modal-header">
           <h2>{{ i18n.t('crm.newLead') }}</h2>
-          <button class="btn-close" (click)="showLeadModal.set(false)">✕</button>
+          <button class="btn-close" (click)="showLeadModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <form [formGroup]="leadForm" (ngSubmit)="submitLead()">
           <div class="modal-body">
@@ -390,7 +390,7 @@
       <div class="modal-card timeline-card">
         <div class="modal-header">
           <h2>{{ selectedLead()?.name }} — {{ i18n.t('crm.activities') }}</h2>
-          <button class="btn-close" (click)="selectedLead.set(null)">✕</button>
+          <button class="btn-close" (click)="selectedLead.set(null)" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <div class="modal-body">
           <div class="tab-actions-bar">
@@ -433,7 +433,7 @@
       <div class="modal-card">
         <div class="modal-header">
           <h2>{{ i18n.t('crm.newActivity') }}</h2>
-          <button class="btn-close" (click)="showActivityModal.set(false)">✕</button>
+          <button class="btn-close" (click)="showActivityModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <form [formGroup]="activityForm" (ngSubmit)="submitActivity()">
           <div class="modal-body">
@@ -473,7 +473,7 @@
       <div class="modal-card">
         <div class="modal-header">
           <h2>{{ i18n.t('crm.newChannel') }}</h2>
-          <button class="btn-close" (click)="showChannelModal.set(false)">✕</button>
+          <button class="btn-close" (click)="showChannelModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
         </div>
         <form [formGroup]="channelForm" (ngSubmit)="submitChannel()">
           <div class="modal-body">

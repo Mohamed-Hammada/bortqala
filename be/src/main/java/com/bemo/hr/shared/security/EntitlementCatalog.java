@@ -13,7 +13,7 @@ public class EntitlementCatalog {
             f("workforce.enabled", "WORKFORCE", Set.of(), "/api/v1/workforce"),
             f("workforce.attendance.enabled", "WORKFORCE", Set.of("workforce.enabled"), "/api/v1/workforce/attendance"),
             f("workforce.dashboard.enabled", "WORKFORCE", Set.of("workforce.enabled"), "/api/v1/workforce/dashboard"),
-            f("workforce.contractorAccounts.enabled", "WORKFORCE", Set.of("workforce.enabled"), "/api/v1/workforce/contractors", "/api/v1/workforce/settlements"),
+            f("workforce.contractorAccounts.enabled", "WORKFORCE", Set.of("workforce.enabled"), "/api/v1/workforce/settlements"),
             f("payroll.enabled", "PAYROLL", Set.of("employeeAttendance.enabled"), "/api/v1/payroll"),
             f("procurement.enabled", "PROCUREMENT", Set.of(), "/api/v1/trade/procurement"),
             f("purchasing.enabled", "PROCUREMENT", Set.of()),

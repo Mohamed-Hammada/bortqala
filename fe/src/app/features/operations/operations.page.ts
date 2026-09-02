@@ -224,7 +224,7 @@ export class OperationsPage {
       uomId: raw.uomId || null,
       version: null,
     })) {
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('operations.itemCreatedSuccess')); 
       this.close();
     }
   }
@@ -338,7 +338,7 @@ export class OperationsPage {
       occurredAt: new Date(value.occurredAt).getTime(),
     };
     if (await this.store.transaction(payload)) {
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('operations.transactionSaved')); 
       this.close();
     }
   }
@@ -346,7 +346,7 @@ export class OperationsPage {
     if (this.advanceForm.invalid) return this.advanceForm.markAllAsTouched();
     const value = this.advanceForm.getRawValue();
     if (await this.store.advance({ ...value, occurredAt: new Date(value.occurredAt).getTime() })) {
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t('operations.advanceSaved')); 
       this.close();
     }
   }

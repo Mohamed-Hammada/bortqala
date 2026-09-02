@@ -47,7 +47,7 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
       'ADMIN', 'SUPER_ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER',
       'INVENTORY_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR',
     ],
-    requiredFeature: null,
+    requiredFeature: 'procurement.enabled',
   },
   { menuId: 'sales', route: '/trade/sales', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
   { menuId: 'pos', route: '/trade/pos', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },

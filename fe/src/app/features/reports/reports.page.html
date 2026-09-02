@@ -343,7 +343,7 @@
                 <button class="button secondary small" type="button" (click)="runSchedule(s.id)" [disabled]="runningSchedule() === s.id">
                   {{ runningSchedule() === s.id ? '…' : i18n.t('reports.runNow') }}
                 </button>
-                <button class="button danger small" type="button" (click)="deleteSchedule(s.id)">✕</button>
+                <button class="button danger small" type="button" (click)="deleteSchedule(s.id)" [attr.aria-label]="i18n.t('common.delete')">✕</button>
               </td>
             </tr>
           }

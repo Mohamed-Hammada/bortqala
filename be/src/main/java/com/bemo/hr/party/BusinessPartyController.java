@@ -126,13 +126,13 @@ class BusinessPartyController {
 
     @PostMapping("/{id}/onboarding/suspend")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    BusinessPartyApi.Response suspend(@PathVariable String id, @RequestBody SupplierOnboardingApi.TransitionRequest request) {
+    BusinessPartyApi.Response suspend(@PathVariable String id, @RequestBody @Valid SupplierOnboardingApi.TransitionRequest request) {
         return supplierOnboardingService.suspend(id, request.reason());
     }
 
     @PostMapping("/{id}/onboarding/blacklist")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    BusinessPartyApi.Response blacklist(@PathVariable String id, @RequestBody SupplierOnboardingApi.TransitionRequest request) {
+    BusinessPartyApi.Response blacklist(@PathVariable String id, @RequestBody @Valid SupplierOnboardingApi.TransitionRequest request) {
         return supplierOnboardingService.blacklist(id, request.reason());
     }
 }

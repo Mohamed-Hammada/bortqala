@@ -72,7 +72,7 @@
     <div class="drawer-panel" (click)="$event.stopPropagation()">
       <div class="drawer-header">
         <h3>{{ editingGroupId() ? i18n.t('policy.editGroup') : i18n.t('policy.createGroup') }}</h3>
-        <button type="button" class="btn-close" (click)="closeDrawer()">✕</button>
+        <button type="button" class="btn-close" (click)="closeDrawer()" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
 
       <div class="drawer-body">

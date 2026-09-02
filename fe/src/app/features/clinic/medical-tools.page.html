@@ -173,7 +173,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h4>{{ i18n.t('clinic.scheduleTelemedicine') }}</h4>
-        <button class="btn-close" (click)="showTelemedModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showTelemedModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitTelemed()">
         <div class="form-group">
@@ -205,7 +205,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h4>{{ i18n.t('clinic.licenseRegistry') }}</h4>
-        <button class="btn-close" (click)="showLicenseModal.set(false)">✕</button>
+        <button class="btn-close" (click)="showLicenseModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
       </div>
       <form (ngSubmit)="submitLicense()">
         <div class="form-group">

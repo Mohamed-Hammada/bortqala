@@ -21,13 +21,13 @@ public class ProjectDailyReportController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public List<DailyReportResponse> listDailyReports(@PathVariable String projectId) {
         return dailyReportService.listDailyReports(projectId);
     }
 
     @GetMapping("/{reportId}")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public DailyReportResponse getDailyReport(
             @PathVariable String projectId,
             @PathVariable String reportId) {
@@ -36,7 +36,7 @@ public class ProjectDailyReportController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public DailyReportResponse createDailyReport(
             @PathVariable String projectId,
             @Valid @RequestBody CreateDailyReportRequest req,
@@ -46,7 +46,7 @@ public class ProjectDailyReportController {
     }
 
     @PutMapping("/{reportId}")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public DailyReportResponse updateDailyReport(
             @PathVariable String projectId,
             @PathVariable String reportId,
@@ -58,7 +58,7 @@ public class ProjectDailyReportController {
 
     @DeleteMapping("/{reportId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public void deleteDailyReport(
             @PathVariable String projectId,
             @PathVariable String reportId,
@@ -68,7 +68,7 @@ public class ProjectDailyReportController {
     }
 
     @PostMapping("/{reportId}/submit")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public DailyReportResponse submitDailyReport(
             @PathVariable String projectId,
             @PathVariable String reportId,
@@ -78,7 +78,7 @@ public class ProjectDailyReportController {
     }
 
     @PostMapping("/{reportId}/approve")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public DailyReportResponse approveDailyReport(
             @PathVariable String projectId,
             @PathVariable String reportId,
@@ -88,7 +88,7 @@ public class ProjectDailyReportController {
     }
 
     @PostMapping("/{reportId}/reopen")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public DailyReportResponse reopenDailyReport(
             @PathVariable String projectId,
             @PathVariable String reportId,
@@ -101,7 +101,7 @@ public class ProjectDailyReportController {
 
     @PostMapping("/copy-previous")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public DailyReportResponse copyPreviousDay(
             @PathVariable String projectId,
             @RequestParam Long targetDate,
@@ -111,7 +111,7 @@ public class ProjectDailyReportController {
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public DprPeriodSummaryResponse getPeriodSummary(
             @PathVariable String projectId,
             @RequestParam Long startDate,

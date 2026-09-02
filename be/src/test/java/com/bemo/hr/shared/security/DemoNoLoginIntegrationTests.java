@@ -49,11 +49,21 @@ class DemoNoLoginIntegrationTests {
     }
 
     @Test
-    void missingSecretIsRejectedWithNotFound() throws Exception {
+    void missingSecretIsRejectedWithValidationFailed() throws Exception {
         mockMvc.perform(post("/api/v1/auth/demo-login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("DEMO_NO_LOGIN_LINK_INVALID"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+    }
+
+    @Test
+    void tooLongSecretIsRejectedWithValidationFailed() throws Exception {
+        String longSecret = "x".repeat(129);
+        mockMvc.perform(post("/api/v1/auth/demo-login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"secret\":\"" + longSecret + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
     }
 }

@@ -65,15 +65,11 @@ export class WorkforceService {
   }
 
   createContractor(payload: Partial<Contractor>): Observable<Contractor> {
-    return this.http.post<Contractor>('/api/v1/workforce/contractors', payload).pipe(
-      tap(() => this.loadContractors().subscribe())
-    );
+    return this.http.post<Contractor>('/api/v1/workforce/contractors', payload);
   }
 
   updateContractor(id: string, payload: Partial<Contractor>): Observable<Contractor> {
-    return this.http.put<Contractor>(`/api/v1/workforce/contractors/${id}`, payload).pipe(
-      tap(() => this.loadContractors().subscribe())
-    );
+    return this.http.put<Contractor>(`/api/v1/workforce/contractors/${id}`, payload);
   }
 
   exportContractorsExcel(): Observable<Blob> {
@@ -88,9 +84,7 @@ export class WorkforceService {
   }
 
   createCategory(payload: Partial<WorkerCategory>): Observable<WorkerCategory> {
-    return this.http.post<WorkerCategory>('/api/v1/workforce/categories', payload).pipe(
-      tap(() => this.loadCategories().subscribe())
-    );
+    return this.http.post<WorkerCategory>('/api/v1/workforce/categories', payload);
   }
 
   exportCategoriesExcel(): Observable<Blob> {
@@ -105,15 +99,11 @@ export class WorkforceService {
   }
 
   createWorker(payload: Partial<Worker>): Observable<Worker> {
-    return this.http.post<Worker>('/api/v1/workforce/workers', payload).pipe(
-      tap(() => this.loadWorkers().subscribe())
-    );
+    return this.http.post<Worker>('/api/v1/workforce/workers', payload);
   }
 
   updateWorker(id: string, payload: Partial<Worker>): Observable<Worker> {
-    return this.http.put<Worker>(`/api/v1/workforce/workers/${id}`, payload).pipe(
-      tap(() => this.loadWorkers().subscribe())
-    );
+    return this.http.put<Worker>(`/api/v1/workforce/workers/${id}`, payload);
   }
 
   loadEmployees(): Observable<AdvanceEmployeeOption[]> {

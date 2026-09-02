@@ -166,7 +166,8 @@ public class ProjectExecutiveDashboardService {
             activeWorkforceHeadcount = laborSnapshots.stream()
                     .mapToInt(DailyLaborSnapshot::getHeadcount)
                     .sum();
-        } catch (Exception ignored) {
+        } catch (RuntimeException ex) {
+            log.warn("Could not aggregate labor headcount for executive dashboard; using 0", ex);
         }
 
         // Treasury (Cash & Banks)

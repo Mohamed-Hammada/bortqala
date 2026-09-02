@@ -111,7 +111,7 @@
                   <div class="row-actions">
                     <button class="row-action" (click)="openEditCostCenter(cc)">✎</button>
                     @if (!cc.isHeader) {
-                      <button class="row-action danger" (click)="deleteCostCenter(cc.id)">✕</button>
+                      <button class="row-action danger" (click)="deleteCostCenter(cc.id)" [attr.aria-label]="i18n.t('common.delete')">✕</button>
                     }
                   </div>
                 </td>

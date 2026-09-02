@@ -21,20 +21,20 @@ public class ProjectTenderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public List<ProjectTenderResponse> listTenders() {
         return tenderService.listTenders();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('projects.read', 'projects.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
     public ProjectTenderResponse getTender(@PathVariable String id) {
         return tenderService.getTender(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectTenderResponse createTender(
             @Valid @RequestBody CreateTenderRequest req,
             Authentication auth) {
@@ -43,7 +43,7 @@ public class ProjectTenderController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectTenderResponse updateTender(
             @PathVariable String id,
             @Valid @RequestBody UpdateTenderRequest req,
@@ -54,21 +54,21 @@ public class ProjectTenderController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public void deleteTender(@PathVariable String id, Authentication auth) {
         String userId = auth != null ? auth.getName() : null;
         tenderService.deleteTender(id, userId);
     }
 
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectTenderResponse publishTender(@PathVariable String id, Authentication auth) {
         String userId = auth != null ? auth.getName() : null;
         return tenderService.publishTender(id, userId);
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectTenderResponse cancelTender(@PathVariable String id, Authentication auth) {
         String userId = auth != null ? auth.getName() : null;
         return tenderService.cancelTender(id, userId);
@@ -76,7 +76,7 @@ public class ProjectTenderController {
 
     @PostMapping("/{id}/boq")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TenderBoqItemResponse addBoqItem(
             @PathVariable String id,
             @Valid @RequestBody CreateBoqItemRequest req,
@@ -86,7 +86,7 @@ public class ProjectTenderController {
     }
 
     @PutMapping("/{id}/boq/{itemId}")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TenderBoqItemResponse updateBoqItem(
             @PathVariable String id,
             @PathVariable String itemId,
@@ -98,7 +98,7 @@ public class ProjectTenderController {
 
     @DeleteMapping("/{id}/boq/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public void deleteBoqItem(
             @PathVariable String id,
             @PathVariable String itemId,
@@ -109,7 +109,7 @@ public class ProjectTenderController {
 
     @PostMapping("/{id}/bidders")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TenderBidderResponse inviteBidder(
             @PathVariable String id,
             @Valid @RequestBody InviteBidderRequest req,
@@ -119,7 +119,7 @@ public class ProjectTenderController {
     }
 
     @PostMapping("/{id}/bidders/{bidderId}/submit")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TenderBidderResponse submitBid(
             @PathVariable String id,
             @PathVariable String bidderId,
@@ -130,7 +130,7 @@ public class ProjectTenderController {
     }
 
     @PostMapping("/{id}/bidders/{bidderId}/bid-bond")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TenderBidderResponse recordBidBond(
             @PathVariable String id,
             @PathVariable String bidderId,
@@ -142,7 +142,7 @@ public class ProjectTenderController {
 
     @PostMapping("/{id}/bidders/{bidderId}/technical-eval")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public void evaluateBidderTechnical(
             @PathVariable String id,
             @PathVariable String bidderId,
@@ -153,7 +153,7 @@ public class ProjectTenderController {
     }
 
     @PostMapping("/{id}/evaluate")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TenderEvaluationSummaryResponse calculateEvaluation(
             @PathVariable String id,
             Authentication auth) {
@@ -162,7 +162,7 @@ public class ProjectTenderController {
     }
 
     @PostMapping("/{id}/award")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public ProjectTenderResponse awardTender(
             @PathVariable String id,
             @Valid @RequestBody AwardTenderRequest req,
@@ -173,7 +173,7 @@ public class ProjectTenderController {
 
     @PostMapping("/{id}/clarifications")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TenderClarificationResponse addClarification(
             @PathVariable String id,
             @Valid @RequestBody CreateClarificationRequest req,
@@ -183,7 +183,7 @@ public class ProjectTenderController {
     }
 
     @PutMapping("/{id}/clarifications/{clarifId}")
-    @PreAuthorize("hasAuthority('projects.manage')")
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
     public TenderClarificationResponse answerClarification(
             @PathVariable String id,
             @PathVariable String clarifId,

@@ -64,7 +64,7 @@
                       (click)="activeTag.set(activeTag() === tag.id ? null : tag.id)">
                 {{ tag.name }}
               </button>
-              <button class="tag-x" (click)="deleteTag(tag)">✕</button>
+              <button class="tag-x" (click)="deleteTag(tag)" [attr.aria-label]="i18n.t('common.remove')">✕</button>
             </span>
           } @empty {
             <span class="muted">{{ i18n.t('doc.tags') }} —</span>
@@ -104,7 +104,7 @@
                   @for (tag of result.tags; track tag.id) {
                     <span class="tag-chip" [style.--tag-color]="tag.color ?? '#d4af37'">
                       {{ tag.name }}
-                      <button class="tag-x" (click)="removeTag(result, tag)">✕</button>
+                      <button class="tag-x" (click)="removeTag(result, tag)" [attr.aria-label]="i18n.t('common.remove')">✕</button>
                     </span>
                   }
                   @if (assignableTags(result).length > 0) {

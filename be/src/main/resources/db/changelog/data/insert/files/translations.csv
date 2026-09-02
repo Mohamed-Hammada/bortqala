@@ -9835,12 +9835,12 @@ t-004917-ar;operations.transfers;ar-EG;تحويلات المخزون
 t-004917-en;operations.transfers;en-US;Warehouse transfers
 t-004918-ar;operations.transfersHint;ar-EG;انقل المخزون المتاح من خلال دورة شحن واستلام محكومة.
 t-004918-en;operations.transfersHint;en-US;Move available stock through a controlled ship and receive workflow.
-t-004919-ar;operations.unit;ar-EG;وحدة القياس
-t-004919-en;operations.unit;en-US;Unit
+t-004919-ar;operations.unit;ar-EG;رمز الوحدة
+t-004919-en;operations.unit;en-US;Unit code
 t-004920-ar;operations.unitCode;ar-EG;رمز الوحدة
 t-004920-en;operations.unitCode;en-US;Unit code
-t-004921-ar;operations.uom;ar-EG;وحدة القياس
-t-004921-en;operations.uom;en-US;Unit of measure
+t-004921-ar;operations.uom;ar-EG;اسم وحدة القياس
+t-004921-en;operations.uom;en-US;Unit name
 t-004922-ar;operations.uomCreatedSuccess;ar-EG;تم إنشاء وحدة القياس بنجاح ✓
 t-004922-en;operations.uomCreatedSuccess;en-US;Unit of measure created successfully.
 t-004923-ar;operations.valuation.adjustmentAccount;ar-EG;حساب فروق وتسويات المخزون
@@ -17831,3 +17831,59 @@ t-008915-ar;payroll.wpsDownloadButton;ar-EG;تحميل ملف البنك
 t-008915-en;payroll.wpsDownloadButton;en-US;Download Bank File
 t-008916-ar;payroll.wpsExportSuccess;ar-EG;تم تحميل وتصدير ملف التحويل البنكي بنجاح
 t-008916-en;payroll.wpsExportSuccess;en-US;WPS bank clearing file exported successfully
+t-008917-ar;dashboard.halfMonthExistsHint;ar-EG;يوجد تقرير نصف شهري لهذا الشهر، لكن لم يُنشأ التقرير الشهري بعد.
+t-008917-en;dashboard.halfMonthExistsHint;en-US;A half-month report exists for this month, but the monthly report has not been created yet.
+t-008918-ar;dashboard.halfMonthFirst;ar-EG;التقرير النصفي الأول
+t-008918-en;dashboard.halfMonthFirst;en-US;First half report
+t-008919-ar;dashboard.halfMonthSecond;ar-EG;التقرير النصفي الثاني
+t-008919-en;dashboard.halfMonthSecond;en-US;Second half report
+t-008920-ar;operations.itemCreatedSuccess;ar-EG;تم إنشاء الصنف بنجاح
+t-008920-en;operations.itemCreatedSuccess;en-US;Item created successfully
+t-008921-ar;operations.transactionSaved;ar-EG;تم تسجيل الحركة بنجاح
+t-008921-en;operations.transactionSaved;en-US;Transaction recorded successfully
+t-008922-ar;operations.advanceSaved;ar-EG;تم تسجيل السلفة بنجاح
+t-008922-en;operations.advanceSaved;en-US;Advance recorded successfully
+t-008923-ar;org.companySaved;ar-EG;تم حفظ الشركة بنجاح
+t-008923-en;org.companySaved;en-US;Company saved successfully
+t-008924-ar;org.branchSaved;ar-EG;تم حفظ الفرع بنجاح
+t-008924-en;org.branchSaved;en-US;Branch saved successfully
+t-008925-ar;org.warehouseSaved;ar-EG;تم حفظ المخزن بنجاح
+t-008925-en;org.warehouseSaved;en-US;Warehouse saved successfully
+t-008926-ar;org.departmentSaved;ar-EG;تم حفظ القسم بنجاح
+t-008926-en;org.departmentSaved;en-US;Department saved successfully
+t-008927-ar;accounts.costCenterSaved;ar-EG;تم حفظ مركز التكلفة بنجاح
+t-008927-en;accounts.costCenterSaved;en-US;Cost center saved successfully
+t-008928-ar;accounts.accountSaved;ar-EG;تم حفظ الحساب بنجاح
+t-008928-en;accounts.accountSaved;en-US;Account saved successfully
+t-008929-ar;banks.bankSaved;ar-EG;تم حفظ البنك بنجاح
+t-008929-en;banks.bankSaved;en-US;Bank saved successfully
+t-008930-ar;banks.cashboxSaved;ar-EG;تم حفظ الخزنة بنجاح
+t-008930-en;banks.cashboxSaved;en-US;Cashbox saved successfully
+t-008931-ar;banks.cashTxSaved;ar-EG;تم تسجيل العملية النقدية بنجاح
+t-008931-en;banks.cashTxSaved;en-US;Cash transaction recorded successfully
+t-008932-ar;banks.chequeSaved;ar-EG;تم حفظ الشيك بنجاح
+t-008932-en;banks.chequeSaved;en-US;Cheque saved successfully
+t-008933-ar;users.userSaved;ar-EG;تم حفظ المستخدم بنجاح
+t-008933-en;users.userSaved;en-US;User saved successfully
+t-008934-ar;categories.deactivated;ar-EG;تم تعطيل الفئة بنجاح
+t-008934-en;categories.deactivated;en-US;Category deactivated successfully
+t-008935-ar;accounts.costCenterDeleted;ar-EG;تم حذف مركز التكلفة بنجاح
+t-008935-en;accounts.costCenterDeleted;en-US;Cost center deleted successfully
+t-008936-ar;projects.custodyIssued;ar-EG;تم إصدار العهدة بنجاح
+t-008936-en;projects.custodyIssued;en-US;Custody issued successfully
+t-008937-ar;projects.custodyExpenseRecorded;ar-EG;تم تسجيل مصروف العهدة بنجاح
+t-008937-en;projects.custodyExpenseRecorded;en-US;Custody expense recorded successfully
+t-008938-ar;projects.custodyExpenseApproved;ar-EG;تم اعتماد مصروف العهدة
+t-008938-en;projects.custodyExpenseApproved;en-US;Custody expense approved
+t-008939-ar;projects.custodyExpenseRejected;ar-EG;تم رفض مصروف العهدة
+t-008939-en;projects.custodyExpenseRejected;en-US;Custody expense rejected
+t-008940-ar;projects.custodySettled;ar-EG;تم تسوية العهدة
+t-008940-en;projects.custodySettled;en-US;Custody settled successfully
+t-008941-ar;costControl.budgetVersionSaved;ar-EG;تم حفظ إصدار الميزانية بنجاح
+t-008941-en;costControl.budgetVersionSaved;en-US;Budget version saved successfully
+t-008942-ar;costControl.costLedgerSaved;ar-EG;تم تسجيل قيد التكلفة بنجاح
+t-008942-en;costControl.costLedgerSaved;en-US;Cost ledger entry recorded successfully
+t-008943-ar;clinic.telemedScheduled;ar-EG;تم حجز الاستشارة عن بعد بنجاح
+t-008943-en;clinic.telemedScheduled;en-US;Telemedicine session scheduled successfully
+t-008944-ar;clinic.licenseRegistered;ar-EG;تم تسجيل الترخيص بنجاح
+t-008944-en;clinic.licenseRegistered;en-US;License registered successfully

@@ -8,6 +8,7 @@ import { Contractor } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { downloadBlob } from '../../../../core/download';
 import { NotificationService } from '../../../../core/notification.service';
+import { apiErrorMessage } from '../../../../core/api-error';
 import { WorkforceExcelImportButtonComponent } from '../../ui/workforce-excel-import-button.component';
 
 @Component({
@@ -85,21 +86,22 @@ export class ContractorsComponent implements OnInit {
         ? await firstValueFrom(this.workforceService.updateContractor(this.editingContractor.id, this.form))
         : await firstValueFrom(this.workforceService.createContractor(this.form));
 
+      if (!saved?.id) {
+        this.saveError.set(this.i18n.t('workforce.ui.contractors.verifyFailed')); 
+        return;
+      }
+
       const refreshed = await firstValueFrom(this.workforceService.loadContractors());
-      if (!saved?.id || !refreshed.some(contractor => contractor.id === saved.id)) {
-        throw new Error(this.i18n.t('workforce.ui.contractors.verifyFailed')); 
+      if (!refreshed.some(contractor => contractor.id === saved.id)) {
+        this.saveError.set(this.i18n.t('workforce.ui.contractors.verifyFailed')); 
+        return;
       }
 
       this.editingContractor = saved;
       this.isModalOpen = false;
       this.notification.success(this.i18n.t(wasEditing ? 'workforce.ui.contractors.updatedSuccess' : 'workforce.ui.contractors.createdSuccess')); 
-    } catch (error: any) {
-      const message =
-        error?.error?.message ??
-        error?.error?.detail ??
-        error?.message ??
-        this.i18n.t('workforce.ui.contractors.saveFailed');
-      this.saveError.set(message);
+    } catch (error: unknown) {
+      this.saveError.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.saving.set(false);
     }

@@ -114,7 +114,7 @@ export class ProjectCostControlComponent implements OnInit {
     this.costControlService.createBudgetVersion(this.projectId, req).subscribe({
       next: () => {
         this.showBudgetModal.set(false);
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('costControl.budgetVersionSaved'));
         this.loadData();
       }
     });
@@ -139,7 +139,7 @@ export class ProjectCostControlComponent implements OnInit {
     this.costControlService.recordCostLedgerEntry(this.projectId, req).subscribe({
       next: () => {
         this.showLedgerModal.set(false);
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('costControl.costLedgerSaved'));
         this.loadData();
       }
     });

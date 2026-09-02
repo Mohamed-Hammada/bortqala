@@ -100,7 +100,7 @@ export class SiteCustodyListComponent implements OnInit {
         this.saving.set(false);
         this.showIssueModal.set(false);
         this.loadCustodies();
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('projects.custodyIssued'));
       },
       error: () => this.saving.set(false),
     });
@@ -126,7 +126,7 @@ export class SiteCustodyListComponent implements OnInit {
         this.saving.set(false);
         this.showExpenseModal.set(false);
         this.loadCustodies();
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('projects.custodyExpenseRecorded'));
       },
       error: () => this.saving.set(false),
     });
@@ -136,7 +136,7 @@ export class SiteCustodyListComponent implements OnInit {
     this.projectService.approveCustodyExpense(expense.id).subscribe({
       next: () => {
         this.loadCustodies();
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('projects.custodyExpenseApproved'));
       },
     });
   }
@@ -145,7 +145,7 @@ export class SiteCustodyListComponent implements OnInit {
     this.projectService.rejectCustodyExpense(expense.id).subscribe({
       next: () => {
         this.loadCustodies();
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('projects.custodyExpenseRejected'));
       },
     });
   }
@@ -170,7 +170,7 @@ export class SiteCustodyListComponent implements OnInit {
         this.saving.set(false);
         this.showSettleModal.set(false);
         this.loadCustodies();
-        this.notification.success(this.i18n.t('common.save'));
+        this.notification.success(this.i18n.t('projects.custodySettled'));
       },
       error: () => this.saving.set(false),
     });

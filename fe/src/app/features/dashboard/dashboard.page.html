@@ -126,11 +126,13 @@
           <h2>{{ i18n.t(monthKeys[data.month - 1]) }} {{ data.year }}</h2>
           <p>
             {{
-              !data.reportStatus
-                ? i18n.t('dashboard.noReportHint')
-                : (data.unresolvedCount
-                    ? i18n.t('dashboard.pendingDecisions', { count: data.unresolvedCount })
-                    : i18n.t('dashboard.noPending'))
+              !data.reportStatus && data.halfMonthReports?.length
+                ? i18n.t('dashboard.halfMonthExistsHint')
+                : (!data.reportStatus
+                    ? i18n.t('dashboard.noReportHint')
+                    : (data.unresolvedCount
+                        ? i18n.t('dashboard.pendingDecisions', { count: data.unresolvedCount })
+                        : i18n.t('dashboard.noPending')))
             }}
           </p>
         </div>
@@ -139,7 +141,18 @@
             >{{ i18n.t('dashboard.openReview') }} ←</a
           >
         } @else {
-          <a class="button gold" routerLink="/reports">{{ i18n.t('dashboard.createReport') }} ←</a>
+          @if (data.halfMonthReports?.length) {
+            <div class="half-month-links">
+              @for (hm of data.halfMonthReports; track hm.reportId) {
+                <a class="button secondary" [routerLink]="['/reports', hm.reportId]">
+                  {{ i18n.t(hm.firstHalf ? 'dashboard.halfMonthFirst' : 'dashboard.halfMonthSecond') }}
+                  — {{ statusLabel(hm.status) }} ←
+                </a>
+              }
+            </div>
+          } @else {
+            <a class="button gold" routerLink="/reports">{{ i18n.t('dashboard.createReport') }} ←</a>
+          }
         }
       </article>
 

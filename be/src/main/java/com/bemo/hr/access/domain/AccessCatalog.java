@@ -260,6 +260,7 @@ public final class AccessCatalog {
     private static final String FEATURE_CONTRACTOR_ACCOUNTS = "workforce.contractorAccounts.enabled";
     private static final String FEATURE_AGRI = "agri.enabled";
     private static final String FEATURE_MEDICAL = "medical.enabled";
+    private static final String FEATURE_PROCUREMENT = "procurement.enabled";
 
     private static final String KEY_ROLE_PREFIX = "roles.access.";
     private static final String KEY_PAGE_PREFIX = "access.pages.";
@@ -402,7 +403,7 @@ public final class AccessCatalog {
                     ADMIN_ONLY, null,
                     action("MANAGE", P_OPERATIONS_MANAGE, false)),
             page("PROCUREMENT", "TRADE", "/trade/procurement", "procurement", "nav.procurement", P_PROCUREMENT_READ,
-                    PROCUREMENT_ROLES, null,
+                    PROCUREMENT_ROLES, FEATURE_PROCUREMENT,
                     action("MANAGE", P_PROCUREMENT_MANAGE, false)),
             page("SALES", "TRADE", "/trade/sales", "sales", "nav.sales", P_SALES_READ,
                     SALES_ROLES, FEATURE_SALES,

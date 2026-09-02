@@ -630,6 +630,12 @@ databaseChangeLog:
   - include:
       file: db/changelog/schema/alter/20260830_v448_app_user_employee_id.yaml
   # WP-52: AI Intelligence Pack Translations
+  # BUG-011: Fix duplicate Arabic inventory unit headers (operations.unit / operations.uom)
+  - include:
+      file: db/changelog/data/update/20260901_v449_operations_unit_header_translations.yaml
+  # BUG-012: Operation-identifying save feedback toasts (organization/operations/banks/accounts/users)
+  - include:
+      file: db/changelog/data/update/20260902_v450_audit_save_feedback_translations.yaml
 
 
 

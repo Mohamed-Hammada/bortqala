@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260901-v449-operations-unit-header-translations
+      author: bemo-erp
+      comment: "BUG-011: The inventory Stock Balances table renders two adjacent unit columns (unit code from item.unitCode and unit name from item.uomName). In ar-EG both headers previously resolved to 'وحدة القياس', and en-US used imprecise 'Unit'/'Unit of measure'. Align the DB rows with the precise frontend fallbacks: operations.unit = Unit code / رمز الوحدة, operations.uom = Unit name / اسم وحدة القياس. BUG-017: dashboard keys distinguishing half-month reports from a missing monthly report."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              UPDATE translations SET text_value = 'رمز الوحدة' WHERE translation_key = 'operations.unit' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'Unit code' WHERE translation_key = 'operations.unit' AND locale = 'en-US';
+              UPDATE translations SET text_value = 'اسم وحدة القياس' WHERE translation_key = 'operations.uom' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'Unit name' WHERE translation_key = 'operations.uom' AND locale = 'en-US';
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008917-ar', 'dashboard.halfMonthExistsHint', 'ar-EG', 'يوجد تقرير نصف شهري لهذا الشهر، لكن لم يُنشأ التقرير الشهري بعد.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'dashboard.halfMonthExistsHint' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008917-en', 'dashboard.halfMonthExistsHint', 'en-US', 'A half-month report exists for this month, but the monthly report has not been created yet.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'dashboard.halfMonthExistsHint' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008918-ar', 'dashboard.halfMonthFirst', 'ar-EG', 'التقرير النصفي الأول', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'dashboard.halfMonthFirst' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008918-en', 'dashboard.halfMonthFirst', 'en-US', 'First half report', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'dashboard.halfMonthFirst' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008919-ar', 'dashboard.halfMonthSecond', 'ar-EG', 'التقرير النصفي الثاني', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'dashboard.halfMonthSecond' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-008919-en', 'dashboard.halfMonthSecond', 'en-US', 'Second half report', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'dashboard.halfMonthSecond' AND locale = 'en-US');

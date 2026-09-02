@@ -96,7 +96,7 @@
                   <div class="row-actions">
                     @if (r.status === 'PENDING_APPROVAL') {
                       <button class="success-btn" (click)="approve(r)" [attr.title]="i18n.t('leaves.approve')">✓</button>
-                      <button class="danger-btn" (click)="openRejectModal(r)" [attr.title]="i18n.t('leaves.reject')">✕</button>
+                      <button class="danger-btn" (click)="openRejectModal(r)" [attr.title]="i18n.t('leaves.reject')" [attr.aria-label]="i18n.t('common.reject')">✕</button>
                     }
                     @if (r.status === 'PENDING_APPROVAL' || r.status === 'APPROVED') {
                       <button class="neutral-btn" (click)="cancel(r)" [attr.title]="i18n.t('leaves.cancel')">⊘</button>
