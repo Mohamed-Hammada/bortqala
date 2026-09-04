@@ -7,7 +7,7 @@
   <div class="loading">{{ i18n.t('common.loading') }}</div>
 } @else if (error()) {
   <div class="load-error">
-    <h2>{{ i18n.t('audit.loadErrorTitle') }}</h2>
+    <h2>{{ i18n.t('expenses.loadErrorTitle') }}</h2>
     <p>{{ error() }}</p>
     <button class="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
   </div>

@@ -17887,3 +17887,31 @@ t-008943-ar;clinic.telemedScheduled;ar-EG;تم حجز الاستشارة عن ب
 t-008943-en;clinic.telemedScheduled;en-US;Telemedicine session scheduled successfully
 t-008944-ar;clinic.licenseRegistered;ar-EG;تم تسجيل الترخيص بنجاح
 t-008944-en;clinic.licenseRegistered;en-US;License registered successfully
+t-008945-ar;users.wizardStepNav;ar-EG;خطوات إنشاء المستخدم
+t-008946-en;users.wizardStepNav;en-US;User creation steps
+t-008947-ar;users.stepIdentity;ar-EG;الهوية
+t-008948-en;users.stepIdentity;en-US;Identity
+t-008949-ar;users.stepCategory;ar-EG;التصنيف
+t-008950-en;users.stepCategory;en-US;Category
+t-008951-ar;users.stepRole;ar-EG;الدور
+t-008952-en;users.stepRole;en-US;Role
+t-008953-ar;users.stepPermissions;ar-EG;مراجعة الصلاحيات
+t-008954-en;users.stepPermissions;en-US;Permission Review
+t-008955-ar;users.stepConfirmation;ar-EG;التأكيد
+t-008956-en;users.stepConfirmation;en-US;Confirmation
+t-008957-ar;users.sectionRole;ar-EG;الدور والصلاحيات
+t-008958-en;users.sectionRole;en-US;Role
+t-008959-ar;users.sectionPermissionsReview;ar-EG;مراجعة الصلاحيات والوصول
+t-008960-en;users.sectionPermissionsReview;en-US;Permissions & Access Review
+t-008961-ar;users.sectionConfirmation;ar-EG;تأكيد الإنشاء
+t-008962-en;users.sectionConfirmation;en-US;Confirmation
+t-008963-ar;users.primaryRole;ar-EG;الدور الأساسي
+t-008964-en;users.primaryRole;en-US;Primary role
+t-008965-ar;users.reviewCreate;ar-EG;استعراض وإنشاء
+t-008966-en;users.reviewCreate;en-US;Review & Create
+t-008967-ar;users.confirmSummary;ar-EG;يرجى مراجعة تفاصيل المستخدم أدناه قبل الحفظ.
+t-008968-en;users.confirmSummary;en-US;Review the user details below before saving.
+t-008969-ar;common.back;ar-EG;رجوع
+t-008970-en;common.back;en-US;Back
+t-008971-ar;common.next;ar-EG;التالي
+t-008972-en;common.next;en-US;Next

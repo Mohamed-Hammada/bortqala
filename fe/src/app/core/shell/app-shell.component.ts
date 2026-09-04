@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
@@ -52,6 +52,8 @@ export class AppShellComponent {
   private readonly productAnalytics = inject(ProductAnalyticsClient);
   readonly dialogState = inject(DialogStateService);
   private lastOverlayTrigger: HTMLElement | null = null;
+
+  @ViewChild('confirmDialogBox') confirmDialogBox?: ElementRef<HTMLElement>;
 
   readonly searchQuery = signal('');
   readonly menuOpen = signal(false);
@@ -165,6 +167,13 @@ export class AppShellComponent {
     effect(() => {
       if (this.dialogState.modalOpen()) this.clearChord();
     }, { allowSignalWrites: true });
+    // Accessibility: move focus into the global confirm prompt so screen readers
+    // and automation can perceive and dismiss it (ISSUE-007).
+    effect(() => {
+      if (this.confirmDialog.confirmState()) {
+        queueMicrotask(() => this.confirmDialogBox?.nativeElement?.focus({ preventScroll: true }));
+      }
+    });
   }
 
   @HostListener('window:blur')

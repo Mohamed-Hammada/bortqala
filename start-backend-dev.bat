@@ -27,6 +27,10 @@ set "SERVER_FORWARD_HEADERS_STRATEGY=framework"
 set "HR_BOOTSTRAP_APP_CODE=DEMO"
 set "HR_BOOTSTRAP_APP_NAME=Bemo ERP"
 set "HR_BOOTSTRAP_ADMIN_USERNAME=admin"
+rem NOTE: bootstrap passwords below only apply when the admin/super-admin user is first
+rem created (empty database). On an already-seeded database the existing password is
+rem left untouched, so this value will NOT reset it — delete the user row or drop the
+rem dev database if you need to change the seeded password.
 set "HR_BOOTSTRAP_ADMIN_PASSWORD=Admin@12345"
 set "HR_BOOTSTRAP_SUPER_ADMIN_USERNAME=superadmin"
 set "HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD=SuperSameh@12345"

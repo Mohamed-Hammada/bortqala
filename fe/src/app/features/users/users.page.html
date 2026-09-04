@@ -187,7 +187,7 @@
   </div>
   } <!-- end @if (!store.loading()) -->
 
-  <!-- Simplified User Form: simple by default, detailed access on demand -->
+  <!-- Staged user wizard: Identity → Category → Role → Permission Review → Confirmation -->
   <app-modal-dialog
     class="users-dialog"
     [isOpen]="drawerOpen()"
@@ -204,7 +204,24 @@
         <div class="alert error" role="alert">{{ i18n.t('users.validation') }}</div>
       }
 
+      <nav class="wizard-steps" [attr.aria-label]="i18n.t('users.wizardStepNav')">
+        @for (step of wizardSteps; track step.key; let i = $index) {
+          <button
+            type="button"
+            class="wizard-step"
+            [class.active]="wizardStep() === i + 1"
+            [class.done]="wizardStep() > i + 1"
+            (click)="goToStep(i + 1)"
+            [attr.aria-current]="wizardStep() === i + 1 ? 'step' : null"
+          >
+            <span class="wizard-step-index">{{ i + 1 }}</span>
+            <span class="wizard-step-label">{{ i18n.t(step.key) }}</span>
+          </button>
+        }
+      </nav>
+
       <div class="user-form-stack">
+        @if (wizardStep() === 1) {
         <!-- 1. Identity and account basics -->
         <section class="user-form-panel">
           <header class="panel-heading">
@@ -268,52 +285,6 @@
               }
             </div>
 
-            <div class="field">
-              <label for="user-category">{{ i18n.t('users.category') }}</label>
-              <select id="user-category" formControlName="categoryId">
-                <option [ngValue]="null">— {{ i18n.t('common.none') }} —</option>
-                @for (cat of store.categories(); track cat.id) {
-                  <option [ngValue]="cat.id">{{ cat.name }}</option>
-                }
-              </select>
-          <!-- BORTQALA_FEEDBACK_20260816_CATEGORY_LINK -->
-          <a class="field-inline-link" href="/categories">{{ i18n.t('users.manageCategories') }}</a>
-            </div>
-
-            @if (accessLoading()) {
-              <div class="field role-load-state">
-                <span class="field-label">{{ i18n.t('users.roles') }}</span>
-                <div class="loading"></div>
-              </div>
-            } @else if (!access.catalog()) {
-              <div class="field role-load-state">
-                <span class="field-label">{{ i18n.t('users.roles') }}</span>
-                <button type="button" class="button secondary" (click)="loadAccessCatalog()">
-                  {{ i18n.t('access.catalogRetry') }}
-                </button>
-              </div>
-            } @else {
-              <div class="field primary-role-field">
-                <label for="user-primary-role">{{ i18n.t('users.roles') }}</label>
-                <select id="user-primary-role" [value]="primaryRole()" (change)="setPrimaryRole($event)">
-                  @for (role of access.roles(); track role.code) {
-                    <option
-                      [value]="role.code"
-                      [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
-                    >
-                      {{ i18n.t(role.nameKey) }}
-                    </option>
-                  }
-                </select>
-                @if (primaryRoleInfo(); as selectedRole) {
-                  <div class="role-selection-hint">
-                    <strong>{{ i18n.t(selectedRole.labelKey) }}</strong>
-                    <small>{{ i18n.t(selectedRole.descriptionKey) }}</small>
-                  </div>
-                }
-              </div>
-            }
-
             <div class="field span-2 account-status-field">
               <label class="account-status-toggle">
                 <input type="checkbox" formControlName="active" />
@@ -325,10 +296,114 @@
             </div>
           </div>
         </section>
+        }
 
-        <!-- Advanced access is intentionally hidden in the normal Add User workflow. -->
-        <details class="advanced-access-panel">
-          <summary>
+        @if (wizardStep() === 2) {
+        <!-- 2. Category -->
+        <section class="user-form-panel">
+          <header class="panel-heading">
+            <strong>{{ i18n.t('users.sectionCategory') }}</strong>
+          </header>
+
+          <div class="user-profile-grid">
+            <div class="field">
+              <label for="user-category">{{ i18n.t('users.category') }}</label>
+              <select id="user-category" formControlName="categoryId">
+                <option [ngValue]="null">— {{ i18n.t('common.none') }} —</option>
+                @for (cat of store.categories(); track cat.id) {
+                  <option [ngValue]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+              <!-- BORTQALA_FEEDBACK_20260816_CATEGORY_LINK -->
+              <a class="field-inline-link" href="/categories">{{ i18n.t('users.manageCategories') }}</a>
+            </div>
+          </div>
+        </section>
+        }
+
+        @if (wizardStep() === 3) {
+        <!-- 3. Role -->
+        <section class="user-form-panel">
+          <header class="panel-heading">
+            <strong>{{ i18n.t('users.sectionRole') }}</strong>
+          </header>
+
+          @if (accessLoading()) {
+            <div class="field role-load-state">
+              <span class="field-label">{{ i18n.t('users.roles') }}</span>
+              <div class="loading"></div>
+            </div>
+          } @else if (!access.catalog()) {
+            <div class="field role-load-state">
+              <span class="field-label">{{ i18n.t('users.roles') }}</span>
+              <button type="button" class="button secondary" (click)="loadAccessCatalog()">
+                {{ i18n.t('access.catalogRetry') }}
+              </button>
+            </div>
+          } @else {
+            <div class="field primary-role-field">
+              <label for="user-primary-role">{{ i18n.t('users.primaryRole') }}</label>
+              <select id="user-primary-role" [value]="primaryRole()" (change)="setPrimaryRole($event)">
+                @for (role of access.roles(); track role.code) {
+                  <option
+                    [value]="role.code"
+                    [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
+                  >
+                    {{ i18n.t(role.nameKey) }}
+                  </option>
+                }
+              </select>
+              @if (primaryRoleInfo(); as selectedRole) {
+                <div class="role-selection-hint">
+                  <strong>{{ i18n.t(selectedRole.labelKey) }}</strong>
+                  <small>{{ i18n.t(selectedRole.descriptionKey) }}</small>
+                </div>
+              }
+            </div>
+
+            <div class="access-role-grid advanced-role-grid wizard-role-grid">
+              @for (role of access.roles(); track role.code) {
+                <label
+                  class="access-role-card simple-role-card"
+                  [class.role-selected]="hasRole(role.code)"
+                  [class.disabled-card]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
+                >
+                  <input
+                    type="checkbox"
+                    [checked]="hasRole(role.code)"
+                    [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
+                    (change)="toggleRole(role.code, $event)"
+                  />
+                  <span class="role-choice-copy">
+                    <span class="role-choice-title">
+                      <strong>{{ i18n.t(role.nameKey) }}</strong>
+                      @if (hasRole(role.code)) {
+                        <span class="selected-check" aria-hidden="true">✓</span>
+                      }
+                    </span>
+                    <small class="role-desc">{{ i18n.t(role.descriptionKey) }}</small>
+                  </span>
+                </label>
+              }
+            </div>
+          }
+        </section>
+        }
+
+        @if (wizardStep() === 4) {
+        <!-- 4. Permission review (collapsible advanced access + effective preview) -->
+        <section class="user-form-panel">
+          <header class="panel-heading">
+            <strong>{{ i18n.t('users.sectionPermissionsReview') }}</strong>
+          </header>
+
+          <button
+            type="button"
+            class="accordion-header permission-review-toggle"
+            (click)="advancedOpen.set(!advancedOpen())"
+            [attr.aria-expanded]="advancedOpen()"
+            [attr.aria-controls]="'advanced-access-content'"
+          >
             <span class="advanced-summary-copy">
               <strong>{{ i18n.t('users.sectionSpecialPermissions') }}</strong>
               <small>{{ i18n.t('users.menuGroupsHint') }}</small>
@@ -336,41 +411,10 @@
             <span class="advanced-summary-meta ltr">
               {{ form.controls.roles.value.length }} · {{ form.controls.allowedMenus.value.length }}
             </span>
-          </summary>
+          </button>
 
-          <div class="advanced-access-content">
-            <section class="advanced-subsection">
-              <div class="advanced-subsection-head">
-                <strong>{{ i18n.t('users.sectionRoles') }}</strong>
-                <span class="selection-count">{{ form.controls.roles.value.length }}</span>
-              </div>
-              <div class="access-role-grid advanced-role-grid">
-                @for (role of access.roles(); track role.code) {
-                  <label
-                    class="access-role-card simple-role-card"
-                    [class.role-selected]="hasRole(role.code)"
-                    [class.disabled-card]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
-                  >
-                    <input
-                      type="checkbox"
-                      [checked]="hasRole(role.code)"
-                      [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
-                      (change)="toggleRole(role.code, $event)"
-                    />
-                    <span class="role-choice-copy">
-                      <span class="role-choice-title">
-                        <strong>{{ i18n.t(role.nameKey) }}</strong>
-                        @if (hasRole(role.code)) {
-                          <span class="selected-check" aria-hidden="true">✓</span>
-                        }
-                      </span>
-                      <small class="role-desc">{{ i18n.t(role.descriptionKey) }}</small>
-                    </span>
-                  </label>
-                }
-              </div>
-            </section>
-
+          @if (advancedOpen()) {
+          <div id="advanced-access-content" class="advanced-access-content">
             <section class="advanced-subsection policy-assignment-section">
               <div class="advanced-subsection-head">
                 <div>
@@ -474,95 +518,94 @@
                 <strong>{{ i18n.t('users.sectionMenus') }}</strong>
                 <span class="selection-count">{{ form.controls.allowedMenus.value.length }}</span>
               </div>
-            <div class="quick-actions advanced-quick-actions">
-              <button
-                type="button"
-                class="permission-action"
-                (click)="selectAllMenus()"
-                [disabled]="adminOverrideActive()"
-                [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
-              >
-                {{ i18n.t('users.selectAllMenus') }}
-              </button>
-              <button
-                type="button"
-                class="permission-action"
-                (click)="clearAllMenus()"
-                [disabled]="adminOverrideActive()"
-                [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
-              >
-                {{ i18n.t('users.clearAllMenus') }}
-              </button>
-            </div>
-
-            @if (adminOverrideActive()) {
-              <div class="alert info admin-override-notice">
-                {{ i18n.t('access.adminOverrideNotice') }}
-              </div>
-            }
-
-            @if (!editingId() && roleTemplates().length > 0) {
-              <div class="job-template-block">
-                <label for="user-job-template">{{ i18n.t('users.jobTemplate') }}</label>
-                <select
-                  id="user-job-template"
-                  [value]="activeTemplateCode()"
-                  (change)="applyJobTemplate($any($event.target).value)"
+              <div class="quick-actions advanced-quick-actions">
+                <button
+                  type="button"
+                  class="permission-action"
+                  (click)="selectAllMenus()"
+                  [disabled]="adminOverrideActive()"
+                  [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
                 >
-                  <option value="">—</option>
-                  @for (template of roleTemplates(); track template.code) {
-                    <option [value]="template.code" [selected]="template.code === activeTemplateCode()">
-                      {{ i18n.t(template.nameKey) }}
-                    </option>
-                  }
-                </select>
-                <small>{{ i18n.t('users.jobTemplateHint') }}</small>
+                  {{ i18n.t('users.selectAllMenus') }}
+                </button>
+                <button
+                  type="button"
+                  class="permission-action"
+                  (click)="clearAllMenus()"
+                  [disabled]="adminOverrideActive()"
+                  [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
+                >
+                  {{ i18n.t('users.clearAllMenus') }}
+                </button>
               </div>
-            }
 
-            <div class="module-groups-grid">
-              @for (group of menuGroups; track group.titleKey) {
-                <div class="module-group-card">
-                  <label class="module-group-header">
-                    <input
-                      type="checkbox"
-                      [checked]="isModuleAllSelected(group.ids)"
-                      [indeterminate]="isModulePartiallySelected(group.ids)"
-                      [disabled]="adminOverrideActive()"
-                      (change)="toggleModule(group.ids)"
-                    />
-                    <strong>{{ i18n.t(group.titleKey) }}</strong>
-                    <span class="count-badge">
-                      {{ i18n.t(group.ids.length === 1 ? 'users.permissionOne' : 'users.permissionCount', { count: group.ids.length }) }}
-                    </span>
-                  </label>
-                  <div class="module-group-items">
-                    @for (id of group.ids; track id) {
-                      <label
-                        class="menu-item-check"
-                        [class.menu-disabled]="adminOverrideActive()"
-                        [class.feature-locked]="menuFeature(id)"
-                        [attr.title]="menuFeature(id) ? i18n.t('users.menuNotEnabledForVertical') : null"
-                      >
-                        <input
-                          type="checkbox"
-                          [checked]="hasMenu(id)"
-                          [disabled]="adminOverrideActive() || !!menuFeature(id)"
-                          (change)="toggleMenu(id, $event)"
-                        />
-                        <span>{{ getMenuLabel(id) }}</span>
-                        @if (menuFeature(id)) {
-                          <span class="chip chip-warn">{{ i18n.t('access.menuFeatureDisabled') }}</span>
-                        } @else if (menuRoleMismatch(id)) {
-                          <span class="chip chip-warn">{{ i18n.t('access.menuRoleMismatch') }}</span>
-                        }
-                      </label>
-                    }
-                  </div>
+              @if (adminOverrideActive()) {
+                <div class="alert info admin-override-notice">
+                  {{ i18n.t('access.adminOverrideNotice') }}
                 </div>
               }
-            </div>
 
+              @if (!editingId() && roleTemplates().length > 0) {
+                <div class="job-template-block">
+                  <label for="user-job-template">{{ i18n.t('users.jobTemplate') }}</label>
+                  <select
+                    id="user-job-template"
+                    [value]="activeTemplateCode()"
+                    (change)="applyJobTemplate($any($event.target).value)"
+                  >
+                    <option value="">—</option>
+                    @for (template of roleTemplates(); track template.code) {
+                      <option [value]="template.code" [selected]="template.code === activeTemplateCode()">
+                        {{ i18n.t(template.nameKey) }}
+                      </option>
+                    }
+                  </select>
+                  <small>{{ i18n.t('users.jobTemplateHint') }}</small>
+                </div>
+              }
+
+              <div class="module-groups-grid">
+                @for (group of menuGroups; track group.titleKey) {
+                  <div class="module-group-card">
+                    <label class="module-group-header">
+                      <input
+                        type="checkbox"
+                        [checked]="isModuleAllSelected(group.ids)"
+                        [indeterminate]="isModulePartiallySelected(group.ids)"
+                        [disabled]="adminOverrideActive()"
+                        (change)="toggleModule(group.ids)"
+                      />
+                      <strong>{{ i18n.t(group.titleKey) }}</strong>
+                      <span class="count-badge">
+                        {{ i18n.t(group.ids.length === 1 ? 'users.permissionOne' : 'users.permissionCount', { count: group.ids.length }) }}
+                      </span>
+                    </label>
+                    <div class="module-group-items">
+                      @for (id of group.ids; track id) {
+                        <label
+                          class="menu-item-check"
+                          [class.menu-disabled]="adminOverrideActive()"
+                          [class.feature-locked]="menuFeature(id)"
+                          [attr.title]="menuFeature(id) ? i18n.t('users.menuNotEnabledForVertical') : null"
+                        >
+                          <input
+                            type="checkbox"
+                            [checked]="hasMenu(id)"
+                            [disabled]="adminOverrideActive() || !!menuFeature(id)"
+                            (change)="toggleMenu(id, $event)"
+                          />
+                          <span>{{ getMenuLabel(id) }}</span>
+                          @if (menuFeature(id)) {
+                            <span class="chip chip-warn">{{ i18n.t('access.menuFeatureDisabled') }}</span>
+                          } @else if (menuRoleMismatch(id)) {
+                            <span class="chip chip-warn">{{ i18n.t('access.menuRoleMismatch') }}</span>
+                          }
+                        </label>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
             </section>
 
             <details class="effective-access-panel">
@@ -665,72 +708,200 @@
               </div>
             </details>
           </div>
-        </details>
+          }
 
-        @if (validationRunning() || validationError() || validationResult()) {
-          <div class="validation-box compact-validation-box">
-            @if (validationRunning()) {
-              <p class="hint">{{ i18n.t('access.validateRunning') }}</p>
-            } @else if (validationError()) {
-              <div class="alert error">{{ validationError() }}</div>
-            } @else if (validationResult()) {
-              @if (validationOk() && !accessReasonEditing()) {
-                <p class="validation-ok">✅ {{ i18n.t('access.validateOk') }}</p>
-              } @else {
-                @if (validationResult()!.errors.length) {
-                  <div class="warnings-box">
-                    @for (error of validationResult()!.errors; track error.code) {
-                      <p class="hint conflict-text">{{ validateErrorLabel(error.code) }}</p>
-                    }
-                  </div>
-                }
-                @if (validationResult()!.conflicts.length) {
-                  <div class="warnings-box">
-                    @for (conflict of validationResult()!.conflicts; track conflict.code) {
-                      <p class="hint conflict-text">{{ i18n.t(conflict.reasonKey) }}</p>
-                    }
-                  </div>
-                }
-                @if (validationResult()!.warnings.length) {
-                  <div class="warnings-box">
-                    @for (warning of validationResult()!.warnings; track warning.code) {
-                      <p class="hint">{{ i18n.t(warning.messageKey) }}</p>
-                    }
-                  </div>
-                }
-                @if ((validationNeedsAck()) || accessReasonEditing()) {
-                  <div class="ack-reason-box">
-                    <label for="ack-reason" class="ack-reason-label">
-                      {{ i18n.t('access.ackReasonLabel') }}
-                    </label>
-                    <input
-                      id="ack-reason"
-                      type="text"
-                      [value]="ackReason()"
-                      (input)="ackReason.set($any($event.target).value)"
-                      [placeholder]="i18n.t('access.ackReasonPlaceholder')"
-                     (focus)="accessReasonEditing.set(true)" (blur)="finishAccessReasonEditing()" />
-                    @if (!validationAckSatisfied()) {
-                      <small class="hint warning-text">{{ i18n.t('access.ackReasonRequired') }}</small>
-                    }
-                  </div>
+          @if (validationRunning() || validationError() || validationResult()) {
+            <div class="validation-box compact-validation-box">
+              @if (validationRunning()) {
+                <p class="hint">{{ i18n.t('access.validateRunning') }}</p>
+              } @else if (validationError()) {
+                <div class="alert error">{{ validationError() }}</div>
+              } @else if (validationResult()) {
+                @if (validationOk() && !accessReasonEditing()) {
+                  <p class="validation-ok">✅ {{ i18n.t('access.validateOk') }}</p>
+                } @else {
+                  @if (validationResult()!.errors.length) {
+                    <div class="warnings-box">
+                      @for (error of validationResult()!.errors; track error.code) {
+                        <p class="hint conflict-text">{{ validateErrorLabel(error.code) }}</p>
+                      }
+                    </div>
+                  }
+                  @if (validationResult()!.conflicts.length) {
+                    <div class="warnings-box">
+                      @for (conflict of validationResult()!.conflicts; track conflict.code) {
+                        <p class="hint conflict-text">{{ i18n.t(conflict.reasonKey) }}</p>
+                      }
+                    </div>
+                  }
+                  @if (validationResult()!.warnings.length) {
+                    <div class="warnings-box">
+                      @for (warning of validationResult()!.warnings; track warning.code) {
+                        <p class="hint">{{ i18n.t(warning.messageKey) }}</p>
+                      }
+                    </div>
+                  }
+                  @if ((validationNeedsAck()) || accessReasonEditing()) {
+                    <div class="ack-reason-box">
+                      <label for="ack-reason" class="ack-reason-label">
+                        {{ i18n.t('access.ackReasonLabel') }}
+                      </label>
+                      <input
+                        id="ack-reason"
+                        type="text"
+                        [value]="ackReason()"
+                        (input)="ackReason.set($any($event.target).value)"
+                        [placeholder]="i18n.t('access.ackReasonPlaceholder')"
+                       (focus)="accessReasonEditing.set(true)" (blur)="finishAccessReasonEditing()" />
+                      @if (!validationAckSatisfied()) {
+                        <small class="hint warning-text">{{ i18n.t('access.ackReasonRequired') }}</small>
+                      }
+                    </div>
+                  }
                 }
               }
-            }
-          </div>
+            </div>
+          }
+        </section>
+        }
+
+        @if (wizardStep() === 5) {
+        <!-- 5. Confirmation -->
+        <section class="user-form-panel">
+          <header class="panel-heading">
+            <strong>{{ i18n.t('users.sectionConfirmation') }}</strong>
+          </header>
+
+          <p class="hint confirmation-hint">{{ i18n.t('users.confirmSummary') }}</p>
+
+          <dl class="confirmation-list">
+            <div class="confirmation-row">
+              <dt>{{ i18n.t('users.displayName') }}</dt>
+              <dd>{{ confirmationSummary().displayName || '—' }}</dd>
+            </div>
+            <div class="confirmation-row">
+              <dt>{{ i18n.t('users.username') }}</dt>
+              <dd class="ltr">{{ confirmationSummary().username || '—' }}</dd>
+            </div>
+            <div class="confirmation-row">
+              <dt>{{ i18n.t('users.category') }}</dt>
+              <dd>{{ confirmationSummary().categoryName }}</dd>
+            </div>
+            <div class="confirmation-row">
+              <dt>{{ i18n.t('users.roles') }}</dt>
+              <dd>
+                <div class="role-list">
+                  @for (role of confirmationSummary().roles; track role) {
+                    <span class="confirmation-chip">{{ roleLabel(role) }}</span>
+                  } @empty {
+                    <span class="hint">—</span>
+                  }
+                </div>
+              </dd>
+            </div>
+            <div class="confirmation-row">
+              <dt>{{ i18n.t('users.allowedMenus') }}</dt>
+              <dd>
+                <span class="confirmation-meta">{{ confirmationSummary().menus.length }} / {{ menuOptions().length }}</span>
+                <div class="confirmation-chips-wrap">
+                  @for (menu of confirmationSummary().menus; track menu) {
+                    <span class="confirmation-chip">{{ getMenuLabel(menu) }}</span>
+                  }
+                </div>
+              </dd>
+            </div>
+            <div class="confirmation-row">
+              <dt>{{ i18n.t('users.status') }}</dt>
+              <dd>
+                <span class="status" [class.success]="confirmationSummary().active" [class.neutral]="!confirmationSummary().active">{{
+                  i18n.t(confirmationSummary().active ? 'common.active' : 'common.inactive')
+                }}</span>
+              </dd>
+            </div>
+          </dl>
+
+          @if (validationRunning() || validationError() || validationResult()) {
+            <div class="validation-box compact-validation-box">
+              @if (validationRunning()) {
+                <p class="hint">{{ i18n.t('access.validateRunning') }}</p>
+              } @else if (validationError()) {
+                <div class="alert error">{{ validationError() }}</div>
+              } @else if (validationResult()) {
+                @if (validationOk() && !accessReasonEditing()) {
+                  <p class="validation-ok">✅ {{ i18n.t('access.validateOk') }}</p>
+                } @else {
+                  @if (validationResult()!.errors.length) {
+                    <div class="warnings-box">
+                      @for (error of validationResult()!.errors; track error.code) {
+                        <p class="hint conflict-text">{{ validateErrorLabel(error.code) }}</p>
+                      }
+                    </div>
+                  }
+                  @if (validationResult()!.conflicts.length) {
+                    <div class="warnings-box">
+                      @for (conflict of validationResult()!.conflicts; track conflict.code) {
+                        <p class="hint conflict-text">{{ i18n.t(conflict.reasonKey) }}</p>
+                      }
+                    </div>
+                  }
+                  @if (validationResult()!.warnings.length) {
+                    <div class="warnings-box">
+                      @for (warning of validationResult()!.warnings; track warning.code) {
+                        <p class="hint">{{ i18n.t(warning.messageKey) }}</p>
+                      }
+                    </div>
+                  }
+                  @if ((validationNeedsAck()) || accessReasonEditing()) {
+                    <div class="ack-reason-box">
+                      <label for="ack-reason" class="ack-reason-label">
+                        {{ i18n.t('access.ackReasonLabel') }}
+                      </label>
+                      <input
+                        id="ack-reason"
+                        type="text"
+                        [value]="ackReason()"
+                        (input)="ackReason.set($any($event.target).value)"
+                        [placeholder]="i18n.t('access.ackReasonPlaceholder')"
+                       (focus)="accessReasonEditing.set(true)" (blur)="finishAccessReasonEditing()" />
+                      @if (!validationAckSatisfied()) {
+                        <small class="hint warning-text">{{ i18n.t('access.ackReasonRequired') }}</small>
+                      }
+                    </div>
+                  }
+                }
+              }
+            </div>
+          }
+        </section>
         }
       </div>
     </form>
 
     <div modal-actions class="user-modal-actions">
-      <button
-        class="button primary"
-        type="button"
-        (click)="submit()"
-        [disabled]="store.loading() || validationRunning() || catalogUnavailable()"
-      >
-        {{ i18n.t('users.save') }}
-      </button>
+      @if (wizardStep() > 1) {
+        <button class="button secondary" type="button" (click)="goBack()">
+          {{ i18n.t('common.back') }}
+        </button>
+      }
+      @if (wizardStep() < 5) {
+        <button
+          class="button primary"
+          type="button"
+          (click)="goNext()"
+          [disabled]="store.loading() || (wizardStep() === 3 && !rolesSelected())"
+        >
+          {{ i18n.t('common.next') }}
+        </button>
+      } @else {
+        <button
+          class="button primary"
+          type="button"
+          (click)="submit()"
+          [disabled]="store.loading() || validationRunning() || catalogUnavailable()"
+        >
+          {{ i18n.t(editingId() ? 'users.save' : 'users.reviewCreate') }}
+        </button>
+      }
       <button class="button secondary" type="button" (click)="closeDrawer()">
         {{ i18n.t('common.cancel') }}
       </button>
@@ -748,4 +919,3 @@
 
 </section>
 <!-- BORTQALA_RUNTIME_20260816_V2_USER_REASON_FIELD -->
-<!-- BORTQALA_CORRECTIVE_20260816_USER_REASON_FIELD: keep override reason editor mounted until the user finishes typing. -->

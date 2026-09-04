@@ -1,0 +1,93 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260902-v451-user-wizard-translations
+      author: bemo-erp
+      comment: "BUG-021: staged user-creation wizard (Identity -> Category -> Role -> Permission Review -> Confirmation) navigation, step titles, and confirmation copy."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8945-ar', 'users.wizardStepNav', 'ar-EG', 'خطوات إنشاء المستخدم', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.wizardStepNav' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8946-en', 'users.wizardStepNav', 'en-US', 'User creation steps', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.wizardStepNav' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8947-ar', 'users.stepIdentity', 'ar-EG', 'الهوية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepIdentity' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8948-en', 'users.stepIdentity', 'en-US', 'Identity', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepIdentity' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8949-ar', 'users.stepCategory', 'ar-EG', 'التصنيف', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepCategory' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8950-en', 'users.stepCategory', 'en-US', 'Category', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepCategory' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8951-ar', 'users.stepRole', 'ar-EG', 'الدور', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepRole' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8952-en', 'users.stepRole', 'en-US', 'Role', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepRole' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8953-ar', 'users.stepPermissions', 'ar-EG', 'مراجعة الصلاحيات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepPermissions' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8954-en', 'users.stepPermissions', 'en-US', 'Permission Review', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepPermissions' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8955-ar', 'users.stepConfirmation', 'ar-EG', 'التأكيد', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepConfirmation' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8956-en', 'users.stepConfirmation', 'en-US', 'Confirmation', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.stepConfirmation' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8957-ar', 'users.sectionRole', 'ar-EG', 'الدور والصلاحيات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.sectionRole' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8958-en', 'users.sectionRole', 'en-US', 'Role', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.sectionRole' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8959-ar', 'users.sectionPermissionsReview', 'ar-EG', 'مراجعة الصلاحيات والوصول', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.sectionPermissionsReview' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8960-en', 'users.sectionPermissionsReview', 'en-US', 'Permissions & Access Review', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.sectionPermissionsReview' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8961-ar', 'users.sectionConfirmation', 'ar-EG', 'تأكيد الإنشاء', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.sectionConfirmation' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8962-en', 'users.sectionConfirmation', 'en-US', 'Confirmation', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.sectionConfirmation' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8963-ar', 'users.primaryRole', 'ar-EG', 'الدور الأساسي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.primaryRole' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8964-en', 'users.primaryRole', 'en-US', 'Primary role', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.primaryRole' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8965-ar', 'users.reviewCreate', 'ar-EG', 'استعراض وإنشاء', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.reviewCreate' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8966-en', 'users.reviewCreate', 'en-US', 'Review & Create', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.reviewCreate' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8967-ar', 'users.confirmSummary', 'ar-EG', 'يرجى مراجعة تفاصيل المستخدم أدناه قبل الحفظ.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.confirmSummary' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8968-en', 'users.confirmSummary', 'en-US', 'Review the user details below before saving.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'users.confirmSummary' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8969-ar', 'common.back', 'ar-EG', 'رجوع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'common.back' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8970-en', 'common.back', 'en-US', 'Back', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'common.back' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8971-ar', 'common.next', 'ar-EG', 'التالي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'common.next' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-8972-en', 'common.next', 'en-US', 'Next', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'common.next' AND locale = 'en-US');

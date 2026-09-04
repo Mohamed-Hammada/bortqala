@@ -1112,6 +1112,16 @@ databaseChangeLog:
       file: db/changelog/data/update/20260902_v450_audit_save_feedback_translations.yaml
       relativeToChangelogFile: false
       relativeToChangelogFile: false
+  # BUG-021: staged user-creation wizard translations
+  - include:
+      file: db/changelog/data/update/20260902_v451_user_wizard_translations.yaml
+      relativeToChangelogFile: false
+      relativeToChangelogFile: false
+  # QA-REPORT-002..013: inline/save error copy, no-match empty state, leave validation, expenses error, parties tax-id, PROJECT_MANAGER role keys
+  - include:
+      file: db/changelog/data/update/20260903_v452_qa_report_fixes_translations.yaml
+      relativeToChangelogFile: false
+      relativeToChangelogFile: false
 
 
 

@@ -252,6 +252,9 @@
     </form>
 
     <div modal-actions class="drawer-actions">
+      @if (store.saveError()) {
+        <div class="alert error dialog-error" role="alert">{{ store.saveError() }}</div>
+      }
       <button class="button primary" type="button" (click)="submit()" [disabled]="store.loading()">
         {{ i18n.t('categories.save') }}
       </button>

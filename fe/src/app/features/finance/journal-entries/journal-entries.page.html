@@ -197,11 +197,21 @@
                       <div class="dimension-grid">
                         <div class="dimension-field">
                           <label>{{ i18n.t('journal.costCenter') }}</label>
-                          <input type="text" [value]="line.costCenterId" (input)="updateLine($index, 'costCenterId', $any($event.target).value)" [placeholder]="i18n.t('journal.costCenter')" />
+                          <select [value]="line.costCenterId" (change)="updateLine($index, 'costCenterId', $any($event.target).value)">
+                            <option [value]="''">—</option>
+                            @for (cc of costCenters(); track cc.id) {
+                              <option [value]="cc.id">{{ cc.code }} - {{ cc.name }}</option>
+                            }
+                          </select>
                         </div>
                         <div class="dimension-field">
                           <label>{{ i18n.t('journal.project') }}</label>
-                          <input type="text" [value]="line.projectId" (input)="updateLine($index, 'projectId', $any($event.target).value)" [placeholder]="i18n.t('journal.project')" />
+                          <select [value]="line.projectId" (change)="updateLine($index, 'projectId', $any($event.target).value)">
+                            <option [value]="''">—</option>
+                            @for (p of projects(); track p.id) {
+                              <option [value]="p.id">{{ p.code }} - {{ p.name }}</option>
+                            }
+                          </select>
                         </div>
                         <div class="dimension-field">
                           <label>{{ i18n.t('journal.wbsDimension') }}</label>
@@ -213,7 +223,12 @@
                         </div>
                         <div class="dimension-field">
                           <label>{{ i18n.t('journal.department') }}</label>
-                          <input type="text" [value]="line.departmentId" (input)="updateLine($index, 'departmentId', $any($event.target).value)" [placeholder]="i18n.t('journal.department')" />
+                          <select [value]="line.departmentId" (change)="updateLine($index, 'departmentId', $any($event.target).value)">
+                            <option [value]="''">—</option>
+                            @for (d of departments(); track d.id) {
+                              <option [value]="d.id">{{ d.code }} - {{ d.name }}</option>
+                            }
+                          </select>
                         </div>
                       </div>
                     </td>

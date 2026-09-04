@@ -12,6 +12,7 @@ export class CategoriesStore {
   readonly items = signal<AttendanceCategory[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly saveError = signal<string | null>(null);
   async load() {
     this.loading.set(true);
     this.error.set(null);
@@ -27,7 +28,7 @@ export class CategoriesStore {
   }
   async save(id: string | null, payload: CategoryPayload) {
     this.loading.set(true);
-    this.error.set(null);
+    this.saveError.set(null);
     try {
       await firstValueFrom(
         id
@@ -37,11 +38,14 @@ export class CategoriesStore {
       await this.load();
       return true;
     } catch (e) {
-      this.error.set(apiErrorMessage(e, this.i18n));
+      this.saveError.set(apiErrorMessage(e, this.i18n));
       return false;
     } finally {
       this.loading.set(false);
     }
+  }
+  clearSaveError() {
+    this.saveError.set(null);
   }
   async deactivate(id: string) {
     this.loading.set(true);

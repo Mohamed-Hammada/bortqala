@@ -138,6 +138,9 @@ public class ItemLotSerialService {
         List<ItemLotSerial> issuedLots = new ArrayList<>();
 
         for (ItemLotSerial lot : fefoLots) {
+            if (lot.getStatus() != ItemLotSerial.Status.AVAILABLE) {
+                continue;
+            }
             if (remaining.signum() <= 0) break;
             BigDecimal toIssue = remaining.min(lot.getQuantity());
             lot.issue(toIssue, documentReference);

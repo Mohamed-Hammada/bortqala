@@ -13,6 +13,7 @@ export class EmployeesStore {
   readonly categories = signal<AttendanceCategory[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly saveError = signal<string | null>(null);
   async load() {
     this.loading.set(true);
     this.error.set(null);
@@ -31,7 +32,7 @@ export class EmployeesStore {
   }
   async save(id: string | null, payload: EmployeePayload) {
     this.loading.set(true);
-    this.error.set(null);
+    this.saveError.set(null);
     try {
       await firstValueFrom(
         id
@@ -41,11 +42,14 @@ export class EmployeesStore {
       await this.load();
       return true;
     } catch (e) {
-      this.error.set(apiErrorMessage(e, this.i18n));
+      this.saveError.set(apiErrorMessage(e, this.i18n));
       return false;
     } finally {
       this.loading.set(false);
     }
+  }
+  clearSaveError() {
+    this.saveError.set(null);
   }
   async deactivate(id: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`/api/v1/employees/${id}`));

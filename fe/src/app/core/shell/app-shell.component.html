@@ -530,8 +530,8 @@
 }
 
 @if (confirmDialog.confirmState(); as state) {
-  <div class="confirm-overlay" (click)="confirmDialog.cancel()">
-    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+  <div class="confirm-overlay" (click)="confirmDialog.cancel()" (keydown)="onOverlayKeydown($event)" (keydown.escape)="confirmDialog.cancel()">
+    <div #confirmDialogBox class="confirm-dialog" role="alertdialog" aria-modal="true" tabindex="-1" [attr.aria-label]="state.options.titleKey ? i18n.t(state.options.titleKey) : i18n.t(state.options.messageKey, state.options.params)" (click)="$event.stopPropagation()">
       <div class="confirm-icon">&#9888;&#65039;</div>
       @if (state.options.titleKey) {
         <h3 class="confirm-title">{{ i18n.t(state.options.titleKey) }}</h3>

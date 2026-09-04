@@ -95,6 +95,8 @@ export class JournalEntriesPage {
   readonly entries = signal<JournalEntry[]>([]);
   readonly accounts = signal<Account[]>([]);
   readonly projects = signal<{ id: string; code: string; name: string }[]>([]);
+  readonly costCenters = signal<{ id: string; code: string; name: string }[]>([]);
+  readonly departments = signal<{ id: string; code: string; name: string }[]>([]);
   readonly totalElements = signal<number>(0);
   readonly pagination = new TablePagination();
 
@@ -136,7 +138,14 @@ export class JournalEntriesPage {
     void this.load(0);
     void this.loadAccounts();
     void this.loadProjects();
+    void this.loadCostCenters();
+    void this.loadDepartments();
     void this.loadNumberingSettings();
+    this.entryForm.controls.projectId.valueChanges.subscribe((projectId) => {
+      this.lines.update((arr) =>
+        arr.map((line) => (line.projectId ? line : { ...line, projectId: projectId ?? '' })),
+      );
+    });
   }
 
   async loadProjects() {
@@ -145,6 +154,29 @@ export class JournalEntriesPage {
       this.projects.set(res?.content || (Array.isArray(res) ? res : []));
     } catch {
       this.projects.set([]);
+    }
+  }
+
+  async loadCostCenters() {
+    try {
+      const res = await firstValueFrom(
+        this.http.get<any[]>('/api/v1/finance/cost-centers', { params: { activeOnly: 'false' } }),
+      );
+      this.costCenters.set((Array.isArray(res) ? res : [])
+        .filter((c: { isHeader?: boolean }) => !c.isHeader)
+        .map((c: { id: string; code: string; name: string }) => ({ id: c.id, code: c.code, name: c.name })));
+    } catch {
+      this.costCenters.set([]);
+    }
+  }
+
+  async loadDepartments() {
+    try {
+      const res = await firstValueFrom(this.http.get<any[]>('/api/v1/organization/departments'));
+      this.departments.set((Array.isArray(res) ? res : [])
+        .map((d: { id: string; code: string; name: string }) => ({ id: d.id, code: d.code, name: d.name })));
+    } catch {
+      this.departments.set([]);
     }
   }
 

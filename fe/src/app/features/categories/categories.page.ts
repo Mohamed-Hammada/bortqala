@@ -87,6 +87,7 @@ export class CategoriesPage {
   }
   openNew() {
     this.editingId.set(null);
+    this.store.clearSaveError();
     this.form.reset({
       code: '',
       name: '',
@@ -106,6 +107,7 @@ export class CategoriesPage {
   }
   openEdit(item: AttendanceCategory) {
     this.editingId.set(item.id);
+    this.store.clearSaveError();
     this.form.reset({
       code: item.code,
       name: item.name,

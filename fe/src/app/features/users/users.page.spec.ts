@@ -472,6 +472,10 @@ describe('WP-10 job templates and server menu options', () => {
     ]);
     httpMock.expectOne('/api/v1/users/role-templates').flush([]);
     await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // BUG-021: the menu editor lives in the "Permission Review" step of the wizard.
+    page.wizardStep.set(4);
+    page.advancedOpen.set(true);
     fixture.detectChanges();
 
     // ModalDialogComponent teleports its content to document.body when open.
@@ -546,3 +550,138 @@ describe('WP-10 job templates and server menu options', () => {
     expect(page.roleTemplates().length).toBe(0);
   });
 });
+
+describe('BUG-021 staged user wizard', () => {
+  let httpMock: HttpTestingController;
+  let page: UsersPage;
+  let fixture: ComponentFixture<UsersPage>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [UsersPage],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: AuthService,
+          useValue: {
+            user: () => ({
+              id: 'u1',
+              username: 'admin',
+              displayName: 'Admin',
+              roles: ['ADMIN'],
+              allowedMenus: [],
+              activeFeatures: [],
+              active: true,
+              version: 1,
+            }),
+            appSettings: () =>
+              of({
+                minPasswordLength: 8,
+                maxPasswordLength: 128,
+                disallowSpaces: false,
+                requireUppercase: false,
+                requireLowercase: false,
+                requireNumbers: false,
+                requireSpecialChars: false,
+              }),
+            isSuperAdmin: () => true,
+          },
+        },
+        { provide: I18nService, useValue: { t: (key: string) => key } },
+        {
+          provide: NotificationService,
+          useValue: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
+        },
+      ],
+    }).compileComponents();
+
+    httpMock = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(UsersPage);
+    page = fixture.componentInstance;
+
+    httpMock.expectOne('/api/v1/users').flush([]);
+    httpMock.expectOne('/api/v1/auth/user-categories').flush([]);
+    httpMock.expectOne('/api/v1/access/catalog').flush(CATALOG);
+    httpMock.expectOne('/api/v1/access/policy-groups').flush([]);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    httpMock.verify();
+  });
+
+  async function openAndFlush(): Promise<void> {
+    page.openNew();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    httpMock.expectOne('/api/v1/users/menu-options').flush([]);
+    httpMock.expectOne('/api/v1/users/role-templates').flush([]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  it('renders five wizard stage buttons and starts on Identity', async () => {
+    await openAndFlush();
+    fixture.detectChanges();
+    const steps = document.body.querySelectorAll('.wizard-step');
+    expect(steps.length).toBe(5);
+    expect(page.wizardStep()).toBe(1);
+  });
+
+  it('navigates forward and back while preserving form data', () => {
+    page.form.patchValue({ displayName: 'Wave Test', username: 'wave' });
+    page.goNext();
+    expect(page.wizardStep()).toBe(2);
+    expect(page.form.controls.displayName.value).toBe('Wave Test');
+    page.goNext();
+    expect(page.wizardStep()).toBe(3);
+    page.form.controls.roles.setValue(['VIEWER', 'ADMIN']);
+    page.goBack();
+    expect(page.wizardStep()).toBe(2);
+    expect(page.form.controls.roles.value).toEqual(['VIEWER', 'ADMIN']);
+  });
+
+  it('requires at least one role before proceeding past the Role step', async () => {
+    await openAndFlush();
+    page.wizardStep.set(3);
+    page.form.controls.roles.setValue([]);
+    expect(page.rolesSelected()).toBe(false);
+    page.form.controls.roles.setValue(['VIEWER']);
+    expect(page.rolesSelected()).toBe(true);
+  });
+
+  it('renders the confirmation summary of the selected role and category', async () => {
+    await openAndFlush();
+    page.store.categories.set([{ id: 'cat-a', name: 'Operations' } as never]);
+    page.form.patchValue({
+      displayName: 'Mona',
+      username: 'mona',
+      categoryId: 'cat-a',
+      roles: ['VIEWER'],
+      allowedMenus: ['dashboard'],
+    });
+    page.wizardStep.set(5);
+    fixture.detectChanges();
+    expect(page.confirmationSummary().displayName).toBe('Mona');
+    expect(page.confirmationSummary().categoryName).toBe('Operations');
+    expect(page.confirmationSummary().roles).toEqual(['VIEWER']);
+    expect(page.confirmationSummary().menus).toEqual(['dashboard']);
+  });
+
+  it('collapses the advanced permission search within the Permission Review step', async () => {
+    await openAndFlush();
+    expect(page.advancedOpen()).toBe(false);
+    page.wizardStep.set(4);
+    fixture.detectChanges();
+    expect(document.getElementById('advanced-access-content')).toBeNull();
+
+    page.advancedOpen.set(true);
+    fixture.detectChanges();
+    expect(document.getElementById('advanced-access-content')).not.toBeNull();
+
+    page.advancedOpen.set(false);
+    fixture.detectChanges();
+    expect(document.getElementById('advanced-access-content')).toBeNull();
+  });
+});
+

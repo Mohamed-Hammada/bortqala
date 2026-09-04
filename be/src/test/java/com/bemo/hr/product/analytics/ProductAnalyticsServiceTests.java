@@ -14,6 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
@@ -40,6 +43,10 @@ class ProductAnalyticsServiceTests {
     JdbcTemplate jdbcTemplate;
     @Mock
     AuditService auditService;
+    @Mock
+    PlatformTransactionManager transactionManager;
+    @Mock
+    TransactionStatus transactionStatus;
     ProductAnalyticsService service;
     TenantApplication tenant;
 
@@ -47,12 +54,13 @@ class ProductAnalyticsServiceTests {
     void setup() {
         tenant = new TenantApplication("analytics", "Analytics");
         TenantContext.set(tenant.getId());
-        service = new ProductAnalyticsService(tenantRepository, eventRepository, dailyRepository, milestoneRepository, new ObjectMapper(), jdbcTemplate, auditService);
+        service = new ProductAnalyticsService(tenantRepository, eventRepository, dailyRepository, milestoneRepository, new ObjectMapper(), jdbcTemplate, auditService, transactionManager);
         lenient().when(tenantRepository.findByIdForUpdate(tenant.getId())).thenReturn(Optional.of(tenant));
         lenient().when(eventRepository.findByOperationId(anyString())).thenReturn(Optional.empty());
         lenient().when(eventRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         lenient().when(dailyRepository.findByEventDateAndEventNameAndFeatureKey(any(), any(), any())).thenReturn(Optional.empty());
         lenient().when(dailyRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(transactionManager.getTransaction(any(TransactionDefinition.class))).thenReturn(transactionStatus);
     }
 
     @AfterEach

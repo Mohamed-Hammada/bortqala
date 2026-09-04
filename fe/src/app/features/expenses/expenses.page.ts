@@ -6,6 +6,7 @@ import { NotificationService } from '../../core/notification.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
+import { dateInputToEpoch } from '../../core/date';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { ExpenseService } from './expense.service';
 import {
@@ -147,7 +148,7 @@ export class ExpensesPage {
       const val = this.form.value;
       const payload: CreateClaimRequest = {
         category: val.category as ExpenseCategory,
-        spentOn: val.spentOn!,
+        spentOn: dateInputToEpoch(val.spentOn!),
         amount: val.amount!,
         currency: val.currency || 'EGP',
         description: val.description || undefined,

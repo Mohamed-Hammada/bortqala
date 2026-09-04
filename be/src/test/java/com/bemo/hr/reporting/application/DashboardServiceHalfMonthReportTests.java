@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -70,7 +71,7 @@ class DashboardServiceHalfMonthReportTests {
         when(attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
                 PayCycle.HALF_MONTHLY, period.atDay(16), period.atEndOfMonth()))
                 .thenReturn(Optional.empty());
-        when(attendanceReportRefreshService.needsRefresh(any(), any()))
+        when(attendanceReportRefreshService.needsRefresh(any(), anyBoolean()))
                 .thenReturn(false);
         when(importBatchRepository.findAll()).thenReturn(List.of());
         when(importBatchRepository.findAllByOrderByImportedAtDesc()).thenReturn(List.of());
@@ -109,7 +110,7 @@ class DashboardServiceHalfMonthReportTests {
         when(attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
                 PayCycle.HALF_MONTHLY, period.atDay(16), period.atEndOfMonth()))
                 .thenReturn(Optional.of(secondHalf));
-        when(attendanceReportRefreshService.needsRefresh(any(), any()))
+        when(attendanceReportRefreshService.needsRefresh(any(), anyBoolean()))
                 .thenReturn(false);
         when(importBatchRepository.findAll()).thenReturn(List.of());
         when(importBatchRepository.findAllByOrderByImportedAtDesc()).thenReturn(List.of());

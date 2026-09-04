@@ -25,7 +25,7 @@ export interface ExpenseClaimResponse {
 
 export interface CreateClaimRequest {
   category: ExpenseCategory;
-  spentOn: string;
+  spentOn: number;
   amount: number;
   currency?: string;
   description?: string;
@@ -36,7 +36,7 @@ export interface CreateClaimRequest {
 
 export interface UpdateClaimRequest {
   category: ExpenseCategory;
-  spentOn: string;
+  spentOn: number;
   amount: number;
   currency?: string;
   description?: string;

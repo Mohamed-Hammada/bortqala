@@ -42,6 +42,9 @@ for (const path of filesUnder(changelogRoot, '.yaml')) {
   for (const match of source.matchAll(/VALUES\s*\(\s*'[^']+'\s*,\s*'([\w.-]+)'\s*,\s*'(ar-EG|en-US)'/g)) {
     byLocale.get(match[2]).add(match[1]);
   }
+  for (const match of source.matchAll(/SELECT\s+'[^']+'\s*,\s*'([\w.-]+)'\s*,\s*'(ar-EG|en-US)'/g)) {
+    byLocale.get(match[2]).add(match[1]);
+  }
 }
 let failed = false;
 

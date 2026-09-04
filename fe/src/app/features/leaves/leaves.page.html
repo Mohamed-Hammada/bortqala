@@ -72,8 +72,8 @@
                 <td><strong class="ltr">{{ r.requestNumber }}</strong></td>
                 <td><strong>{{ r.employeeName }}</strong></td>
                 <td><span class="status neutral">{{ r.leaveTypeName }}</span></td>
-                <td class="ltr">{{ r.startDate }}</td>
-                <td class="ltr">{{ r.endDate }}</td>
+                <td class="ltr">{{ dateLabel(r.startDate) }}</td>
+                <td class="ltr">{{ dateLabel(r.endDate) }}</td>
                 <td><strong>{{ r.totalDays }}</strong></td>
                 <td>
                   <span

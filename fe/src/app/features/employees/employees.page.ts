@@ -365,6 +365,7 @@ export class EmployeesPage {
   openNew() {
     this.submitAttempted.set(false);
     this.editingId.set(null);
+    this.store.clearSaveError();
     this.form.reset({
       employeeCode: '',
       fullName: '',
@@ -383,6 +384,7 @@ export class EmployeesPage {
   openEdit(item: Employee) {
     this.submitAttempted.set(false);
     this.editingId.set(item.id);
+    this.store.clearSaveError();
     this.form.reset({
       employeeCode: item.employeeCode,
       fullName: item.fullName,

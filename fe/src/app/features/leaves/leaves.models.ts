@@ -51,8 +51,8 @@ export interface LeaveRequest {
   leaveTypeId: string;
   leaveTypeCode: string;
   leaveTypeName: string;
-  startDate: string;
-  endDate: string;
+  startDate: number;
+  endDate: number;
   totalDays: number;
   status: LeaveRequestStatus;
   reason?: string;
@@ -67,8 +67,8 @@ export interface LeaveRequest {
 export interface SubmitLeaveRequestPayload {
   employeeId: string;
   leaveTypeId: string;
-  startDate: string;
-  endDate: string;
+  startDate: number;
+  endDate: number;
   reason?: string;
 }
 

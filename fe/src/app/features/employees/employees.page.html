@@ -137,9 +137,9 @@
               <td colspan="8">
                 <app-empty-state
                   icon="👥"
-                  [title]="i18n.t('employees.noResults')"
-                  [description]="i18n.t('employees.noResultsHint')"
-                  [actionLabel]="i18n.t('employees.add')"
+                  [title]="search() ? i18n.t('employees.noMatches') : i18n.t('employees.noResults')"
+                  [description]="search() ? i18n.t('employees.noMatchesHint') : i18n.t('employees.noResultsHint')"
+                  [actionLabel]="search() ? '' : i18n.t('employees.add')"
                   (action)="openNew()"
                 />
               </td>
@@ -345,6 +345,9 @@
     }
 
     <div modal-actions class="drawer-actions">
+      @if (store.saveError()) {
+        <div class="alert error dialog-error" role="alert">{{ store.saveError() }}</div>
+      }
       <button class="button primary" type="button" (click)="submit()" [disabled]="store.loading()">
         {{ i18n.t('employees.save') }}
       </button>

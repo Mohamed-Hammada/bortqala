@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260903-v452-qa-report-fix-translations
+      author: bemo-erp
+      comment: "QA-REPORT-002..013: inline/save error copy, no-match empty state, leave date-range validation, expenses load error, parties tax-id, and the PROJECT_MANAGER role i18n keys."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009001-ar', 'leaves.invalidDateRange', 'ar-EG', 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'leaves.invalidDateRange' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009001-en', 'leaves.invalidDateRange', 'en-US', 'End date must be after the start date.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'leaves.invalidDateRange' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009002-ar', 'expenses.loadErrorTitle', 'ar-EG', 'تعذر تحميل المصروفات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'expenses.loadErrorTitle' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009002-en', 'expenses.loadErrorTitle', 'en-US', 'Unable to load expenses', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'expenses.loadErrorTitle' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009003-ar', 'parties.taxIdRequired', 'ar-EG', 'رقم التسجيل الضريبي مطلوب للموردين.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'parties.taxIdRequired' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009003-en', 'parties.taxIdRequired', 'en-US', 'Tax registration number is required for suppliers.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'parties.taxIdRequired' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009004-ar', 'employees.noMatches', 'ar-EG', 'لا توجد نتائج مطابقة للبحث', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'employees.noMatches' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009004-en', 'employees.noMatches', 'en-US', 'No employees match this search', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'employees.noMatches' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009005-ar', 'employees.noMatchesHint', 'ar-EG', 'جرّب تعديل كلمة البحث أو مسحها لعرض كل الموظفين.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'employees.noMatchesHint' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009005-en', 'employees.noMatchesHint', 'en-US', 'Try adjusting or clearing the search to see all employees.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'employees.noMatchesHint' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009006-ar', 'roles.access.projectManager', 'ar-EG', 'مدير مشروع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'roles.access.projectManager' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009006-en', 'roles.access.projectManager', 'en-US', 'Project Manager', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'roles.access.projectManager' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009007-ar', 'roles.access.projectManager.description', 'ar-EG', 'إدارة المشاريع وهيكل العمل والميزانيات.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'roles.access.projectManager.description' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009007-en', 'roles.access.projectManager.description', 'en-US', 'Manages projects, work breakdown structures and budgets.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'roles.access.projectManager.description' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009008-ar', 'access.sensitive.projectManager', 'ar-EG', 'يمكن لهذا الدور الموافقة على سير العمل والوصول إلى بيانات المشاريع.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'access.sensitive.projectManager' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009008-en', 'access.sensitive.projectManager', 'en-US', 'This role can approve workflows and access project data.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'access.sensitive.projectManager' AND locale = 'en-US');

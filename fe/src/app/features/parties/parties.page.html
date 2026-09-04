@@ -164,6 +164,9 @@
           <div class="field">
             <label>{{ i18n.t('parties.taxId') }}</label>
             <input class="ltr" formControlName="taxId" placeholder="123-456-789" />
+            @if (taxIdError()) {
+              <small class="error-text" style="color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ taxIdError() }}</small>
+            }
           </div>
           @if (form.controls.partyType.value === 'SUPPLIER') {
             <div class="field">

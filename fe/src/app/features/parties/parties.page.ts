@@ -135,6 +135,14 @@ export class PartiesPage {
     return null;
   });
 
+  readonly taxIdError = computed(() => {
+    const ctrl = this.form.controls.taxId;
+    if ((this.submitted() || ctrl.touched) && ctrl.hasError('required')) {
+      return this.i18n.t('parties.taxIdRequired');
+    }
+    return null;
+  });
+
   constructor() {
     void this.store.load();
   }

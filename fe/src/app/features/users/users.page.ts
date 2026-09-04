@@ -102,6 +102,15 @@ export class UsersPage {
   readonly roleTemplates = signal<RoleTemplate[]>([]);
   readonly activeTemplateCode = signal('');
   readonly drawerOpen = signal(false);
+  readonly wizardStep = signal(1);
+  readonly advancedOpen = signal(false);
+  readonly wizardSteps: Array<{ key: string }> = [
+    { key: 'users.stepIdentity' },
+    { key: 'users.stepCategory' },
+    { key: 'users.stepRole' },
+    { key: 'users.stepPermissions' },
+    { key: 'users.stepConfirmation' },
+  ];
   readonly submitted = signal(false);
   readonly showPassword = signal(false);
   readonly editingId = signal<string | null>(null);
@@ -230,6 +239,27 @@ export class UsersPage {
   });
 
   readonly editMode = computed(() => this.editingId() !== null);
+
+  /** True when at least one role is selected, allowing progression past the Role step. */
+  readonly rolesSelected = () => this.form.controls.roles.value.length > 0;
+
+  readonly selectedCategoryLabel = computed(() => {
+    const id = this.form.controls.categoryId.value;
+    if (!id) return this.i18n.t('common.none');
+    return this.store.categories().find((cat) => cat.id === id)?.name ?? id;
+  });
+
+  readonly confirmationSummary = computed(() => {
+    const v = this.form.getRawValue();
+    return {
+      displayName: v.displayName,
+      username: v.username,
+      categoryName: this.selectedCategoryLabel(),
+      roles: [...new Set(v.roles)],
+      menus: [...new Set(v.allowedMenus)],
+      active: v.active,
+    };
+  });
 
   readonly rolesAdded = computed(() =>
     this.selectedRoles().filter((role) => !this.baselineRoles().includes(role)).sort(),
@@ -469,6 +499,7 @@ export class UsersPage {
     this.activeTemplateCode.set('');
     this.roleTemplates.set([]);
     this.drawerOpen.set(true);
+    this.wizardStep.set(1);
     void this.loadUserDialogOptions();
   }
 
@@ -529,6 +560,7 @@ export class UsersPage {
     });
     void this.initPolicyAssignmentsForEdit(item);
     this.drawerOpen.set(true);
+    this.wizardStep.set(1);
   }
 
   private initPolicyAssignmentsForNew(): void {
@@ -919,6 +951,25 @@ export class UsersPage {
   closeDrawer(): void {
     this.drawerOpen.set(false);
     this.submitted.set(false);
+    this.wizardStep.set(1);
+  }
+
+  goToStep(step: number): void {
+    if (step >= 1 && step <= this.wizardSteps.length) {
+      this.wizardStep.set(step);
+    }
+  }
+
+  goNext(): void {
+    if (this.wizardStep() < this.wizardSteps.length) {
+      this.wizardStep.update((step) => step + 1);
+    }
+  }
+
+  goBack(): void {
+    if (this.wizardStep() > 1) {
+      this.wizardStep.update((step) => step - 1);
+    }
   }
 
   exportCsv(): void {

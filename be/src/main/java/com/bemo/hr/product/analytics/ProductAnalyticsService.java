@@ -10,7 +10,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.ObjectMapper;
 
 import java.sql.Timestamp;
@@ -35,6 +38,7 @@ public class ProductAnalyticsService {
     private final ObjectMapper objectMapper;
     private final JdbcTemplate jdbcTemplate;
     private final AuditService auditService;
+    private final PlatformTransactionManager transactionManager;
 
     private static long epoch(Timestamp value) {
         return value == null ? 0 : value.toInstant().toEpochMilli();
@@ -69,19 +73,59 @@ public class ProductAnalyticsService {
             throw ex;
         }
         LocalDate day = LocalDate.ofInstant(event.getOccurredAt(), ZoneOffset.UTC);
-        var aggregate = dailyRepository.findByEventDateAndEventNameAndFeatureKey(day, event.getEventName(), event.getFeatureKey()).orElse(null);
-        if (aggregate == null)
-            dailyRepository.save(new ProductEventDailyAggregate(day, event.getEventName(), event.getFeatureKey()));
-        else {
+        updateDailyAggregate(day, event.getEventName(), event.getFeatureKey());
+        recordMilestone(event);
+        return eventView(event, false);
+    }
+
+    /**
+     * Maintains the per-day aggregate outside the event's transaction so that a
+     * concurrent unique-key race on {@code (app_id, event_date, event_name,
+     * feature_key)} can never surface a 409 to the client. On a race we roll back
+     * the isolated insert and retry an increment instead of failing the request.
+     */
+    private void updateDailyAggregate(LocalDate day, String eventName, String featureKey) {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        try {
+            tx.executeWithoutResult(status -> upsertAggregate(day, eventName, featureKey));
+        } catch (DataIntegrityViolationException ex) {
+            log.debug("Daily aggregate insert raced for {} {} {}; retrying increment", day, eventName, featureKey);
+            try {
+                tx.executeWithoutResult(status -> upsertAggregate(day, eventName, featureKey));
+            } catch (Exception retryEx) {
+                log.warn("Daily aggregate update failed for {} {} {}: {}", day, eventName, featureKey, retryEx.getMessage());
+            }
+        }
+    }
+
+    private void upsertAggregate(LocalDate day, String eventName, String featureKey) {
+        var aggregate = dailyRepository.findByEventDateAndEventNameAndFeatureKey(day, eventName, featureKey).orElse(null);
+        if (aggregate == null) {
+            dailyRepository.save(new ProductEventDailyAggregate(day, eventName, featureKey));
+        } else {
             aggregate.increment();
             dailyRepository.save(aggregate);
         }
+    }
+
+    private void recordMilestone(ProductEvent event) {
         String milestone = MILESTONES.get(event.getEventName());
-        if (milestone != null && !milestoneRepository.existsByMilestoneKey(milestone)) {
-            milestoneRepository.save(new ActivationMilestone(milestone, event.getId(), event.getOccurredAt()));
-            log.info("Milestone {} achieved for event {}", milestone, event.getEventName());
+        if (milestone == null || milestoneRepository.existsByMilestoneKey(milestone)) {
+            return;
         }
-        return eventView(event, false);
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        try {
+            tx.executeWithoutResult(status -> {
+                if (!milestoneRepository.existsByMilestoneKey(milestone)) {
+                    milestoneRepository.save(new ActivationMilestone(milestone, event.getId(), event.getOccurredAt()));
+                    log.info("Milestone {} achieved for event {}", milestone, event.getEventName());
+                }
+            });
+        } catch (Exception ex) {
+            log.warn("Activation milestone insert failed for {}: {}", milestone, ex.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)

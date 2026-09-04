@@ -73,10 +73,10 @@ class ItemLotSerialServiceTests {
 
     @Test
     void pickFefoIssuesFromEarliestExpiringLotsFirst() {
-        // Create lots: LOT-A expires 2026-09-01, LOT-B expires 2026-12-01, LOT-C expires 2027-06-01
-        ItemLotSerial lotA = new ItemLotSerial("item-1", "wh-1", "LOT-A", null, new BigDecimal("10"), "GRN-1", LocalDate.of(2026, 9, 1), null);
-        ItemLotSerial lotB = new ItemLotSerial("item-1", "wh-1", "LOT-B", null, new BigDecimal("10"), "GRN-2", LocalDate.of(2026, 12, 1), null);
-        ItemLotSerial lotC = new ItemLotSerial("item-1", "wh-1", "LOT-C", null, new BigDecimal("10"), "GRN-3", LocalDate.of(2027, 6, 1), null);
+        LocalDate today = LocalDate.now();
+        ItemLotSerial lotA = new ItemLotSerial("item-1", "wh-1", "LOT-A", null, new BigDecimal("10"), "GRN-1", today.plusMonths(1), null);
+        ItemLotSerial lotB = new ItemLotSerial("item-1", "wh-1", "LOT-B", null, new BigDecimal("10"), "GRN-2", today.plusMonths(3), null);
+        ItemLotSerial lotC = new ItemLotSerial("item-1", "wh-1", "LOT-C", null, new BigDecimal("10"), "GRN-3", today.plusMonths(6), null);
 
         // FEFO order: A (earliest) -> B -> C
         when(repository.findFifoLots("item-1", "wh-1")).thenReturn(List.of(lotA, lotB, lotC));

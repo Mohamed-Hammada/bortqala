@@ -8,15 +8,15 @@ Completion rule: every item starts `[ ]`. Change to `[x]` ONLY after implementat
 
 ## INDEX
 
-- [ ] 01 — BUG-001 — Super Admin authorization vs sidebar visibility
-- [ ] 02 — BUG-002 — Contractor creation fails silently
-- [ ] 03 — BUG-003 — Workforce attendance/dashboard disabled
-- [ ] 04 — BUG-004 — Procurement exposed but disabled
-- [ ] 05 — BUG-005 — Manual attendance decision does not persist
-- [ ] 06 — BUG-006 — Employee code duplicated on create
+- [x] 01 — BUG-001 — Super Admin authorization vs sidebar visibility
+- [x] 02 — BUG-002 — Contractor creation fails silently
+- [x] 03 — BUG-003 — Workforce attendance/dashboard disabled
+- [x] 04 — BUG-004 — Procurement exposed but disabled
+- [x] 05 — BUG-005 — Manual attendance decision does not persist
+- [x] 06 — BUG-006 — Employee code duplicated on create
 - [x] 07 — BUG-007 — BOTH workforce category is not unified
-- [ ] 08 — BUG-008 — Worker daily rate does not inherit from category
-- [ ] 09 — BUG-009 — Dev-server/lazy-loaded chunk deployment risk
+- [x] 08 — BUG-008 — Worker daily rate does not inherit from category
+- [x] 09 — BUG-009 — Dev-server/lazy-loaded chunk deployment risk
 - [x] 10 — BUG-010 — Inventory movement lacks distinct document references
 - [x] 11 — BUG-011 — Duplicate inventory unit headers
 - [x] 12 — BUG-012 — Save feedback is too generic
@@ -28,8 +28,8 @@ Completion rule: every item starts `[ ]`. Change to `[x]` ONLY after implementat
 - [x] 18 — BUG-018 — Missing accessibility names
 - [x] 19 — BUG-019 — Contractor failure lacks recovery guidance
 - [x] 20 — BUG-020 — Workforce category form/table rule fields inconsistent
-- [ ] 21 — BUG-021 — User-role configuration is cognitively overloaded
-- [ ] 22 — BUG-022 — Role metadata disagrees with live access
+- [x] 21 — BUG-021 — User-role configuration is cognitively overloaded
+- [x] 22 — BUG-022 — Role metadata disagrees with live access
 - [ ] 23 — PAGE — Dashboard
 - [ ] 24 — PAGE — Employees
 - [ ] 25 — PAGE — Imports / Device Integrations

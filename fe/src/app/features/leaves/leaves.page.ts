@@ -13,6 +13,7 @@ import { LeavesService } from './leaves.service';
 import { LeaveBalance, LeaveRequest, LeaveRequestStatus, LeaveType } from './leaves.models';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { dateInputToEpoch, formatDateReadable } from '../../core/date';
 
 @Component({
   selector: 'app-leaves-page',
@@ -146,14 +147,29 @@ export class LeavesPage {
 
   async submitRequest() {
     if (this.requestForm.invalid) return;
+    if (this.requestForm.controls.startDate.value > this.requestForm.controls.endDate.value) {
+      this.notification.warning(this.i18n.t('leaves.invalidDateRange'));
+      return;
+    }
+    const val = this.requestForm.getRawValue();
     try {
-      await this.leavesService.submitRequest(this.requestForm.getRawValue());
+      await this.leavesService.submitRequest({
+        employeeId: val.employeeId,
+        leaveTypeId: val.leaveTypeId,
+        startDate: dateInputToEpoch(val.startDate),
+        endDate: dateInputToEpoch(val.endDate),
+        reason: val.reason.trim() || undefined,
+      });
       this.notification.success(this.i18n.t('leaves.saved'));
       this.closeRequestDrawer();
       await Promise.all([this.loadRequests(), this.loadBalances()]);
     } catch (e) {
       this.notification.error(apiErrorMessage(e, this.i18n));
     }
+  }
+
+  dateLabel(value: number): string {
+    return formatDateReadable(value, this.i18n.locale());
   }
 
   async approve(r: LeaveRequest) {
