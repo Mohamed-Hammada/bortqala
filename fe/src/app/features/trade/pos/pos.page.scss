@@ -489,6 +489,17 @@
     font-size: 0.8125rem;
     line-height: 1.4;
 
+    .receipt-duplicate-banner {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px dashed #ef4444;
+      padding: 0.375rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      margin-bottom: 0.5rem;
+    }
+
     .receipt-brand {
       text-align: center;
       h3 { margin: 0; font-size: 1rem; }
@@ -516,6 +527,89 @@
       margin-top: 0.5rem;
       font-size: 0.75rem;
     }
+  }
+
+  .badge-reprint {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    background: #fef3c7;
+    color: #92400e;
+    margin-inline-start: 0.375rem;
+  }
+
+  .badge-conn {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .conn-detail {
+    font-size: 0.75rem;
+    color: var(--muted, #64748b);
+    margin-inline-start: 0.375rem;
+    font-family: monospace;
+  }
+
+  .badge-default {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    background: #ecfdf5;
+    color: #059669;
+  }
+
+  .radio-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.25rem;
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+  }
+
+  .checkboxes {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+  }
+
+  .form-row {
+    display: flex;
+    gap: 0.75rem;
+
+    .col-8 { flex: 2; }
+    .col-4 { flex: 1; }
+  }
+
+  .reprint-prompt-info {
+    font-size: 0.875rem;
+    color: var(--text, #1e293b);
+    margin-bottom: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: #f8fafc;
+    border-radius: 0.375rem;
   }
 
   @media print {

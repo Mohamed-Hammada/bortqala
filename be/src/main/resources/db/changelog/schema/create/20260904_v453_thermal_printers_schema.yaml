@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260904-v453-01-pos-thermal-printers
+      author: bemo-tech-lead
+      changes:
+        - createTable:
+            tableName: pos_thermal_printers
+            columns:
+              - column: { name: id, type: VARCHAR(64), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: branch_id, type: VARCHAR(64) }
+              - column: { name: terminal_id, type: VARCHAR(64) }
+              - column: { name: connection_type, type: VARCHAR(32), constraints: { nullable: false } } # NETWORK, BLUETOOTH, USB
+              - column: { name: ip_address, type: VARCHAR(64) }
+              - column: { name: port, type: INT, defaultValueNumeric: 9100 }
+              - column: { name: bluetooth_mac, type: VARCHAR(64) }
+              - column: { name: paper_width, type: VARCHAR(32), defaultValue: "MM_80", constraints: { nullable: false } } # MM_58, MM_80
+              - column: { name: character_code_page, type: VARCHAR(32), defaultValue: "CP864", constraints: { nullable: false } }
+              - column: { name: header_text, type: VARCHAR(500) }
+              - column: { name: footer_text, type: VARCHAR(500) }
+              - column: { name: open_drawer, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: cut_paper, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: print_qr_code, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: is_default, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 20260904-v453-02-pos-transactions-reprint
+      author: bemo-tech-lead
+      changes:
+        - addColumn:
+            tableName: pos_transactions
+            columns:
+              - column: { name: reprint_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: last_reprinted_at, type: BIGINT }

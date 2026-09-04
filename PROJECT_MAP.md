@@ -15,6 +15,17 @@
   - Endpoints: `POST /api/v1/payroll/calculate-statutory` and `GET /api/v1/payroll/wps-export`.
   - Frontend: `PayrollStore.exportWps()`, "تصدير ملف البنوك (WPS / SIF)" action button, and modal selection dialog in `PayrollPage`.
   - Verification: 644 frontend unit tests across 138 test suites pass 100% green, 5,859 i18n keys verified, 0 hardcoded string violations, backend unit test suite passes with `BUILD SUCCESSFUL`, production bundle builds cleanly.
+- **Offline Field Sales Mobile Application & Resilient IndexedDB Sync Engine (Session 16 / Commercial Readiness TASK 02)**: Complete offline-first mobile sales execution suite:
+  - **Resilient Offline Storage & Sync Engine (`FieldSalesOfflineService`)**: Browser-native IndexedDB transactional store (`bemo_field_sales_db`) with fallback to localStorage, containing offline bundles (customer balances, credit limits, price lists, inventory master), an atomic outbox queue (`outbox`), and local history. Auto-detects connectivity via `window.navigator.onLine` and triggers automatic background replay upon network reconnection.
+  - **Idempotent Batch Sync & Validation Backend (`FieldSalesService`)**: Database schema `v455` (`field_sales_offline_transactions`) with unique constraint on `(app_id, client_offline_id)`. REST endpoints (`GET /offline-bundle`, `POST /sync`, `GET /history`). Supports offline invoices, orders, collections/receipts, returns, and quotations. Enforces customer credit hold validation, credit limit exceeded checks, automatic partner ledger entries (`PartnerLedgerEntry`), inventory movements (`StockMovement`), and immutable audit logging (`AuditService`).
+  - **Touch Signature Canvas & GPS Geo-Tagging**: Mobile-first responsive UI featuring HTML5 signature pad with clear/confirm mechanics, dynamic GPS coordinate capture (`navigator.geolocation`) with fallback coordinates, customer balance & credit status indicators, and one-tap offline sequence number generation.
+  - **Verification**: 100% clean test execution — 704 frontend unit tests across 144 test suites pass, `check:i18n` verified with 5,961 keys, `check:hardcoded` verified with 0 violations across 148 HTML and 330 TS files, backend tests pass with `BUILD SUCCESSFUL`, production bundle builds cleanly (`ng build`).
+- **ESC/POS Thermal Receipt Printing, Web Bluetooth & Reprint Audit Engine (Session 15 / Commercial Readiness TASK 03)**: Complete implementation of high-speed ESC/POS thermal receipt printing and hardware integration:
+  - **Raw ESC/POS Command Byte Generator (`EscPosCommandBuilder`)**: Hardware-level byte command generation supporting 58mm (32-column) and 80mm (48-column) widths, text justification, double-height/width font sizing, bold/underline formatting, Code128 barcodes, native ESC/POS 2D QR codes, Egyptian Tax Authority / ZATCA Tag-Length-Value (TLV) Base64 encoded QR generation, automated cash drawer kick pulse, paper partial cut, and dynamic table formatting with right-aligned prices.
+  - **Reprint Auditing & Fraud Prevention**: Added `reprint_count` and `last_reprinted_at` tracking to `pos_transactions`. Every reprint command strictly requires an audit reason, enforces `POS_REPRINT_REASON_REQUIRED`, stamps an immutable `AuditService` log entry, and renders a bold `*** DUPLICATE (REPRINT) (N) ***` header on the receipt.
+  - **Direct Hardware & Bluetooth Connectivity**: Server-side direct TCP network socket dispatch (`ThermalPrintService`) with connection timeout and fallback, plus frontend Web Bluetooth driver (`ThermalPrinterService`) supporting standard GATT serial SPP profiles (UUIDs `000018f0`, `49535343`, `e7810a71`) with 512-byte MTU chunking and browser print fallback.
+  - **Printer Management & Configuration UI**: Liquibase `v453` (DDL `pos_thermal_printers`) and `v454` (36 bilingual translation keys). Added Printers tab in `PosPage`, allowing full CRUD of thermal printers, connection type (Network, Bluetooth, USB), IP/port configuration, paper width selection, cash drawer / auto-cut toggles, and live test printing (`POST /api/v1/trade/pos/printers/{id}/test-print`).
+  - **Verification**: 100% clean test execution — 696 frontend unit tests across 143 suites pass, `check:i18n` verified with 5,927 keys, `check:hardcoded` verified with 0 violations across 147 HTML and 327 TS files, full backend unit test suite passes with `BUILD SUCCESSFUL`, production bundle builds cleanly (`ng build`).
 - **Consolidated UI/UX Audit, Global Shortcut Gate & Platform Polish (Session 13)**: Complete resolution of source/UI-UX audit across global shell, keyboard shortcuts, information architecture, forms, tables, and settings. Unified all keyboard shortcuts (`Ctrl/Cmd+K`, `/`, `?`, `G → X`, `Esc`) through `shortcut-guard.util.ts` with strict modal suppression via `DialogStateService.modalOpen()`. Added dirty tracking (`hasUnsavedChanges`) and discard workflow in `ShortcutSettingsComponent`, aligned shortcut key codes (`KeyA..KeyZ` + `Digit0..Digit9`), un-nested interactive buttons from navigation links, expanded `IconComponent` with 11 SVG icons (`star`, `clock`, `bell`, `chat`, `wallet`, `cart`, `boxes`, `banknote`, `building`, `factory`, `search`) to eliminate raw emoji in shell chrome, configured clean default collapsed state for secondary/vertical modules, converted employee form accordion to button-driven semantics, refactored journal entry lines editor with analytical dimension sub-rows, added disabled tooltip guidance for employee creation without categories, and added mobile responsive layouts across tables and toolbars. Verified 100% clean with 643 frontend unit tests, 5,851 database i18n keys, 0 hardcoded violations, and full backend test execution (`BUILD SUCCESSFUL`).
 - **API Authorization & Role Security Enforcements (P0-01)**: Enforced `@PreAuthorize` role rules across all Spring Boot controllers. Prevented unauthorized execution of disbursement, posting, and user updates at API layer (returns `403 Forbidden`).
 - **Security Pack: 2FA TOTP, Password Policy, Trusted Devices & Role IP Allowlists (WP-33)**: Built enterprise security suite with RFC 6238 TOTP two-factor authentication, encrypted secrets at rest with AES-GCM, single-use emergency backup codes, tenant password complexity and history enforcement, trusted devices tracking with remote session revocation (`tv` bump), and role-based CIDR IP allowlists with Super Admin bypass. Liquibase `v442` (schema) and `v443` (translations). Backend domain package `com.bemo.hr.security.pack` with `TotpService`, `PasswordPolicyService`, `TrustedDeviceService`, `IpAllowlistService`, `SecurityPackController`, and `Auth2FaController`. Frontend `SecuritySettingsComponent` in `/settings` (Security tab) and 2FA challenge flow in `LoginPage`.
@@ -166,17 +177,42 @@
     - Frontend i18n & hardcoded scanner: **5,690 keys verified, 0 violations across 142 HTML templates and 310 TS files**.
     - Production bundle: **`ng build` builds cleanly**.
 
+- **TASK 04: Multi-Branch Control Center, Cross-Branch Inventory Transfer & In-Transit Tracking, and Consolidated Group Reporting (DONE 2026-09-04, Session 17 - VERIFIED)**:
+  - **Multi-Branch Master Data & Operational Scoping**: Extended `Branch` entity and `branches` schema with operational defaults (`defaultWarehouseId`, `defaultCashboxId`, `defaultBankAccountId`, `defaultPosTerminalId`), branch document prefix (`documentCodePrefix`), main branch indicator (`isMainBranch`), and legal identities (`taxNumber`, `commercialRegistry`, phone, email). Built `BranchControlCenterService.getBranchControlSummary(branchId)` delivering a 360° operational overview (headcount, active terminals, default warehouse inventory valuation, cash/bank liquidity).
+  - **Cross-Branch Transfer & In-Transit Workflow**: Extended `StockTransferHeader` and `StockTransferLine` with in-transit logistics state machine (`DRAFT` -> `IN_TRANSIT` -> `RECEIVED` / `DISCREPANCY`). Dispatch records logistics details (carrier, driver name, phone, vehicle plate, waybill number, dispatched timestamp). Receiving supports inspection recording line-by-line received, damaged, and lost quantities with damage/loss reasons. Automatic discrepancy generation into `StockTransferDiscrepancy` with resolution states (`RESOLVED`, `CLAIMED`, `WRITTEN_OFF`, `RETURNED_TO_SENDER`).
+  - **Consolidated Group Reporting Engine**: Multi-branch financial consolidation in `BranchControlCenterService.getConsolidatedGroupReport(...)` featuring Consolidated Profit & Loss with inter-branch sales and cost of sales eliminations, Consolidated Balance Sheet with inter-branch receivables/payables eliminations, Branch Performance Comparison Matrix (revenue, COGS, gross profit, margin %, operating expenses, net profit, inventory valuation, cash position, AR/AP), and multi-tab Excel export (`/api/v1/organization/branches/group-report/export.xlsx`).
+  - **Database & Translations**: Liquibase `v457` (`20260904_v457_multi_branch_control_schema.yaml`) and `v458` (`20260904_v458_multi_branch_control_translations.yaml` + CSV) with 68 bilingual keys.
+  - **Frontend UI**: Integrated into `OrganizationPage` (`/organization/branches`) with 3 tabs: Branches Directory, Stock Transfers Hub (with Dispatch modal, Inspection Receiving modal, Discrepancy Resolution modal), and Consolidated Group Reporting (P&L, Balance Sheet, Branch Comparison Matrix, date/branch filtering, Excel export).
+  - **Evidence**: 709 frontend tests across 144 suites pass, 6,004 i18n keys, 0 hardcoded strings, 820 error codes PASS, 18,216 translation catalog PASS.
+
 ## [ORPHANS & PENDING]
 
-All P0 and P1 technical capabilities, security contracts, and forensic controls are fully implemented, wired, and verified with zero orphans and zero placeholders across the entire ERP product surface:
+Tracking Commercial Readiness Roadmap Tasks (C:\Users\wolfn\Downloads\Next_ERP_Commercial_Readiness_Task_Pack):
+- **TASK 05 — Owner Executive Cockpit** [P1, IN PROGRESS]: Real-time executive KPIs, AR/AP aging waterfall, net liquidity, low stock, branch performance leaderboard.
+- **TASK 06 — Field Sales Representative Workspace** [P1, PENDING]: Rep daily visit planning, route view, customer balance, visit outcome, mobile flow.
+- **TASK 07 — Customer Portal** [P1, PENDING]: Customer statement, invoices, delivery status, online reorders.
+- **TASK 08 — WhatsApp & Document Delivery Center** [P1, PENDING]: Document sharing via WhatsApp & email, localized templates, delivery audit.
+- **TASK 09 — Approval Workflow Engine** [P1, PENDING]: Reusable approvals for discounts, credit holds, stock adjustments, and journals.
+- **TASK 10 — Backup & Disaster Recovery Console** [P1, PENDING]: Backup schedule, size, checksum, restore points, recovery drills.
+- **TASK 11 — Inventory Barcode & Label Studio** [P1, PENDING]: Barcode/QR generation, custom label sizes, shelf/product labels.
+- **TASK 12 — Customer Credit & Collections Workspace** [P1, PENDING]: Aging buckets, overdue collections, promises to pay, automated credit holds.
 
-- **VERIFIED** — Identity, Authentication & PBAC Authorization (P0-01..P0-03, Section 2 & 16 matrix).
-- **VERIFIED** — Cryptographic Device Signing & Revocation (P0-04, Section 3).
-- **VERIFIED** — Transactional Audit Trail 2.0 (P0, Section 4).
-- **VERIFIED** — Database Transaction Integrity & Idempotency Engine (P0, Section 5).
-- **VERIFIED** — Financial Statements, Multi-Subledger & Reconciliation Center (P0, Section 6).
-- **VERIFIED** — End-to-End ERP Core Workflows: P2P, O2C, Inventory, Payroll, Manufacturing, Projects (P0, Section 7).
-- **VERIFIED** — Public Product Catalog, Retail/Computer Shop Domain, ETA Integration & Transactional Outbox (P1, Sections 8–11).
+Completed in Prior Sessions:
+- **TASK 01 — Egyptian Statutory Payroll Engine & WPS SIF Bank Clearing** [P0, VERIFIED]: Law 30/2023 progressive income tax, Law 148/2019 social insurance, Martyrs' fund, EG_WPS & GCC_SIF bank export, verified green.
+- **TASK 02 — Offline Field Sales Mobile & Local Sync** [P0, VERIFIED]: Offline-first IndexedDB catalog & customer sync, offline sales order/invoice/receipt creation, local numbering, signature capture, idempotent sync queue.
+- **TASK 03 — Thermal Printer & Receipt Printing (ESC/POS)** [P0, VERIFIED]: Standard ESC/POS binary byte generator, 58mm/80mm layouts, Arabic/English rendering, QR/barcode, branch/device printer config, POS & sales reprint with audit log.
+- **TASK 04 — Multi-Branch Control Center & Consolidated Group Reporting** [P1, VERIFIED]: Branch operational scoping, branch defaults & prefix, in-transit cross-branch transfers, inspection & discrepancy resolution, consolidated P&L and Balance Sheet with eliminations, Excel export.
+- **TASK 05 — Owner Executive Cockpit** [P1, PENDING]: Real-time executive KPIs, AR/AP aging waterfall, net liquidity, low stock, branch performance leaderboard.
+- **TASK 06 — Field Sales Representative Workspace** [P1, PENDING]: Rep daily visit planning, route view, customer balance, visit outcome, mobile flow.
+- **TASK 07 — Customer Portal** [P1, PENDING]: Customer statement, invoices, delivery status, online reorders.
+- **TASK 08 — WhatsApp & Document Delivery Center** [P1, PENDING]: Document sharing via WhatsApp & email, localized templates, delivery audit.
+- **TASK 09 — Approval Workflow Engine** [P1, PENDING]: Reusable approvals for discounts, credit holds, stock adjustments, and journals.
+- **TASK 10 — Backup & Disaster Recovery Console** [P1, PENDING]: Backup schedule, size, checksum, restore points, recovery drills.
+- **TASK 11 — Inventory Barcode & Label Studio** [P1, PENDING]: Barcode/QR generation, custom label sizes, shelf/product labels.
+- **TASK 12 — Customer Credit & Collections Workspace** [P1, PENDING]: Aging buckets, overdue collections, promises to pay, automated credit holds.
+
+Completed in Prior Sessions:
+- **TASK 01 — Egyptian Statutory Payroll Engine & WPS SIF Bank Clearing** [P0, VERIFIED]: Law 30/2023 progressive income tax, Law 148/2019 social insurance, Martyrs' fund, EG_WPS & GCC_SIF bank export, verified green.
 - **BLOCKED (external)** — Independent CI execution on external GitHub Actions runner remains blocked by the repository's GitHub Actions account/billing lock (`REL-001`). All tests pass 100% cleanly in the local verification environment.
 - **BLOCKED (external)** — Real Docker container concurrency tests for PostgreSQL require a local Docker daemon (unavailable in WSL sandbox environment). All corresponding H2 mirror concurrency suites pass with zero defects.
 
@@ -289,5 +325,22 @@ All P0 and P1 technical capabilities, security contracts, and forensic controls 
   - **Finance / Master Data / Rules — VERIFY**: characterize dimensions, manual journal approval, FX, financial statements, effective dating, and bank-change governance against real paths.
 
 - **Operational hardening completed from the 2026-08-12 staff audit**: structured console output is wrapped in a non-blocking Logback `AsyncAppender`; Java 21 is the explicit Gradle toolchain matching CI and both Docker stages while release 17 remains the compatibility target.
+
+---
+
+## [COMMERCIAL READINESS ROADMAP EXECUTION]
+- [x] **TASK 01 — Egyptian Statutory Payroll & WPS SIF Bank Export (P0)**: Complete statutory payroll calculation engine (Tax Law 30/2023, Social Insurance Law 148/2019, Martyrs fund) and dual-format bank clearing export (EG_WPS ACH CSV + GCC_SIF). (Session 14 - VERIFIED).
+- [x] **TASK 03 — ESC/POS Thermal Printing & Hardware Integration (P0)**: Direct ESC/POS byte generator (58mm/80mm, QR TLV, Code128, drawer kick, cut paper), Web Bluetooth GATT driver, network socket dispatch, reprint audit engine, and printer management UI. (Session 15 - VERIFIED).
+- [x] **TASK 02 — Offline Field Sales Mobile (P0)**: Authenticated local session, offline bundle download (assigned customers, catalog, stock summaries), offline draft creation (quotation, order, invoice, receipt, return) with deterministic local numbering (`OFF-...`), signature capture canvas, outbox sync queue with idempotency keys, conflict handling, and mobile phone-optimized UI. (Session 16 - VERIFIED).
+- [x] **TASK 04 — Multi-Branch Inventory Transfer & In-Transit Tracking (P1)**: Multi-branch operational defaults, prefix, main branch flags, in-transit dispatch, inspection receiving, discrepancy resolution, consolidated group reporting (P&L, Balance Sheet, comparison matrix) with eliminations. (Session 17 - VERIFIED).
+- [/] **TASK 05 — Owner / Executive Mobile KPI Cockpit (P1)**: [IN PROGRESS] Real-time executive KPIs, AR/AP aging waterfall, net liquidity, low stock, branch performance leaderboard.
+- [ ] **TASK 06 — Field Sales Rep Route Planning & Visit Verification (P1)**
+- [ ] **TASK 07 — Customer Self-Service Portal (P1)**
+- [ ] **TASK 08 — WhatsApp Document & Invoice Delivery (P1)**
+- [ ] **TASK 09 — Van Sales Inventory Loading & Day-End Reconciliation (P1)**
+- [ ] **TASK 10 — Multi-Unit Pricing, Tiered Discounts & Promotional Bundles (P1)**
+- [ ] **TASK 11 — Egyptian E-Invoicing Phase 2 Integration (ETA SDK / Cert) (P1)**
+- [ ] **TASK 12 — Contractor Workforce Advances & Daily Settlement Mobile (P1)**
+
 
 

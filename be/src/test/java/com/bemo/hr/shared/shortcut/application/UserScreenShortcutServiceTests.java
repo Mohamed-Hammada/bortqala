@@ -13,6 +13,8 @@ import com.bemo.hr.shared.shortcut.domain.ShortcutProfileMode;
 import com.bemo.hr.shared.shortcut.domain.UserShortcutProfile;
 import com.bemo.hr.shared.shortcut.infrastructure.UserScreenShortcutRepository;
 import com.bemo.hr.shared.shortcut.infrastructure.UserShortcutProfileRepository;
+import com.bemo.hr.shared.security.TenantContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -57,6 +60,7 @@ class UserScreenShortcutServiceTests {
 
     @BeforeEach
     void setUp() {
+        TenantContext.clear();
         defaultProvider = new DefaultScreenShortcutProvider();
         service = new UserScreenShortcutService(
                 profileRepository,
@@ -69,6 +73,8 @@ class UserScreenShortcutServiceTests {
 
         Role adminRole = new Role(RoleCode.ADMIN, "Admin");
         testUser = new AppUser("test-app", "testuser", "Test User", "encoded_pass", Set.of(adminRole), Set.of("dashboard", "employees"), true, true);
+        lenient().when(userRepository.findByAppIdAndUsernameIgnoreCase(any(), eq("testuser"))).thenReturn(Optional.of(testUser));
+        lenient().when(userRepository.findByUsernameIgnoreCase("testuser")).thenReturn(Optional.of(testUser));
 
         pageDashboard = new AccessApi.AccessPageResponse(
                 "DASHBOARD", "DASHBOARD", "/dashboard", "dashboard", "nav.dashboard",
@@ -78,6 +84,11 @@ class UserScreenShortcutServiceTests {
                 "EMPLOYEES", "HR", "/employees", "employees", "nav.employees",
                 List.of("employees.read"), List.of("ADMIN"), null, List.of()
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test

@@ -10,7 +10,11 @@ import {
   PosTransaction,
   ProcessReturnPayload,
   ProcessSalePayload,
+  ReceiptPrintData,
+  SavePrinterPayload,
   SaveTerminalPayload,
+  TestPrintResponse,
+  ThermalPrinter,
 } from './pos.models';
 
 @Injectable({
@@ -60,5 +64,34 @@ export class PosDataService {
 
   getSummary(): Observable<PosSummary> {
     return this.http.get<PosSummary>(`${this.baseUrl}/summary`);
+  }
+
+  getPrinters(): Observable<ThermalPrinter[]> {
+    return this.http.get<ThermalPrinter[]>(`${this.baseUrl}/printers`);
+  }
+
+  savePrinter(payload: SavePrinterPayload): Observable<ThermalPrinter> {
+    return this.http.post<ThermalPrinter>(`${this.baseUrl}/printers`, payload);
+  }
+
+  deletePrinter(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/printers/${id}`);
+  }
+
+  testPrint(id: string): Observable<TestPrintResponse> {
+    return this.http.post<TestPrintResponse>(`${this.baseUrl}/printers/${id}/test-print`, {});
+  }
+
+  getReceiptEscPos(transactionId: string, printerId?: string): Observable<ReceiptPrintData> {
+    return this.http.get<ReceiptPrintData>(`${this.baseUrl}/transactions/${transactionId}/receipt-escpos`, {
+      params: printerId ? { printerId } : {},
+    });
+  }
+
+  reprintReceipt(transactionId: string, reason: string, printerId?: string): Observable<ReceiptPrintData> {
+    return this.http.post<ReceiptPrintData>(`${this.baseUrl}/transactions/${transactionId}/reprint`, {
+      reason,
+      printerId,
+    });
   }
 }

@@ -1,0 +1,260 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260904-v454-thermal-printer-translations
+      author: bemo-tech-lead
+      comment: "TASK-03: Bilingual translations for ESC/POS thermal printers, receipt formatting, reprint auditing, and printer management."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009010-ar', 'THERMAL_PRINTER_NOT_FOUND', 'ar-EG', 'لم يتم العثور على إعدادات طابعة الإيصالات الحرارية.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'THERMAL_PRINTER_NOT_FOUND' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009010-en', 'THERMAL_PRINTER_NOT_FOUND', 'en-US', 'Thermal printer configuration not found.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'THERMAL_PRINTER_NOT_FOUND' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009011-ar', 'THERMAL_PRINTER_UNREACHABLE', 'ar-EG', 'تعذر الاتصال بطابعة الإيصالات عبر الشبكة.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'THERMAL_PRINTER_UNREACHABLE' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009011-en', 'THERMAL_PRINTER_UNREACHABLE', 'en-US', 'Unable to connect to thermal printer over network.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'THERMAL_PRINTER_UNREACHABLE' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009012-ar', 'THERMAL_PRINT_FAILED', 'ar-EG', 'فشلت عملية إرسال أمر الطباعة إلى الطابعة الحرارية.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'THERMAL_PRINT_FAILED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009012-en', 'THERMAL_PRINT_FAILED', 'en-US', 'Thermal receipt print command failed.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'THERMAL_PRINT_FAILED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009013-ar', 'THERMAL_PRINTER_NAME_REQUIRED', 'ar-EG', 'اسم طابعة الإيصالات مطلوب.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'THERMAL_PRINTER_NAME_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009013-en', 'THERMAL_PRINTER_NAME_REQUIRED', 'en-US', 'Thermal printer name is required.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'THERMAL_PRINTER_NAME_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009014-ar', 'POS_REPRINT_REASON_REQUIRED', 'ar-EG', 'سبب إعادة طباعة الإيصال مطلوب لتوثيق سجل التدقيق.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'POS_REPRINT_REASON_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009014-en', 'POS_REPRINT_REASON_REQUIRED', 'en-US', 'Reprint reason is required for audit trail.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'POS_REPRINT_REASON_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009015-ar', 'pos.thermalPrinter', 'ar-EG', 'طابعة الإيصالات الحرارية (ESC/POS)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.thermalPrinter' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009015-en', 'pos.thermalPrinter', 'en-US', 'Thermal Receipt Printer (ESC/POS)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.thermalPrinter' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009016-ar', 'pos.thermalPrinters', 'ar-EG', 'طابعات الإيصالات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.thermalPrinters' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009016-en', 'pos.thermalPrinters', 'en-US', 'Thermal Printers', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.thermalPrinters' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009017-ar', 'pos.addPrinter', 'ar-EG', 'إضافة طابعة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.addPrinter' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009017-en', 'pos.addPrinter', 'en-US', 'Add Printer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.addPrinter' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009018-ar', 'pos.editPrinter', 'ar-EG', 'تعديل الطابعة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.editPrinter' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009018-en', 'pos.editPrinter', 'en-US', 'Edit Printer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.editPrinter' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009019-ar', 'pos.printerName', 'ar-EG', 'اسم الطابعة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.printerName' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009019-en', 'pos.printerName', 'en-US', 'Printer Name', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.printerName' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009020-ar', 'pos.connectionType', 'ar-EG', 'نوع الاتصال', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.connectionType' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009020-en', 'pos.connectionType', 'en-US', 'Connection Type', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.connectionType' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009021-ar', 'pos.network', 'ar-EG', 'شبكة (Ethernet / Wi-Fi)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.network' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009021-en', 'pos.network', 'en-US', 'Network (Ethernet / Wi-Fi)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.network' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009022-ar', 'pos.bluetooth', 'ar-EG', 'بلوتوث (Bluetooth)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.bluetooth' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009022-en', 'pos.bluetooth', 'en-US', 'Bluetooth', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.bluetooth' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009023-ar', 'pos.usb', 'ar-EG', 'USB / متصفح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.usb' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009023-en', 'pos.usb', 'en-US', 'USB / Browser', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.usb' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009024-ar', 'pos.ipAddress', 'ar-EG', 'عنوان IP', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.ipAddress' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009024-en', 'pos.ipAddress', 'en-US', 'IP Address', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.ipAddress' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009025-ar', 'pos.port', 'ar-EG', 'المنفذ (Port)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.port' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009025-en', 'pos.port', 'en-US', 'Port', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.port' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009026-ar', 'pos.paperWidth', 'ar-EG', 'عرض الورق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.paperWidth' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009026-en', 'pos.paperWidth', 'en-US', 'Paper Width', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.paperWidth' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009027-ar', 'pos.paper58mm', 'ar-EG', '58 مم (مدمج 32 حرف/سطر)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.paper58mm' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009027-en', 'pos.paper58mm', 'en-US', '58 mm (Compact 32 col)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.paper58mm' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009028-ar', 'pos.paper80mm', 'ar-EG', '80 مم (قياسي 48 حرف/سطر)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.paper80mm' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009028-en', 'pos.paper80mm', 'en-US', '80 mm (Standard 48 col)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.paper80mm' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009029-ar', 'pos.openDrawer', 'ar-EG', 'فتح درج النقدية تلقائياً', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.openDrawer' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009029-en', 'pos.openDrawer', 'en-US', 'Kick Cash Drawer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.openDrawer' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009030-ar', 'pos.cutPaper', 'ar-EG', 'قص الورق تلقائياً', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.cutPaper' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009030-en', 'pos.cutPaper', 'en-US', 'Auto Cut Paper', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.cutPaper' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009031-ar', 'pos.printQr', 'ar-EG', 'طباعة رمز الاستجابة السريعة (QR)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.printQr' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009031-en', 'pos.printQr', 'en-US', 'Print Tax QR Code', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.printQr' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009032-ar', 'pos.isDefault', 'ar-EG', 'تعيين كطابعة افتراضية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.isDefault' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009032-en', 'pos.isDefault', 'en-US', 'Set as Default Printer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.isDefault' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009033-ar', 'pos.testPrint', 'ar-EG', 'طباعة تجريبية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.testPrint' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009033-en', 'pos.testPrint', 'en-US', 'Test Print', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.testPrint' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009034-ar', 'pos.testPrintSuccess', 'ar-EG', 'تم إرسال أمر الطباعة التجريبية بنجاح.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.testPrintSuccess' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009034-en', 'pos.testPrintSuccess', 'en-US', 'Test print command sent successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.testPrintSuccess' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009035-ar', 'pos.directThermalPrint', 'ar-EG', 'طباعة حرارية مباشرة (ESC/POS)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.directThermalPrint' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009035-en', 'pos.directThermalPrint', 'en-US', 'Direct Thermal Print (ESC/POS)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.directThermalPrint' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009036-ar', 'pos.reprintReceipt', 'ar-EG', 'إعادة طباعة الإيصال', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.reprintReceipt' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009036-en', 'pos.reprintReceipt', 'en-US', 'Reprint Receipt', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.reprintReceipt' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009037-ar', 'pos.reprintReason', 'ar-EG', 'سبب إعادة الطباعة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.reprintReason' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009037-en', 'pos.reprintReason', 'en-US', 'Reprint Reason', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.reprintReason' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009038-ar', 'pos.reprintCount', 'ar-EG', 'مرات إعادة الطباعة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.reprintCount' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009038-en', 'pos.reprintCount', 'en-US', 'Reprint Count', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.reprintCount' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009039-ar', 'pos.reprintSuccess', 'ar-EG', 'تمت إعادة طباعة الإيصال وتوثيق العملية في سجل التدقيق.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.reprintSuccess' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009039-en', 'pos.reprintSuccess', 'en-US', 'Receipt reprinted and logged to audit trail.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.reprintSuccess' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009040-ar', 'pos.headerText', 'ar-EG', 'ترويسة الإيصال (الأسطر العلوية)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.headerText' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009040-en', 'pos.headerText', 'en-US', 'Receipt Header Text', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.headerText' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009041-ar', 'pos.footerText', 'ar-EG', 'تذييل الإيصال (الأسطر السفلية)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.footerText' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009041-en', 'pos.footerText', 'en-US', 'Receipt Footer Text', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.footerText' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009042-ar', 'pos.printerSaved', 'ar-EG', 'تم حفظ إعدادات الطابعة بنجاح.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.printerSaved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009042-en', 'pos.printerSaved', 'en-US', 'Printer configuration saved successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.printerSaved' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009043-ar', 'pos.printerDeleted', 'ar-EG', 'تم حذف إعدادات الطابعة.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.printerDeleted' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009043-en', 'pos.printerDeleted', 'en-US', 'Printer configuration deleted.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.printerDeleted' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009044-ar', 'pos.duplicate', 'ar-EG', 'نسخة إضافية (مُعادة)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.duplicate' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009044-en', 'pos.duplicate', 'en-US', 'DUPLICATE (REPRINT)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'pos.duplicate' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009045-ar', 'POS_TRANSACTION_NOT_FOUND', 'ar-EG', 'لم يتم العثور على المعاملة المطلوبة.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'POS_TRANSACTION_NOT_FOUND' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009045-en', 'POS_TRANSACTION_NOT_FOUND', 'en-US', 'Transaction not found.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'POS_TRANSACTION_NOT_FOUND' AND locale = 'en-US');

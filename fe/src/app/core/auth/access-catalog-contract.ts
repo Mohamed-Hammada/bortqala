@@ -51,6 +51,7 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
   },
   { menuId: 'sales', route: '/trade/sales', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
   { menuId: 'pos', route: '/trade/pos', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
+  { menuId: 'field-sales', route: '/trade/field-sales', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
   { menuId: 'crm', route: '/crm', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
   { menuId: 'export-shipments', route: '/trade/export-shipments', roles: ['ADMIN', 'SUPER_ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'SALES_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'], requiredFeature: 'agri.enabled' },
   { menuId: 'production', route: '/manufacturing/production', roles: ['ADMIN', 'SUPER_ADMIN', 'MANUFACTURING_MANAGER'], requiredFeature: 'manufacturing.enabled' },

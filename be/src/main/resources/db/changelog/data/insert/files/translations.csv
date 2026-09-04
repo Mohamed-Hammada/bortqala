@@ -17915,3 +17915,304 @@ t-008969-ar;common.back;ar-EG;رجوع
 t-008970-en;common.back;en-US;Back
 t-008971-ar;common.next;ar-EG;التالي
 t-008972-en;common.next;en-US;Next
+t-009010-ar;THERMAL_PRINTER_NOT_FOUND;ar-EG;لم يتم العثور على إعدادات طابعة الإيصالات الحرارية.
+t-009010-en;THERMAL_PRINTER_NOT_FOUND;en-US;Thermal printer configuration not found.
+t-009011-ar;THERMAL_PRINTER_UNREACHABLE;ar-EG;تعذر الاتصال بطابعة الإيصالات عبر الشبكة.
+t-009011-en;THERMAL_PRINTER_UNREACHABLE;en-US;Unable to connect to thermal printer over network.
+t-009012-ar;THERMAL_PRINT_FAILED;ar-EG;فشلت عملية إرسال أمر الطباعة إلى الطابعة الحرارية.
+t-009012-en;THERMAL_PRINT_FAILED;en-US;Thermal receipt print command failed.
+t-009013-ar;THERMAL_PRINTER_NAME_REQUIRED;ar-EG;اسم طابعة الإيصالات مطلوب.
+t-009013-en;THERMAL_PRINTER_NAME_REQUIRED;en-US;Thermal printer name is required.
+t-009014-ar;POS_REPRINT_REASON_REQUIRED;ar-EG;سبب إعادة طباعة الإيصال مطلوب لتوثيق سجل التدقيق.
+t-009014-en;POS_REPRINT_REASON_REQUIRED;en-US;Reprint reason is required for audit trail.
+t-009015-ar;pos.thermalPrinter;ar-EG;طابعة الإيصالات الحرارية (ESC/POS)
+t-009015-en;pos.thermalPrinter;en-US;Thermal Receipt Printer (ESC/POS)
+t-009016-ar;pos.thermalPrinters;ar-EG;طابعات الإيصالات
+t-009016-en;pos.thermalPrinters;en-US;Thermal Printers
+t-009017-ar;pos.addPrinter;ar-EG;إضافة طابعة
+t-009017-en;pos.addPrinter;en-US;Add Printer
+t-009018-ar;pos.editPrinter;ar-EG;تعديل الطابعة
+t-009018-en;pos.editPrinter;en-US;Edit Printer
+t-009019-ar;pos.printerName;ar-EG;اسم الطابعة
+t-009019-en;pos.printerName;en-US;Printer Name
+t-009020-ar;pos.connectionType;ar-EG;نوع الاتصال
+t-009020-en;pos.connectionType;en-US;Connection Type
+t-009021-ar;pos.network;ar-EG;شبكة (Ethernet / Wi-Fi)
+t-009021-en;pos.network;en-US;Network (Ethernet / Wi-Fi)
+t-009022-ar;pos.bluetooth;ar-EG;بلوتوث (Bluetooth)
+t-009022-en;pos.bluetooth;en-US;Bluetooth
+t-009023-ar;pos.usb;ar-EG;USB / متصفح
+t-009023-en;pos.usb;en-US;USB / Browser
+t-009024-ar;pos.ipAddress;ar-EG;عنوان IP
+t-009024-en;pos.ipAddress;en-US;IP Address
+t-009025-ar;pos.port;ar-EG;المنفذ (Port)
+t-009025-en;pos.port;en-US;Port
+t-009026-ar;pos.paperWidth;ar-EG;عرض الورق
+t-009026-en;pos.paperWidth;en-US;Paper Width
+t-009027-ar;pos.paper58mm;ar-EG;58 مم (مدمج 32 حرف/سطر)
+t-009027-en;pos.paper58mm;en-US;58 mm (Compact 32 col)
+t-009028-ar;pos.paper80mm;ar-EG;80 مم (قياسي 48 حرف/سطر)
+t-009028-en;pos.paper80mm;en-US;80 mm (Standard 48 col)
+t-009029-ar;pos.openDrawer;ar-EG;فتح درج النقدية تلقائياً
+t-009029-en;pos.openDrawer;en-US;Kick Cash Drawer
+t-009030-ar;pos.cutPaper;ar-EG;قص الورق تلقائياً
+t-009030-en;pos.cutPaper;en-US;Auto Cut Paper
+t-009031-ar;pos.printQr;ar-EG;طباعة رمز الاستجابة السريعة (QR)
+t-009031-en;pos.printQr;en-US;Print Tax QR Code
+t-009032-ar;pos.isDefault;ar-EG;تعيين كطابعة افتراضية
+t-009032-en;pos.isDefault;en-US;Set as Default Printer
+t-009033-ar;pos.testPrint;ar-EG;طباعة تجريبية
+t-009033-en;pos.testPrint;en-US;Test Print
+t-009034-ar;pos.testPrintSuccess;ar-EG;تم إرسال أمر الطباعة التجريبية بنجاح.
+t-009034-en;pos.testPrintSuccess;en-US;Test print command sent successfully.
+t-009035-ar;pos.directThermalPrint;ar-EG;طباعة حرارية مباشرة (ESC/POS)
+t-009035-en;pos.directThermalPrint;en-US;Direct Thermal Print (ESC/POS)
+t-009036-ar;pos.reprintReceipt;ar-EG;إعادة طباعة الإيصال
+t-009036-en;pos.reprintReceipt;en-US;Reprint Receipt
+t-009037-ar;pos.reprintReason;ar-EG;سبب إعادة الطباعة
+t-009037-en;pos.reprintReason;en-US;Reprint Reason
+t-009038-ar;pos.reprintCount;ar-EG;مرات إعادة الطباعة
+t-009038-en;pos.reprintCount;en-US;Reprint Count
+t-009039-ar;pos.reprintSuccess;ar-EG;تمت إعادة طباعة الإيصال وتوثيق العملية في سجل التدقيق.
+t-009039-en;pos.reprintSuccess;en-US;Receipt reprinted and logged to audit trail.
+t-009040-ar;pos.headerText;ar-EG;ترويسة الإيصال (الأسطر العلوية)
+t-009040-en;pos.headerText;en-US;Receipt Header Text
+t-009041-ar;pos.footerText;ar-EG;تذييل الإيصال (الأسطر السفلية)
+t-009041-en;pos.footerText;en-US;Receipt Footer Text
+t-009042-ar;pos.printerSaved;ar-EG;تم حفظ إعدادات الطابعة بنجاح.
+t-009042-en;pos.printerSaved;en-US;Printer configuration saved successfully.
+t-009043-ar;pos.printerDeleted;ar-EG;تم حذف إعدادات الطابعة.
+t-009043-en;pos.printerDeleted;en-US;Printer configuration deleted.
+t-009044-ar;pos.duplicate;ar-EG;نسخة إضافية (مُعادة)
+t-009044-en;pos.duplicate;en-US;DUPLICATE (REPRINT)
+t-009045-ar;POS_TRANSACTION_NOT_FOUND;ar-EG;لم يتم العثور على المعاملة المطلوبة.
+t-009045-en;POS_TRANSACTION_NOT_FOUND;en-US;Transaction not found.
+t-009050-ar;FIELD_SALES_OFFLINE_ID_REQUIRED;ar-EG;المعرف الفريد للعملية أوفلاين مطلوب.
+t-009050-en;FIELD_SALES_OFFLINE_ID_REQUIRED;en-US;Client offline ID is required.
+t-009051-ar;FIELD_SALES_CUSTOMER_REQUIRED;ar-EG;يجب تحديد العميل لإتمام عملية المبيعات.
+t-009051-en;FIELD_SALES_CUSTOMER_REQUIRED;en-US;Customer is required for sales transaction.
+t-009052-ar;FIELD_SALES_LINES_REQUIRED;ar-EG;يجب إضافة صنف واحد على الأقل في أمر المبيعات.
+t-009052-en;FIELD_SALES_LINES_REQUIRED;en-US;At least one line item is required.
+t-009053-ar;FIELD_SALES_CONFLICT_CREDIT_EXCEEDED;ar-EG;تعذر اعتماد الفاتورة لتجاوز الحد الائتماني للعميل أثناء العمل أوفلاين.
+t-009053-en;FIELD_SALES_CONFLICT_CREDIT_EXCEEDED;en-US;Sale rejected: Customer credit limit exceeded while offline.
+t-009054-ar;FIELD_SALES_CONFLICT_STOCK_SHORTFALL;ar-EG;تعذر اعتماد الفاتورة لعدم توفر رصيد مخزني كافٍ في المستودع.
+t-009054-en;FIELD_SALES_CONFLICT_STOCK_SHORTFALL;en-US;Sale rejected: Insufficient stock available in warehouse.
+t-009055-ar;FIELD_SALES_SYNC_FAILED;ar-EG;فشلت عملية مزامنة مبيعات المندوب.
+t-009055-en;FIELD_SALES_SYNC_FAILED;en-US;Field sales synchronization failed.
+t-009056-ar;FIELD_SALES_CUSTOMER_NOT_FOUND;ar-EG;لم يتم العثور على العميل المطلوب.
+t-009056-en;FIELD_SALES_CUSTOMER_NOT_FOUND;en-US;Customer not found.
+t-009057-ar;FIELD_SALES_DOC_NOT_FOUND;ar-EG;لم يتم العثور على سجل المبيعات المطلوب.
+t-009057-en;FIELD_SALES_DOC_NOT_FOUND;en-US;Field sales record not found.
+t-009058-ar;fieldSales.title;ar-EG;مبيعات المندوبين والميدان
+t-009058-en;fieldSales.title;en-US;Field Sales Mobile
+t-009059-ar;fieldSales.eyebrow;ar-EG;المبيعات الميدانية الأوفلاين
+t-009059-en;fieldSales.eyebrow;en-US;Offline Field Sales
+t-009060-ar;fieldSales.description;ar-EG;إصدار الفواتير وسندات القبض وطلبات البيع أوفلاين مع المزامنة الذكية والتوقيع الرقمي للعميل.
+t-009060-en;fieldSales.description;en-US;Offline sales orders, van invoices, collections, and signatures with smart background sync.
+t-009061-ar;nav.fieldSales;ar-EG;المبيعات الميدانية
+t-009061-en;nav.fieldSales;en-US;Field Sales
+t-009062-ar;fieldSales.offlineBundle;ar-EG;حزمة بيانات الأوفلاين
+t-009062-en;fieldSales.offlineBundle;en-US;Offline Data Bundle
+t-009063-ar;fieldSales.syncStatus;ar-EG;حالة المزامنة
+t-009063-en;fieldSales.syncStatus;en-US;Sync Status
+t-009064-ar;fieldSales.syncNow;ar-EG;مزامنة الآن
+t-009064-en;fieldSales.syncNow;en-US;Sync Now
+t-009065-ar;fieldSales.allSynced;ar-EG;جميع المعاملات متزامنة مع الخادم.
+t-009065-en;fieldSales.allSynced;en-US;All transactions are synced with the server.
+t-009066-ar;fieldSales.offlineMode;ar-EG;وضع العمل أوفلاين (بدون اتصال)
+t-009066-en;fieldSales.offlineMode;en-US;Offline Mode Active
+t-009067-ar;fieldSales.onlineMode;ar-EG;متصل بالإنترنت
+t-009067-en;fieldSales.onlineMode;en-US;Online
+t-009068-ar;fieldSales.pendingCount;ar-EG;المعاملات المعلقة في قائمة الانتظار
+t-009068-en;fieldSales.pendingCount;en-US;Queued Transactions
+t-009069-ar;fieldSales.newSale;ar-EG;فاتورة بيع مباشر (فان)
+t-009069-en;fieldSales.newSale;en-US;Direct Van Sale (Invoice)
+t-009070-ar;fieldSales.newOrder;ar-EG;طلب بيع جديد
+t-009070-en;fieldSales.newOrder;en-US;New Sales Order
+t-009071-ar;fieldSales.newReceipt;ar-EG;سند قبض / تحصيل نقدي
+t-009071-en;fieldSales.newReceipt;en-US;Customer Payment Collection
+t-009072-ar;fieldSales.newReturn;ar-EG;مرتجع مبيعات ميداني
+t-009072-en;fieldSales.newReturn;en-US;Field Sales Return
+t-009073-ar;fieldSales.newQuotation;ar-EG;عرض أسعار
+t-009073-en;fieldSales.newQuotation;en-US;Quotation
+t-009074-ar;fieldSales.customerSignature;ar-EG;توقيع العميل / المستلم
+t-009074-en;fieldSales.customerSignature;en-US;Customer Signature
+t-009075-ar;fieldSales.clearSignature;ar-EG;مسح التوقيع
+t-009075-en;fieldSales.clearSignature;en-US;Clear Signature
+t-009076-ar;fieldSales.customerConfirmName;ar-EG;اسم المستلم المؤكد
+t-009076-en;fieldSales.customerConfirmName;en-US;Confirmed Receiver Name
+t-009077-ar;fieldSales.locationCaptured;ar-EG;تم التقاط الموقع الجغرافي GPS
+t-009077-en;fieldSales.locationCaptured;en-US;GPS Location Captured
+t-009078-ar;fieldSales.conflictDetected;ar-EG;تم رصد تعارض في بيانات المعاملة أثناء المزامنة.
+t-009078-en;fieldSales.conflictDetected;en-US;Sync conflict detected during submission.
+t-009079-ar;fieldSales.retrySync;ar-EG;إعادة المحاولة
+t-009079-en;fieldSales.retrySync;en-US;Retry Sync
+t-009080-ar;fieldSales.cachedCustomers;ar-EG;العملاء المحفوظون محلياً
+t-009080-en;fieldSales.cachedCustomers;en-US;Cached Customers
+t-009081-ar;fieldSales.cachedProducts;ar-EG;المنتجات المحفوظة محلياً
+t-009081-en;fieldSales.cachedProducts;en-US;Cached Products
+t-009082-ar;fieldSales.refreshCache;ar-EG;تحديث بيانات الأوفلاين
+t-009082-en;fieldSales.refreshCache;en-US;Refresh Offline Cache
+t-009083-ar;fieldSales.cacheUpdated;ar-EG;تم تحديث حزمة بيانات الأوفلاين بنجاح.
+t-009083-en;fieldSales.cacheUpdated;en-US;Offline data bundle updated successfully.
+t-009084-ar;fieldSales.saveOffline;ar-EG;حفظ المعاملة أوفلاين
+t-009084-en;fieldSales.saveOffline;en-US;Save Offline
+t-009085-ar;fieldSales.syncCenter;ar-EG;مركز المزامنة وقائمة الانتظار
+t-009085-en;fieldSales.syncCenter;en-US;Sync Center & Queue
+t-009086-ar;fieldSales.synced;ar-EG;تمت المزامنة
+t-009086-en;fieldSales.synced;en-US;Synced
+t-009087-ar;fieldSales.conflict;ar-EG;تعارض
+t-009087-en;fieldSales.conflict;en-US;Conflict
+t-009088-ar;fieldSales.queued;ar-EG;في الانتظار
+t-009088-en;fieldSales.queued;en-US;Queued
+t-009089-ar;fieldSales.allocatedInvoice;ar-EG;الفاتورة المسددة
+t-009089-en;fieldSales.allocatedInvoice;en-US;Allocated Invoice
+t-009090-ar;fieldSales.offlineSavedSuccess;ar-EG;تم حفظ المعاملة أوفلاين بنجاح وسيتم مزامنتها تلقائياً عند الاتصال بالشبكة.
+t-009090-en;fieldSales.offlineSavedSuccess;en-US;Transaction saved offline and queued for auto-sync.
+t-009091-ar;fieldSales.syncCompleted;ar-EG;تمت مزامنة المعاملات بنجاح.
+t-009091-en;fieldSales.syncCompleted;en-US;Sync completed successfully.
+t-009092-ar;fieldSales.creditAvailable;ar-EG;الرصيد الائتماني المتاح
+t-009092-en;fieldSales.creditAvailable;en-US;Available Credit
+t-009093-ar;fieldSales.currentBalance;ar-EG;المديونية الحالية
+t-009093-en;fieldSales.currentBalance;en-US;Current Balance
+t-009094-ar;fieldSales.price;ar-EG;السعر
+t-009094-en;fieldSales.price;en-US;Price
+t-009095-ar;fieldSales.qty;ar-EG;الكمية
+t-009095-en;fieldSales.qty;en-US;Quantity
+t-009096-ar;BRANCH_CODE_DUPLICATE;ar-EG;كود الفرع مستخدم مسبقاً، يرجى اختيار كود فريد.
+t-009096-en;BRANCH_CODE_DUPLICATE;en-US;Branch code is already in use, please choose a unique code.
+t-009097-ar;BRANCH_ACCESS_DENIED;ar-EG;ليس لديك صلاحية وصول إلى بيانات هذا الفرع.
+t-009097-en;BRANCH_ACCESS_DENIED;en-US;You do not have access permission to this branch.
+t-009098-ar;TRANSFER_INVALID_STATUS;ar-EG;حالة التحويل الحالية لا تسمح بهذا الإجراء.
+t-009098-en;TRANSFER_INVALID_STATUS;en-US;Transfer status does not allow this operation.
+t-009099-ar;TRANSFER_SOURCE_WAREHOUSE_REQUIRED;ar-EG;مستودع الشحن/المصدر مطلوب.
+t-009099-en;TRANSFER_SOURCE_WAREHOUSE_REQUIRED;en-US;Source warehouse is required.
+t-009100-ar;TRANSFER_TARGET_WAREHOUSE_REQUIRED;ar-EG;مستودع الاستلام/الوجهة مطلوب.
+t-009100-en;TRANSFER_TARGET_WAREHOUSE_REQUIRED;en-US;Target warehouse is required.
+t-009101-ar;TRANSFER_SAME_WAREHOUSE;ar-EG;لا يمكن التحويل لنفس المستودع.
+t-009101-en;TRANSFER_SAME_WAREHOUSE;en-US;Cannot transfer to the same warehouse.
+t-009102-ar;TRANSFER_DISPATCH_CARRIER_REQUIRED;ar-EG;بيانات الناقل أو وسيلة النقل مطلوبة للشحن.
+t-009102-en;TRANSFER_DISPATCH_CARRIER_REQUIRED;en-US;Carrier or transport details are required for dispatch.
+t-009103-ar;TRANSFER_RECEIPT_LINES_REQUIRED;ar-EG;بيانات بنود الاستلام وفحص البضاعة مطلوبة.
+t-009103-en;TRANSFER_RECEIPT_LINES_REQUIRED;en-US;Receipt line items and inspection data are required.
+t-009104-ar;TRANSFER_DISCREPANCY_NOT_FOUND;ar-EG;سجل فروقات الاستلام غير موجود.
+t-009104-en;TRANSFER_DISCREPANCY_NOT_FOUND;en-US;Stock transfer discrepancy record not found.
+t-009105-ar;TRANSFER_DISCREPANCY_ALREADY_RESOLVED;ar-EG;تمت تسوية فارق الاستلام مسبقاً.
+t-009105-en;TRANSFER_DISCREPANCY_ALREADY_RESOLVED;en-US;Transfer discrepancy has already been resolved.
+t-009106-ar;branchControl.title;ar-EG;مركز التحكم بالفروع المتعددة
+t-009106-en;branchControl.title;en-US;Multi-Branch Control Center
+t-009107-ar;branchControl.subtitle;ar-EG;إدارة الفروع، المستودعات، الخزائن، البنوك، ونقاط البيع مع التتبع اللوجستي المجمع
+t-009107-en;branchControl.subtitle;en-US;Manage branches, warehouses, cashboxes, banks, and POS terminals with consolidated logistics
+t-009108-ar;branchControl.permittedBranches;ar-EG;الفروع المصرح بها
+t-009108-en;branchControl.permittedBranches;en-US;Permitted Branches
+t-009109-ar;branchControl.allBranches;ar-EG;كافة الفروع
+t-009109-en;branchControl.allBranches;en-US;All Branches
+t-009110-ar;branchControl.mainBranch;ar-EG;الفرع الرئيسي
+t-009110-en;branchControl.mainBranch;en-US;Main Branch
+t-009111-ar;branchControl.setMainBranch;ar-EG;تعيين كفرع رئيسي
+t-009111-en;branchControl.setMainBranch;en-US;Set as Main Branch
+t-009112-ar;branchControl.defaultWarehouse;ar-EG;المستودع الافتراضي
+t-009112-en;branchControl.defaultWarehouse;en-US;Default Warehouse
+t-009113-ar;branchControl.defaultCashbox;ar-EG;الخزينة الافتراضية
+t-009113-en;branchControl.defaultCashbox;en-US;Default Cashbox
+t-009114-ar;branchControl.defaultBank;ar-EG;الحساب البنكي الافتراضي
+t-009114-en;branchControl.defaultBank;en-US;Default Bank Account
+t-009115-ar;branchControl.defaultPos;ar-EG;نقطة البيع الافتراضية
+t-009115-en;branchControl.defaultPos;en-US;Default POS Terminal
+t-009116-ar;branchControl.docPrefix;ar-EG;بادئة ترقيم المستندات
+t-009116-en;branchControl.docPrefix;en-US;Document Code Prefix
+t-009117-ar;branchControl.phone;ar-EG;رقم الهاتف
+t-009117-en;branchControl.phone;en-US;Phone Number
+t-009118-ar;branchControl.email;ar-EG;البريد الإلكتروني
+t-009118-en;branchControl.email;en-US;Email Address
+t-009119-ar;branchControl.taxNumber;ar-EG;الرقم الضريبي للفرع
+t-009119-en;branchControl.taxNumber;en-US;Branch Tax Number
+t-009120-ar;branchControl.commercialRegistry;ar-EG;السجل التجاري للفرع
+t-009120-en;branchControl.commercialRegistry;en-US;Branch Commercial Registry
+t-009121-ar;branchControl.warehousesCount;ar-EG;المستودعات
+t-009121-en;branchControl.warehousesCount;en-US;Warehouses
+t-009122-ar;branchControl.cashboxesCount;ar-EG;الخزائن النقدية
+t-009122-en;branchControl.cashboxesCount;en-US;Cashboxes
+t-009123-ar;branchControl.banksCount;ar-EG;الحسابات البنكية
+t-009123-en;branchControl.banksCount;en-US;Bank Accounts
+t-009124-ar;branchControl.terminalsCount;ar-EG;نقاط البيع
+t-009124-en;branchControl.terminalsCount;en-US;POS Terminals
+t-009125-ar;branchControl.headcount;ar-EG;الموظفين
+t-009125-en;branchControl.headcount;en-US;Employees
+t-009126-ar;branchControl.transfersCount;ar-EG;التحويلات النشطة
+t-009126-en;branchControl.transfersCount;en-US;Active Transfers
+t-009127-ar;branchControl.transfersHub;ar-EG;تحويلات الفروع والبضاعة بالطريق
+t-009127-en;branchControl.transfersHub;en-US;Branch Transfers & In-Transit Hub
+t-009128-ar;branchControl.inTransit;ar-EG;بضاعة بالطريق
+t-009128-en;branchControl.inTransit;en-US;In-Transit
+t-009129-ar;branchControl.dispatchedAt;ar-EG;تاريخ ووقت الشحن
+t-009129-en;branchControl.dispatchedAt;en-US;Dispatch Time
+t-009130-ar;branchControl.dispatchedBy;ar-EG;المسؤول عن الشحن
+t-009130-en;branchControl.dispatchedBy;en-US;Dispatched By
+t-009131-ar;branchControl.carrier;ar-EG;شركة الشحن / الناقل
+t-009131-en;branchControl.carrier;en-US;Carrier / Logistics
+t-009132-ar;branchControl.driver;ar-EG;اسم السائق
+t-009132-en;branchControl.driver;en-US;Driver Name
+t-009133-ar;branchControl.driverPhone;ar-EG;هاتف السائق
+t-009133-en;branchControl.driverPhone;en-US;Driver Phone
+t-009134-ar;branchControl.vehiclePlate;ar-EG;رقم لوحة المركبة
+t-009134-en;branchControl.vehiclePlate;en-US;Vehicle Plate
+t-009135-ar;branchControl.waybill;ar-EG;رقم البوليصة / التتبع
+t-009135-en;branchControl.waybill;en-US;Waybill / Tracking #
+t-009136-ar;branchControl.dispatchTransfer;ar-EG;شحن البضاعة وإرسالها
+t-009136-en;branchControl.dispatchTransfer;en-US;Dispatch Transfer
+t-009137-ar;branchControl.receiveTransfer;ar-EG;استلام وفحص الشحنة
+t-009137-en;branchControl.receiveTransfer;en-US;Receive & Inspect
+t-009138-ar;branchControl.inspectShipment;ar-EG;فحص الكميات والعيوب
+t-009138-en;branchControl.inspectShipment;en-US;Inspect Quantities & Defects
+t-009139-ar;branchControl.expectedQty;ar-EG;الكمية المشحونة
+t-009139-en;branchControl.expectedQty;en-US;Shipped Qty
+t-009140-ar;branchControl.receivedQty;ar-EG;الكمية السليمة المستلمة
+t-009140-en;branchControl.receivedQty;en-US;Good Received Qty
+t-009141-ar;branchControl.damagedQty;ar-EG;كمية التالف
+t-009141-en;branchControl.damagedQty;en-US;Damaged Qty
+t-009142-ar;branchControl.lostQty;ar-EG;كمية الفاقد / العجز
+t-009142-en;branchControl.lostQty;en-US;Lost / Shortage Qty
+t-009143-ar;branchControl.discrepancyReason;ar-EG;سبب الفارق
+t-009143-en;branchControl.discrepancyReason;en-US;Discrepancy Reason
+t-009144-ar;branchControl.discrepancies;ar-EG;فروقات وشكاوى التحويل
+t-009144-en;branchControl.discrepancies;en-US;Transfer Discrepancies
+t-009145-ar;branchControl.hasDiscrepancy;ar-EG;يوجد فارق فحص
+t-009145-en;branchControl.hasDiscrepancy;en-US;Discrepancy Flagged
+t-009146-ar;branchControl.resolveDiscrepancy;ar-EG;تسوية ومعالجة الفارق
+t-009146-en;branchControl.resolveDiscrepancy;en-US;Resolve Discrepancy
+t-009147-ar;branchControl.resolutionNotes;ar-EG;ملاحظات وقرار التسوية
+t-009147-en;branchControl.resolutionNotes;en-US;Resolution Decision & Notes
+t-009148-ar;branchControl.groupReporting;ar-EG;التقارير المالية المجمعة للمجموعة
+t-009148-en;branchControl.groupReporting;en-US;Consolidated Group Reporting
+t-009149-ar;branchControl.filterCompany;ar-EG;تصفية بالشركة
+t-009149-en;branchControl.filterCompany;en-US;Filter by Company
+t-009150-ar;branchControl.filterBranch;ar-EG;تصفية بالفرع
+t-009150-en;branchControl.filterBranch;en-US;Filter by Branch
+t-009151-ar;branchControl.consolidatedPl;ar-EG;قائمة الدخل المجمعة (P&L)
+t-009151-en;branchControl.consolidatedPl;en-US;Consolidated Income Statement (P&L)
+t-009152-ar;branchControl.consolidatedBs;ar-EG;الميزانية العمومية المجمعة (Balance Sheet)
+t-009152-en;branchControl.consolidatedBs;en-US;Consolidated Balance Sheet
+t-009153-ar;branchControl.branchComparison;ar-EG;مقارنة أداء الفروع
+t-009153-en;branchControl.branchComparison;en-US;Branch Performance Comparison
+t-009154-ar;branchControl.eliminations;ar-EG;تسويات واستبعادات المعاملات البينية
+t-009154-en;branchControl.eliminations;en-US;Intercompany Eliminations
+t-009155-ar;branchControl.exportConsolidated;ar-EG;تصدير التقرير المجمع (Excel)
+t-009155-en;branchControl.exportConsolidated;en-US;Export Consolidated Report (Excel)
+t-009156-ar;branchControl.savedSuccess;ar-EG;تم حفظ بيانات وإعدادات الفرع بنجاح.
+t-009156-en;branchControl.savedSuccess;en-US;Branch settings saved successfully.
+t-009157-ar;branchControl.dispatchedSuccess;ar-EG;تم شحن التحويل وتحديث حالة البضاعة بالطريق بنجاح.
+t-009157-en;branchControl.dispatchedSuccess;en-US;Transfer dispatched and marked in-transit successfully.
+t-009158-ar;branchControl.receivedSuccess;ar-EG;تم إثبات استلام وفحص الشحنة بنجاح في المستودع.
+t-009158-en;branchControl.receivedSuccess;en-US;Shipment received and inspected into warehouse successfully.
+t-009159-ar;branchControl.resolvedSuccess;ar-EG;تمت تسوية فارق التحويل المخزني بنجاح.
+t-009159-en;branchControl.resolvedSuccess;en-US;Transfer discrepancy resolved successfully.
+t-009160-ar;branchControl.statusResolved;ar-EG;تمت التسوية
+t-009160-en;branchControl.statusResolved;en-US;Resolved
+t-009161-ar;branchControl.statusClaimed;ar-EG;مطالبة تأمينية / ناقل
+t-009161-en;branchControl.statusClaimed;en-US;Claimed
+t-009162-ar;branchControl.statusWrittenOff;ar-EG;شطب خسائر / عجز
+t-009162-en;branchControl.statusWrittenOff;en-US;Written Off
+t-009163-ar;branchControl.statusReturned;ar-EG;إرجاع للفرع المصدر
+t-009163-en;branchControl.statusReturned;en-US;Returned to Sender
+

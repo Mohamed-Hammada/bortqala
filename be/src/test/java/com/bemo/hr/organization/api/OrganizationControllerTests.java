@@ -1,5 +1,6 @@
 package com.bemo.hr.organization.api;
 
+import com.bemo.hr.organization.application.BranchControlCenterService;
 import com.bemo.hr.organization.application.IntercompanyService;
 import com.bemo.hr.organization.domain.Company;
 import com.bemo.hr.organization.infrastructure.BranchRepository;
@@ -30,6 +31,8 @@ class OrganizationControllerTests {
     private DepartmentRepository departmentRepository;
     @Mock
     private IntercompanyService intercompanyService;
+    @Mock
+    private BranchControlCenterService branchControlCenterService;
 
     @Test
     void readingAnEmptyHierarchyDoesNotCreateDemoOrganizationData() {
@@ -38,7 +41,7 @@ class OrganizationControllerTests {
         when(warehouseRepository.findAllByOrderByCodeAsc()).thenReturn(List.of());
         when(departmentRepository.findAllByOrderByCodeAsc()).thenReturn(List.of());
         var controller = new OrganizationController(
-                companyRepository, branchRepository, warehouseRepository, departmentRepository, intercompanyService);
+                companyRepository, branchRepository, warehouseRepository, departmentRepository, intercompanyService, branchControlCenterService);
 
         var result = controller.getHierarchy();
 
@@ -62,7 +65,7 @@ class OrganizationControllerTests {
         );
         when(intercompanyService.getConsolidatedSummary()).thenReturn(summary);
         var controller = new OrganizationController(
-                companyRepository, branchRepository, warehouseRepository, departmentRepository, intercompanyService);
+                companyRepository, branchRepository, warehouseRepository, departmentRepository, intercompanyService, branchControlCenterService);
 
         var result = controller.getConsolidatedSummary();
 

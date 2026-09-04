@@ -103,6 +103,8 @@ export interface PosTransaction {
   status: PosTransactionStatus;
   originalTransactionId: string | null;
   clientOfflineId: string | null;
+  reprintCount?: number;
+  lastReprintedAt?: number | null;
   createdAt: number;
   lines: PosLineItem[];
 }
@@ -112,4 +114,73 @@ export interface PosSummary {
   todayTransactionsCount: number;
   activeShiftsCount: number;
   totalVariance: number;
+}
+
+export type ThermalPrinterConnectionType = 'NETWORK' | 'BLUETOOTH' | 'USB';
+export type ThermalPaperWidth = 'MM_58' | 'MM_80';
+
+export interface ThermalPrinter {
+  id: string;
+  name: string;
+  branchId?: string | null;
+  terminalId?: string | null;
+  connectionType: ThermalPrinterConnectionType;
+  ipAddress?: string | null;
+  port?: number | null;
+  bluetoothMac?: string | null;
+  paperWidth: ThermalPaperWidth;
+  characterCodePage: string;
+  headerText?: string | null;
+  footerText?: string | null;
+  openDrawer: boolean;
+  cutPaper: boolean;
+  printQrCode: boolean;
+  isDefault: boolean;
+  active: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SavePrinterPayload {
+  id?: string | null;
+  name: string;
+  branchId?: string | null;
+  terminalId?: string | null;
+  connectionType: ThermalPrinterConnectionType;
+  ipAddress?: string | null;
+  port?: number | null;
+  bluetoothMac?: string | null;
+  paperWidth: ThermalPaperWidth;
+  characterCodePage?: string;
+  headerText?: string | null;
+  footerText?: string | null;
+  openDrawer: boolean;
+  cutPaper: boolean;
+  printQrCode: boolean;
+  isDefault: boolean;
+  active: boolean;
+}
+
+export interface ReceiptPrintData {
+  transactionId: string;
+  transactionNumber: string;
+  printerId: string;
+  printerName: string;
+  connectionType: ThermalPrinterConnectionType;
+  ipAddress?: string | null;
+  port?: number | null;
+  paperWidth: ThermalPaperWidth;
+  base64Bytes: string;
+  reprintCount: number;
+  lastReprintedAt?: number | null;
+  sentToPrinter: boolean;
+  statusMessage: string;
+}
+
+export interface TestPrintResponse {
+  printerId: string;
+  printerName: string;
+  base64Bytes: string;
+  sentToPrinter: boolean;
+  message: string;
 }

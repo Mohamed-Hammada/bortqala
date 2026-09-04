@@ -1,5 +1,6 @@
 package com.bemo.hr.organization.api;
 
+import com.bemo.hr.organization.application.BranchControlCenterService;
 import com.bemo.hr.organization.application.IntercompanyService;
 import com.bemo.hr.organization.domain.Branch;
 import com.bemo.hr.organization.domain.Company;
@@ -9,9 +10,13 @@ import com.bemo.hr.organization.infrastructure.BranchRepository;
 import com.bemo.hr.organization.infrastructure.CompanyRepository;
 import com.bemo.hr.organization.infrastructure.DepartmentRepository;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
+import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -27,19 +32,22 @@ public class OrganizationController {
     private final WarehouseRepository warehouseRepository;
     private final DepartmentRepository departmentRepository;
     private final IntercompanyService intercompanyService;
+    private final BranchControlCenterService branchControlCenterService;
 
     public OrganizationController(
             CompanyRepository companyRepository,
             BranchRepository branchRepository,
             WarehouseRepository warehouseRepository,
             DepartmentRepository departmentRepository,
-            IntercompanyService intercompanyService
+            IntercompanyService intercompanyService,
+            BranchControlCenterService branchControlCenterService
     ) {
         this.companyRepository = companyRepository;
         this.branchRepository = branchRepository;
         this.warehouseRepository = warehouseRepository;
         this.departmentRepository = departmentRepository;
         this.intercompanyService = intercompanyService;
+        this.branchControlCenterService = branchControlCenterService;
     }
 
     @GetMapping
@@ -81,11 +89,26 @@ public class OrganizationController {
         return branchRepository.findAllByOrderByCodeAsc().stream().map(this::toResponse).toList();
     }
 
+    @GetMapping("/branches/permitted")
+    public List<OrganizationApi.BranchResponse> listPermittedBranches() {
+        return branchControlCenterService.getPermittedBranches().stream().map(this::toResponse).toList();
+    }
+
+    @GetMapping("/branches/{id}/control-summary")
+    public OrganizationApi.BranchControlSummary getBranchControlSummary(@PathVariable String id) {
+        return branchControlCenterService.getBranchControlSummary(id);
+    }
+
     @PostMapping("/branches")
     @Transactional
     @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.BranchResponse createBranch(@Valid @RequestBody OrganizationApi.BranchPayload payload) {
-        Branch branch = new Branch(payload.companyId(), payload.code(), payload.name(), payload.location(), payload.active());
+        Branch branch = new Branch(
+                payload.companyId(), payload.code(), payload.name(), payload.location(), payload.active(),
+                payload.isMainBranch(), payload.phone(), payload.email(), payload.taxNumber(), payload.commercialRegistry(),
+                payload.defaultWarehouseId(), payload.defaultCashboxId(), payload.defaultBankAccountId(),
+                payload.defaultPosTerminalId(), payload.documentCodePrefix()
+        );
         return toResponse(branchRepository.save(branch));
     }
 
@@ -95,7 +118,12 @@ public class OrganizationController {
     public OrganizationApi.BranchResponse updateBranch(@PathVariable String id, @Valid @RequestBody OrganizationApi.BranchPayload payload) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("Branch not found.", "ORG_BRANCH_NOT_FOUND", HttpStatus.CONFLICT));
-        branch.update(payload.companyId(), payload.code(), payload.name(), payload.location(), payload.active());
+        branch.update(
+                payload.companyId(), payload.code(), payload.name(), payload.location(), payload.active(),
+                payload.isMainBranch(), payload.phone(), payload.email(), payload.taxNumber(), payload.commercialRegistry(),
+                payload.defaultWarehouseId(), payload.defaultCashboxId(), payload.defaultBankAccountId(),
+                payload.defaultPosTerminalId(), payload.documentCodePrefix()
+        );
         return toResponse(branchRepository.save(branch));
     }
 
@@ -154,6 +182,30 @@ public class OrganizationController {
         return intercompanyService.getConsolidatedSummary();
     }
 
+    @GetMapping("/consolidation/group-report")
+    public OrganizationApi.ConsolidatedGroupReport getConsolidatedGroupReport(
+            @RequestParam(required = false) String companyId,
+            @RequestParam(required = false) String branchId,
+            @RequestParam(required = false) String period
+    ) {
+        return branchControlCenterService.getConsolidatedGroupReport(companyId, branchId, period);
+    }
+
+    @GetMapping("/consolidation/group-report/export")
+    public ResponseEntity<byte[]> exportConsolidatedGroupReport(
+            @RequestParam(required = false) String companyId,
+            @RequestParam(required = false) String branchId,
+            @RequestParam(required = false) String period,
+            @RequestParam(defaultValue = "ar-EG") String locale
+    ) {
+        ExcelExportOptions options = new ExcelExportOptions("ar-EG".equalsIgnoreCase(locale) ? "ar-EG" : "en-US", null);
+        byte[] bytes = branchControlCenterService.exportConsolidatedReport(companyId, branchId, period, options);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=consolidated-group-report.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(bytes);
+    }
+
     @GetMapping("/intercompany")
     public List<OrganizationApi.IntercompanyTransactionResponse> listIntercompanyTransactions() {
         return intercompanyService.listTransactions();
@@ -192,7 +244,13 @@ public class OrganizationController {
     }
 
     private OrganizationApi.BranchResponse toResponse(Branch b) {
-        return new OrganizationApi.BranchResponse(b.getId(), b.getCompanyId(), b.getCode(), b.getName(), b.getLocation(), b.isActive(), b.getCreatedAt(), b.getUpdatedAt());
+        return new OrganizationApi.BranchResponse(
+                b.getId(), b.getCompanyId(), b.getCode(), b.getName(), b.getLocation(), b.isActive(),
+                b.isMainBranch(), b.getPhone(), b.getEmail(), b.getTaxNumber(), b.getCommercialRegistry(),
+                b.getDefaultWarehouseId(), b.getDefaultCashboxId(), b.getDefaultBankAccountId(),
+                b.getDefaultPosTerminalId(), b.getDocumentCodePrefix(),
+                b.getCreatedAt(), b.getUpdatedAt()
+        );
     }
 
     private OrganizationApi.WarehouseResponse toResponse(Warehouse w) {

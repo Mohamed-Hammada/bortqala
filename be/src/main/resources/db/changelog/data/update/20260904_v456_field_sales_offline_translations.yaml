@@ -1,0 +1,330 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260904-v456-field-sales-offline-translations
+      author: bemo-tech-lead
+      comment: "TASK-02: Bilingual translations for Offline Field Sales Mobile, sync queue, and signature capture."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009050-ar', 'FIELD_SALES_OFFLINE_ID_REQUIRED', 'ar-EG', 'المعرف الفريد للعملية أوفلاين مطلوب.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_OFFLINE_ID_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009050-en', 'FIELD_SALES_OFFLINE_ID_REQUIRED', 'en-US', 'Client offline ID is required.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_OFFLINE_ID_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009051-ar', 'FIELD_SALES_CUSTOMER_REQUIRED', 'ar-EG', 'يجب تحديد العميل لإتمام عملية المبيعات.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_CUSTOMER_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009051-en', 'FIELD_SALES_CUSTOMER_REQUIRED', 'en-US', 'Customer is required for sales transaction.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_CUSTOMER_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009052-ar', 'FIELD_SALES_LINES_REQUIRED', 'ar-EG', 'يجب إضافة صنف واحد على الأقل في أمر المبيعات.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_LINES_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009052-en', 'FIELD_SALES_LINES_REQUIRED', 'en-US', 'At least one line item is required.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_LINES_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009053-ar', 'FIELD_SALES_CONFLICT_CREDIT_EXCEEDED', 'ar-EG', 'تعذر اعتماد الفاتورة لتجاوز الحد الائتماني للعميل أثناء العمل أوفلاين.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_CONFLICT_CREDIT_EXCEEDED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009053-en', 'FIELD_SALES_CONFLICT_CREDIT_EXCEEDED', 'en-US', 'Sale rejected: Customer credit limit exceeded while offline.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_CONFLICT_CREDIT_EXCEEDED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009054-ar', 'FIELD_SALES_CONFLICT_STOCK_SHORTFALL', 'ar-EG', 'تعذر اعتماد الفاتورة لعدم توفر رصيد مخزني كافٍ في المستودع.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_CONFLICT_STOCK_SHORTFALL' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009054-en', 'FIELD_SALES_CONFLICT_STOCK_SHORTFALL', 'en-US', 'Sale rejected: Insufficient stock available in warehouse.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_CONFLICT_STOCK_SHORTFALL' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009055-ar', 'FIELD_SALES_SYNC_FAILED', 'ar-EG', 'فشلت عملية مزامنة مبيعات المندوب.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_SYNC_FAILED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009055-en', 'FIELD_SALES_SYNC_FAILED', 'en-US', 'Field sales synchronization failed.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_SYNC_FAILED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009056-ar', 'FIELD_SALES_CUSTOMER_NOT_FOUND', 'ar-EG', 'لم يتم العثور على العميل المطلوب.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_CUSTOMER_NOT_FOUND' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009056-en', 'FIELD_SALES_CUSTOMER_NOT_FOUND', 'en-US', 'Customer not found.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_CUSTOMER_NOT_FOUND' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009057-ar', 'FIELD_SALES_DOC_NOT_FOUND', 'ar-EG', 'لم يتم العثور على سجل المبيعات المطلوب.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_DOC_NOT_FOUND' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009057-en', 'FIELD_SALES_DOC_NOT_FOUND', 'en-US', 'Field sales record not found.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'FIELD_SALES_DOC_NOT_FOUND' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009058-ar', 'fieldSales.title', 'ar-EG', 'مبيعات المندوبين والميدان', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.title' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009058-en', 'fieldSales.title', 'en-US', 'Field Sales Mobile', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.title' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009059-ar', 'fieldSales.eyebrow', 'ar-EG', 'المبيعات الميدانية الأوفلاين', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.eyebrow' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009059-en', 'fieldSales.eyebrow', 'en-US', 'Offline Field Sales', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.eyebrow' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009060-ar', 'fieldSales.description', 'ar-EG', 'إصدار الفواتير وسندات القبض وطلبات البيع أوفلاين مع المزامنة الذكية والتوقيع الرقمي للعميل.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.description' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009060-en', 'fieldSales.description', 'en-US', 'Offline sales orders, van invoices, collections, and signatures with smart background sync.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.description' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009061-ar', 'nav.fieldSales', 'ar-EG', 'المبيعات الميدانية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'nav.fieldSales' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009061-en', 'nav.fieldSales', 'en-US', 'Field Sales', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'nav.fieldSales' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009062-ar', 'fieldSales.offlineBundle', 'ar-EG', 'حزمة بيانات الأوفلاين', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.offlineBundle' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009062-en', 'fieldSales.offlineBundle', 'en-US', 'Offline Data Bundle', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.offlineBundle' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009063-ar', 'fieldSales.syncStatus', 'ar-EG', 'حالة المزامنة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.syncStatus' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009063-en', 'fieldSales.syncStatus', 'en-US', 'Sync Status', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.syncStatus' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009064-ar', 'fieldSales.syncNow', 'ar-EG', 'مزامنة الآن', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.syncNow' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009064-en', 'fieldSales.syncNow', 'en-US', 'Sync Now', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.syncNow' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009065-ar', 'fieldSales.allSynced', 'ar-EG', 'جميع المعاملات متزامنة مع الخادم.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.allSynced' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009065-en', 'fieldSales.allSynced', 'en-US', 'All transactions are synced with the server.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.allSynced' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009066-ar', 'fieldSales.offlineMode', 'ar-EG', 'وضع العمل أوفلاين (بدون اتصال)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.offlineMode' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009066-en', 'fieldSales.offlineMode', 'en-US', 'Offline Mode Active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.offlineMode' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009067-ar', 'fieldSales.onlineMode', 'ar-EG', 'متصل بالإنترنت', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.onlineMode' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009067-en', 'fieldSales.onlineMode', 'en-US', 'Online', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.onlineMode' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009068-ar', 'fieldSales.pendingCount', 'ar-EG', 'المعاملات المعلقة في قائمة الانتظار', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.pendingCount' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009068-en', 'fieldSales.pendingCount', 'en-US', 'Queued Transactions', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.pendingCount' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009069-ar', 'fieldSales.newSale', 'ar-EG', 'فاتورة بيع مباشر (فان)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newSale' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009069-en', 'fieldSales.newSale', 'en-US', 'Direct Van Sale (Invoice)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newSale' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009070-ar', 'fieldSales.newOrder', 'ar-EG', 'طلب بيع جديد', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newOrder' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009070-en', 'fieldSales.newOrder', 'en-US', 'New Sales Order', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newOrder' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009071-ar', 'fieldSales.newReceipt', 'ar-EG', 'سند قبض / تحصيل نقدي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newReceipt' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009071-en', 'fieldSales.newReceipt', 'en-US', 'Customer Payment Collection', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newReceipt' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009072-ar', 'fieldSales.newReturn', 'ar-EG', 'مرتجع مبيعات ميداني', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newReturn' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009072-en', 'fieldSales.newReturn', 'en-US', 'Field Sales Return', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newReturn' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009073-ar', 'fieldSales.newQuotation', 'ar-EG', 'عرض أسعار', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newQuotation' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009073-en', 'fieldSales.newQuotation', 'en-US', 'Quotation', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.newQuotation' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009074-ar', 'fieldSales.customerSignature', 'ar-EG', 'توقيع العميل / المستلم', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.customerSignature' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009074-en', 'fieldSales.customerSignature', 'en-US', 'Customer Signature', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.customerSignature' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009075-ar', 'fieldSales.clearSignature', 'ar-EG', 'مسح التوقيع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.clearSignature' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009075-en', 'fieldSales.clearSignature', 'en-US', 'Clear Signature', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.clearSignature' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009076-ar', 'fieldSales.customerConfirmName', 'ar-EG', 'اسم المستلم المؤكد', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.customerConfirmName' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009076-en', 'fieldSales.customerConfirmName', 'en-US', 'Confirmed Receiver Name', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.customerConfirmName' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009077-ar', 'fieldSales.locationCaptured', 'ar-EG', 'تم التقاط الموقع الجغرافي GPS', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.locationCaptured' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009077-en', 'fieldSales.locationCaptured', 'en-US', 'GPS Location Captured', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.locationCaptured' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009078-ar', 'fieldSales.conflictDetected', 'ar-EG', 'تم رصد تعارض في بيانات المعاملة أثناء المزامنة.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.conflictDetected' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009078-en', 'fieldSales.conflictDetected', 'en-US', 'Sync conflict detected during submission.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.conflictDetected' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009079-ar', 'fieldSales.retrySync', 'ar-EG', 'إعادة المحاولة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.retrySync' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009079-en', 'fieldSales.retrySync', 'en-US', 'Retry Sync', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.retrySync' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009080-ar', 'fieldSales.cachedCustomers', 'ar-EG', 'العملاء المحفوظون محلياً', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.cachedCustomers' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009080-en', 'fieldSales.cachedCustomers', 'en-US', 'Cached Customers', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.cachedCustomers' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009081-ar', 'fieldSales.cachedProducts', 'ar-EG', 'المنتجات المحفوظة محلياً', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.cachedProducts' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009081-en', 'fieldSales.cachedProducts', 'en-US', 'Cached Products', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.cachedProducts' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009082-ar', 'fieldSales.refreshCache', 'ar-EG', 'تحديث بيانات الأوفلاين', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.refreshCache' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009082-en', 'fieldSales.refreshCache', 'en-US', 'Refresh Offline Cache', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.refreshCache' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009083-ar', 'fieldSales.cacheUpdated', 'ar-EG', 'تم تحديث حزمة بيانات الأوفلاين بنجاح.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.cacheUpdated' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009083-en', 'fieldSales.cacheUpdated', 'en-US', 'Offline data bundle updated successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.cacheUpdated' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009084-ar', 'fieldSales.saveOffline', 'ar-EG', 'حفظ المعاملة أوفلاين', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.saveOffline' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009084-en', 'fieldSales.saveOffline', 'en-US', 'Save Offline', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.saveOffline' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009085-ar', 'fieldSales.syncCenter', 'ar-EG', 'مركز المزامنة وقائمة الانتظار', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.syncCenter' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009085-en', 'fieldSales.syncCenter', 'en-US', 'Sync Center & Queue', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.syncCenter' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009086-ar', 'fieldSales.synced', 'ar-EG', 'تمت المزامنة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.synced' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009086-en', 'fieldSales.synced', 'en-US', 'Synced', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.synced' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009087-ar', 'fieldSales.conflict', 'ar-EG', 'تعارض', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.conflict' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009087-en', 'fieldSales.conflict', 'en-US', 'Conflict', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.conflict' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009088-ar', 'fieldSales.queued', 'ar-EG', 'في الانتظار', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.queued' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009088-en', 'fieldSales.queued', 'en-US', 'Queued', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.queued' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009089-ar', 'fieldSales.allocatedInvoice', 'ar-EG', 'الفاتورة المسددة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.allocatedInvoice' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009089-en', 'fieldSales.allocatedInvoice', 'en-US', 'Allocated Invoice', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.allocatedInvoice' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009090-ar', 'fieldSales.offlineSavedSuccess', 'ar-EG', 'تم حفظ المعاملة أوفلاين بنجاح وسيتم مزامنتها تلقائياً عند الاتصال بالشبكة.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.offlineSavedSuccess' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009090-en', 'fieldSales.offlineSavedSuccess', 'en-US', 'Transaction saved offline and queued for auto-sync.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.offlineSavedSuccess' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009091-ar', 'fieldSales.syncCompleted', 'ar-EG', 'تمت مزامنة المعاملات بنجاح.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.syncCompleted' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009091-en', 'fieldSales.syncCompleted', 'en-US', 'Sync completed successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.syncCompleted' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009092-ar', 'fieldSales.creditAvailable', 'ar-EG', 'الرصيد الائتماني المتاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.creditAvailable' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009092-en', 'fieldSales.creditAvailable', 'en-US', 'Available Credit', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.creditAvailable' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009093-ar', 'fieldSales.currentBalance', 'ar-EG', 'المديونية الحالية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.currentBalance' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009093-en', 'fieldSales.currentBalance', 'en-US', 'Current Balance', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.currentBalance' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009094-ar', 'fieldSales.price', 'ar-EG', 'السعر', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.price' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009094-en', 'fieldSales.price', 'en-US', 'Price', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.price' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009095-ar', 'fieldSales.qty', 'ar-EG', 'الكمية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.qty' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009095-en', 'fieldSales.qty', 'en-US', 'Quantity', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'fieldSales.qty' AND locale = 'en-US');

@@ -116,6 +116,9 @@ public final class AccessCatalog {
     public static final String P_POS_READ = "pos.read";
     public static final String P_POS_OPERATE = "pos.operate";
     public static final String P_POS_MANAGE = "pos.manage";
+    public static final String P_FIELD_SALES_READ = "fieldSales.read";
+    public static final String P_FIELD_SALES_OPERATE = "fieldSales.operate";
+    public static final String P_FIELD_SALES_MANAGE = "fieldSales.manage";
     public static final String P_CRM_READ = "crm.read";
     public static final String P_CRM_MANAGE = "crm.manage";
     public static final String P_CRM_OMNICHANNEL = "crm.omnichannel";
@@ -182,6 +185,7 @@ public final class AccessCatalog {
             P_PERFORMANCE_READ, P_PERFORMANCE_MANAGE,
             P_ETA_TAX_READ, P_ETA_TAX_MANAGE,
             P_POS_READ, P_POS_OPERATE, P_POS_MANAGE,
+            P_FIELD_SALES_READ, P_FIELD_SALES_OPERATE, P_FIELD_SALES_MANAGE,
             P_CRM_READ, P_CRM_MANAGE, P_CRM_OMNICHANNEL,
             P_VERTICALS_READ, P_VERTICALS_MANAGE,
             P_EXPENSE_READ, P_EXPENSE_MANAGE,
@@ -320,7 +324,7 @@ public final class AccessCatalog {
                     Set.of(), null),
             new AccessRoleDef("SALES_MANAGER", key("salesManager"), AccessSensitivity.MEDIUM,
                     RoleKind.OPERATIONAL,
-                    Set.of(P_SALES_READ, P_SALES_MANAGE),
+                    Set.of(P_SALES_READ, P_SALES_MANAGE, P_FIELD_SALES_READ, P_FIELD_SALES_OPERATE, P_FIELD_SALES_MANAGE),
                     Set.of(), null),
             new AccessRoleDef("INVENTORY_MANAGER", key("inventoryManager"), AccessSensitivity.MEDIUM,
                     RoleKind.OPERATIONAL,
@@ -415,6 +419,10 @@ public final class AccessCatalog {
                     SALES_ROLES, FEATURE_SALES,
                     action("OPERATE", P_POS_OPERATE, false),
                     action("MANAGE", P_POS_MANAGE, true)),
+            page("FIELD_SALES", "TRADE", "/trade/field-sales", "field-sales", "nav.fieldSales", P_FIELD_SALES_READ,
+                    SALES_ROLES, FEATURE_SALES,
+                    action("OPERATE", P_FIELD_SALES_OPERATE, false),
+                    action("MANAGE", P_FIELD_SALES_MANAGE, true)),
             page("CRM", "TRADE", "/crm", "crm", "nav.crm", P_CRM_READ,
                     SALES_ROLES, FEATURE_SALES,
                     action("MANAGE", P_CRM_MANAGE, false),

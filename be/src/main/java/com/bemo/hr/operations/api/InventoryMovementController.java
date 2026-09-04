@@ -52,11 +52,59 @@ public class InventoryMovementController {
         return movementService.transfer(id);
     }
 
+    @PostMapping("/transfers/{id}/dispatch")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public InventoryMovementFullService.TransferView dispatchTransfer(
+            @PathVariable String id,
+            @RequestBody(required = false) DispatchTransferPayload payload,
+            Authentication authentication
+    ) {
+        String carrier = payload != null ? payload.carrierName() : null;
+        String driver = payload != null ? payload.driverName() : null;
+        String phone = payload != null ? payload.driverPhone() : null;
+        String plate = payload != null ? payload.vehiclePlate() : null;
+        String waybill = payload != null ? payload.waybillNumber() : null;
+        String notes = payload != null ? payload.notes() : null;
+        movementService.dispatchTransfer(id, carrier, driver, phone, plate, waybill, notes, authentication.getName());
+        return movementService.transfer(id);
+    }
+
     @PostMapping("/transfers/{id}/receive")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
     public InventoryMovementFullService.TransferView receiveTransfer(@PathVariable String id, Authentication authentication) {
         movementService.receiveTransfer(id, authentication.getName());
         return movementService.transfer(id);
+    }
+
+    @PostMapping("/transfers/{id}/receive-inspection")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public InventoryMovementFullService.TransferView receiveTransferInspection(
+            @PathVariable String id,
+            @RequestBody(required = false) ReceiveTransferPayload payload,
+            Authentication authentication
+    ) {
+        List<InventoryMovementFullService.ReceiptInspectionLineInput> lines = payload != null ? payload.lines() : List.of();
+        String notes = payload != null ? payload.notes() : null;
+        movementService.receiveTransferWithInspection(id, lines, notes, authentication.getName());
+        return movementService.transfer(id);
+    }
+
+    @GetMapping("/transfers/discrepancies")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public List<com.bemo.hr.operations.domain.StockTransferDiscrepancy> discrepancies(
+            @RequestParam(required = false) String transferId
+    ) {
+        return movementService.discrepancies(transferId);
+    }
+
+    @PostMapping("/transfers/discrepancies/{id}/resolve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public com.bemo.hr.operations.domain.StockTransferDiscrepancy resolveDiscrepancy(
+            @PathVariable String id,
+            @Valid @RequestBody ResolveDiscrepancyPayload payload,
+            Authentication authentication
+    ) {
+        return movementService.resolveDiscrepancy(id, payload.resolutionStatus(), payload.resolutionNotes(), authentication.getName());
     }
 
     @PostMapping("/transfers/{id}/cancel")
@@ -112,5 +160,27 @@ public class InventoryMovementController {
 
     public record ReconcileCycleCountPayload(String operationId, String warehouseId, String itemId,
                                              BigDecimal countedQuantity, String countDate) {
+    }
+
+    public record DispatchTransferPayload(
+            String carrierName,
+            String driverName,
+            String driverPhone,
+            String vehiclePlate,
+            String waybillNumber,
+            String notes
+    ) {
+    }
+
+    public record ReceiveTransferPayload(
+            List<InventoryMovementFullService.ReceiptInspectionLineInput> lines,
+            String notes
+    ) {
+    }
+
+    public record ResolveDiscrepancyPayload(
+            @NotBlank String resolutionStatus,
+            String resolutionNotes
+    ) {
     }
 }

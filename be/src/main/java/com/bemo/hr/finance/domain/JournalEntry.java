@@ -56,6 +56,8 @@ public class JournalEntry {
     private String wbsNodeId;
     @Column(name = "cost_code_id", length = 36)
     private String costCodeId;
+    @Column(name = "branch_id", length = 36)
+    private String branchId;
     @Column(name = "posted_at")
     private Long postedAt;
     @Column(name = "created_at", nullable = false)
@@ -261,6 +263,14 @@ public class JournalEntry {
 
     public String getCostCodeId() {
         return costCodeId;
+    }
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
     }
 
     public long getVersion() {

@@ -33,6 +33,9 @@ public class BankAccount {
     @Column(name = "currency_code", nullable = false, length = 10)
     private String currencyCode;
 
+    @Column(name = "branch_id", length = 36)
+    private String branchId;
+
     @Column(nullable = false)
     private boolean active;
 
@@ -50,17 +53,26 @@ public class BankAccount {
     }
 
     public BankAccount(String bankName, String accountNumber, String iban, String swiftCode, String accountId, String currencyCode, boolean active) {
+        this(bankName, accountNumber, iban, swiftCode, accountId, currencyCode, null, active);
+    }
+
+    public BankAccount(String bankName, String accountNumber, String iban, String swiftCode, String accountId, String currencyCode, String branchId, boolean active) {
         this.id = UUID.randomUUID().toString();
-        update(bankName, accountNumber, iban, swiftCode, accountId, currencyCode, active);
+        update(bankName, accountNumber, iban, swiftCode, accountId, currencyCode, branchId, active);
     }
 
     public void update(String bankName, String accountNumber, String iban, String swiftCode, String accountId, String currencyCode, boolean active) {
+        update(bankName, accountNumber, iban, swiftCode, accountId, currencyCode, this.branchId, active);
+    }
+
+    public void update(String bankName, String accountNumber, String iban, String swiftCode, String accountId, String currencyCode, String branchId, boolean active) {
         this.bankName = bankName.strip();
         this.accountNumber = accountNumber.strip();
         this.iban = iban == null ? null : iban.strip();
         this.swiftCode = swiftCode == null ? null : swiftCode.strip();
         this.accountId = accountId == null || accountId.isBlank() ? null : accountId.strip();
         this.currencyCode = currencyCode == null || currencyCode.isBlank() ? "EGP" : currencyCode.strip().toUpperCase();
+        this.branchId = branchId == null || branchId.isBlank() ? null : branchId.strip();
         this.active = active;
     }
 
@@ -117,5 +129,13 @@ public class BankAccount {
 
     public long getVersion() {
         return version;
+    }
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
     }
 }

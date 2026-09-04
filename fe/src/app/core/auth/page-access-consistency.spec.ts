@@ -96,7 +96,7 @@ describe('page access consistency', () => {
       'accounts', 'banks', 'budgets', 'eta-tax', 'fiscal-periods', 'fixed-assets', 'journal-entries', 'payment-links', 'tax-currency',
     ]);
     expect(gatedByFeature.get('payroll.enabled')).toEqual(['payroll']);
-    expect(gatedByFeature.get('sales.enabled')!.sort()).toEqual(['crm', 'pos', 'sales']);
+    expect(gatedByFeature.get('sales.enabled')!.sort()).toEqual(['crm', 'field-sales', 'pos', 'sales']);
     expect(gatedByFeature.get('agri.enabled')).toEqual(['export-shipments']);
     expect(gatedByFeature.get('manufacturing.enabled')).toEqual(['production']);
     expect(gatedByFeature.get('quality.enabled')).toEqual(['quality']);

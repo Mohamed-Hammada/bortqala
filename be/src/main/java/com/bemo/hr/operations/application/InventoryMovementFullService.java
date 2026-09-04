@@ -4,16 +4,21 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.operations.domain.CycleCountHeader;
 import com.bemo.hr.operations.domain.CycleCountLine;
+import com.bemo.hr.operations.domain.StockTransferDiscrepancy;
 import com.bemo.hr.operations.domain.StockTransferHeader;
 import com.bemo.hr.operations.domain.StockTransferLine;
 import com.bemo.hr.operations.infrastructure.CycleCountHeaderRepository;
 import com.bemo.hr.operations.infrastructure.CycleCountLineRepository;
+import com.bemo.hr.operations.infrastructure.StockTransferDiscrepancyRepository;
 import com.bemo.hr.operations.infrastructure.StockTransferHeaderRepository;
 import com.bemo.hr.operations.infrastructure.StockTransferLineRepository;
+import com.bemo.hr.organization.domain.Branch;
 import com.bemo.hr.organization.domain.Warehouse;
+import com.bemo.hr.organization.infrastructure.BranchRepository;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +27,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,6 +42,8 @@ public class InventoryMovementFullService {
     private final WarehouseInventoryService warehouseInventoryService;
     private final WarehouseRepository warehouseRepository;
     private final AuditService auditService;
+    private final StockTransferDiscrepancyRepository discrepancyRepository;
+    private final BranchRepository branchRepository;
 
     public InventoryMovementFullService(StockTransferHeaderRepository transferHeaderRepository,
                                         StockTransferLineRepository transferLineRepository,
@@ -44,6 +53,21 @@ public class InventoryMovementFullService {
                                         WarehouseInventoryService warehouseInventoryService,
                                         WarehouseRepository warehouseRepository,
                                         AuditService auditService) {
+        this(transferHeaderRepository, transferLineRepository, cycleCountHeaderRepository, cycleCountLineRepository,
+                operationsService, warehouseInventoryService, warehouseRepository, auditService, null, null);
+    }
+
+    @Autowired
+    public InventoryMovementFullService(StockTransferHeaderRepository transferHeaderRepository,
+                                        StockTransferLineRepository transferLineRepository,
+                                        CycleCountHeaderRepository cycleCountHeaderRepository,
+                                        CycleCountLineRepository cycleCountLineRepository,
+                                        OperationsService operationsService,
+                                        WarehouseInventoryService warehouseInventoryService,
+                                        WarehouseRepository warehouseRepository,
+                                        AuditService auditService,
+                                        StockTransferDiscrepancyRepository discrepancyRepository,
+                                        BranchRepository branchRepository) {
         this.transferHeaderRepository = transferHeaderRepository;
         this.transferLineRepository = transferLineRepository;
         this.cycleCountHeaderRepository = cycleCountHeaderRepository;
@@ -52,6 +76,8 @@ public class InventoryMovementFullService {
         this.warehouseInventoryService = warehouseInventoryService;
         this.warehouseRepository = warehouseRepository;
         this.auditService = auditService;
+        this.discrepancyRepository = discrepancyRepository;
+        this.branchRepository = branchRepository;
     }
 
     @Transactional
@@ -62,8 +88,8 @@ public class InventoryMovementFullService {
             throw new BusinessRuleException("Source and target warehouses must be different.",
                     "TRANSFER_WAREHOUSES_DIFFERENT", HttpStatus.CONFLICT);
         }
-        requireWarehouse(sourceWarehouseId);
-        requireWarehouse(targetWarehouseId);
+        Warehouse source = requireWarehouse(sourceWarehouseId);
+        Warehouse target = requireWarehouse(targetWarehouseId);
         if (transferDate == null) {
             throw new BusinessRuleException("Transfer date is required.", "TRANSFER_DATE_REQUIRED", HttpStatus.CONFLICT);
         }
@@ -75,7 +101,14 @@ public class InventoryMovementFullService {
             throw new BusinessRuleException("Transfer number already exists.",
                     "TRANSFER_NUMBER_EXISTS", HttpStatus.CONFLICT);
         }
-        StockTransferHeader transfer = new StockTransferHeader(normalizedNumber, sourceWarehouseId, targetWarehouseId, transferDate);
+        StockTransferHeader transfer = new StockTransferHeader(
+                normalizedNumber,
+                sourceWarehouseId,
+                targetWarehouseId,
+                source.getBranchId(),
+                target.getBranchId(),
+                transferDate
+        );
         StockTransferHeader saved = transferHeaderRepository.save(transfer);
         log.info("StockTransferHeader {} created successfully", saved.getId());
         return saved;
@@ -108,7 +141,14 @@ public class InventoryMovementFullService {
 
     @Transactional
     public StockTransferHeader shipTransfer(String transferId, String actor) {
-        log.debug("shipTransfer called with transferId={}, actor={}", transferId, actor);
+        return dispatchTransfer(transferId, null, null, null, null, null, null, actor);
+    }
+
+    @Transactional
+    public StockTransferHeader dispatchTransfer(String transferId, String carrierName, String driverName,
+                                                String driverPhone, String vehiclePlate, String waybillNumber,
+                                                String notes, String actor) {
+        log.debug("dispatchTransfer called with transferId={}, actor={}", transferId, actor);
         StockTransferHeader transfer = getTransfer(transferId);
         if (transfer.getStatus() == StockTransferHeader.Status.SHIPPED) return transfer;
         if (transfer.getStatus() != StockTransferHeader.Status.DRAFT) {
@@ -124,22 +164,36 @@ public class InventoryMovementFullService {
             if (warehouseInventoryService.getAvailableStock(transfer.getSourceWarehouseId(), line.getItemId())
                     .compareTo(line.getQuantity()) < 0) {
                 throw new BusinessRuleException("Insufficient source-warehouse stock for transfer.",
-                        "TRANSFER_SOURCE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
+                    "TRANSFER_SOURCE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
             }
         }
-        lines.forEach(line -> warehouseInventoryService.issueAvailableStock(
-                transfer.getSourceWarehouseId(), line.getItemId(), line.getQuantity()));
-        transfer.ship();
+        lines.forEach(line -> {
+            warehouseInventoryService.issueAvailableStock(
+                    transfer.getSourceWarehouseId(), line.getItemId(), line.getQuantity());
+            line.setShippedQuantity(line.getQuantity());
+            transferLineRepository.save(line);
+        });
+
+        transfer.dispatch(carrierName, driverName, driverPhone, vehiclePlate, waybillNumber, notes, actor);
         StockTransferHeader saved = transferHeaderRepository.save(transfer);
         auditService.record("STOCK_TRANSFER_SHIPPED", "STOCK_TRANSFER", saved.getId(), actor,
-                "Shipped transfer " + saved.getTransferNumber() + " lines=" + lines.size(), null);
+                "Shipped transfer " + saved.getTransferNumber() + " lines=" + lines.size()
+                        + (waybillNumber != null ? " waybill=" + waybillNumber : ""), null);
         log.info("StockTransferHeader {} shipped successfully", saved.getId());
         return saved;
     }
 
     @Transactional
     public StockTransferHeader receiveTransfer(String transferId, String actor) {
-        log.debug("receiveTransfer called with transferId={}, actor={}", transferId, actor);
+        return receiveTransferWithInspection(transferId, List.of(), null, actor);
+    }
+
+    @Transactional
+    public StockTransferHeader receiveTransferWithInspection(String transferId,
+                                                             List<ReceiptInspectionLineInput> inspectionLines,
+                                                             String inspectionNotes,
+                                                             String actor) {
+        log.debug("receiveTransferWithInspection called with transferId={}, actor={}", transferId, actor);
         StockTransferHeader transfer = getTransfer(transferId);
         if (transfer.getStatus() == StockTransferHeader.Status.RECEIVED) return transfer;
         if (transfer.getStatus() != StockTransferHeader.Status.SHIPPED) {
@@ -147,14 +201,101 @@ public class InventoryMovementFullService {
                     "TRANSFER_NOT_SHIPPED", HttpStatus.CONFLICT);
         }
         List<StockTransferLine> lines = transferLineRepository.findByTransferId(transferId);
-        lines.forEach(line -> warehouseInventoryService.receiveAvailableStock(
-                transfer.getTargetWarehouseId(), line.getItemId(), line.getQuantity()));
-        transfer.receive();
+        Map<String, ReceiptInspectionLineInput> inspectionMap = (inspectionLines != null)
+                ? inspectionLines.stream().collect(Collectors.toMap(ReceiptInspectionLineInput::lineId, i -> i, (a, b) -> a))
+                : Map.of();
+
+        boolean anyDiscrepancy = false;
+
+        for (StockTransferLine line : lines) {
+            BigDecimal shippedQty = line.getShippedQuantity() != null ? line.getShippedQuantity() : line.getQuantity();
+            ReceiptInspectionLineInput insp = inspectionMap.get(line.getId());
+
+            BigDecimal receivedGoodQty = shippedQty;
+            BigDecimal damagedQty = BigDecimal.ZERO;
+            BigDecimal lostQty = BigDecimal.ZERO;
+            String reason = null;
+            String notes = null;
+
+            if (insp != null) {
+                receivedGoodQty = insp.receivedQuantity() != null ? insp.receivedQuantity() : BigDecimal.ZERO;
+                damagedQty = insp.damagedQuantity() != null ? insp.damagedQuantity() : BigDecimal.ZERO;
+                lostQty = insp.lostQuantity() != null ? insp.lostQuantity() : BigDecimal.ZERO;
+                reason = insp.discrepancyReason();
+                notes = insp.discrepancyNotes();
+            }
+
+            line.updateReceipt(receivedGoodQty, damagedQty, lostQty, reason, notes);
+            transferLineRepository.save(line);
+
+            // Stock target warehouse with good accepted quantity
+            if (receivedGoodQty.compareTo(BigDecimal.ZERO) > 0) {
+                warehouseInventoryService.receiveAvailableStock(
+                        transfer.getTargetWarehouseId(), line.getItemId(), receivedGoodQty);
+            }
+
+            // Flag discrepancy if damage or loss recorded
+            if (damagedQty.compareTo(BigDecimal.ZERO) > 0 || lostQty.compareTo(BigDecimal.ZERO) > 0) {
+                anyDiscrepancy = true;
+                if (discrepancyRepository != null) {
+                    StockTransferDiscrepancy.DiscrepancyType discType = damagedQty.compareTo(BigDecimal.ZERO) > 0
+                            ? StockTransferDiscrepancy.DiscrepancyType.DAMAGED
+                            : StockTransferDiscrepancy.DiscrepancyType.SHORTAGE;
+
+                    StockTransferDiscrepancy discrepancy = new StockTransferDiscrepancy(
+                            transferId,
+                            line.getId(),
+                            line.getItemId(),
+                            shippedQty,
+                            receivedGoodQty,
+                            damagedQty,
+                            lostQty,
+                            discType,
+                            actor != null ? actor : "SYSTEM"
+                    );
+                    discrepancyRepository.save(discrepancy);
+                }
+            }
+        }
+
+        transfer.receiveWithInspection(actor, anyDiscrepancy);
         StockTransferHeader saved = transferHeaderRepository.save(transfer);
         auditService.record("STOCK_TRANSFER_RECEIVED", "STOCK_TRANSFER", saved.getId(), actor,
-                "Received transfer " + saved.getTransferNumber() + " lines=" + lines.size(), null);
-        log.info("StockTransferHeader {} received successfully", saved.getId());
+                "Received transfer " + saved.getTransferNumber() + " lines=" + lines.size()
+                        + " discrepancy=" + anyDiscrepancy, null);
+        log.info("StockTransferHeader {} received successfully with discrepancy={}", saved.getId(), anyDiscrepancy);
         return saved;
+    }
+
+    @Transactional
+    public StockTransferDiscrepancy resolveDiscrepancy(String discrepancyId, String resolutionStatus,
+                                                      String resolutionNotes, String actor) {
+        if (discrepancyRepository == null) {
+            throw new BusinessRuleException("Discrepancy repository unavailable", "TRANSFER_DISCREPANCY_NOT_FOUND", HttpStatus.NOT_FOUND);
+        }
+        StockTransferDiscrepancy discrepancy = discrepancyRepository.findById(discrepancyId)
+                .orElseThrow(() -> new BusinessRuleException("Discrepancy not found", "TRANSFER_DISCREPANCY_NOT_FOUND", HttpStatus.NOT_FOUND));
+
+        if (discrepancy.getResolutionStatus() != StockTransferDiscrepancy.ResolutionStatus.PENDING) {
+            throw new BusinessRuleException("Discrepancy already resolved", "TRANSFER_DISCREPANCY_ALREADY_RESOLVED", HttpStatus.BAD_REQUEST);
+        }
+
+        StockTransferDiscrepancy.ResolutionStatus status = StockTransferDiscrepancy.ResolutionStatus.valueOf(resolutionStatus);
+        discrepancy.resolve(actor, status, resolutionNotes, null);
+        StockTransferDiscrepancy saved = discrepancyRepository.save(discrepancy);
+
+        auditService.record("STOCK_DISCREPANCY_RESOLVED", "STOCK_DISCREPANCY", saved.getId(), actor,
+                "Resolved discrepancy for transfer " + saved.getTransferId() + " status=" + status, null);
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public List<StockTransferDiscrepancy> discrepancies(String transferId) {
+        if (discrepancyRepository == null) return List.of();
+        if (transferId != null && !transferId.isBlank()) {
+            return discrepancyRepository.findByTransferId(transferId);
+        }
+        return discrepancyRepository.findAllByOrderByReportedAtDesc();
     }
 
     @Transactional
@@ -260,13 +401,63 @@ public class InventoryMovementFullService {
     private TransferView transferView(StockTransferHeader header) {
         Warehouse source = warehouseRepository.findById(header.getSourceWarehouseId()).orElse(null);
         Warehouse target = warehouseRepository.findById(header.getTargetWarehouseId()).orElse(null);
+
+        String sourceBranchName = null;
+        String targetBranchName = null;
+        if (branchRepository != null) {
+            if (header.getSourceBranchId() != null) {
+                sourceBranchName = branchRepository.findById(header.getSourceBranchId()).map(Branch::getName).orElse(null);
+            }
+            if (header.getTargetBranchId() != null) {
+                targetBranchName = branchRepository.findById(header.getTargetBranchId()).map(Branch::getName).orElse(null);
+            }
+        }
+
         List<TransferLineView> lines = transferLineRepository.findByTransferId(header.getId()).stream().map(line -> {
             var item = operationsService.inventoryItem(line.getItemId());
-            return new TransferLineView(line.getId(), line.getItemId(), item.code(), item.name(), line.getQuantity());
+            return new TransferLineView(
+                    line.getId(),
+                    line.getItemId(),
+                    item.code(),
+                    item.name(),
+                    line.getQuantity(),
+                    line.getShippedQuantity() != null ? line.getShippedQuantity() : line.getQuantity(),
+                    line.getReceivedQuantity(),
+                    line.getDamagedQuantity(),
+                    line.getLostQuantity(),
+                    line.getDiscrepancyReason(),
+                    line.getDiscrepancyNotes()
+            );
         }).toList();
-        return new TransferView(header.getId(), header.getTransferNumber(), header.getSourceWarehouseId(),
-                source == null ? null : source.getName(), header.getTargetWarehouseId(), target == null ? null : target.getName(),
-                header.getTransferDate(), header.getStatus().name(), header.getVersion(), lines);
+
+        return new TransferView(
+                header.getId(),
+                header.getTransferNumber(),
+                header.getSourceWarehouseId(),
+                source == null ? null : source.getName(),
+                header.getTargetWarehouseId(),
+                target == null ? null : target.getName(),
+                header.getSourceBranchId(),
+                sourceBranchName,
+                header.getTargetBranchId(),
+                targetBranchName,
+                header.getTransferDate(),
+                header.getStatus().name(),
+                header.getCarrierName(),
+                header.getDriverName(),
+                header.getDriverPhone(),
+                header.getVehiclePlate(),
+                header.getWaybillNumber(),
+                header.getDispatchedAt(),
+                header.getDispatchedBy(),
+                header.getReceivedAt(),
+                header.getReceivedBy(),
+                header.isHasDiscrepancy(),
+                header.getNotes(),
+                header.getIntercompanyTransactionId(),
+                header.getVersion(),
+                lines
+        );
     }
 
     private Warehouse requireWarehouse(String id) {
@@ -287,16 +478,63 @@ public class InventoryMovementFullService {
                 .orElseThrow(() -> new BusinessRuleException("Stock transfer not found", "TRANSFER_NOT_FOUND", HttpStatus.NOT_FOUND));
     }
 
+    public record ReceiptInspectionLineInput(
+            String lineId,
+            BigDecimal receivedQuantity,
+            BigDecimal damagedQuantity,
+            BigDecimal lostQuantity,
+            String discrepancyReason,
+            String discrepancyNotes
+    ) {
+    }
+
     public record CycleCountSummary(String id, String countNumber, String warehouseId, LocalDate countDate,
                                     String status, String itemId, BigDecimal systemQuantity,
                                     BigDecimal countedQuantity, BigDecimal variance) {
     }
 
-    public record TransferLineView(String id, String itemId, String itemCode, String itemName, BigDecimal quantity) {
+    public record TransferLineView(
+            String id,
+            String itemId,
+            String itemCode,
+            String itemName,
+            BigDecimal quantity,
+            BigDecimal shippedQuantity,
+            BigDecimal receivedQuantity,
+            BigDecimal damagedQuantity,
+            BigDecimal lostQuantity,
+            String discrepancyReason,
+            String discrepancyNotes
+    ) {
     }
 
-    public record TransferView(String id, String transferNumber, String sourceWarehouseId, String sourceWarehouseName,
-                               String targetWarehouseId, String targetWarehouseName, LocalDate transferDate,
-                               String status, long version, List<TransferLineView> lines) {
+    public record TransferView(
+            String id,
+            String transferNumber,
+            String sourceWarehouseId,
+            String sourceWarehouseName,
+            String targetWarehouseId,
+            String targetWarehouseName,
+            String sourceBranchId,
+            String sourceBranchName,
+            String targetBranchId,
+            String targetBranchName,
+            LocalDate transferDate,
+            String status,
+            String carrierName,
+            String driverName,
+            String driverPhone,
+            String vehiclePlate,
+            String waybillNumber,
+            Long dispatchedAt,
+            String dispatchedBy,
+            Long receivedAt,
+            String receivedBy,
+            boolean hasDiscrepancy,
+            String notes,
+            String intercompanyTransactionId,
+            long version,
+            List<TransferLineView> lines
+    ) {
     }
 }

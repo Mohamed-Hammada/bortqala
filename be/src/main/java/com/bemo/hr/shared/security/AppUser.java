@@ -46,6 +46,9 @@ public class AppUser {
     @Column(name = "category_id", length = 36)
     private String categoryId;
 
+    @Column(name = "branch_id", length = 36)
+    private String branchId;
+
 
     @Column(name = "dashboard_customization_enabled", nullable = false)
     private boolean dashboardCustomizationEnabled = true;
@@ -246,6 +249,14 @@ public class AppUser {
 
     public void setEmployeeId(String employeeId) {
         this.employeeId = employeeId;
+    }
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
     }
 
     public boolean isMenuAccessAll() {

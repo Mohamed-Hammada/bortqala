@@ -1,0 +1,250 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260904-v457-multi-branch-control-schema
+      author: bemo-tech-lead
+      comment: "TASK-04: Multi-Branch Control Center schema with branch defaults, in-transit transfers, discrepancy tracking, and branch-level scoping."
+      changes:
+        # 1. Enrich branches table with defaults and registration info
+        - addColumn:
+            tableName: branches
+            columns:
+              - column:
+                  name: is_main_branch
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone
+                  type: VARCHAR(50)
+              - column:
+                  name: email
+                  type: VARCHAR(100)
+              - column:
+                  name: tax_number
+                  type: VARCHAR(50)
+              - column:
+                  name: commercial_registry
+                  type: VARCHAR(50)
+              - column:
+                  name: default_warehouse_id
+                  type: VARCHAR(36)
+              - column:
+                  name: default_cashbox_id
+                  type: VARCHAR(36)
+              - column:
+                  name: default_bank_account_id
+                  type: VARCHAR(36)
+              - column:
+                  name: default_pos_terminal_id
+                  type: VARCHAR(36)
+              - column:
+                  name: document_code_prefix
+                  type: VARCHAR(20)
+
+        # 2. Enrich stock_transfer_headers with branch trace and in-transit tracking
+        - addColumn:
+            tableName: stock_transfer_headers
+            columns:
+              - column:
+                  name: source_branch_id
+                  type: VARCHAR(36)
+              - column:
+                  name: target_branch_id
+                  type: VARCHAR(36)
+              - column:
+                  name: carrier_name
+                  type: VARCHAR(150)
+              - column:
+                  name: driver_name
+                  type: VARCHAR(150)
+              - column:
+                  name: driver_phone
+                  type: VARCHAR(50)
+              - column:
+                  name: vehicle_plate
+                  type: VARCHAR(50)
+              - column:
+                  name: waybill_number
+                  type: VARCHAR(100)
+              - column:
+                  name: dispatched_at
+                  type: BIGINT
+              - column:
+                  name: dispatched_by
+                  type: VARCHAR(100)
+              - column:
+                  name: received_at
+                  type: BIGINT
+              - column:
+                  name: received_by
+                  type: VARCHAR(100)
+              - column:
+                  name: has_discrepancy
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: VARCHAR(500)
+              - column:
+                  name: intercompany_transaction_id
+                  type: VARCHAR(36)
+
+        # 3. Enrich stock_transfer_lines with shipment and inspection counts
+        - addColumn:
+            tableName: stock_transfer_lines
+            columns:
+              - column:
+                  name: shipped_quantity
+                  type: NUMERIC(15, 4)
+              - column:
+                  name: received_quantity
+                  type: NUMERIC(15, 4)
+              - column:
+                  name: damaged_quantity
+                  type: NUMERIC(15, 4)
+                  defaultValueNumeric: 0
+              - column:
+                  name: lost_quantity
+                  type: NUMERIC(15, 4)
+                  defaultValueNumeric: 0
+              - column:
+                  name: discrepancy_reason
+                  type: VARCHAR(50)
+              - column:
+                  name: discrepancy_notes
+                  type: VARCHAR(255)
+
+        # 4. Create stock_transfer_discrepancies table
+        - createTable:
+            tableName: stock_transfer_discrepancies
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transfer_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expected_quantity
+                  type: NUMERIC(15, 4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: received_quantity
+                  type: NUMERIC(15, 4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: damaged_quantity
+                  type: NUMERIC(15, 4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lost_quantity
+                  type: NUMERIC(15, 4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: discrepancy_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resolution_status
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reported_by
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reported_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resolved_by
+                  type: VARCHAR(100)
+              - column:
+                  name: resolved_at
+                  type: BIGINT
+              - column:
+                  name: resolution_notes
+                  type: VARCHAR(500)
+              - column:
+                  name: journal_entry_id
+                  type: VARCHAR(36)
+
+        - createIndex:
+            tableName: stock_transfer_discrepancies
+            indexName: ix_stock_transfer_discrepancies_app_trf
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: transfer_id
+
+        # 5. Add branch_id to app_users
+        - addColumn:
+            tableName: app_users
+            columns:
+              - column:
+                  name: branch_id
+                  type: VARCHAR(36)
+
+        # 6. Add branch_id to bank_accounts
+        - addColumn:
+            tableName: bank_accounts
+            columns:
+              - column:
+                  name: branch_id
+                  type: VARCHAR(36)
+
+        # 7. Add branch_id to employees
+        - addColumn:
+            tableName: employees
+            columns:
+              - column:
+                  name: branch_id
+                  type: VARCHAR(36)
+
+        # 8. Add branch_id to journal_entries
+        - addColumn:
+            tableName: journal_entries
+            columns:
+              - column:
+                  name: branch_id
+                  type: VARCHAR(36)
+
+        # 9. Add branch_id to journal_entry_lines
+        - addColumn:
+            tableName: journal_entry_lines
+            columns:
+              - column:
+                  name: branch_id
+                  type: VARCHAR(36)

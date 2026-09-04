@@ -281,6 +281,13 @@ export const routes: Routes = [
           import('./features/trade/pos/pos.page').then((module) => module.PosPage),
       },
       {
+        path: 'trade/field-sales',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SALES_MANAGER'], menuId: 'field-sales' },
+        loadComponent: () =>
+          import('./features/trade/field-sales/field-sales.page').then((module) => module.FieldSalesPage),
+      },
+      {
         path: 'crm',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['SALES_MANAGER'], menuId: 'crm' },

@@ -52,6 +52,9 @@
     <button class="tab-btn" [class.active]="activeTab() === 'terminals'" (click)="activeTab.set('terminals')">
       {{ i18n.t('pos.tabTerminals') }}
     </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'printers'" (click)="activeTab.set('printers')">
+      {{ i18n.t('pos.thermalPrinters') }}
+    </button>
     <button class="tab-btn" [class.active]="activeTab() === 'history'" (click)="activeTab.set('history')">
       {{ i18n.t('pos.tabHistory') }}
     </button>
@@ -297,7 +300,14 @@
           <tbody>
             @for (txn of transactions(); track txn.id) {
               <tr>
-                <td><strong>{{ txn.transactionNumber }}</strong></td>
+                <td>
+                  <strong>{{ txn.transactionNumber }}</strong>
+                  @if (txn.reprintCount && txn.reprintCount > 0) {
+                    <span class="badge-reprint" [title]="i18n.t('pos.reprintCount')">
+                      {{ i18n.t('pos.duplicate') }} ({{ txn.reprintCount }})
+                    </span>
+                  }
+                </td>
                 <td>{{ txn.createdAt | date:'short' }}</td>
                 <td>{{ txn.taxAmount | number:'1.2-2' }}</td>
                 <td><strong>{{ txn.totalAmount | number:'1.2-2' }}</strong></td>
@@ -311,6 +321,12 @@
                     <button class="btn btn-sm btn-outline-primary" (click)="viewReceipt(txn)">
                       {{ i18n.t('pos.printReceipt') }}
                     </button>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="printThermalReceiptDirect(txn)" [disabled]="isPrintingThermal()">
+                      {{ i18n.t('pos.directThermalPrint') }}
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" (click)="openReprintDialog(txn)">
+                      {{ i18n.t('pos.reprintReceipt') }}
+                    </button>
                     @if (txn.status === 'COMPLETED') {
                       <button class="btn btn-sm btn-outline-danger" (click)="returnReceipt(txn)">
                         {{ i18n.t('pos.returnSale') }}
@@ -318,6 +334,83 @@
                     }
                   </div>
                 </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 5: THERMAL PRINTERS -->
+  @if (activeTab() === 'printers') {
+    <div class="card p-4">
+      <div class="table-header">
+        <div>
+          <h3>{{ i18n.t('pos.thermalPrinters') }}</h3>
+          <p class="text-muted">{{ i18n.t('pos.thermalPrinter') }}</p>
+        </div>
+        <button class="btn btn-primary" (click)="openAddPrinterModal()">
+          + {{ i18n.t('pos.addPrinter') }}
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('pos.printerName') }}</th>
+              <th>{{ i18n.t('pos.connectionType') }}</th>
+              <th>{{ i18n.t('pos.paperWidth') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('pos.isDefault') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of printers(); track p.id) {
+              <tr>
+                <td><strong>{{ p.name }}</strong></td>
+                <td>
+                  <span class="badge-conn">{{ p.connectionType }}</span>
+                  @if (p.connectionType === 'NETWORK' && p.ipAddress) {
+                    <span class="conn-detail">{{ p.ipAddress }}:{{ p.port }}</span>
+                  }
+                  @if (p.connectionType === 'BLUETOOTH' && p.bluetoothMac) {
+                    <span class="conn-detail">{{ p.bluetoothMac }}</span>
+                  }
+                </td>
+                <td>{{ p.paperWidth === 'MM_58' ? i18n.t('pos.paper58mm') : i18n.t('pos.paper80mm') }}</td>
+                <td>
+                  <span class="status-pill" [class.active]="p.active">
+                    {{ p.active ? i18n.t('common.active') : i18n.t('common.inactive') }}
+                  </span>
+                </td>
+                <td>
+                  @if (p.isDefault) {
+                    <span class="badge-default">★ {{ i18n.t('pos.isDefault') }}</span>
+                  } @else {
+                    <span>—</span>
+                  }
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-info" (click)="testPrint(p)">
+                      {{ i18n.t('pos.testPrint') }}
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="openEditPrinterModal(p)">
+                      {{ i18n.t('pos.editPrinter') }}
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="deletePrinter(p)">
+                      {{ i18n.t('common.delete') }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @if (printers().length === 0) {
+              <tr>
+                <td colspan="6" class="empty-cell">{{ i18n.t('common.noData') }}</td>
               </tr>
             }
           </tbody>
@@ -440,6 +533,11 @@
         </div>
         <div class="modal-body">
           <div class="thermal-receipt">
+            @if (activeReceipt()?.reprintCount && activeReceipt()!.reprintCount! > 0) {
+              <div class="receipt-duplicate-banner">
+                *** {{ i18n.t('pos.duplicate') }} ({{ activeReceipt()?.reprintCount }}) ***
+              </div>
+            }
             <div class="receipt-brand">
               <h3>{{ i18n.t('pos.brandTitle') }}</h3>
               <p>{{ i18n.t('pos.taxInvoiceReceipt') }}</p>
@@ -491,8 +589,155 @@
           <button type="button" class="btn btn-secondary" (click)="showReceiptModal.set(false)">
             {{ i18n.t('common.close') }}
           </button>
+          <button type="button" class="btn btn-outline-primary" (click)="printThermalReceiptDirect(activeReceipt()!)" [disabled]="isPrintingThermal()">
+            {{ i18n.t('pos.directThermalPrint') }}
+          </button>
           <button type="button" class="btn btn-primary" (click)="printReceipt()">
             {{ i18n.t('pos.printReceipt') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: ADD / EDIT THERMAL PRINTER -->
+  @if (showPrinterModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>{{ printerForm.value.id ? i18n.t('pos.editPrinter') : i18n.t('pos.addPrinter') }}</h2>
+          <button class="btn-close" (click)="showPrinterModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
+        </div>
+        <form [formGroup]="printerForm" (ngSubmit)="savePrinter()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>{{ i18n.t('pos.printerName') }} *</label>
+              <input type="text" class="form-control" formControlName="name" />
+            </div>
+
+            <div class="form-group">
+              <label>{{ i18n.t('pos.connectionType') }} *</label>
+              <select class="form-control" formControlName="connectionType">
+                <option value="NETWORK">{{ i18n.t('pos.network') }}</option>
+                <option value="BLUETOOTH">{{ i18n.t('pos.bluetooth') }}</option>
+                <option value="USB">{{ i18n.t('pos.usb') }}</option>
+              </select>
+            </div>
+
+            @if (printerForm.value.connectionType === 'NETWORK') {
+              <div class="form-row">
+                <div class="form-group col-8">
+                  <label>{{ i18n.t('pos.ipAddress') }}</label>
+                  <input type="text" class="form-control" formControlName="ipAddress" placeholder="192.168.1.200" />
+                </div>
+                <div class="form-group col-4">
+                  <label>{{ i18n.t('pos.port') }}</label>
+                  <input type="number" class="form-control" formControlName="port" />
+                </div>
+              </div>
+            }
+
+            @if (printerForm.value.connectionType === 'BLUETOOTH') {
+              <div class="form-group">
+                <label>{{ i18n.t('pos.bluetooth') }}</label>
+                <input type="text" class="form-control" formControlName="bluetoothMac" placeholder="00:11:22:33:44:55" />
+              </div>
+            }
+
+            <div class="form-group">
+              <label>{{ i18n.t('pos.paperWidth') }} *</label>
+              <div class="radio-row">
+                <label class="radio-label">
+                  <input type="radio" value="MM_80" formControlName="paperWidth" />
+                  {{ i18n.t('pos.paper80mm') }}
+                </label>
+                <label class="radio-label">
+                  <input type="radio" value="MM_58" formControlName="paperWidth" />
+                  {{ i18n.t('pos.paper58mm') }}
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row checkboxes">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="openDrawer" />
+                {{ i18n.t('pos.openDrawer') }}
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="cutPaper" />
+                {{ i18n.t('pos.cutPaper') }}
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="printQrCode" />
+                {{ i18n.t('pos.printQr') }}
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="isDefault" />
+                {{ i18n.t('pos.isDefault') }}
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="active" />
+                {{ i18n.t('common.active') }}
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label>{{ i18n.t('pos.headerText') }}</label>
+              <textarea class="form-control" formControlName="headerText" rows="2"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>{{ i18n.t('pos.footerText') }}</label>
+              <textarea class="form-control" formControlName="footerText" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showPrinterModal.set(false)">
+              {{ i18n.t('common.cancel') }}
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="printerForm.invalid">
+              {{ i18n.t('common.save') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: REPRINT RECEIPT AUDIT PROMPT -->
+  @if (showReprintModal() && activeReceipt()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>{{ i18n.t('pos.reprintReceipt') }}</h2>
+          <button class="btn-close" (click)="showReprintModal.set(false)" [attr.aria-label]="i18n.t('common.close')">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="reprint-prompt-info">
+            <strong>{{ i18n.t('pos.receiptNo') }}:</strong> {{ activeReceipt()?.transactionNumber }}
+          </p>
+          <div class="form-group">
+            <label>{{ i18n.t('pos.reprintReason') }} *</label>
+            <textarea
+              class="form-control"
+              rows="3"
+              [placeholder]="i18n.t('pos.reprintReason')"
+              [value]="reprintReason()"
+              (input)="reprintReason.set($any($event.target).value)"
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showReprintModal.set(false)">
+            {{ i18n.t('common.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-warning"
+            [disabled]="!reprintReason().trim()"
+            (click)="submitReprint()"
+          >
+            {{ i18n.t('pos.reprintReceipt') }}
           </button>
         </div>
       </div>

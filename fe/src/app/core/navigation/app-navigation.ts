@@ -404,6 +404,15 @@ export const NAV_ITEMS: NavItem[] = [
     roles: SALES_ROLES,
   },
   {
+    menuId: 'field-sales',
+    labelKey: 'nav.fieldSales',
+    descriptionKey: 'nav.fieldSalesHint',
+    path: '/trade/field-sales',
+    icon: 'reports',
+    workspace: 'workspace.salesCommercial',
+    roles: SALES_ROLES,
+  },
+  {
     menuId: 'crm',
     labelKey: 'nav.crm',
     descriptionKey: 'nav.crmHint',

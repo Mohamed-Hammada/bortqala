@@ -24,22 +24,25 @@
 
   <!-- Product-standard organization tabs -->
   <nav class="app-tabs app-tabs-wrap" [attr.aria-label]="i18n.t('organization.title')">
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'companies'" (click)="activeTab.set('companies')">
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'companies'" (click)="switchTab('companies')">
       {{ i18n.t('organization.tabCompanies') }} ({{ companies().length }})
     </button>
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'branches'" (click)="activeTab.set('branches')">
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'branches'" (click)="switchTab('branches')">
       {{ i18n.t('organization.tabBranches') }} ({{ branches().length }})
     </button>
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'warehouses'" (click)="activeTab.set('warehouses')">
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'warehouses'" (click)="switchTab('warehouses')">
       {{ i18n.t('organization.tabWarehouses') }} ({{ warehouses().length }})
     </button>
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'departments'" (click)="activeTab.set('departments')">
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'departments'" (click)="switchTab('departments')">
       {{ i18n.t('organization.tabDepartments') }} ({{ departments().length }})
     </button>
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'consolidation'" (click)="activeTab.set('consolidation')">
-      📊 {{ i18n.t('org.tabConsolidation') }}
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'transfers'" (click)="switchTab('transfers')">
+      🚚 {{ i18n.t('branchControl.transfersHub') }} ({{ transfers().length }})
     </button>
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'intercompany'" (click)="activeTab.set('intercompany')">
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'consolidation'" (click)="switchTab('consolidation')">
+      📊 {{ i18n.t('branchControl.groupReporting') }}
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'intercompany'" (click)="switchTab('intercompany')">
       ⇄ {{ i18n.t('org.tabIntercompany') }} ({{ intercompanyTransactions().length }})
     </button>
   </nav>
@@ -75,7 +78,7 @@
       </div>
     }
 
-    <!-- Branches Tab -->
+    <!-- Branches Tab (Multi-Branch Control Center) -->
     @if (activeTab() === 'branches') {
       <div class="table-card">
         <table>
@@ -83,20 +86,40 @@
             <tr>
               <th>{{ i18n.t('organization.branchCode') }}</th>
               <th>{{ i18n.t('organization.branchName') }}</th>
+              <th>{{ i18n.t('branchControl.docPrefix') }}</th>
               <th>{{ i18n.t('organization.location') }}</th>
+              <th>{{ i18n.t('branchControl.phone') }}</th>
               <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (b of branches(); track b.id) {
               <tr>
                 <td><strong class="ltr">{{ b.code }}</strong></td>
-                <td><strong>{{ b.name }}</strong></td>
+                <td>
+                  <strong>{{ b.name }}</strong>
+                  @if (b.isMainBranch) {
+                    <span class="badge highlight ms-2">★ {{ i18n.t('branchControl.mainBranch') }}</span>
+                  }
+                </td>
+                <td><span class="badge info ltr">{{ b.documentCodePrefix || '—' }}</span></td>
                 <td>{{ b.location || '—' }}</td>
+                <td class="ltr">{{ b.phone || '—' }}</td>
                 <td><span class="status" [class.success]="b.active">{{ b.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
+                <td>
+                  <div class="table-actions">
+                    <button class="button small secondary" type="button" (click)="viewBranchSummary(b.id)">
+                      👁 {{ i18n.t('branchControl.title') }}
+                    </button>
+                    <button class="button small secondary" type="button" (click)="editBranch(b)">
+                      ✏ {{ i18n.t('common.edit') }}
+                    </button>
+                  </div>
+                </td>
               </tr>
             } @empty {
-              <tr><td colspan="4"><div class="empty-state">{{ i18n.t('organization.emptyBranches') }}</div></td></tr>
+              <tr><td colspan="7"><div class="empty-state">{{ i18n.t('organization.emptyBranches') }}</div></td></tr>
             }
           </tbody>
         </table>
@@ -157,9 +180,270 @@
       </div>
     }
 
+    <!-- Transfers & In-Transit Hub Tab -->
+    @if (activeTab() === 'transfers') {
+      <div class="table-card">
+        <div class="card-header-bar">
+          <h3>{{ i18n.t('branchControl.transfersHub') }}</h3>
+          <button class="button small secondary" (click)="loadTransfers()">↻ {{ i18n.t('common.refresh') }}</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('operations.reference') }}</th>
+              <th>{{ i18n.t('operations.date') }}</th>
+              <th>{{ i18n.t('operations.transferSource') }}</th>
+              <th>{{ i18n.t('operations.transferTarget') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('branchControl.carrier') }} / {{ i18n.t('branchControl.waybill') }}</th>
+              <th>{{ i18n.t('branchControl.driver') }} / {{ i18n.t('branchControl.vehiclePlate') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of transfers(); track t.id) {
+              <tr>
+                <td>
+                  <strong class="ltr">{{ t.transferNumber }}</strong>
+                  @if (t.hasDiscrepancy) {
+                    <span class="badge warning ms-1">⚠ {{ i18n.t('branchControl.hasDiscrepancy') }}</span>
+                  }
+                </td>
+                <td>{{ t.transferDate }}</td>
+                <td>
+                  <strong>{{ t.sourceWarehouseName || t.sourceWarehouseId }}</strong>
+                  @if (t.sourceBranchName) { <small class="text-muted d-block">({{ t.sourceBranchName }})</small> }
+                </td>
+                <td>
+                  <strong>{{ t.targetWarehouseName || t.targetWarehouseId }}</strong>
+                  @if (t.targetBranchName) { <small class="text-muted d-block">({{ t.targetBranchName }})</small> }
+                </td>
+                <td>
+                  <span class="status"
+                    [class.neutral]="t.status === 'DRAFT'"
+                    [class.warning]="t.status === 'SHIPPED'"
+                    [class.success]="t.status === 'RECEIVED'">
+                    {{ t.status === 'SHIPPED' ? '🚚 ' + i18n.t('branchControl.inTransit') : t.status }}
+                  </span>
+                </td>
+                <td>
+                  @if (t.carrierName || t.waybillNumber) {
+                    <div><strong>{{ t.carrierName || '—' }}</strong></div>
+                    <small class="ltr text-muted">{{ t.waybillNumber || '—' }}</small>
+                  } @else {
+                    —
+                  }
+                </td>
+                <td>
+                  @if (t.driverName || t.vehiclePlate) {
+                    <div>{{ t.driverName || '—' }}</div>
+                    <small class="ltr text-muted">{{ t.vehiclePlate || '—' }}</small>
+                  } @else {
+                    —
+                  }
+                </td>
+                <td>
+                  <div class="table-actions">
+                    @if (t.status === 'DRAFT') {
+                      <button class="button small primary" (click)="openDispatchModal(t)">
+                        🚀 {{ i18n.t('branchControl.dispatchTransfer') }}
+                      </button>
+                    }
+                    @if (t.status === 'SHIPPED') {
+                      <button class="button small primary" (click)="openInspectModal(t)">
+                        📥 {{ i18n.t('branchControl.receiveTransfer') }}
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8"><div class="empty-state">{{ i18n.t('operations.noTransfers') }}</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Discrepancies sub-table -->
+      @if (discrepancies().length > 0) {
+        <div class="section-card mt-4">
+          <h3 class="section-title text-danger">⚠ {{ i18n.t('branchControl.discrepancies') }} ({{ discrepancies().length }})</h3>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('operations.items') }}</th>
+                  <th>{{ i18n.t('branchControl.expectedQty') }}</th>
+                  <th>{{ i18n.t('branchControl.receivedQty') }}</th>
+                  <th>{{ i18n.t('branchControl.damagedQty') }}</th>
+                  <th>{{ i18n.t('branchControl.lostQty') }}</th>
+                  <th>{{ i18n.t('common.status') }}</th>
+                  <th>{{ i18n.t('branchControl.resolutionNotes') }}</th>
+                  <th>{{ i18n.t('common.actions') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of discrepancies(); track d.id) {
+                  <tr>
+                    <td>
+                      <strong>{{ d.itemName || d.itemId }}</strong>
+                      @if (d.itemCode) { <small class="ltr text-muted ms-1">({{ d.itemCode }})</small> }
+                    </td>
+                    <td class="ltr">{{ d.shippedQuantity | number:'1.2-2' }}</td>
+                    <td class="ltr text-success font-bold">{{ d.receivedQuantity | number:'1.2-2' }}</td>
+                    <td class="ltr text-danger">{{ d.damagedQuantity | number:'1.2-2' }}</td>
+                    <td class="ltr text-danger">{{ d.lostQuantity | number:'1.2-2' }}</td>
+                    <td>
+                      <span class="badge" [class.warning]="d.resolutionStatus === 'PENDING'" [class.success]="d.resolutionStatus !== 'PENDING'">
+                        {{ d.resolutionStatus }}
+                      </span>
+                    </td>
+                    <td>{{ d.resolutionNotes || d.notes || '—' }}</td>
+                    <td>
+                      @if (d.resolutionStatus === 'PENDING') {
+                        <button class="button small secondary" (click)="openResolveModal(d)">
+                          ⚖ {{ i18n.t('branchControl.resolveDiscrepancy') }}
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+
     <!-- Financial Consolidation Tab -->
     @if (activeTab() === 'consolidation') {
-      @if (consolidationSummary(); as sum) {
+      <div class="filter-card">
+        <div class="filter-controls">
+          <div class="filter-item">
+            <label>{{ i18n.t('branchControl.filterCompany') }}</label>
+            <select [value]="selectedCompanyFilter()" (change)="selectedCompanyFilter.set($any($event.target).value)">
+              <option value="">— {{ i18n.t('common.all') }} —</option>
+              @for (c of companies(); track c.id) {
+                <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+              }
+            </select>
+          </div>
+          <div class="filter-item">
+            <label>{{ i18n.t('branchControl.filterBranch') }}</label>
+            <select [value]="selectedBranchFilter()" (change)="selectedBranchFilter.set($any($event.target).value)">
+              <option value="">— {{ i18n.t('branchControl.allBranches') }} —</option>
+              @for (b of permittedBranches(); track b.id) {
+                <option [value]="b.id">{{ b.name }} ({{ b.code }})</option>
+              }
+            </select>
+          </div>
+          <div class="filter-item">
+            <label>{{ i18n.t('org.eliminationPeriod') }}</label>
+            <input class="ltr" [value]="selectedPeriod()" (change)="selectedPeriod.set($any($event.target).value)" placeholder="e.g. 2026-Q1" />
+          </div>
+          <div class="filter-actions">
+            <button class="button primary" (click)="loadGroupReport()">🔍 {{ i18n.t('common.filter') }}</button>
+            <button class="button secondary" (click)="exportGroupReport()">📥 {{ i18n.t('branchControl.exportConsolidated') }}</button>
+          </div>
+        </div>
+      </div>
+
+      @if (loadingReport()) {
+        <div class="loading"></div>
+      } @else if (groupReport(); as rpt) {
+        <div class="kpi-grid mt-3">
+          <div class="kpi-card">
+            <span class="kpi-label">{{ i18n.t('org.totalRevenue') }}</span>
+            <span class="kpi-value ltr">{{ rpt.totalRevenue | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">{{ i18n.t('org.totalExpenses') }}</span>
+            <span class="kpi-value ltr">{{ rpt.totalExpenses | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card highlight">
+            <span class="kpi-label">{{ i18n.t('org.netProfit') }}</span>
+            <span class="kpi-value ltr font-bold" [class.text-success]="rpt.netIncome >= 0" [class.text-danger]="rpt.netIncome < 0">
+              {{ rpt.netIncome | number:'1.2-2' }} <small>ج.م</small>
+            </span>
+          </div>
+          <div class="kpi-card info">
+            <span class="kpi-label">{{ i18n.t('org.inventoryValue') }}</span>
+            <span class="kpi-value ltr">{{ rpt.totalAssets | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card warning">
+            <span class="kpi-label">{{ i18n.t('branchControl.eliminations') }}</span>
+            <span class="kpi-value ltr">{{ rpt.intercompanyEliminationsTotal | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+        </div>
+
+        <!-- Consolidated P&L Table -->
+        <div class="section-card mt-3">
+          <h3 class="section-title">{{ i18n.t('branchControl.consolidatedPl') }}</h3>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('common.category') }}</th>
+                  <th>{{ i18n.t('journal.colAccount') }}</th>
+                  <th>{{ i18n.t('org.amount') }}</th>
+                  <th>{{ i18n.t('branchControl.eliminations') }}</th>
+                  <th>{{ i18n.t('org.consolidatedNetMargin') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (pl of rpt.plLines; track pl.accountCode + pl.category) {
+                  <tr>
+                    <td><span class="badge info">{{ pl.category }}</span></td>
+                    <td><strong>{{ pl.accountName }}</strong> <small class="ltr text-muted">({{ pl.accountCode }})</small></td>
+                    <td class="ltr">{{ pl.amount | number:'1.2-2' }}</td>
+                    <td class="ltr text-danger">{{ pl.eliminationAmount | number:'1.2-2' }}</td>
+                    <td class="ltr font-bold">{{ pl.consolidatedAmount | number:'1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Branch Comparison Matrix -->
+        @if (rpt.branchComparison && rpt.branchComparison.length > 0) {
+          <div class="section-card mt-3">
+            <h3 class="section-title">{{ i18n.t('branchControl.branchComparison') }}</h3>
+            <div class="table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ i18n.t('org.branchCode') }}</th>
+                    <th>{{ i18n.t('org.branchName') }}</th>
+                    <th>{{ i18n.t('org.company') }}</th>
+                    <th>{{ i18n.t('org.revenue') }}</th>
+                    <th>{{ i18n.t('org.expenses') }}</th>
+                    <th>{{ i18n.t('org.netProfit') }}</th>
+                    <th>{{ i18n.t('org.inventoryValue') }}</th>
+                    <th>{{ i18n.t('org.headcount') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (m of rpt.branchComparison; track m.branchId) {
+                    <tr>
+                      <td><strong class="ltr">{{ m.branchCode }}</strong></td>
+                      <td><strong>{{ m.branchName }}</strong></td>
+                      <td>{{ m.companyName }}</td>
+                      <td class="ltr">{{ m.revenue | number:'1.2-2' }}</td>
+                      <td class="ltr">{{ m.expenses | number:'1.2-2' }}</td>
+                      <td class="ltr font-bold" [class.text-success]="m.netProfit >= 0" [class.text-danger]="m.netProfit < 0">
+                        {{ m.netProfit | number:'1.2-2' }}
+                      </td>
+                      <td class="ltr">{{ m.inventoryValuation | number:'1.2-2' }}</td>
+                      <td>{{ m.headcount }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      } @else if (consolidationSummary(); as sum) {
         <div class="kpi-grid">
           <div class="kpi-card">
             <span class="kpi-label">{{ i18n.t('org.totalRevenue') }}</span>
@@ -184,48 +468,6 @@
           <div class="kpi-card info">
             <span class="kpi-label">{{ i18n.t('org.totalHeadcount') }}</span>
             <span class="kpi-value">{{ sum.totalHeadcount }}</span>
-          </div>
-        </div>
-
-        <div class="section-card">
-          <h2 class="section-title">{{ i18n.t('org.branchMatrix') }}</h2>
-          <div class="table-card">
-            <table>
-              <thead>
-                <tr>
-                  <th>{{ i18n.t('org.branchCode') }}</th>
-                  <th>{{ i18n.t('org.branchName') }}</th>
-                  <th>{{ i18n.t('org.company') }}</th>
-                  <th>{{ i18n.t('org.revenue') }}</th>
-                  <th>{{ i18n.t('org.expenses') }}</th>
-                  <th>{{ i18n.t('org.netProfit') }}</th>
-                  <th>{{ i18n.t('org.marginPercent') }}</th>
-                  <th>{{ i18n.t('org.inventoryValue') }}</th>
-                  <th>{{ i18n.t('org.headcount') }}</th>
-                  <th>{{ i18n.t('org.activeProjects') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (m of sum.branchMetrics; track m.branchId) {
-                  <tr>
-                    <td><strong class="ltr">{{ m.branchCode }}</strong></td>
-                    <td><strong>{{ m.branchName }}</strong></td>
-                    <td>{{ m.companyName }}</td>
-                    <td class="ltr">{{ m.revenue | number:'1.2-2' }}</td>
-                    <td class="ltr">{{ m.expenses | number:'1.2-2' }}</td>
-                    <td class="ltr font-bold" [class.text-success]="m.netProfit >= 0" [class.text-danger]="m.netProfit < 0">
-                      {{ m.netProfit | number:'1.2-2' }}
-                    </td>
-                    <td><span class="badge" [class.success]="m.marginPercent >= 20" [class.warning]="m.marginPercent < 20">{{ m.marginPercent }}%</span></td>
-                    <td class="ltr">{{ m.inventoryValue | number:'1.2-2' }}</td>
-                    <td>{{ m.headcount }}</td>
-                    <td><span class="badge info">{{ m.activeProjects }}</span></td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="10"><div class="empty-state">{{ i18n.t('organization.emptyBranches') }}</div></td></tr>
-                }
-              </tbody>
-            </table>
           </div>
         </div>
       }
@@ -340,9 +582,44 @@
             <label>{{ i18n.t('organization.branchName') }} *</label>
             <input formControlName="name" [placeholder]="i18n.t('organization.branchNamePlaceholder')" />
           </div>
+          <div class="field">
+            <label>{{ i18n.t('branchControl.docPrefix') }}</label>
+            <input class="ltr" formControlName="documentCodePrefix" placeholder="e.g. CAI-" />
+          </div>
+          <div class="field">
+            <label class="checkbox-label mt-4">
+              <input type="checkbox" formControlName="isMainBranch" />
+              <span>★ {{ i18n.t('branchControl.mainBranch') }}</span>
+            </label>
+          </div>
           <div class="field span-2">
             <label>{{ i18n.t('organization.location') }}</label>
             <input formControlName="location" [placeholder]="i18n.t('organization.locationPlaceholder')" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('branchControl.phone') }}</label>
+            <input class="ltr" formControlName="phone" [placeholder]="i18n.t('branchControl.phone')" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('branchControl.email') }}</label>
+            <input class="ltr" formControlName="email" [placeholder]="i18n.t('branchControl.email')" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('branchControl.taxNumber') }}</label>
+            <input class="ltr" formControlName="taxNumber" [placeholder]="i18n.t('branchControl.taxNumber')" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('branchControl.commercialRegistry') }}</label>
+            <input class="ltr" formControlName="commercialRegistry" [placeholder]="i18n.t('branchControl.commercialRegistry')" />
+          </div>
+          <div class="field span-2">
+            <label>{{ i18n.t('branchControl.defaultWarehouse') }}</label>
+            <select formControlName="defaultWarehouseId">
+              <option value="">— {{ i18n.t('common.none') }} —</option>
+              @for (w of warehouses(); track w.id) {
+                <option [value]="w.id">{{ w.name }} ({{ w.code }})</option>
+              }
+            </select>
           </div>
         </div>
       </form>
@@ -511,7 +788,207 @@
     <div modal-actions class="modal-form-actions">
       <button class="button secondary" type="button" (click)="closeEliminationModal()">{{ i18n.t('common.cancel') }}</button>
       <button class="button primary" type="submit" form="elimination-form" [disabled]="eliminationForm.invalid || runningElimination()">
-        ⚡ {{ i18n.t('org.eliminate') }}
+        ⚡ {{ i18n.t('org.runElimination') }}
+      </button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Branch Control Center 360 Summary Modal -->
+  <app-modal-dialog
+    [isOpen]="summaryModalOpen()"
+    [title]="i18n.t('branchControl.title')"
+    size="wide"
+    (close)="closeSummaryModal()">
+
+    @if (loadingSummary()) {
+      <div class="loading"></div>
+    } @else if (selectedBranchSummary(); as bs) {
+      <div class="branch-summary-dialog">
+        <div class="dialog-header-info">
+          <h3>{{ bs.branchName }} <small class="ltr">({{ bs.branchCode }})</small></h3>
+          <p>{{ bs.companyName }}</p>
+          @if (bs.isMainBranch) {
+            <span class="badge highlight">★ {{ i18n.t('branchControl.mainBranch') }}</span>
+          }
+        </div>
+
+        <div class="kpi-grid mt-3">
+          <div class="kpi-card">
+            <span class="kpi-label">{{ i18n.t('branchControl.warehousesCount') }}</span>
+            <span class="kpi-value">{{ bs.warehousesCount }}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">{{ i18n.t('branchControl.cashboxesCount') }}</span>
+            <span class="kpi-value">{{ bs.cashboxesCount }}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">{{ i18n.t('branchControl.banksCount') }}</span>
+            <span class="kpi-value">{{ bs.bankAccountsCount }}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">{{ i18n.t('branchControl.terminalsCount') }}</span>
+            <span class="kpi-value">{{ bs.posTerminalsCount }}</span>
+          </div>
+          <div class="kpi-card info">
+            <span class="kpi-label">{{ i18n.t('branchControl.headcount') }}</span>
+            <span class="kpi-value">{{ bs.employeesCount }}</span>
+          </div>
+          <div class="kpi-card highlight">
+            <span class="kpi-label">{{ i18n.t('org.inventoryValue') }}</span>
+            <span class="kpi-value ltr">{{ bs.inventoryValuation | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card warning">
+            <span class="kpi-label">{{ i18n.t('branchControl.transfersCount') }}</span>
+            <span class="kpi-value">{{ bs.activeUsersCount }}</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div modal-actions class="modal-form-actions">
+      <button class="button secondary" type="button" (click)="closeSummaryModal()">{{ i18n.t('common.close') }}</button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Dispatch Transfer Modal -->
+  <app-modal-dialog
+    [isOpen]="dispatchModalOpen()"
+    [title]="i18n.t('branchControl.dispatchTransfer')"
+    size="normal"
+    [preventOutsideClose]="true"
+    (close)="closeDispatchModal()">
+
+    <form [formGroup]="dispatchForm" (ngSubmit)="submitDispatch()" id="dispatch-form" class="modal-form">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('branchControl.carrier') }} *</label>
+          <input formControlName="carrierName" [placeholder]="i18n.t('branchControl.carrier')" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('branchControl.waybill') }} *</label>
+          <input class="ltr" formControlName="waybillNumber" [placeholder]="i18n.t('branchControl.waybill')" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('branchControl.driver') }} *</label>
+          <input formControlName="driverName" [placeholder]="i18n.t('branchControl.driver')" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('branchControl.driverPhone') }} *</label>
+          <input class="ltr" formControlName="driverPhone" [placeholder]="i18n.t('branchControl.driverPhone')" />
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('branchControl.vehiclePlate') }} *</label>
+          <input class="ltr" formControlName="vehiclePlate" [placeholder]="i18n.t('branchControl.vehiclePlate')" />
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('org.description') }}</label>
+          <input formControlName="notes" [placeholder]="i18n.t('org.description')" />
+        </div>
+      </div>
+    </form>
+
+    <div modal-actions class="modal-form-actions">
+      <button class="button secondary" type="button" (click)="closeDispatchModal()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="submit" form="dispatch-form" [disabled]="dispatchForm.invalid || dispatching()">
+        🚀 {{ i18n.t('branchControl.dispatchTransfer') }}
+      </button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Receive & Inspect Modal -->
+  <app-modal-dialog
+    [isOpen]="inspectModalOpen()"
+    [title]="i18n.t('branchControl.receiveTransfer')"
+    size="wide"
+    [preventOutsideClose]="true"
+    (close)="closeInspectModal()">
+
+    <div class="inspection-container">
+      <p class="mb-3 text-muted">{{ i18n.t('branchControl.inspectShipment') }}</p>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('operations.items') }}</th>
+              <th>{{ i18n.t('branchControl.expectedQty') }}</th>
+              <th>{{ i18n.t('branchControl.receivedQty') }}</th>
+              <th>{{ i18n.t('branchControl.damagedQty') }}</th>
+              <th>{{ i18n.t('branchControl.lostQty') }}</th>
+              <th>{{ i18n.t('branchControl.discrepancyReason') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of inspectionLines(); track line.lineId; let i = $index) {
+              <tr>
+                <td><strong>{{ line.itemName }}</strong> <small class="ltr text-muted">({{ line.itemCode }})</small></td>
+                <td class="ltr font-bold">{{ line.shippedQty }}</td>
+                <td>
+                  <input type="number" step="0.01" class="ltr input-sm" [value]="line.receivedQuantity"
+                    (input)="updateInspectionLine(i, 'receivedQuantity', +$any($event.target).value)" />
+                </td>
+                <td>
+                  <input type="number" step="0.01" class="ltr input-sm text-danger" [value]="line.damagedQuantity"
+                    (input)="updateInspectionLine(i, 'damagedQuantity', +$any($event.target).value)" />
+                </td>
+                <td>
+                  <input type="number" step="0.01" class="ltr input-sm text-danger" [value]="line.lostQuantity"
+                    (input)="updateInspectionLine(i, 'lostQuantity', +$any($event.target).value)" />
+                </td>
+                <td>
+                  <input class="input-sm" [value]="line.discrepancyReason"
+                    (input)="updateInspectionLine(i, 'discrepancyReason', $any($event.target).value)"
+                    [placeholder]="i18n.t('branchControl.discrepancyReason')" />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="field span-2 mt-3">
+        <label>{{ i18n.t('branchControl.resolutionNotes') }}</label>
+        <input [formControl]="inspectNotes" [placeholder]="i18n.t('branchControl.resolutionNotes')" />
+      </div>
+    </div>
+
+    <div modal-actions class="modal-form-actions">
+      <button class="button secondary" type="button" (click)="closeInspectModal()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submitReceiveInspection()" [disabled]="receiving()">
+        📥 {{ i18n.t('branchControl.receiveTransfer') }}
+      </button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Discrepancy Resolution Modal -->
+  <app-modal-dialog
+    [isOpen]="resolveModalOpen()"
+    [title]="i18n.t('branchControl.resolveDiscrepancy')"
+    size="normal"
+    [preventOutsideClose]="true"
+    (close)="closeResolveModal()">
+
+    <form [formGroup]="resolveForm" (ngSubmit)="submitResolve()" id="resolve-form" class="modal-form">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label>{{ i18n.t('common.status') }} *</label>
+          <select formControlName="resolutionStatus">
+            <option value="RESOLVED">{{ i18n.t('branchControl.statusResolved') }}</option>
+            <option value="CLAIMED">{{ i18n.t('branchControl.statusClaimed') }}</option>
+            <option value="WRITTEN_OFF">{{ i18n.t('branchControl.statusWrittenOff') }}</option>
+            <option value="RETURNED_TO_SENDER">{{ i18n.t('branchControl.statusReturned') }}</option>
+          </select>
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('branchControl.resolutionNotes') }} *</label>
+          <textarea formControlName="resolutionNotes" rows="3" [placeholder]="i18n.t('branchControl.resolutionNotes')"></textarea>
+        </div>
+      </div>
+    </form>
+
+    <div modal-actions class="modal-form-actions">
+      <button class="button secondary" type="button" (click)="closeResolveModal()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="submit" form="resolve-form" [disabled]="resolveForm.invalid || resolving()">
+        ⚖ {{ i18n.t('branchControl.resolveDiscrepancy') }}
       </button>
     </div>
   </app-modal-dialog>

@@ -15,6 +15,16 @@ export interface Branch {
   code: string;
   name: string;
   location?: string;
+  isMainBranch?: boolean;
+  phone?: string;
+  email?: string;
+  taxNumber?: string;
+  commercialRegistry?: string;
+  defaultWarehouseId?: string;
+  defaultCashboxId?: string;
+  defaultBankAccountId?: string;
+  defaultPosTerminalId?: string;
+  documentCodePrefix?: string;
   active: boolean;
   createdAt: number;
   updatedAt: number;
@@ -123,3 +133,164 @@ export interface ConsolidatedOrganizationSummary {
   totalHeadcount: number;
   branchMetrics: BranchPerformanceMetric[];
 }
+
+export interface BranchControlSummary {
+  branchId: string;
+  branchCode: string;
+  branchName: string;
+  companyId: string;
+  companyName: string;
+  isMainBranch: boolean;
+  warehousesCount: number;
+  cashboxesCount: number;
+  bankAccountsCount: number;
+  posTerminalsCount: number;
+  employeesCount: number;
+  inventoryValuation: number;
+  activeUsersCount: number;
+  documentCodePrefix?: string;
+}
+
+export interface GroupPlLine {
+  accountCode: string;
+  accountName: string;
+  category: string;
+  amount: number;
+  eliminationAmount: number;
+  consolidatedAmount: number;
+}
+
+export interface GroupBalanceSheetLine {
+  accountCode: string;
+  accountName: string;
+  category: string;
+  amount: number;
+  eliminationAmount: number;
+  consolidatedAmount: number;
+}
+
+export interface BranchComparisonItem {
+  branchId: string;
+  branchCode: string;
+  branchName: string;
+  companyName: string;
+  revenue: number;
+  expenses: number;
+  netProfit: number;
+  inventoryValuation: number;
+  headcount: number;
+}
+
+export interface ConsolidatedGroupReport {
+  period: string;
+  companyId?: string;
+  companyName?: string;
+  branchId?: string;
+  branchName?: string;
+  totalRevenue: number;
+  totalExpenses: number;
+  netIncome: number;
+  totalAssets: number;
+  totalLiabilities: number;
+  totalEquity: number;
+  intercompanyEliminationsCount: number;
+  intercompanyEliminationsTotal: number;
+  plLines: GroupPlLine[];
+  balanceSheetLines: GroupBalanceSheetLine[];
+  branchComparison: BranchComparisonItem[];
+}
+
+export interface StockTransferLineItem {
+  id: string;
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  quantity: number;
+  shippedQuantity?: number;
+  receivedQuantity?: number;
+  damagedQuantity?: number;
+  lostQuantity?: number;
+  discrepancyReason?: string;
+  discrepancyNotes?: string;
+}
+
+export interface StockTransferItem {
+  id: string;
+  transferNumber: string;
+  sourceWarehouseId: string;
+  sourceWarehouseName?: string;
+  targetWarehouseId: string;
+  targetWarehouseName?: string;
+  sourceBranchId?: string;
+  sourceBranchName?: string;
+  targetBranchId?: string;
+  targetBranchName?: string;
+  transferDate: string;
+  status: 'DRAFT' | 'SHIPPED' | 'RECEIVED' | 'CANCELLED';
+  carrierName?: string;
+  driverName?: string;
+  driverPhone?: string;
+  vehiclePlate?: string;
+  waybillNumber?: string;
+  dispatchedAt?: number;
+  dispatchedBy?: string;
+  receivedAt?: number;
+  receivedBy?: string;
+  hasDiscrepancy?: boolean;
+  notes?: string;
+  intercompanyTransactionId?: string;
+  version: number;
+  lines: StockTransferLineItem[];
+}
+
+export type DiscrepancyResolutionStatus = 'PENDING' | 'RESOLVED' | 'CLAIMED' | 'WRITTEN_OFF' | 'RETURNED_TO_SENDER';
+
+export interface StockTransferDiscrepancyItem {
+  id: string;
+  transferId: string;
+  transferLineId: string;
+  itemId: string;
+  itemCode?: string;
+  itemName?: string;
+  shippedQuantity: number;
+  receivedQuantity: number;
+  damagedQuantity: number;
+  lostQuantity: number;
+  discrepancyType: 'DAMAGED' | 'LOST' | 'OVER_DELIVERY' | 'SHORT_DELIVERY' | 'WRONG_ITEM';
+  notes?: string;
+  reportedBy: string;
+  reportedAt: number;
+  resolutionStatus: DiscrepancyResolutionStatus;
+  resolutionNotes?: string;
+  resolvedBy?: string;
+  resolvedAt?: number;
+}
+
+export interface DispatchTransferPayload {
+  carrierName: string;
+  driverName: string;
+  driverPhone: string;
+  vehiclePlate: string;
+  waybillNumber: string;
+  notes?: string;
+}
+
+export interface InspectionLineInput {
+  lineId: string;
+  receivedQuantity: number;
+  damagedQuantity: number;
+  lostQuantity: number;
+  discrepancyReason?: string;
+  discrepancyNotes?: string;
+}
+
+export interface ReceiveTransferPayload {
+  inspectionLines: InspectionLineInput[];
+  notes?: string;
+}
+
+export interface ResolveDiscrepancyPayload {
+  resolutionStatus: DiscrepancyResolutionStatus;
+  resolutionNotes: string;
+}
+

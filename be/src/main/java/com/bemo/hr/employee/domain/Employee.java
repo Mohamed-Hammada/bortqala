@@ -30,6 +30,9 @@ public class Employee {
     @Column(name = "category_id", nullable = false)
     private String categoryId;
 
+    @Column(name = "branch_id", length = 36)
+    private String branchId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "employment_type", nullable = false, length = 20)
     private EmploymentType employmentType;
@@ -144,5 +147,13 @@ public class Employee {
 
     public long getVersion() {
         return version;
+    }
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
     }
 }

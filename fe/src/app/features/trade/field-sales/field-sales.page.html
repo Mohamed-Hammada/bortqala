@@ -1,0 +1,455 @@
+<div class="field-sales-container">
+  <!-- Top Navigation & Connectivity Header -->
+  <header class="mobile-header">
+    <div class="header-main">
+      <span class="eyebrow">{{ i18n.t('fieldSales.eyebrow') }}</span>
+      <h1 class="title">{{ i18n.t('fieldSales.title') }}</h1>
+      <p class="desc">{{ i18n.t('fieldSales.description') }}</p>
+    </div>
+
+    <div class="header-status-bar">
+      @if (offlineService.isOnline()) {
+        <span class="status-pill online">
+          <span class="status-dot"></span>
+          {{ i18n.t('fieldSales.onlineMode') }}
+        </span>
+      } @else {
+        <span class="status-pill offline">
+          <span class="status-dot"></span>
+          {{ i18n.t('fieldSales.offlineMode') }}
+        </span>
+      }
+
+      @if (offlineService.outboxCount() > 0) {
+        <span class="status-pill outbox-badge">
+          {{ offlineService.outboxCount() }} {{ i18n.t('fieldSales.queued') }}
+        </span>
+      }
+
+      <div class="header-actions">
+        <button
+          type="button"
+          class="btn-sync"
+          [disabled]="offlineService.isSyncing() || !offlineService.isOnline() || offlineService.outboxCount() === 0"
+          (click)="syncNow()"
+        >
+          {{ i18n.t('fieldSales.syncNow') }}
+        </button>
+        <button type="button" class="btn-refresh" (click)="refreshCache()" [title]="i18n.t('fieldSales.refreshCache')">
+          ↻
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="mobile-tabs" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="tab-item"
+      [class.active]="activeTab() === 'new_sale'"
+      (click)="setTab('new_sale')"
+    >
+      {{ i18n.t('fieldSales.newSale') }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab-item"
+      [class.active]="activeTab() === 'outbox'"
+      (click)="setTab('outbox')"
+    >
+      {{ i18n.t('fieldSales.syncCenter') }}
+      @if (offlineService.outboxCount() > 0) {
+        <span class="count-badge">{{ offlineService.outboxCount() }}</span>
+      }
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab-item"
+      [class.active]="activeTab() === 'customers'"
+      (click)="setTab('customers')"
+    >
+      {{ i18n.t('fieldSales.cachedCustomers') }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab-item"
+      [class.active]="activeTab() === 'history'"
+      (click)="setTab('history')"
+    >
+      {{ i18n.t('fieldSales.syncStatus') }}
+    </button>
+  </nav>
+
+  <!-- Message Toast -->
+  @if (messageToast(); as toast) {
+    <div class="mobile-toast" [class.success]="toast.type === 'success'" [class.error]="toast.type === 'error'">
+      {{ toast.text }}
+    </div>
+  }
+
+  <!-- Tab 1: New Sale / Order / Receipt -->
+  @if (activeTab() === 'new_sale') {
+    <section class="tab-content sale-flow">
+      <!-- Document Type Selection -->
+      <div class="doc-type-selector">
+        <button
+          type="button"
+          class="doc-type-btn"
+          [class.selected]="docType() === 'INVOICE'"
+          (click)="setDocType('INVOICE')"
+        >
+          {{ i18n.t('fieldSales.newSale') }}
+        </button>
+        <button
+          type="button"
+          class="doc-type-btn"
+          [class.selected]="docType() === 'ORDER'"
+          (click)="setDocType('ORDER')"
+        >
+          {{ i18n.t('fieldSales.newOrder') }}
+        </button>
+        <button
+          type="button"
+          class="doc-type-btn"
+          [class.selected]="docType() === 'RECEIPT'"
+          (click)="setDocType('RECEIPT')"
+        >
+          {{ i18n.t('fieldSales.newReceipt') }}
+        </button>
+        <button
+          type="button"
+          class="doc-type-btn"
+          [class.selected]="docType() === 'RETURN'"
+          (click)="setDocType('RETURN')"
+        >
+          {{ i18n.t('fieldSales.newReturn') }}
+        </button>
+        <button
+          type="button"
+          class="doc-type-btn"
+          [class.selected]="docType() === 'QUOTATION'"
+          (click)="setDocType('QUOTATION')"
+        >
+          {{ i18n.t('fieldSales.newQuotation') }}
+        </button>
+      </div>
+
+      <!-- Customer & Warehouse Card -->
+      <div class="card form-card">
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('fieldSales.cachedCustomers') }}</label>
+          <select
+            class="form-select"
+            [ngModel]="selectedCustomerId()"
+            (ngModelChange)="selectedCustomerId.set($event)"
+          >
+            <option value="">-- {{ i18n.t('fieldSales.cachedCustomers') }} --</option>
+            @for (c of customers(); track c.id) {
+              <option [value]="c.id">{{ c.code }} - {{ c.name }}</option>
+            }
+          </select>
+        </div>
+
+        @if (selectedCustomer(); as cust) {
+          <div class="customer-info-pills">
+            <span class="info-pill">
+              {{ i18n.t('fieldSales.creditAvailable') }}:
+              <strong>{{ cust.creditLimit | number:'1.2-2' }}</strong>
+            </span>
+            <span class="info-pill">
+              {{ i18n.t('fieldSales.currentBalance') }}:
+              <strong>{{ cust.currentBalance | number:'1.2-2' }}</strong>
+            </span>
+            @if (cust.creditHold) {
+              <span class="info-pill danger">
+                {{ i18n.t('FIELD_SALES_CONFLICT_CREDIT_EXCEEDED') }}
+              </span>
+            }
+          </div>
+        }
+
+        @if (warehouses().length > 0) {
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('operations.warehouse') }}</label>
+            <select
+              class="form-select"
+              [ngModel]="selectedWarehouseId()"
+              (ngModelChange)="selectedWarehouseId.set($event)"
+            >
+              @for (w of warehouses(); track w.id) {
+                <option [value]="w.id">{{ w.warehouseCode }} - {{ w.warehouseName }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        @if (docType() === 'RECEIPT') {
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('fieldSales.allocatedInvoice') }}</label>
+            <input
+              type="text"
+              class="form-input"
+              [ngModel]="allocatedInvoice()"
+              (ngModelChange)="allocatedInvoice.set($event)"
+              [placeholder]="i18n.t('fieldSales.allocatedInvoice')"
+            />
+          </div>
+        }
+
+        @if (docType() === 'RETURN') {
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('fieldSales.newReturn') }}</label>
+            <input
+              type="text"
+              class="form-input"
+              [ngModel]="returnReason()"
+              (ngModelChange)="returnReason.set($event)"
+              [placeholder]="i18n.t('fieldSales.newReturn')"
+            />
+          </div>
+        }
+      </div>
+
+      <!-- Items Section (for non-RECEIPT types) -->
+      @if (docType() !== 'RECEIPT') {
+        <div class="card items-card">
+          <div class="items-search">
+            <input
+              type="text"
+              class="form-input"
+              [ngModel]="searchProductQuery()"
+              (ngModelChange)="searchProductQuery.set($event)"
+              [placeholder]="i18n.t('fieldSales.cachedProducts')"
+            />
+          </div>
+
+          <div class="quick-products-row">
+            @for (p of filteredProducts().slice(0, 10); track p.id) {
+              <button type="button" class="product-chip" (click)="addItemToCart(p)">
+                <span class="chip-name">{{ p.itemName }}</span>
+                <span class="chip-price">{{ p.basePrice | number:'1.2-2' }}</span>
+              </button>
+            }
+          </div>
+
+          <!-- Cart Line Items -->
+          <div class="cart-table">
+            @for (line of cartLines(); track line.itemId; let idx = $index) {
+              <div class="cart-row">
+                <div class="cart-row-details">
+                  <span class="cart-item-name">{{ line.itemName }}</span>
+                  <span class="cart-item-unit">{{ line.unitOfMeasure }}</span>
+                  <div class="cart-row-edit">
+                    <input
+                      type="number"
+                      class="cart-price-input"
+                      [value]="line.unitPrice"
+                      (change)="setLinePrice(idx, $any($event.target).value)"
+                    />
+                  </div>
+                </div>
+
+                <div class="cart-qty-controls">
+                  <button type="button" class="qty-btn" (click)="updateLineQty(idx, -1)">-</button>
+                  <span class="qty-display">{{ line.quantity }}</span>
+                  <button type="button" class="qty-btn" (click)="updateLineQty(idx, 1)">+</button>
+                </div>
+
+                <div class="cart-row-total">
+                  <span>{{ line.lineTotal | number:'1.2-2' }}</span>
+                  <button type="button" class="cart-del-btn" (click)="removeLine(idx)">✕</button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Totals Breakdown -->
+          <div class="totals-box">
+            <div class="total-line">
+              <span>{{ i18n.t('pos.subtotal') }}</span>
+              <span>{{ subtotal() | number:'1.2-2' }}</span>
+            </div>
+            <div class="total-line">
+              <span>{{ i18n.t('pos.tax') }} (14%)</span>
+              <span>{{ taxAmount() | number:'1.2-2' }}</span>
+            </div>
+            <div class="total-line net-total">
+              <span>{{ i18n.t('pos.total') }}</span>
+              <span>{{ totalAmount() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Customer Confirmation & Signature -->
+      <div class="card signature-card">
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('fieldSales.customerConfirmName') }}</label>
+          <input
+            type="text"
+            class="form-input"
+            [ngModel]="signeeName()"
+            (ngModelChange)="signeeName.set($event)"
+            [placeholder]="i18n.t('fieldSales.customerConfirmName')"
+          />
+        </div>
+
+        <div class="form-group">
+          <div class="signature-header">
+            <label class="form-label">{{ i18n.t('fieldSales.customerSignature') }}</label>
+            <button type="button" class="btn-clear-sig" (click)="clearSignature()">
+              {{ i18n.t('fieldSales.clearSignature') }}
+            </button>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas
+              #signatureCanvas
+              width="320"
+              height="140"
+              class="sig-canvas"
+              (mousedown)="onMouseDown($event)"
+              (mousemove)="onMouseMove($event)"
+              (mouseup)="onMouseUp()"
+              (touchstart)="onTouchStart($event)"
+              (touchmove)="onTouchMove($event)"
+              (touchend)="onTouchEnd($event)"
+            ></canvas>
+          </div>
+        </div>
+
+        <div class="location-row">
+          <button type="button" class="btn-location" (click)="captureLocation()">
+            📍 {{ i18n.t('fieldSales.locationCaptured') }}
+          </button>
+          @if (gpsLocation()) {
+            <span class="coords-display">{{ gpsLocation() }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="submit-action-bar">
+        <button
+          type="button"
+          class="btn-save-offline"
+          [disabled]="isSaving()"
+          (click)="saveAndQueueOffline()"
+        >
+          {{ i18n.t('fieldSales.saveOffline') }}
+        </button>
+      </div>
+    </section>
+  }
+
+  <!-- Tab 2: Outbox Queue -->
+  @if (activeTab() === 'outbox') {
+    <section class="tab-content outbox-flow">
+      <div class="outbox-header-card">
+        <h2>{{ i18n.t('fieldSales.syncCenter') }}</h2>
+        <p>{{ i18n.t('fieldSales.pendingCount') }}: {{ outboxItems().length }}</p>
+        <button
+          type="button"
+          class="btn-sync-large"
+          [disabled]="offlineService.isSyncing() || !offlineService.isOnline() || outboxItems().length === 0"
+          (click)="syncNow()"
+        >
+          {{ i18n.t('fieldSales.syncNow') }}
+        </button>
+      </div>
+
+      @if (outboxItems().length === 0) {
+        <div class="empty-state">
+          <p>{{ i18n.t('fieldSales.allSynced') }}</p>
+        </div>
+      } @else {
+        <div class="outbox-list">
+          @for (item of outboxItems(); track item.clientOfflineId) {
+            <div class="outbox-card">
+              <div class="outbox-card-header">
+                <span class="doc-badge">{{ item.documentType }}</span>
+                <span class="doc-number">{{ item.offlineDocumentNumber }}</span>
+                <button type="button" class="btn-del-outbox" (click)="deleteOutbox(item.clientOfflineId)">✕</button>
+              </div>
+              <div class="outbox-card-body">
+                <p class="customer-title">{{ item.customerName || item.customerId }}</p>
+                <p class="amount-val">{{ item.totalAmount | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- Tab 3: Customers Directory -->
+  @if (activeTab() === 'customers') {
+    <section class="tab-content customers-flow">
+      <div class="search-bar">
+        <input
+          type="text"
+          class="form-input"
+          [ngModel]="searchCustomerQuery()"
+          (ngModelChange)="searchCustomerQuery.set($event)"
+          [placeholder]="i18n.t('fieldSales.cachedCustomers')"
+        />
+      </div>
+
+      <div class="customer-cards-list">
+        @for (c of filteredCustomers(); track c.id) {
+          <div class="customer-card" (click)="selectCustomer(c)">
+            <div class="cust-card-head">
+              <span class="cust-code">{{ c.code }}</span>
+              <span class="cust-name">{{ c.name }}</span>
+            </div>
+            <div class="cust-card-metrics">
+              <div class="metric">
+                <span class="m-label">{{ i18n.t('fieldSales.creditAvailable') }}</span>
+                <span class="m-val">{{ c.creditLimit | number:'1.2-2' }}</span>
+              </div>
+              <div class="metric">
+                <span class="m-label">{{ i18n.t('fieldSales.currentBalance') }}</span>
+                <span class="m-val">{{ c.currentBalance | number:'1.2-2' }}</span>
+              </div>
+            </div>
+            @if (c.phone) {
+              <div class="cust-card-contact">
+                <span>📞 {{ c.phone }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Tab 4: History -->
+  @if (activeTab() === 'history') {
+    <section class="tab-content history-flow">
+      <div class="history-list">
+        @for (item of historyItems(); track item.id) {
+          <div class="history-card" [class.conflict]="item.status === 'CONFLICT'">
+            <div class="history-head">
+              <span class="doc-badge">{{ item.documentType }}</span>
+              <span class="doc-ref">{{ item.serverDocumentNumber || item.offlineDocumentNumber }}</span>
+              <span class="status-badge" [class.synced]="item.status === 'SYNCED'" [class.conflict]="item.status === 'CONFLICT'">
+                {{ item.status }}
+              </span>
+            </div>
+            <div class="history-body">
+              <p class="history-customer">{{ item.customerName }}</p>
+              <p class="history-amount">{{ item.totalAmount | number:'1.2-2' }}</p>
+              @if (item.conflictReason) {
+                <p class="conflict-alert">{{ item.conflictReason }}</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

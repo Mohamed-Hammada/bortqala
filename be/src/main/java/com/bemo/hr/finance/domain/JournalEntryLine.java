@@ -47,6 +47,9 @@ public class JournalEntryLine {
     @Column(name = "cost_code_id", length = 36)
     private String costCodeId;
 
+    @Column(name = "branch_id", length = 36)
+    private String branchId;
+
     protected JournalEntryLine() {
     }
 
@@ -104,5 +107,13 @@ public class JournalEntryLine {
 
     public String getCostCodeId() {
         return costCodeId;
+    }
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
     }
 }

@@ -39,6 +39,16 @@ public class OrganizationApi {
             String name,
             String location,
             boolean active,
+            boolean isMainBranch,
+            String phone,
+            String email,
+            String taxNumber,
+            String commercialRegistry,
+            String defaultWarehouseId,
+            String defaultCashboxId,
+            String defaultBankAccountId,
+            String defaultPosTerminalId,
+            String documentCodePrefix,
             long createdAt,
             long updatedAt
     ) {
@@ -49,7 +59,17 @@ public class OrganizationApi {
             @NotBlank String code,
             @NotBlank String name,
             String location,
-            boolean active
+            boolean active,
+            boolean isMainBranch,
+            String phone,
+            String email,
+            String taxNumber,
+            String commercialRegistry,
+            String defaultWarehouseId,
+            String defaultCashboxId,
+            String defaultBankAccountId,
+            String defaultPosTerminalId,
+            String documentCodePrefix
     ) {
     }
 
@@ -180,6 +200,79 @@ public class OrganizationApi {
             int activeBranches,
             int totalHeadcount,
             List<BranchPerformanceMetric> branchMetrics
+    ) {
+    }
+
+    public record BranchControlSummary(
+            String branchId,
+            String branchCode,
+            String branchName,
+            String companyId,
+            String companyName,
+            boolean isMainBranch,
+            int warehouseCount,
+            int cashboxCount,
+            int bankAccountCount,
+            int posTerminalCount,
+            int employeeCount,
+            BigDecimal inventoryValuation,
+            int activeTransfersCount
+    ) {
+    }
+
+    public record BranchComparisonItem(
+            String branchId,
+            String branchCode,
+            String branchName,
+            String companyName,
+            BigDecimal revenue,
+            BigDecimal expenses,
+            BigDecimal netProfit,
+            BigDecimal marginPct,
+            BigDecimal inventoryValuation,
+            BigDecimal cashBalance,
+            int headcount
+    ) {
+    }
+
+    public record GroupPlLine(
+            String category,
+            String lineName,
+            BigDecimal amount,
+            java.util.Map<String, BigDecimal> branchBreakdown,
+            BigDecimal eliminations,
+            BigDecimal consolidatedAmount
+    ) {
+    }
+
+    public record GroupBalanceSheetLine(
+            String classification,
+            String lineName,
+            BigDecimal amount,
+            java.util.Map<String, BigDecimal> branchBreakdown,
+            BigDecimal eliminations,
+            BigDecimal consolidatedAmount
+    ) {
+    }
+
+    public record ConsolidatedGroupReport(
+            String companyId,
+            String companyName,
+            String branchId,
+            String branchName,
+            String period,
+            BigDecimal totalRevenue,
+            BigDecimal totalCogs,
+            BigDecimal grossProfit,
+            BigDecimal grossMarginPct,
+            BigDecimal totalOperatingExpenses,
+            BigDecimal netOperatingProfit,
+            BigDecimal totalInventoryValuation,
+            BigDecimal totalCashBankBalance,
+            int totalHeadcount,
+            List<BranchComparisonItem> branchComparison,
+            List<GroupPlLine> plLines,
+            List<GroupBalanceSheetLine> balanceSheetLines
     ) {
     }
 }

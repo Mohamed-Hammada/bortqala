@@ -1122,6 +1122,28 @@ databaseChangeLog:
       file: db/changelog/data/update/20260903_v452_qa_report_fixes_translations.yaml
       relativeToChangelogFile: false
       relativeToChangelogFile: false
+  # TASK-03: Thermal Printer ESC/POS & Receipt Printing
+  - include:
+      file: db/changelog/schema/create/20260904_v453_thermal_printers_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260904_v454_thermal_printers_translations.yaml
+      relativeToChangelogFile: false
+  # TASK-02: Field Sales Offline Transactions & Sync Queue
+  - include:
+      file: db/changelog/schema/create/20260904_v455_field_sales_offline_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260904_v456_field_sales_offline_translations.yaml
+      relativeToChangelogFile: false
+  # TASK-04: Multi-Branch Control Center, In-Transit Tracking & Consolidated Reporting
+  - include:
+      file: db/changelog/schema/create/20260904_v457_multi_branch_control_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260904_v458_multi_branch_control_translations.yaml
+      relativeToChangelogFile: false
+
 
 
 

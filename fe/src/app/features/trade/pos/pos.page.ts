@@ -10,8 +10,11 @@ import {
   PosSummary,
   PosTerminal,
   PosTransaction,
+  SavePrinterPayload,
+  ThermalPrinter,
 } from './pos.models';
 import { PosDataService } from './pos.service';
+import { ThermalPrinterService } from '../../../core/native/thermal-printer.service';
 
 @Component({
   selector: 'app-pos-page',
@@ -25,10 +28,11 @@ export class PosPage implements OnInit, OnDestroy {
   private readonly boundKeyHandler = this.handleKeyboard.bind(this);
   readonly i18n = inject(I18nService);
   private readonly posService = inject(PosDataService);
+  private readonly thermalPrinter = inject(ThermalPrinterService);
   private readonly fb = inject(FormBuilder);
   private readonly notification = inject(NotificationService);
 
-  readonly activeTab = signal<'register' | 'sessions' | 'terminals' | 'history'>('register');
+  readonly activeTab = signal<'register' | 'sessions' | 'terminals' | 'printers' | 'history'>('register');
   readonly loading = signal(false);
   readonly summary = signal<PosSummary | null>(null);
   readonly terminals = signal<PosTerminal[]>([]);
@@ -58,11 +62,20 @@ export class PosPage implements OnInit, OnDestroy {
   readonly showCloseShiftModal = signal(false);
   readonly showTerminalModal = signal(false);
   readonly showReceiptModal = signal(false);
+  readonly showPrinterModal = signal(false);
+  readonly showReprintModal = signal(false);
   readonly activeReceipt = signal<PosTransaction | null>(null);
+  readonly reprintReason = signal<string>('');
+
+  // Printers state
+  readonly printers = signal<ThermalPrinter[]>([]);
+  readonly selectedPrinter = signal<ThermalPrinter | null>(null);
+  readonly isPrintingThermal = signal<boolean>(false);
 
   openShiftForm!: FormGroup;
   closeShiftForm!: FormGroup;
   terminalForm!: FormGroup;
+  printerForm!: FormGroup;
 
   // Cart calculations
   readonly cartSubtotal = computed(() => {
@@ -117,6 +130,8 @@ export class PosPage implements OnInit, OnDestroy {
       if (this.showOpenShiftModal()) { this.showOpenShiftModal.set(false); return; }
       if (this.showCloseShiftModal()) { this.showCloseShiftModal.set(false); return; }
       if (this.showTerminalModal()) { this.showTerminalModal.set(false); return; }
+      if (this.showPrinterModal()) { this.showPrinterModal.set(false); return; }
+      if (this.showReprintModal()) { this.showReprintModal.set(false); return; }
       return;
     }
 
@@ -234,6 +249,23 @@ export class PosPage implements OnInit, OnDestroy {
       cashboxId: [''],
       status: ['ACTIVE', Validators.required],
     });
+
+    this.printerForm = this.fb.group({
+      id: [''],
+      name: ['', Validators.required],
+      connectionType: ['NETWORK', Validators.required],
+      ipAddress: [''],
+      port: [9100],
+      bluetoothMac: [''],
+      paperWidth: ['MM_80', Validators.required],
+      openDrawer: [true],
+      cutPaper: [true],
+      printQrCode: [true],
+      isDefault: [false],
+      active: [true],
+      headerText: [''],
+      footerText: [''],
+    });
   }
 
   loadAll(): void {
@@ -242,6 +274,7 @@ export class PosPage implements OnInit, OnDestroy {
     this.loadTerminals();
     this.loadSessions();
     this.loadTransactions();
+    this.loadPrinters();
   }
 
   loadSummary(): void {
@@ -478,5 +511,150 @@ export class PosPage implements OnInit, OnDestroy {
 
   printReceipt(): void {
     window.print();
+  }
+
+  // Thermal Printers
+  loadPrinters(): void {
+    this.posService.getPrinters().subscribe({
+      next: (data) => {
+        this.printers.set(data);
+        if (data.length > 0 && !this.selectedPrinter()) {
+          const defaultPrinter = data.find((p) => p.isDefault) || data[0];
+          this.selectedPrinter.set(defaultPrinter);
+        }
+      },
+    });
+  }
+
+  selectPrinter(printer: ThermalPrinter): void {
+    this.selectedPrinter.set(printer);
+  }
+
+  openAddPrinterModal(): void {
+    this.printerForm.reset({
+      connectionType: 'NETWORK',
+      port: 9100,
+      paperWidth: 'MM_80',
+      openDrawer: true,
+      cutPaper: true,
+      printQrCode: true,
+      isDefault: false,
+      active: true,
+    });
+    this.showPrinterModal.set(true);
+  }
+
+  openEditPrinterModal(printer: ThermalPrinter): void {
+    this.printerForm.patchValue({
+      id: printer.id,
+      name: printer.name,
+      connectionType: printer.connectionType,
+      ipAddress: printer.ipAddress || '',
+      port: printer.port || 9100,
+      bluetoothMac: printer.bluetoothMac || '',
+      paperWidth: printer.paperWidth,
+      openDrawer: printer.openDrawer,
+      cutPaper: printer.cutPaper,
+      printQrCode: printer.printQrCode,
+      isDefault: printer.isDefault,
+      active: printer.active,
+      headerText: printer.headerText || '',
+      footerText: printer.footerText || '',
+    });
+    this.showPrinterModal.set(true);
+  }
+
+  savePrinter(): void {
+    if (this.printerForm.invalid) return;
+    const formVal = this.printerForm.value;
+    const payload: SavePrinterPayload = {
+      id: formVal.id || undefined,
+      name: formVal.name,
+      connectionType: formVal.connectionType,
+      ipAddress: formVal.ipAddress || undefined,
+      port: formVal.port ? Number(formVal.port) : undefined,
+      bluetoothMac: formVal.bluetoothMac || undefined,
+      paperWidth: formVal.paperWidth,
+      openDrawer: formVal.openDrawer !== false,
+      cutPaper: formVal.cutPaper !== false,
+      printQrCode: formVal.printQrCode !== false,
+      isDefault: !!formVal.isDefault,
+      active: formVal.active !== false,
+      headerText: formVal.headerText || undefined,
+      footerText: formVal.footerText || undefined,
+    };
+
+    this.posService.savePrinter(payload).subscribe({
+      next: () => {
+        this.notification.success(this.i18n.t('pos.printerSaved'));
+        this.showPrinterModal.set(false);
+        this.loadPrinters();
+      },
+    });
+  }
+
+  deletePrinter(printer: ThermalPrinter): void {
+    this.posService.deletePrinter(printer.id).subscribe({
+      next: () => {
+        this.notification.success(this.i18n.t('pos.printerDeleted'));
+        if (this.selectedPrinter()?.id === printer.id) {
+          this.selectedPrinter.set(null);
+        }
+        this.loadPrinters();
+      },
+    });
+  }
+
+  testPrint(printer: ThermalPrinter): void {
+    this.posService.testPrint(printer.id).subscribe({
+      next: (res) => {
+        if (res.sentToPrinter) {
+          this.notification.success(res.message);
+        } else {
+          this.notification.info(res.message);
+        }
+      },
+    });
+  }
+
+  printThermalReceiptDirect(txn: PosTransaction): void {
+    const printer = this.selectedPrinter();
+    const printerId = printer ? printer.id : undefined;
+
+    this.isPrintingThermal.set(true);
+    this.posService.getReceiptEscPos(txn.id, printerId).subscribe({
+      next: async (res) => {
+        await this.thermalPrinter.printReceipt(res);
+        this.isPrintingThermal.set(false);
+      },
+      error: () => {
+        this.isPrintingThermal.set(false);
+      },
+    });
+  }
+
+  openReprintDialog(txn: PosTransaction): void {
+    this.activeReceipt.set(txn);
+    this.reprintReason.set('');
+    this.showReprintModal.set(true);
+  }
+
+  submitReprint(): void {
+    const txn = this.activeReceipt();
+    if (!txn) return;
+    const reason = this.reprintReason().trim();
+    if (!reason) {
+      this.notification.warning(this.i18n.t('POS_REPRINT_REASON_REQUIRED'));
+      return;
+    }
+    const printer = this.selectedPrinter();
+    this.posService.reprintReceipt(txn.id, reason, printer?.id).subscribe({
+      next: async (res) => {
+        this.notification.success(this.i18n.t('pos.reprintSuccess'));
+        this.showReprintModal.set(false);
+        this.loadTransactions();
+        await this.thermalPrinter.printReceipt(res);
+      },
+    });
   }
 }

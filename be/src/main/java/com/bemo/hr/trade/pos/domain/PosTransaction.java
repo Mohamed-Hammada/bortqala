@@ -70,6 +70,12 @@ public class PosTransaction {
     @Column(name = "client_offline_id", length = 100)
     private String clientOfflineId;
 
+    @Column(name = "reprint_count", nullable = false)
+    private int reprintCount = 0;
+
+    @Column(name = "last_reprinted_at")
+    private Long lastReprintedAt;
+
     @Version
     @Column(nullable = false)
     private long version;
@@ -215,5 +221,18 @@ public class PosTransaction {
 
     public List<PosTransactionLine> getLines() {
         return lines;
+    }
+
+    public void recordReprint() {
+        this.reprintCount++;
+        this.lastReprintedAt = System.currentTimeMillis();
+    }
+
+    public int getReprintCount() {
+        return reprintCount;
+    }
+
+    public Long getLastReprintedAt() {
+        return lastReprintedAt;
     }
 }

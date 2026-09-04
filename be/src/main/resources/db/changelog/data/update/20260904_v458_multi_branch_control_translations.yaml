@@ -1,0 +1,485 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260904-v458-multi-branch-control-translations
+      author: bemo-tech-lead
+      comment: "TASK-04: Bilingual translations for Multi-Branch Control Center, in-transit tracking, discrepancies, and group reporting."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009096-ar', 'BRANCH_CODE_DUPLICATE', 'ar-EG', 'كود الفرع مستخدم مسبقاً، يرجى اختيار كود فريد.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'BRANCH_CODE_DUPLICATE' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009096-en', 'BRANCH_CODE_DUPLICATE', 'en-US', 'Branch code is already in use, please choose a unique code.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'BRANCH_CODE_DUPLICATE' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009097-ar', 'BRANCH_ACCESS_DENIED', 'ar-EG', 'ليس لديك صلاحية وصول إلى بيانات هذا الفرع.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'BRANCH_ACCESS_DENIED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009097-en', 'BRANCH_ACCESS_DENIED', 'en-US', 'You do not have access permission to this branch.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'BRANCH_ACCESS_DENIED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009098-ar', 'TRANSFER_INVALID_STATUS', 'ar-EG', 'حالة التحويل الحالية لا تسمح بهذا الإجراء.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_INVALID_STATUS' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009098-en', 'TRANSFER_INVALID_STATUS', 'en-US', 'Transfer status does not allow this operation.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_INVALID_STATUS' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009099-ar', 'TRANSFER_SOURCE_WAREHOUSE_REQUIRED', 'ar-EG', 'مستودع الشحن/المصدر مطلوب.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_SOURCE_WAREHOUSE_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009099-en', 'TRANSFER_SOURCE_WAREHOUSE_REQUIRED', 'en-US', 'Source warehouse is required.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_SOURCE_WAREHOUSE_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009100-ar', 'TRANSFER_TARGET_WAREHOUSE_REQUIRED', 'ar-EG', 'مستودع الاستلام/الوجهة مطلوب.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_TARGET_WAREHOUSE_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009100-en', 'TRANSFER_TARGET_WAREHOUSE_REQUIRED', 'en-US', 'Target warehouse is required.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_TARGET_WAREHOUSE_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009101-ar', 'TRANSFER_SAME_WAREHOUSE', 'ar-EG', 'لا يمكن التحويل لنفس المستودع.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_SAME_WAREHOUSE' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009101-en', 'TRANSFER_SAME_WAREHOUSE', 'en-US', 'Cannot transfer to the same warehouse.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_SAME_WAREHOUSE' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009102-ar', 'TRANSFER_DISPATCH_CARRIER_REQUIRED', 'ar-EG', 'بيانات الناقل أو وسيلة النقل مطلوبة للشحن.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_DISPATCH_CARRIER_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009102-en', 'TRANSFER_DISPATCH_CARRIER_REQUIRED', 'en-US', 'Carrier or transport details are required for dispatch.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_DISPATCH_CARRIER_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009103-ar', 'TRANSFER_RECEIPT_LINES_REQUIRED', 'ar-EG', 'بيانات بنود الاستلام وفحص البضاعة مطلوبة.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_RECEIPT_LINES_REQUIRED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009103-en', 'TRANSFER_RECEIPT_LINES_REQUIRED', 'en-US', 'Receipt line items and inspection data are required.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_RECEIPT_LINES_REQUIRED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009104-ar', 'TRANSFER_DISCREPANCY_NOT_FOUND', 'ar-EG', 'سجل فروقات الاستلام غير موجود.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_DISCREPANCY_NOT_FOUND' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009104-en', 'TRANSFER_DISCREPANCY_NOT_FOUND', 'en-US', 'Stock transfer discrepancy record not found.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_DISCREPANCY_NOT_FOUND' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009105-ar', 'TRANSFER_DISCREPANCY_ALREADY_RESOLVED', 'ar-EG', 'تمت تسوية فارق الاستلام مسبقاً.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_DISCREPANCY_ALREADY_RESOLVED' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009105-en', 'TRANSFER_DISCREPANCY_ALREADY_RESOLVED', 'en-US', 'Transfer discrepancy has already been resolved.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'TRANSFER_DISCREPANCY_ALREADY_RESOLVED' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009106-ar', 'branchControl.title', 'ar-EG', 'مركز التحكم بالفروع المتعددة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.title' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009106-en', 'branchControl.title', 'en-US', 'Multi-Branch Control Center', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.title' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009107-ar', 'branchControl.subtitle', 'ar-EG', 'إدارة الفروع، المستودعات، الخزائن، البنوك، ونقاط البيع مع التتبع اللوجستي المجمع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.subtitle' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009107-en', 'branchControl.subtitle', 'en-US', 'Manage branches, warehouses, cashboxes, banks, and POS terminals with consolidated logistics', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.subtitle' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009108-ar', 'branchControl.permittedBranches', 'ar-EG', 'الفروع المصرح بها', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.permittedBranches' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009108-en', 'branchControl.permittedBranches', 'en-US', 'Permitted Branches', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.permittedBranches' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009109-ar', 'branchControl.allBranches', 'ar-EG', 'كافة الفروع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.allBranches' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009109-en', 'branchControl.allBranches', 'en-US', 'All Branches', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.allBranches' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009110-ar', 'branchControl.mainBranch', 'ar-EG', 'الفرع الرئيسي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.mainBranch' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009110-en', 'branchControl.mainBranch', 'en-US', 'Main Branch', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.mainBranch' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009111-ar', 'branchControl.setMainBranch', 'ar-EG', 'تعيين كفرع رئيسي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.setMainBranch' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009111-en', 'branchControl.setMainBranch', 'en-US', 'Set as Main Branch', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.setMainBranch' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009112-ar', 'branchControl.defaultWarehouse', 'ar-EG', 'المستودع الافتراضي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.defaultWarehouse' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009112-en', 'branchControl.defaultWarehouse', 'en-US', 'Default Warehouse', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.defaultWarehouse' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009113-ar', 'branchControl.defaultCashbox', 'ar-EG', 'الخزينة الافتراضية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.defaultCashbox' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009113-en', 'branchControl.defaultCashbox', 'en-US', 'Default Cashbox', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.defaultCashbox' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009114-ar', 'branchControl.defaultBank', 'ar-EG', 'الحساب البنكي الافتراضي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.defaultBank' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009114-en', 'branchControl.defaultBank', 'en-US', 'Default Bank Account', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.defaultBank' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009115-ar', 'branchControl.defaultPos', 'ar-EG', 'نقطة البيع الافتراضية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.defaultPos' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009115-en', 'branchControl.defaultPos', 'en-US', 'Default POS Terminal', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.defaultPos' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009116-ar', 'branchControl.docPrefix', 'ar-EG', 'بادئة ترقيم المستندات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.docPrefix' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009116-en', 'branchControl.docPrefix', 'en-US', 'Document Code Prefix', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.docPrefix' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009117-ar', 'branchControl.phone', 'ar-EG', 'رقم الهاتف', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.phone' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009117-en', 'branchControl.phone', 'en-US', 'Phone Number', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.phone' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009118-ar', 'branchControl.email', 'ar-EG', 'البريد الإلكتروني', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.email' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009118-en', 'branchControl.email', 'en-US', 'Email Address', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.email' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009119-ar', 'branchControl.taxNumber', 'ar-EG', 'الرقم الضريبي للفرع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.taxNumber' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009119-en', 'branchControl.taxNumber', 'en-US', 'Branch Tax Number', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.taxNumber' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009120-ar', 'branchControl.commercialRegistry', 'ar-EG', 'السجل التجاري للفرع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.commercialRegistry' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009120-en', 'branchControl.commercialRegistry', 'en-US', 'Branch Commercial Registry', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.commercialRegistry' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009121-ar', 'branchControl.warehousesCount', 'ar-EG', 'المستودعات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.warehousesCount' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009121-en', 'branchControl.warehousesCount', 'en-US', 'Warehouses', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.warehousesCount' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009122-ar', 'branchControl.cashboxesCount', 'ar-EG', 'الخزائن النقدية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.cashboxesCount' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009122-en', 'branchControl.cashboxesCount', 'en-US', 'Cashboxes', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.cashboxesCount' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009123-ar', 'branchControl.banksCount', 'ar-EG', 'الحسابات البنكية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.banksCount' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009123-en', 'branchControl.banksCount', 'en-US', 'Bank Accounts', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.banksCount' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009124-ar', 'branchControl.terminalsCount', 'ar-EG', 'نقاط البيع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.terminalsCount' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009124-en', 'branchControl.terminalsCount', 'en-US', 'POS Terminals', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.terminalsCount' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009125-ar', 'branchControl.headcount', 'ar-EG', 'الموظفين', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.headcount' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009125-en', 'branchControl.headcount', 'en-US', 'Employees', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.headcount' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009126-ar', 'branchControl.transfersCount', 'ar-EG', 'التحويلات النشطة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.transfersCount' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009126-en', 'branchControl.transfersCount', 'en-US', 'Active Transfers', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.transfersCount' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009127-ar', 'branchControl.transfersHub', 'ar-EG', 'تحويلات الفروع والبضاعة بالطريق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.transfersHub' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009127-en', 'branchControl.transfersHub', 'en-US', 'Branch Transfers & In-Transit Hub', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.transfersHub' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009128-ar', 'branchControl.inTransit', 'ar-EG', 'بضاعة بالطريق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.inTransit' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009128-en', 'branchControl.inTransit', 'en-US', 'In-Transit', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.inTransit' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009129-ar', 'branchControl.dispatchedAt', 'ar-EG', 'تاريخ ووقت الشحن', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.dispatchedAt' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009129-en', 'branchControl.dispatchedAt', 'en-US', 'Dispatch Time', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.dispatchedAt' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009130-ar', 'branchControl.dispatchedBy', 'ar-EG', 'المسؤول عن الشحن', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.dispatchedBy' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009130-en', 'branchControl.dispatchedBy', 'en-US', 'Dispatched By', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.dispatchedBy' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009131-ar', 'branchControl.carrier', 'ar-EG', 'شركة الشحن / الناقل', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.carrier' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009131-en', 'branchControl.carrier', 'en-US', 'Carrier / Logistics', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.carrier' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009132-ar', 'branchControl.driver', 'ar-EG', 'اسم السائق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.driver' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009132-en', 'branchControl.driver', 'en-US', 'Driver Name', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.driver' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009133-ar', 'branchControl.driverPhone', 'ar-EG', 'هاتف السائق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.driverPhone' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009133-en', 'branchControl.driverPhone', 'en-US', 'Driver Phone', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.driverPhone' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009134-ar', 'branchControl.vehiclePlate', 'ar-EG', 'رقم لوحة المركبة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.vehiclePlate' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009134-en', 'branchControl.vehiclePlate', 'en-US', 'Vehicle Plate', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.vehiclePlate' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009135-ar', 'branchControl.waybill', 'ar-EG', 'رقم البوليصة / التتبع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.waybill' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009135-en', 'branchControl.waybill', 'en-US', 'Waybill / Tracking #', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.waybill' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009136-ar', 'branchControl.dispatchTransfer', 'ar-EG', 'شحن البضاعة وإرسالها', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.dispatchTransfer' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009136-en', 'branchControl.dispatchTransfer', 'en-US', 'Dispatch Transfer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.dispatchTransfer' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009137-ar', 'branchControl.receiveTransfer', 'ar-EG', 'استلام وفحص الشحنة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.receiveTransfer' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009137-en', 'branchControl.receiveTransfer', 'en-US', 'Receive & Inspect', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.receiveTransfer' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009138-ar', 'branchControl.inspectShipment', 'ar-EG', 'فحص الكميات والعيوب', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.inspectShipment' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009138-en', 'branchControl.inspectShipment', 'en-US', 'Inspect Quantities & Defects', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.inspectShipment' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009139-ar', 'branchControl.expectedQty', 'ar-EG', 'الكمية المشحونة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.expectedQty' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009139-en', 'branchControl.expectedQty', 'en-US', 'Shipped Qty', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.expectedQty' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009140-ar', 'branchControl.receivedQty', 'ar-EG', 'الكمية السليمة المستلمة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.receivedQty' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009140-en', 'branchControl.receivedQty', 'en-US', 'Good Received Qty', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.receivedQty' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009141-ar', 'branchControl.damagedQty', 'ar-EG', 'كمية التالف', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.damagedQty' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009141-en', 'branchControl.damagedQty', 'en-US', 'Damaged Qty', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.damagedQty' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009142-ar', 'branchControl.lostQty', 'ar-EG', 'كمية الفاقد / العجز', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.lostQty' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009142-en', 'branchControl.lostQty', 'en-US', 'Lost / Shortage Qty', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.lostQty' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009143-ar', 'branchControl.discrepancyReason', 'ar-EG', 'سبب الفارق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.discrepancyReason' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009143-en', 'branchControl.discrepancyReason', 'en-US', 'Discrepancy Reason', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.discrepancyReason' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009144-ar', 'branchControl.discrepancies', 'ar-EG', 'فروقات وشكاوى التحويل', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.discrepancies' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009144-en', 'branchControl.discrepancies', 'en-US', 'Transfer Discrepancies', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.discrepancies' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009145-ar', 'branchControl.hasDiscrepancy', 'ar-EG', 'يوجد فارق فحص', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.hasDiscrepancy' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009145-en', 'branchControl.hasDiscrepancy', 'en-US', 'Discrepancy Flagged', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.hasDiscrepancy' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009146-ar', 'branchControl.resolveDiscrepancy', 'ar-EG', 'تسوية ومعالجة الفارق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.resolveDiscrepancy' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009146-en', 'branchControl.resolveDiscrepancy', 'en-US', 'Resolve Discrepancy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.resolveDiscrepancy' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009147-ar', 'branchControl.resolutionNotes', 'ar-EG', 'ملاحظات وقرار التسوية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.resolutionNotes' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009147-en', 'branchControl.resolutionNotes', 'en-US', 'Resolution Decision & Notes', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.resolutionNotes' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009148-ar', 'branchControl.groupReporting', 'ar-EG', 'التقارير المالية المجمعة للمجموعة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.groupReporting' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009148-en', 'branchControl.groupReporting', 'en-US', 'Consolidated Group Reporting', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.groupReporting' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009149-ar', 'branchControl.filterCompany', 'ar-EG', 'تصفية بالشركة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.filterCompany' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009149-en', 'branchControl.filterCompany', 'en-US', 'Filter by Company', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.filterCompany' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009150-ar', 'branchControl.filterBranch', 'ar-EG', 'تصفية بالفرع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.filterBranch' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009150-en', 'branchControl.filterBranch', 'en-US', 'Filter by Branch', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.filterBranch' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009151-ar', 'branchControl.consolidatedPl', 'ar-EG', 'قائمة الدخل المجمعة (P&L)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.consolidatedPl' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009151-en', 'branchControl.consolidatedPl', 'en-US', 'Consolidated Income Statement (P&L)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.consolidatedPl' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009152-ar', 'branchControl.consolidatedBs', 'ar-EG', 'الميزانية العمومية المجمعة (Balance Sheet)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.consolidatedBs' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009152-en', 'branchControl.consolidatedBs', 'en-US', 'Consolidated Balance Sheet', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.consolidatedBs' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009153-ar', 'branchControl.branchComparison', 'ar-EG', 'مقارنة أداء الفروع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.branchComparison' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009153-en', 'branchControl.branchComparison', 'en-US', 'Branch Performance Comparison', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.branchComparison' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009154-ar', 'branchControl.eliminations', 'ar-EG', 'تسويات واستبعادات المعاملات البينية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.eliminations' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009154-en', 'branchControl.eliminations', 'en-US', 'Intercompany Eliminations', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.eliminations' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009155-ar', 'branchControl.exportConsolidated', 'ar-EG', 'تصدير التقرير المجمع (Excel)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.exportConsolidated' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009155-en', 'branchControl.exportConsolidated', 'en-US', 'Export Consolidated Report (Excel)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.exportConsolidated' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009156-ar', 'branchControl.savedSuccess', 'ar-EG', 'تم حفظ بيانات وإعدادات الفرع بنجاح.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.savedSuccess' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009156-en', 'branchControl.savedSuccess', 'en-US', 'Branch settings saved successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.savedSuccess' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009157-ar', 'branchControl.dispatchedSuccess', 'ar-EG', 'تم شحن التحويل وتحديث حالة البضاعة بالطريق بنجاح.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.dispatchedSuccess' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009157-en', 'branchControl.dispatchedSuccess', 'en-US', 'Transfer dispatched and marked in-transit successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.dispatchedSuccess' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009158-ar', 'branchControl.receivedSuccess', 'ar-EG', 'تم إثبات استلام وفحص الشحنة بنجاح في المستودع.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.receivedSuccess' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009158-en', 'branchControl.receivedSuccess', 'en-US', 'Shipment received and inspected into warehouse successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.receivedSuccess' AND locale = 'en-US');
+
+               INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009159-ar', 'branchControl.resolvedSuccess', 'ar-EG', 'تمت تسوية فارق التحويل المخزني بنجاح.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.resolvedSuccess' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009159-en', 'branchControl.resolvedSuccess', 'en-US', 'Transfer discrepancy resolved successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.resolvedSuccess' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009160-ar', 'branchControl.statusResolved', 'ar-EG', 'تمت التسوية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.statusResolved' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009160-en', 'branchControl.statusResolved', 'en-US', 'Resolved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.statusResolved' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009161-ar', 'branchControl.statusClaimed', 'ar-EG', 'مطالبة تأمينية / ناقل', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.statusClaimed' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009161-en', 'branchControl.statusClaimed', 'en-US', 'Claimed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.statusClaimed' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009162-ar', 'branchControl.statusWrittenOff', 'ar-EG', 'شطب خسائر / عجز', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.statusWrittenOff' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009162-en', 'branchControl.statusWrittenOff', 'en-US', 'Written Off', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.statusWrittenOff' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009163-ar', 'branchControl.statusReturned', 'ar-EG', 'إرجاع للفرع المصدر', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.statusReturned' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009163-en', 'branchControl.statusReturned', 'en-US', 'Returned to Sender', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'branchControl.statusReturned' AND locale = 'en-US');
+

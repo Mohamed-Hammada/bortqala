@@ -1,0 +1,136 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260904-v455-field-sales-offline-schema
+      author: bemo-tech-lead
+      comment: "TASK-02: Schema for Field Sales offline sync queue, transactions, signature capture, and conflict tracking."
+      changes:
+        - createTable:
+            tableName: field_sales_offline_transactions
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: client_offline_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: document_type
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: offline_document_number
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: server_document_id
+                  type: VARCHAR(64)
+              - column:
+                  name: server_document_number
+                  type: VARCHAR(64)
+              - column:
+                  name: customer_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_name
+                  type: VARCHAR(255)
+              - column:
+                  name: sales_rep_user_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_amount
+                  type: NUMERIC(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: "SYNCED"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: conflict_reason
+                  type: VARCHAR(255)
+              - column:
+                  name: customer_signature_png
+                  type: CLOB
+              - column:
+                  name: customer_confirmation_name
+                  type: VARCHAR(255)
+              - column:
+                  name: gps_coordinates
+                  type: VARCHAR(64)
+              - column:
+                  name: payload_json
+                  type: CLOB
+              - column:
+                  name: client_created_at
+                  type: TIMESTAMP
+              - column:
+                  name: synced_at
+                  type: TIMESTAMP
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: field_sales_offline_transactions
+            columnNames: app_id, client_offline_id
+            constraintName: UQ_FIELD_SALES_OFFLINE_ID
+
+        - createIndex:
+            tableName: field_sales_offline_transactions
+            indexName: IDX_FIELD_SALES_REP_STATUS
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: sales_rep_user_id
+              - column:
+                  name: status
+
+        - sql:
+            splitStatements: true
+            sql: |
+              UPDATE app_users
+              SET allowed_menus = CASE
+                WHEN allowed_menus LIKE '%field-sales%' THEN allowed_menus
+                WHEN allowed_menus IS NULL OR allowed_menus = '' THEN 'field-sales'
+                ELSE allowed_menus || ',field-sales'
+              END
+              WHERE EXISTS (
+                SELECT 1 FROM user_roles ur
+                WHERE ur.user_id = app_users.id
+                  AND ur.role_code IN ('SALES_MANAGER', 'ADMIN', 'SUPER_ADMIN')
+              );
+

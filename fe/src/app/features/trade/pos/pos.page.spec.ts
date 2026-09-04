@@ -196,6 +196,98 @@ describe('PosPage', () => {
     expect(component.showTerminalModal()).toBe(false);
   });
 
+  it('initializes and loads thermal printers and sets default printer', () => {
+    expect(component.printers()).toHaveLength(1);
+    expect(component.selectedPrinter()?.name).toBe('Counter Thermal');
+    expect(component.selectedPrinter()?.isDefault).toBe(true);
+  });
+
+  it('creates and saves a new thermal printer', async () => {
+    component.openAddPrinterModal();
+    expect(component.showPrinterModal()).toBe(true);
+
+    component.printerForm.patchValue({
+      name: 'Kitchen Printer',
+      connectionType: 'NETWORK',
+      ipAddress: '192.168.1.180',
+      port: 9100,
+      paperWidth: 'MM_80',
+      isDefault: false,
+      active: true,
+    });
+
+    component.savePrinter();
+    const req = http.expectOne('/api/v1/trade/pos/printers');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.name).toBe('Kitchen Printer');
+    req.flush({
+      id: 'printer-2',
+      name: 'Kitchen Printer',
+      connectionType: 'NETWORK',
+      ipAddress: '192.168.1.180',
+      port: 9100,
+      paperWidth: 'MM_80',
+      characterCodePage: 'CP437',
+      openDrawer: true,
+      cutPaper: true,
+      printQrCode: true,
+      isDefault: false,
+      active: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await Promise.resolve();
+    http.expectOne('/api/v1/trade/pos/printers').flush([]);
+    expect(component.showPrinterModal()).toBe(false);
+  });
+
+  it('triggers test print for a printer', () => {
+    const printer = component.selectedPrinter()!;
+    component.testPrint(printer);
+
+    const req = http.expectOne(`/api/v1/trade/pos/printers/${printer.id}/test-print`);
+    expect(req.request.method).toBe('POST');
+    req.flush({
+      printerId: printer.id,
+      printerName: printer.name,
+      base64Bytes: 'G0A=',
+      sentToPrinter: true,
+      message: 'Test print sent',
+    });
+  });
+
+  it('submits reprint request with justification and triggers thermal print', () => {
+    const txn = component.transactions()[0];
+    component.openReprintDialog(txn);
+    expect(component.showReprintModal()).toBe(true);
+
+    component.reprintReason.set('Customer dropped original receipt');
+    component.submitReprint();
+
+    const reprintReq = http.expectOne(`/api/v1/trade/pos/transactions/${txn.id}/reprint`);
+    expect(reprintReq.request.method).toBe('POST');
+    expect(reprintReq.request.body.reason).toBe('Customer dropped original receipt');
+    reprintReq.flush({
+      transactionId: txn.id,
+      transactionNumber: txn.transactionNumber,
+      printerId: 'printer-1',
+      printerName: 'Counter Thermal',
+      connectionType: 'NETWORK',
+      paperWidth: 'MM_80',
+      base64Bytes: 'G0A=',
+      reprintCount: 1,
+      lastReprintedAt: Date.now(),
+      sentToPrinter: true,
+      statusMessage: 'OK',
+    });
+
+    // Expect transactions reload
+    http.expectOne('/api/v1/trade/pos/transactions').flush([]);
+
+    expect(component.showReprintModal()).toBe(false);
+  });
+
   function flushLoad() {
     http.expectOne('/api/v1/trade/pos/summary').flush({
       todaySales: 1250,
@@ -272,8 +364,28 @@ describe('PosPage', () => {
         status: 'COMPLETED',
         originalTransactionId: null,
         clientOfflineId: null,
+        reprintCount: 0,
+        lastReprintedAt: null,
         createdAt: Date.now(),
         lines: [],
+      },
+    ]);
+    http.expectOne('/api/v1/trade/pos/printers').flush([
+      {
+        id: 'printer-1',
+        name: 'Counter Thermal',
+        connectionType: 'NETWORK',
+        ipAddress: '192.168.1.150',
+        port: 9100,
+        paperWidth: 'MM_80',
+        characterCodePage: 'CP437',
+        openDrawer: true,
+        cutPaper: true,
+        printQrCode: true,
+        isDefault: true,
+        active: true,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       },
     ]);
   }
