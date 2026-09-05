@@ -7,6 +7,16 @@
 ---
 
 ## [COMPLETED & VERIFIED]
+- **Owner / Executive Cockpit & Profit Pulse (Session 18 / Commercial Readiness TASK 05)**: Complete implementation of cross-module executive cockpit for owners and executives:
+  - **Pulse Hero KPI Grid**: 8 primary real-time business health cards with click-through drilldown links to operational pages (Today's Sales, Today's Collections, Net Liquidity split between cash in hand & bank balances, Gross Profit & Margin %, Operating Profit %, Net Profit %, Active Headcount, and Payroll Disbursed vs Pending).
+  - **AR & AP Aging Waterfall**: 4-bucket aging analysis (0-30 Days Current, 31-60 Days, 61-90 Days, 90+ Days Overdue) with proportional visual bar meters, overdue liability totals, and direct links to partner invoices.
+  - **Profit Pulse Waterfall & Expense Breakdown**: Step-by-step financial waterfall bridge from Revenue through COGS, Gross Profit, OPEX, Operating Profit, down to Net Profit, coupled with categorized operating expense distribution.
+  - **Multi-Branch Leaderboard & Top Performers**: Branch comparison ranking by revenue, headcount, cash liquidity, and bank liquidity with Main Branch badge. Top 5 customers and top 5 products leaderboard by revenue.
+  - **Operational Watch & Control Center**: Real-time alerts for low stock items, slow-moving/dead stock watchlist, active manufacturing WIP orders with material cost and output progress, and project budget cost control (BAC vs Cost Variance).
+  - **Executive Target Setting & Variance Engine**: Tenant-scoped periodic target model (`executive_cockpit_targets` table with `app_id`, `period_key`, optimistic locking `@Version`, and audit timestamps), interactive target setting modal dialog, and dynamic variance indicators (On Track, Target Exceeded, Below Target).
+  - **Multi-Sheet Styled Excel Export**: 6-sheet formatted POI workbook (`/api/v1/analytics/executive/cockpit/export.xlsx`) exporting Executive KPIs, AR/AP Aging, Branch Leaderboard, Top Performers, Stock & Production Watch, and Project Cost Control.
+  - **Database & Permissions**: Liquibase `v459` (schema) and `v460` (74 bilingual translation keys across 148 rows). Role security enforced (`SUPER_ADMIN`, `ADMIN`, `FINANCE_MANAGER`, `PROJECT_MANAGER`, `GENERAL_MANAGER`).
+  - **Verification**: 100% clean test execution — 710 frontend unit tests across 144 test suites pass, `check:i18n` verified with 6,050 keys, `check:hardcoded` verified with 0 violations across 148 HTML and 330 TS files, translation catalog verified with 18,364 rows, error codes verified with 821 codes, role contract verified with 21 roles, backend analytics test suite passes with `BUILD SUCCESSFUL`, production bundle builds cleanly (`ng build`).
 - **Egyptian Statutory Payroll Engine & Multi-Format WPS SIF Bank Clearing (Session 14)**: Complete implementation of Egyptian statutory payroll deductions and bank clearing export:
   - **Egyptian Income Tax on Salaries (Law No. 30 of 2023)**: Implemented the annual 20,000 EGP personal tax exemption and 7-tier progressive tax brackets (0% on 0..21k, 2.5% on 21k..30k, 10% on 30k..45k, 15% on 45k..60k, 20% on 60k..200k, 22.5% on 200k..400k, 25% on >400k).
   - **Social Insurance (Law No. 148 of 2019)**: 11% employee contribution capped between 2,000 EGP minimum and 12,600 EGP maximum insurable wage, plus 18.75% employer contribution.

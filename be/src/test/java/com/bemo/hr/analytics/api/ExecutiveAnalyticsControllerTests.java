@@ -110,4 +110,82 @@ class ExecutiveAnalyticsControllerTests {
         assertThat(result.id()).isEqualTo("id-1");
         verify(analyticsService).recordSnapshot(payload);
     }
+
+    @Test
+    void getOwnerCockpitDelegatesToService() {
+        OwnerCockpitResponse mockResponse = mock(OwnerCockpitResponse.class);
+        when(analyticsService.getOwnerCockpit("2026-09", "comp-1", "branch-1")).thenReturn(mockResponse);
+
+        var result = controller.getOwnerCockpit("2026-09", "comp-1", "branch-1");
+
+        assertThat(result).isSameAs(mockResponse);
+        verify(analyticsService).getOwnerCockpit("2026-09", "comp-1", "branch-1");
+    }
+
+    @Test
+    void exportExecutiveCockpitReturnsExcelAttachment() {
+        byte[] mockBytes = new byte[]{1, 2, 3};
+        when(analyticsService.exportExecutiveCockpitExcel("2026-09", null, null)).thenReturn(mockBytes);
+
+        var response = controller.exportExecutiveCockpit("2026-09", null, null);
+
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isEqualTo(mockBytes);
+        assertThat(response.getHeaders().getContentType().toString()).contains("spreadsheetml.sheet");
+        assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("Executive_Cockpit_2026-09.xlsx");
+        verify(analyticsService).exportExecutiveCockpitExcel("2026-09", null, null);
+    }
+
+    @Test
+    void getTargetsDelegatesToService() {
+        CockpitTargetResponse mockResponse = new CockpitTargetResponse(
+                "tgt-1",
+                "2026-Q3",
+                BigDecimal.valueOf(1_000_000),
+                BigDecimal.valueOf(30.0),
+                BigDecimal.valueOf(200_000),
+                BigDecimal.valueOf(500_000),
+                BigDecimal.valueOf(100_000),
+                "Q3 Targets",
+                123456789L
+        );
+        when(analyticsService.getTargets("2026-Q3")).thenReturn(mockResponse);
+
+        var result = controller.getTargets("2026-Q3");
+
+        assertThat(result.periodKey()).isEqualTo("2026-Q3");
+        assertThat(result.targetRevenue()).isEqualByComparingTo(BigDecimal.valueOf(1_000_000));
+        verify(analyticsService).getTargets("2026-Q3");
+    }
+
+    @Test
+    void saveTargetsDelegatesToService() {
+        SaveCockpitTargetRequest request = new SaveCockpitTargetRequest(
+                "2026-Q3",
+                BigDecimal.valueOf(1_500_000),
+                BigDecimal.valueOf(35.0),
+                BigDecimal.valueOf(250_000),
+                BigDecimal.valueOf(600_000),
+                BigDecimal.valueOf(80_000),
+                "Updated Q3"
+        );
+        CockpitTargetResponse mockResponse = new CockpitTargetResponse(
+                "tgt-1",
+                "2026-Q3",
+                BigDecimal.valueOf(1_500_000),
+                BigDecimal.valueOf(35.0),
+                BigDecimal.valueOf(250_000),
+                BigDecimal.valueOf(600_000),
+                BigDecimal.valueOf(80_000),
+                "Updated Q3",
+                123456789L
+        );
+        when(analyticsService.saveTargets(request)).thenReturn(mockResponse);
+
+        var result = controller.saveTargets(request);
+
+        assertThat(result.targetRevenue()).isEqualByComparingTo(BigDecimal.valueOf(1_500_000));
+        verify(analyticsService).saveTargets(request);
+    }
 }
+

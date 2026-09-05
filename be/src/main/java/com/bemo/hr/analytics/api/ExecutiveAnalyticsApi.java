@@ -115,4 +115,166 @@ public final class ExecutiveAnalyticsApi {
             String metadataJson,
             long createdAt
     ) {}
+
+    public record AgingBucket(
+            String labelKey,
+            BigDecimal amount,
+            int invoiceCount,
+            BigDecimal percentOfTotal
+    ) {}
+
+    public record ArApAgingSummary(
+            AgingBucket current,
+            AgingBucket days30To60,
+            AgingBucket days60To90,
+            AgingBucket daysOver90,
+            BigDecimal total,
+            BigDecimal totalOverdue
+    ) {}
+
+    public record BranchPerformanceItem(
+            String branchId,
+            String branchCode,
+            String branchName,
+            boolean isMainBranch,
+            BigDecimal revenue,
+            BigDecimal cogs,
+            BigDecimal grossProfit,
+            BigDecimal grossMarginPercent,
+            BigDecimal opex,
+            BigDecimal netProfit,
+            int headcount,
+            BigDecimal cashAndBank
+    ) {}
+
+    public record TopCustomerItem(
+            String customerId,
+            String customerName,
+            BigDecimal totalInvoiced,
+            BigDecimal totalCollected,
+            BigDecimal outstandingBalance,
+            int invoiceCount
+    ) {}
+
+    public record TopProductItem(
+            String itemId,
+            String itemCode,
+            String itemName,
+            BigDecimal quantitySold,
+            BigDecimal revenue,
+            BigDecimal cogs,
+            BigDecimal marginPercent
+    ) {}
+
+    public record ExpenseCategoryItem(
+            String category,
+            String nameKey,
+            BigDecimal amount,
+            BigDecimal percentOfTotal
+    ) {}
+
+    public record StockAlertItem(
+            String itemId,
+            String itemCode,
+            String itemName,
+            BigDecimal currentStock,
+            BigDecimal reorderPoint,
+            BigDecimal reorderQuantity,
+            boolean isDeadStock,
+            BigDecimal estimatedValue
+    ) {}
+
+    public record ManufacturingWipItem(
+            String orderId,
+            String orderNumber,
+            String itemName,
+            BigDecimal targetQuantity,
+            BigDecimal actualOutputQuantity,
+            BigDecimal materialCost,
+            String startDate,
+            String status
+    ) {}
+
+    public record ProjectBudgetVarianceItem(
+            String projectId,
+            String code,
+            String name,
+            BigDecimal contractValue,
+            BigDecimal budgetAmount,
+            BigDecimal actualCost,
+            BigDecimal costVariance,
+            String status
+    ) {}
+
+    public record CockpitTargetResponse(
+            String id,
+            String periodKey,
+            BigDecimal targetRevenue,
+            BigDecimal targetGrossMarginPercent,
+            BigDecimal targetMaxOpex,
+            BigDecimal targetMinLiquidity,
+            BigDecimal targetMaxOverdueAr,
+            String notes,
+            long updatedAt
+    ) {}
+
+    public record SaveCockpitTargetRequest(
+            @NotBlank String periodKey,
+            BigDecimal targetRevenue,
+            BigDecimal targetGrossMarginPercent,
+            BigDecimal targetMaxOpex,
+            BigDecimal targetMinLiquidity,
+            BigDecimal targetMaxOverdueAr,
+            String notes
+    ) {}
+
+    public record OwnerCockpitKpiSummary(
+            BigDecimal todaySales,
+            BigDecimal todayCollections,
+            BigDecimal netLiquidity,
+            BigDecimal cashInHand,
+            BigDecimal bankBalances,
+            BigDecimal totalRevenue,
+            BigDecimal totalCogs,
+            BigDecimal grossMarginAmount,
+            BigDecimal grossMarginPercent,
+            BigDecimal totalOpex,
+            BigDecimal operatingProfit,
+            BigDecimal netProfit,
+            BigDecimal netMarginPercent,
+            BigDecimal payrollDisbursed,
+            BigDecimal payrollPending,
+            int activeHeadcount,
+            int manufacturingWipCount,
+            BigDecimal manufacturingWipValuation,
+            BigDecimal projectBudgetTotal,
+            BigDecimal projectActualCost,
+            BigDecimal projectCostVariance,
+            int lowStockCount,
+            int deadStockCount,
+            BigDecimal totalReceivables,
+            BigDecimal overdueReceivables,
+            BigDecimal totalPayables,
+            BigDecimal overduePayables
+    ) {}
+
+    public record OwnerCockpitResponse(
+            String period,
+            String companyId,
+            String branchId,
+            long timestamp,
+            OwnerCockpitKpiSummary kpiSummary,
+            ArApAgingSummary arAging,
+            ArApAgingSummary apAging,
+            List<BranchPerformanceItem> branchLeaderboard,
+            List<TopCustomerItem> topCustomers,
+            List<TopProductItem> topProducts,
+            List<ExpenseCategoryItem> expenseBreakdown,
+            List<StockAlertItem> lowStockAlerts,
+            List<StockAlertItem> deadStockAlerts,
+            List<ManufacturingWipItem> manufacturingWip,
+            List<ProjectBudgetVarianceItem> projectBudgetControl,
+            CockpitTargetResponse targets
+    ) {}
 }
+

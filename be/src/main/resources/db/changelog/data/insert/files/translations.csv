@@ -18216,3 +18216,151 @@ t-009162-en;branchControl.statusWrittenOff;en-US;Written Off
 t-009163-ar;branchControl.statusReturned;ar-EG;إرجاع للفرع المصدر
 t-009163-en;branchControl.statusReturned;en-US;Returned to Sender
 
+t-009164-ar;EXECUTIVE_TARGET_NOT_FOUND;ar-EG;لم يتم العثور على مستهدفات للفترة المحددة.
+t-009164-en;EXECUTIVE_TARGET_NOT_FOUND;en-US;Executive targets not found for the specified period.
+t-009165-ar;EXECUTIVE_TARGET_INVALID;ar-EG;بيانات المستهدفات غير صالحة.
+t-009165-en;EXECUTIVE_TARGET_INVALID;en-US;Invalid executive target parameters.
+t-009166-ar;executive.tabCockpit;ar-EG;لوحة تحكم المالك
+t-009166-en;executive.tabCockpit;en-US;Owner Cockpit
+t-009167-ar;executive.tabTrends;ar-EG;المسار والاتجاهات
+t-009167-en;executive.tabTrends;en-US;Comparative Trends
+t-009168-ar;executive.tabRegistry;ar-EG;سجل المؤشرات
+t-009168-en;executive.tabRegistry;en-US;KPI Registry
+t-009169-ar;executive.tabSnapshots;ar-EG;اللقطات المحفوظة
+t-009169-en;executive.tabSnapshots;en-US;Snapshots
+t-009170-ar;executive.todaySales;ar-EG;مبيعات اليوم
+t-009170-en;executive.todaySales;en-US;Today's Sales
+t-009171-ar;executive.todayCollections;ar-EG;متحصلات اليوم
+t-009171-en;executive.todayCollections;en-US;Today's Collections
+t-009172-ar;executive.netLiquidity;ar-EG;صافي السيولة النقدية
+t-009172-en;executive.netLiquidity;en-US;Net Liquidity
+t-009173-ar;executive.cashInHand;ar-EG;النقدية بالصناديق
+t-009173-en;executive.cashInHand;en-US;Cash in Hand
+t-009174-ar;executive.bankBalances;ar-EG;أرصدة البنوك
+t-009174-en;executive.bankBalances;en-US;Bank Balances
+t-009175-ar;executive.grossMargin;ar-EG;إجمالي هامش الربح
+t-009175-en;executive.grossMargin;en-US;Gross Profit & Margin
+t-009176-ar;executive.operatingProfit;ar-EG;الربح التشغيلي
+t-009176-en;executive.operatingProfit;en-US;Operating Profit
+t-009177-ar;executive.netProfit;ar-EG;صافي الربح
+t-009177-en;executive.netProfit;en-US;Net Profit
+t-009178-ar;executive.revenue;ar-EG;إجمالي الإيرادات
+t-009178-en;executive.revenue;en-US;Total Revenue
+t-009179-ar;executive.cogs;ar-EG;تكلفة البضاعة المباعة
+t-009179-en;executive.cogs;en-US;Cost of Goods Sold
+t-009180-ar;executive.opex;ar-EG;المصروفات التشغيلية
+t-009180-en;executive.opex;en-US;Operating Expenses
+t-009181-ar;executive.arAgingTitle;ar-EG;أعمار الديون والذمم المدينة (AR)
+t-009181-en;executive.arAgingTitle;en-US;Accounts Receivable (AR) Aging
+t-009182-ar;executive.apAgingTitle;ar-EG;أعمار الالتزامات والذمم الدائنة (AP)
+t-009182-en;executive.apAgingTitle;en-US;Accounts Payable (AP) Aging
+t-009183-ar;executive.bucketCurrent;ar-EG;0 - 30 يوم (حالي)
+t-009183-en;executive.bucketCurrent;en-US;0 - 30 Days (Current)
+t-009184-ar;executive.bucket30to60;ar-EG;31 - 60 يوم
+t-009184-en;executive.bucket30to60;en-US;31 - 60 Days
+t-009185-ar;executive.bucket60to90;ar-EG;61 - 90 يوم
+t-009185-en;executive.bucket60to90;en-US;61 - 90 Days
+t-009186-ar;executive.bucketOver90;ar-EG;+90 يوم (متأخر)
+t-009186-en;executive.bucketOver90;en-US;90+ Days (Overdue)
+t-009187-ar;executive.totalReceivables;ar-EG;إجمالي المدينين
+t-009187-en;executive.totalReceivables;en-US;Total Receivables
+t-009188-ar;executive.totalPayables;ar-EG;إجمالي الموردين
+t-009188-en;executive.totalPayables;en-US;Total Payables
+t-009189-ar;executive.overdueReceivables;ar-EG;ديون متأخرة السداد
+t-009189-en;executive.overdueReceivables;en-US;Overdue Receivables
+t-009190-ar;executive.overduePayables;ar-EG;التزامات متأخرة
+t-009190-en;executive.overduePayables;en-US;Overdue Payables
+t-009191-ar;executive.lowStockAlerts;ar-EG;تنبيهات نواقص المخزون
+t-009191-en;executive.lowStockAlerts;en-US;Low Stock Alerts
+t-009192-ar;executive.deadStockAlerts;ar-EG;المخزون الراكد / بطيء الحركة
+t-009192-en;executive.deadStockAlerts;en-US;Dead Stock Watchlist
+t-009193-ar;executive.manufacturingWip;ar-EG;أوامر الإنتاج الجارية (WIP)
+t-009193-en;executive.manufacturingWip;en-US;Manufacturing WIP
+t-009194-ar;executive.projectBudgetVsActual;ar-EG;المشاريع: الموازنة مقابل الفعلي
+t-009194-en;executive.projectBudgetVsActual;en-US;Projects: Budget vs. Actual
+t-009195-ar;executive.branchLeaderboard;ar-EG;مقارنة أداء الفروع
+t-009195-en;executive.branchLeaderboard;en-US;Branch Performance Comparison
+t-009196-ar;executive.topCustomers;ar-EG;أفضل 5 عملاء (حجم التعامل)
+t-009196-en;executive.topCustomers;en-US;Top 5 Customers by Revenue
+t-009197-ar;executive.topProducts;ar-EG;أفضل 5 منتجات مبيعاً
+t-009197-en;executive.topProducts;en-US;Top 5 Products by Revenue
+t-009198-ar;executive.expenseBreakdown;ar-EG;توزيع المصروفات حسب التصنيف
+t-009198-en;executive.expenseBreakdown;en-US;Expense Breakdown
+t-009199-ar;executive.targetsModalTitle;ar-EG;تحديد مستهدفات الفترة التنفيذية
+t-009199-en;executive.targetsModalTitle;en-US;Set Executive Period Targets
+t-009200-ar;executive.targetRevenue;ar-EG;المبيعات المستهدفة
+t-009200-en;executive.targetRevenue;en-US;Target Revenue
+t-009201-ar;executive.targetMargin;ar-EG;نسبة هامش الربح المستهدفة (%)
+t-009201-en;executive.targetMargin;en-US;Target Gross Margin (%)
+t-009202-ar;executive.targetOpex;ar-EG;الحد الأقصى للمصروفات
+t-009202-en;executive.targetOpex;en-US;Target Max OPEX
+t-009203-ar;executive.targetLiquidity;ar-EG;الحد الأدنى للسيولة النقدية
+t-009203-en;executive.targetLiquidity;en-US;Target Min Liquidity
+t-009204-ar;executive.targetOverdueAr;ar-EG;الحد الأقصى للمتأخرات
+t-009204-en;executive.targetOverdueAr;en-US;Target Max Overdue AR
+t-009205-ar;executive.setTargets;ar-EG;ضبط المستهدفات
+t-009205-en;executive.setTargets;en-US;Set Targets
+t-009206-ar;executive.exportExcel;ar-EG;تحميل تقرير المالك (Excel)
+t-009206-en;executive.exportExcel;en-US;Export Owner Report (Excel)
+t-009207-ar;executive.drilldownHint;ar-EG;انقر لعرض تفاصيل المستندات في الشاشة الأصلية
+t-009207-en;executive.drilldownHint;en-US;Click to drill down into source documents
+t-009208-ar;executive.filterPeriod;ar-EG;الفترة الزمنية
+t-009208-en;executive.filterPeriod;en-US;Time Period
+t-009209-ar;executive.filterCompany;ar-EG;الشركة
+t-009209-en;executive.filterCompany;en-US;Company
+t-009210-ar;executive.filterBranch;ar-EG;الفرع
+t-009210-en;executive.filterBranch;en-US;Branch
+t-009211-ar;executive.allCompanies;ar-EG;كافة الشركات
+t-009211-en;executive.allCompanies;en-US;All Companies
+t-009212-ar;executive.allBranches;ar-EG;كافة الفروع
+t-009212-en;executive.allBranches;en-US;All Branches
+t-009213-ar;executive.periodToday;ar-EG;اليوم
+t-009213-en;executive.periodToday;en-US;Today
+t-009214-ar;executive.periodThisMonth;ar-EG;الشهر الحالي
+t-009214-en;executive.periodThisMonth;en-US;This Month
+t-009215-ar;executive.periodThisQuarter;ar-EG;الربع الحالي
+t-009215-en;executive.periodThisQuarter;en-US;This Quarter
+t-009216-ar;executive.periodThisYear;ar-EG;العام الحالي
+t-009216-en;executive.periodThisYear;en-US;This Year
+t-009217-ar;executive.profitPulse;ar-EG;نبض الأرباح والتدفق المالي
+t-009217-en;executive.profitPulse;en-US;Profit Pulse & Cash Flow
+t-009218-ar;executive.wipActiveOrders;ar-EG;أمر إنتاج جاري
+t-009218-en;executive.wipActiveOrders;en-US;Active Orders
+t-009219-ar;executive.targetVsActual;ar-EG;المستهدف مقابل الفعلي
+t-009219-en;executive.targetVsActual;en-US;Target vs. Actual
+t-009220-ar;executive.targetExceeded;ar-EG;تم تجاوز المستهدف
+t-009220-en;executive.targetExceeded;en-US;Target Exceeded
+t-009221-ar;executive.targetMissed;ar-EG;أقل من المستهدف
+t-009221-en;executive.targetMissed;en-US;Below Target
+t-009222-ar;executive.onTrack;ar-EG;مطابق للمسار
+t-009222-en;executive.onTrack;en-US;On Track
+t-009223-ar;executive.saveTargetSuccess;ar-EG;تم حفظ مستهدفات الإدارة بنجاح.
+t-009223-en;executive.saveTargetSuccess;en-US;Executive targets saved successfully.
+t-009224-ar;export.sheet.executiveKpi;ar-EG;المؤشرات التنفيذية
+t-009224-en;export.sheet.executiveKpi;en-US;Executive KPIs
+t-009225-ar;export.sheet.arApAging;ar-EG;أعمار الديون والالتزامات
+t-009225-en;export.sheet.arApAging;en-US;AR & AP Aging
+t-009226-ar;export.sheet.branchLeaderboard;ar-EG;أداء الفروع
+t-009226-en;export.sheet.branchLeaderboard;en-US;Branch Leaderboard
+t-009227-ar;export.sheet.topPerformers;ar-EG;العملاء والمنتجات الأكثر مبيعاً
+t-009227-en;export.sheet.topPerformers;en-US;Top Customers & Products
+t-009228-ar;export.sheet.operationalWatch;ar-EG;مراقبة المخزون والإنتاج
+t-009228-en;export.sheet.operationalWatch;en-US;Stock & Production Watch
+t-009229-ar;export.sheet.projectControl;ar-EG;مراقبة تكاليف المشاريع
+t-009229-en;export.sheet.projectControl;en-US;Project Cost Control
+t-009230-ar;analytics.timeHorizon;ar-EG;النطاق الزمني
+t-009230-en;analytics.timeHorizon;en-US;Time Horizon
+t-009231-ar;analytics.months;ar-EG;أشهر
+t-009231-en;analytics.months;en-US;Months
+t-009232-ar;analytics.period;ar-EG;الفترة
+t-009232-en;analytics.period;en-US;Period
+t-009233-ar;analytics.netProfit;ar-EG;صافي الربح
+t-009233-en;analytics.netProfit;en-US;Net Profit
+t-009234-ar;analytics.inventoryValue;ar-EG;قيمة المخزون
+t-009234-en;analytics.inventoryValue;en-US;Inventory Value
+t-009235-ar;analytics.reconciliationStatus;ar-EG;حالة التسوية
+t-009235-en;analytics.reconciliationStatus;en-US;Reconciliation Status
+t-009236-ar;executive.bac;ar-EG;الموازنة المعتمدة (BAC)
+t-009236-en;executive.bac;en-US;Budget (BAC)
+t-009237-ar;executive.costVariance;ar-EG;انحراف التكلفة (CV)
+t-009237-en;executive.costVariance;en-US;Cost Variance (CV)

@@ -8,6 +8,9 @@ import {
   ExecutiveOverview,
   KpiCategory,
   KpiDefinition,
+  OwnerCockpitResponse,
+  CockpitTargetResponse,
+  SaveCockpitTargetRequest,
 } from './executive-analytics.models';
 
 @Injectable({
@@ -50,4 +53,42 @@ export class ExecutiveAnalyticsService {
   recordSnapshot(payload: CreateSnapshotPayload): Observable<ExecutiveKpiSnapshot> {
     return this.http.post<ExecutiveKpiSnapshot>(`${this.baseUrl}/snapshots`, payload);
   }
+
+  getCockpit(
+    period?: string,
+    companyId?: string,
+    branchId?: string,
+  ): Observable<OwnerCockpitResponse> {
+    let params = new HttpParams();
+    if (period) params = params.set('period', period);
+    if (companyId) params = params.set('companyId', companyId);
+    if (branchId) params = params.set('branchId', branchId);
+    return this.http.get<OwnerCockpitResponse>(`${this.baseUrl}/cockpit`, { params });
+  }
+
+  exportCockpitExcel(
+    period?: string,
+    companyId?: string,
+    branchId?: string,
+  ): Observable<Blob> {
+    let params = new HttpParams();
+    if (period) params = params.set('period', period);
+    if (companyId) params = params.set('companyId', companyId);
+    if (branchId) params = params.set('branchId', branchId);
+    return this.http.get(`${this.baseUrl}/cockpit/export.xlsx`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  getTargets(periodKey?: string): Observable<CockpitTargetResponse> {
+    let params = new HttpParams();
+    if (periodKey) params = params.set('periodKey', periodKey);
+    return this.http.get<CockpitTargetResponse>(`${this.baseUrl}/targets`, { params });
+  }
+
+  saveTargets(payload: SaveCockpitTargetRequest): Observable<CockpitTargetResponse> {
+    return this.http.post<CockpitTargetResponse>(`${this.baseUrl}/targets`, payload);
+  }
 }
+

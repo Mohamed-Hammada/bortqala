@@ -1,0 +1,601 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260905-v460-owner-executive-cockpit-translations
+      author: bemo-tech-lead
+      comment: "TASK-05: Bilingual translations for Owner Executive Cockpit & Profit Pulse."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009164-ar', 'EXECUTIVE_TARGET_NOT_FOUND', 'ar-EG', 'لم يتم العثور على مستهدفات للفترة المحددة.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'EXECUTIVE_TARGET_NOT_FOUND' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009164-en', 'EXECUTIVE_TARGET_NOT_FOUND', 'en-US', 'Executive targets not found for the specified period.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'EXECUTIVE_TARGET_NOT_FOUND' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009165-ar', 'EXECUTIVE_TARGET_INVALID', 'ar-EG', 'بيانات المستهدفات غير صالحة.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'EXECUTIVE_TARGET_INVALID' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009165-en', 'EXECUTIVE_TARGET_INVALID', 'en-US', 'Invalid executive target parameters.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'EXECUTIVE_TARGET_INVALID' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009166-ar', 'executive.tabCockpit', 'ar-EG', 'لوحة تحكم المالك', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.tabCockpit' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009166-en', 'executive.tabCockpit', 'en-US', 'Owner Cockpit', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.tabCockpit' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009167-ar', 'executive.tabTrends', 'ar-EG', 'المسار والاتجاهات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.tabTrends' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009167-en', 'executive.tabTrends', 'en-US', 'Comparative Trends', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.tabTrends' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009168-ar', 'executive.tabRegistry', 'ar-EG', 'سجل المؤشرات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.tabRegistry' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009168-en', 'executive.tabRegistry', 'en-US', 'KPI Registry', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.tabRegistry' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009169-ar', 'executive.tabSnapshots', 'ar-EG', 'اللقطات المحفوظة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.tabSnapshots' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009169-en', 'executive.tabSnapshots', 'en-US', 'Snapshots', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.tabSnapshots' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009170-ar', 'executive.todaySales', 'ar-EG', 'مبيعات اليوم', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.todaySales' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009170-en', 'executive.todaySales', 'en-US', 'Today''s Sales', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.todaySales' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009171-ar', 'executive.todayCollections', 'ar-EG', 'متحصلات اليوم', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.todayCollections' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009171-en', 'executive.todayCollections', 'en-US', 'Today''s Collections', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.todayCollections' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009172-ar', 'executive.netLiquidity', 'ar-EG', 'صافي السيولة النقدية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.netLiquidity' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009172-en', 'executive.netLiquidity', 'en-US', 'Net Liquidity', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.netLiquidity' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009173-ar', 'executive.cashInHand', 'ar-EG', 'النقدية بالصناديق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.cashInHand' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009173-en', 'executive.cashInHand', 'en-US', 'Cash in Hand', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.cashInHand' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009174-ar', 'executive.bankBalances', 'ar-EG', 'أرصدة البنوك', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bankBalances' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009174-en', 'executive.bankBalances', 'en-US', 'Bank Balances', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bankBalances' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009175-ar', 'executive.grossMargin', 'ar-EG', 'إجمالي هامش الربح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.grossMargin' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009175-en', 'executive.grossMargin', 'en-US', 'Gross Profit & Margin', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.grossMargin' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009176-ar', 'executive.operatingProfit', 'ar-EG', 'الربح التشغيلي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.operatingProfit' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009176-en', 'executive.operatingProfit', 'en-US', 'Operating Profit', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.operatingProfit' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009177-ar', 'executive.netProfit', 'ar-EG', 'صافي الربح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.netProfit' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009177-en', 'executive.netProfit', 'en-US', 'Net Profit', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.netProfit' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009178-ar', 'executive.revenue', 'ar-EG', 'إجمالي الإيرادات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.revenue' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009178-en', 'executive.revenue', 'en-US', 'Total Revenue', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.revenue' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009179-ar', 'executive.cogs', 'ar-EG', 'تكلفة البضاعة المباعة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.cogs' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009179-en', 'executive.cogs', 'en-US', 'Cost of Goods Sold', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.cogs' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009180-ar', 'executive.opex', 'ar-EG', 'المصروفات التشغيلية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.opex' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009180-en', 'executive.opex', 'en-US', 'Operating Expenses', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.opex' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009181-ar', 'executive.arAgingTitle', 'ar-EG', 'أعمار الديون والذمم المدينة (AR)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.arAgingTitle' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009181-en', 'executive.arAgingTitle', 'en-US', 'Accounts Receivable (AR) Aging', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.arAgingTitle' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009182-ar', 'executive.apAgingTitle', 'ar-EG', 'أعمار الالتزامات والذمم الدائنة (AP)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.apAgingTitle' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009182-en', 'executive.apAgingTitle', 'en-US', 'Accounts Payable (AP) Aging', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.apAgingTitle' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009183-ar', 'executive.bucketCurrent', 'ar-EG', '0 - 30 يوم (حالي)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bucketCurrent' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009183-en', 'executive.bucketCurrent', 'en-US', '0 - 30 Days (Current)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bucketCurrent' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009184-ar', 'executive.bucket30to60', 'ar-EG', '31 - 60 يوم', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bucket30to60' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009184-en', 'executive.bucket30to60', 'en-US', '31 - 60 Days', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bucket30to60' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009185-ar', 'executive.bucket60to90', 'ar-EG', '61 - 90 يوم', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bucket60to90' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009185-en', 'executive.bucket60to90', 'en-US', '61 - 90 Days', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bucket60to90' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009186-ar', 'executive.bucketOver90', 'ar-EG', '+90 يوم (متأخر)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bucketOver90' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009186-en', 'executive.bucketOver90', 'en-US', '90+ Days (Overdue)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bucketOver90' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009187-ar', 'executive.totalReceivables', 'ar-EG', 'إجمالي المدينين', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.totalReceivables' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009187-en', 'executive.totalReceivables', 'en-US', 'Total Receivables', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.totalReceivables' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009188-ar', 'executive.totalPayables', 'ar-EG', 'إجمالي الموردين', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.totalPayables' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009188-en', 'executive.totalPayables', 'en-US', 'Total Payables', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.totalPayables' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009189-ar', 'executive.overdueReceivables', 'ar-EG', 'ديون متأخرة السداد', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.overdueReceivables' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009189-en', 'executive.overdueReceivables', 'en-US', 'Overdue Receivables', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.overdueReceivables' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009190-ar', 'executive.overduePayables', 'ar-EG', 'التزامات متأخرة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.overduePayables' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009190-en', 'executive.overduePayables', 'en-US', 'Overdue Payables', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.overduePayables' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009191-ar', 'executive.lowStockAlerts', 'ar-EG', 'تنبيهات نواقص المخزون', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.lowStockAlerts' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009191-en', 'executive.lowStockAlerts', 'en-US', 'Low Stock Alerts', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.lowStockAlerts' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009192-ar', 'executive.deadStockAlerts', 'ar-EG', 'المخزون الراكد / بطيء الحركة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.deadStockAlerts' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009192-en', 'executive.deadStockAlerts', 'en-US', 'Dead Stock Watchlist', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.deadStockAlerts' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009193-ar', 'executive.manufacturingWip', 'ar-EG', 'أوامر الإنتاج الجارية (WIP)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.manufacturingWip' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009193-en', 'executive.manufacturingWip', 'en-US', 'Manufacturing WIP', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.manufacturingWip' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009194-ar', 'executive.projectBudgetVsActual', 'ar-EG', 'المشاريع: الموازنة مقابل الفعلي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.projectBudgetVsActual' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009194-en', 'executive.projectBudgetVsActual', 'en-US', 'Projects: Budget vs. Actual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.projectBudgetVsActual' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009195-ar', 'executive.branchLeaderboard', 'ar-EG', 'مقارنة أداء الفروع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.branchLeaderboard' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009195-en', 'executive.branchLeaderboard', 'en-US', 'Branch Performance Comparison', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.branchLeaderboard' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009196-ar', 'executive.topCustomers', 'ar-EG', 'أفضل 5 عملاء (حجم التعامل)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.topCustomers' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009196-en', 'executive.topCustomers', 'en-US', 'Top 5 Customers by Revenue', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.topCustomers' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009197-ar', 'executive.topProducts', 'ar-EG', 'أفضل 5 منتجات مبيعاً', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.topProducts' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009197-en', 'executive.topProducts', 'en-US', 'Top 5 Products by Revenue', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.topProducts' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009198-ar', 'executive.expenseBreakdown', 'ar-EG', 'توزيع المصروفات حسب التصنيف', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.expenseBreakdown' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009198-en', 'executive.expenseBreakdown', 'en-US', 'Expense Breakdown', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.expenseBreakdown' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009199-ar', 'executive.targetsModalTitle', 'ar-EG', 'تحديد مستهدفات الفترة التنفيذية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetsModalTitle' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009199-en', 'executive.targetsModalTitle', 'en-US', 'Set Executive Period Targets', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetsModalTitle' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009200-ar', 'executive.targetRevenue', 'ar-EG', 'المبيعات المستهدفة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetRevenue' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009200-en', 'executive.targetRevenue', 'en-US', 'Target Revenue', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetRevenue' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009201-ar', 'executive.targetMargin', 'ar-EG', 'نسبة هامش الربح المستهدفة (%)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetMargin' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009201-en', 'executive.targetMargin', 'en-US', 'Target Gross Margin (%)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetMargin' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009202-ar', 'executive.targetOpex', 'ar-EG', 'الحد الأقصى للمصروفات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetOpex' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009202-en', 'executive.targetOpex', 'en-US', 'Target Max OPEX', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetOpex' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009203-ar', 'executive.targetLiquidity', 'ar-EG', 'الحد الأدنى للسيولة النقدية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetLiquidity' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009203-en', 'executive.targetLiquidity', 'en-US', 'Target Min Liquidity', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetLiquidity' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009204-ar', 'executive.targetOverdueAr', 'ar-EG', 'الحد الأقصى للمتأخرات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetOverdueAr' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009204-en', 'executive.targetOverdueAr', 'en-US', 'Target Max Overdue AR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetOverdueAr' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009205-ar', 'executive.setTargets', 'ar-EG', 'ضبط المستهدفات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.setTargets' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009205-en', 'executive.setTargets', 'en-US', 'Set Targets', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.setTargets' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009206-ar', 'executive.exportExcel', 'ar-EG', 'تحميل تقرير المالك (Excel)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.exportExcel' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009206-en', 'executive.exportExcel', 'en-US', 'Export Owner Report (Excel)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.exportExcel' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009207-ar', 'executive.drilldownHint', 'ar-EG', 'انقر لعرض تفاصيل المستندات في الشاشة الأصلية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.drilldownHint' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009207-en', 'executive.drilldownHint', 'en-US', 'Click to drill down into source documents', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.drilldownHint' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009208-ar', 'executive.filterPeriod', 'ar-EG', 'الفترة الزمنية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.filterPeriod' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009208-en', 'executive.filterPeriod', 'en-US', 'Time Period', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.filterPeriod' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009209-ar', 'executive.filterCompany', 'ar-EG', 'الشركة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.filterCompany' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009209-en', 'executive.filterCompany', 'en-US', 'Company', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.filterCompany' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009210-ar', 'executive.filterBranch', 'ar-EG', 'الفرع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.filterBranch' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009210-en', 'executive.filterBranch', 'en-US', 'Branch', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.filterBranch' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009211-ar', 'executive.allCompanies', 'ar-EG', 'كافة الشركات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.allCompanies' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009211-en', 'executive.allCompanies', 'en-US', 'All Companies', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.allCompanies' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009212-ar', 'executive.allBranches', 'ar-EG', 'كافة الفروع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.allBranches' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009212-en', 'executive.allBranches', 'en-US', 'All Branches', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.allBranches' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009213-ar', 'executive.periodToday', 'ar-EG', 'اليوم', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.periodToday' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009213-en', 'executive.periodToday', 'en-US', 'Today', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.periodToday' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009214-ar', 'executive.periodThisMonth', 'ar-EG', 'الشهر الحالي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.periodThisMonth' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009214-en', 'executive.periodThisMonth', 'en-US', 'This Month', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.periodThisMonth' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009215-ar', 'executive.periodThisQuarter', 'ar-EG', 'الربع الحالي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.periodThisQuarter' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009215-en', 'executive.periodThisQuarter', 'en-US', 'This Quarter', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.periodThisQuarter' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009216-ar', 'executive.periodThisYear', 'ar-EG', 'العام الحالي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.periodThisYear' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009216-en', 'executive.periodThisYear', 'en-US', 'This Year', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.periodThisYear' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009217-ar', 'executive.profitPulse', 'ar-EG', 'نبض الأرباح والتدفق المالي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.profitPulse' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009217-en', 'executive.profitPulse', 'en-US', 'Profit Pulse & Cash Flow', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.profitPulse' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009218-ar', 'executive.wipActiveOrders', 'ar-EG', 'أمر إنتاج جاري', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.wipActiveOrders' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009218-en', 'executive.wipActiveOrders', 'en-US', 'Active Orders', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.wipActiveOrders' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009219-ar', 'executive.targetVsActual', 'ar-EG', 'المستهدف مقابل الفعلي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetVsActual' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009219-en', 'executive.targetVsActual', 'en-US', 'Target vs. Actual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetVsActual' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009220-ar', 'executive.targetExceeded', 'ar-EG', 'تم تجاوز المستهدف', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetExceeded' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009220-en', 'executive.targetExceeded', 'en-US', 'Target Exceeded', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetExceeded' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009221-ar', 'executive.targetMissed', 'ar-EG', 'أقل من المستهدف', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetMissed' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009221-en', 'executive.targetMissed', 'en-US', 'Below Target', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.targetMissed' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009222-ar', 'executive.onTrack', 'ar-EG', 'مطابق للمسار', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.onTrack' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009222-en', 'executive.onTrack', 'en-US', 'On Track', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.onTrack' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009223-ar', 'executive.saveTargetSuccess', 'ar-EG', 'تم حفظ مستهدفات الإدارة بنجاح.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.saveTargetSuccess' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009223-en', 'executive.saveTargetSuccess', 'en-US', 'Executive targets saved successfully.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.saveTargetSuccess' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009224-ar', 'export.sheet.executiveKpi', 'ar-EG', 'المؤشرات التنفيذية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.executiveKpi' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009224-en', 'export.sheet.executiveKpi', 'en-US', 'Executive KPIs', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.executiveKpi' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009225-ar', 'export.sheet.arApAging', 'ar-EG', 'أعمار الديون والالتزامات', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.arApAging' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009225-en', 'export.sheet.arApAging', 'en-US', 'AR & AP Aging', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.arApAging' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009226-ar', 'export.sheet.branchLeaderboard', 'ar-EG', 'أداء الفروع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.branchLeaderboard' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009226-en', 'export.sheet.branchLeaderboard', 'en-US', 'Branch Leaderboard', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.branchLeaderboard' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009227-ar', 'export.sheet.topPerformers', 'ar-EG', 'العملاء والمنتجات الأكثر مبيعاً', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.topPerformers' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009227-en', 'export.sheet.topPerformers', 'en-US', 'Top Customers & Products', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.topPerformers' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009228-ar', 'export.sheet.operationalWatch', 'ar-EG', 'مراقبة المخزون والإنتاج', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.operationalWatch' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009228-en', 'export.sheet.operationalWatch', 'en-US', 'Stock & Production Watch', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.operationalWatch' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009229-ar', 'export.sheet.projectControl', 'ar-EG', 'مراقبة تكاليف المشاريع', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.projectControl' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009229-en', 'export.sheet.projectControl', 'en-US', 'Project Cost Control', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'export.sheet.projectControl' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009230-ar', 'analytics.timeHorizon', 'ar-EG', 'النطاق الزمني', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.timeHorizon' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009230-en', 'analytics.timeHorizon', 'en-US', 'Time Horizon', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.timeHorizon' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009231-ar', 'analytics.months', 'ar-EG', 'أشهر', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.months' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009231-en', 'analytics.months', 'en-US', 'Months', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.months' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009232-ar', 'analytics.period', 'ar-EG', 'الفترة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.period' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009232-en', 'analytics.period', 'en-US', 'Period', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.period' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009233-ar', 'analytics.netProfit', 'ar-EG', 'صافي الربح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.netProfit' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009233-en', 'analytics.netProfit', 'en-US', 'Net Profit', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.netProfit' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009234-ar', 'analytics.inventoryValue', 'ar-EG', 'قيمة المخزون', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.inventoryValue' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009234-en', 'analytics.inventoryValue', 'en-US', 'Inventory Value', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.inventoryValue' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009235-ar', 'analytics.reconciliationStatus', 'ar-EG', 'حالة التسوية', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.reconciliationStatus' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009235-en', 'analytics.reconciliationStatus', 'en-US', 'Reconciliation Status', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'analytics.reconciliationStatus' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009236-ar', 'executive.bac', 'ar-EG', 'الموازنة المعتمدة (BAC)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bac' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009236-en', 'executive.bac', 'en-US', 'Budget (BAC)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.bac' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009237-ar', 'executive.costVariance', 'ar-EG', 'انحراف التكلفة (CV)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.costVariance' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009237-en', 'executive.costVariance', 'en-US', 'Cost Variance (CV)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.costVariance' AND locale = 'en-US');
+

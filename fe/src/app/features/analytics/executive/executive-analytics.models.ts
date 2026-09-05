@@ -115,3 +115,166 @@ export interface CreateSnapshotPayload {
   drilldownUrl?: string;
   metadataJson?: string;
 }
+
+export interface AgingBucket {
+  labelKey: string;
+  amount: number;
+  invoiceCount: number;
+  percentOfTotal: number;
+}
+
+export interface ArApAgingSummary {
+  current: AgingBucket;
+  days30To60: AgingBucket;
+  days60To90: AgingBucket;
+  daysOver90: AgingBucket;
+  total: number;
+  totalOverdue: number;
+}
+
+export interface BranchPerformanceItem {
+  branchId: string;
+  branchCode: string;
+  branchName: string;
+  isMainBranch: boolean;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  grossMarginPercent: number;
+  opex: number;
+  netProfit: number;
+  headcount: number;
+  cashAndBank: number;
+}
+
+export interface TopCustomerItem {
+  customerId: string;
+  customerName: string;
+  totalInvoiced: number;
+  totalCollected: number;
+  outstandingBalance: number;
+  invoiceCount: number;
+}
+
+export interface TopProductItem {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  quantitySold: number;
+  revenue: number;
+  cogs: number;
+  marginPercent: number;
+}
+
+export interface ExpenseCategoryItem {
+  category: string;
+  nameKey: string;
+  amount: number;
+  percentOfTotal: number;
+}
+
+export interface StockAlertItem {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  currentStock: number;
+  reorderPoint: number;
+  reorderQuantity: number;
+  isDeadStock: boolean;
+  estimatedValue: number;
+}
+
+export interface ManufacturingWipItem {
+  orderId: string;
+  orderNumber: string;
+  itemName: string;
+  targetQuantity: number;
+  actualOutputQuantity: number;
+  materialCost: number;
+  startDate: string;
+  status: string;
+}
+
+export interface ProjectBudgetVarianceItem {
+  projectId: string;
+  code: string;
+  name: string;
+  contractValue: number;
+  budgetAmount: number;
+  actualCost: number;
+  costVariance: number;
+  status: string;
+}
+
+export interface CockpitTargetResponse {
+  id: string;
+  periodKey: string;
+  targetRevenue: number;
+  targetGrossMarginPercent: number;
+  targetMaxOpex: number;
+  targetMinLiquidity: number;
+  targetMaxOverdueAr: number;
+  notes?: string;
+  updatedAt: number;
+}
+
+export interface SaveCockpitTargetRequest {
+  periodKey: string;
+  targetRevenue: number;
+  targetGrossMarginPercent: number;
+  targetMaxOpex: number;
+  targetMinLiquidity: number;
+  targetMaxOverdueAr: number;
+  notes?: string;
+}
+
+export interface OwnerCockpitKpiSummary {
+  todaySales: number;
+  todayCollections: number;
+  netLiquidity: number;
+  cashInHand: number;
+  bankBalances: number;
+  totalRevenue: number;
+  totalCogs: number;
+  grossMarginAmount: number;
+  grossMarginPercent: number;
+  totalOpex: number;
+  operatingProfit: number;
+  netProfit: number;
+  netMarginPercent: number;
+  payrollDisbursed: number;
+  payrollPending: number;
+  activeHeadcount: number;
+  manufacturingWipCount: number;
+  manufacturingWipValuation: number;
+  projectBudgetTotal: number;
+  projectActualCost: number;
+  projectCostVariance: number;
+  lowStockCount: number;
+  deadStockCount: number;
+  totalReceivables: number;
+  overdueReceivables: number;
+  totalPayables: number;
+  overduePayables: number;
+}
+
+export interface OwnerCockpitResponse {
+  period: string;
+  companyId?: string;
+  branchId?: string;
+  timestamp: number;
+  kpiSummary: OwnerCockpitKpiSummary;
+  arAging: ArApAgingSummary;
+  apAging: ArApAgingSummary;
+  branchLeaderboard: BranchPerformanceItem[];
+  topCustomers: TopCustomerItem[];
+  topProducts: TopProductItem[];
+  expenseBreakdown: ExpenseCategoryItem[];
+  lowStockAlerts: StockAlertItem[];
+  deadStockAlerts: StockAlertItem[];
+  manufacturingWip: ManufacturingWipItem[];
+  projectBudgetControl: ProjectBudgetVarianceItem[];
+  targets: CockpitTargetResponse;
+}
+
+

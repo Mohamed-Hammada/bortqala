@@ -7,8 +7,11 @@ import {
 } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { I18nService } from '../../../core/i18n.service';
+import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 import {
@@ -18,7 +21,9 @@ import {
   ExecutiveOverview,
   KpiCategory,
   KpiDefinition,
+  OwnerCockpitResponse,
   ReconciliationStatus,
+  SaveCockpitTargetRequest,
   TrendDirection,
 } from './executive-analytics.models';
 import { ExecutiveAnalyticsService } from './executive-analytics.service';
@@ -26,7 +31,7 @@ import { ExecutiveAnalyticsService } from './executive-analytics.service';
 @Component({
   selector: 'app-executive-analytics-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalDialogComponent, DecimalPipe],
+  imports: [CommonModule, ReactiveFormsModule, ModalDialogComponent, DecimalPipe, RouterLink],
   templateUrl: './executive-analytics.page.html',
   styleUrl: './executive-analytics.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,20 +39,36 @@ import { ExecutiveAnalyticsService } from './executive-analytics.service';
 export class ExecutiveAnalyticsPage implements OnInit {
   protected readonly i18n = inject(I18nService);
   private readonly service = inject(ExecutiveAnalyticsService);
+  private readonly notification = inject(NotificationService);
+  private readonly http = inject(HttpClient);
   private readonly fb = inject(FormBuilder);
 
-  activeTab = signal<'overview' | 'trends' | 'registry' | 'snapshots'>('overview');
+  activeTab = signal<'cockpit' | 'overview' | 'trends' | 'registry' | 'snapshots'>('cockpit');
   loading = signal<boolean>(false);
+  cockpitLoading = signal<boolean>(false);
   error = signal<string | null>(null);
 
+  cockpitData = signal<OwnerCockpitResponse | null>(null);
   overview = signal<ExecutiveOverview | null>(null);
   trends = signal<ComparativeTrends | null>(null);
   registry = signal<KpiDefinition[]>([]);
   snapshots = signal<ExecutiveKpiSnapshot[]>([]);
+  branches = signal<any[]>([]);
 
   selectedMonths = signal<number>(6);
   snapshotModalOpen = signal<boolean>(false);
   savingSnapshot = signal<boolean>(false);
+
+  targetModalOpen = signal<boolean>(false);
+  savingTarget = signal<boolean>(false);
+  exportingExcel = signal<boolean>(false);
+
+  cockpitFilterForm = this.fb.group({
+    periodPreset: ['THIS_MONTH'],
+    period: [''],
+    companyId: [''],
+    branchId: [''],
+  });
 
   filterForm = this.fb.group({
     period: [''],
@@ -70,8 +91,148 @@ export class ExecutiveAnalyticsPage implements OnInit {
     metadataJson: [''],
   });
 
+  targetForm = this.fb.group({
+    periodKey: ['', Validators.required],
+    targetRevenue: [1500000, [Validators.required, Validators.min(0)]],
+    targetGrossMarginPercent: [35.0, [Validators.required, Validators.min(0), Validators.max(100)]],
+    targetMaxOpex: [250000, [Validators.required, Validators.min(0)]],
+    targetMinLiquidity: [300000, [Validators.required, Validators.min(0)]],
+    targetMaxOverdueAr: [50000, [Validators.required, Validators.min(0)]],
+    notes: [''],
+  });
+
   ngOnInit(): void {
-    void this.loadAll();
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    this.cockpitFilterForm.patchValue({ period: currentMonth });
+    void this.loadCockpit();
+    void this.loadBranches();
+  }
+
+  async loadBranches(): Promise<void> {
+    try {
+      const list = await firstValueFrom(this.http.get<any[]>('/api/v1/organization/branches'));
+      this.branches.set(list || []);
+    } catch {
+      this.branches.set([]);
+    }
+  }
+
+  async loadCockpit(): Promise<void> {
+    this.cockpitLoading.set(true);
+    this.error.set(null);
+    try {
+      const val = this.cockpitFilterForm.value;
+      const data = await firstValueFrom(
+        this.service.getCockpit(
+          val.period || undefined,
+          val.companyId || undefined,
+          val.branchId || undefined
+        )
+      );
+      this.cockpitData.set(data);
+    } catch (err) {
+      this.error.set(apiErrorMessage(err, this.i18n));
+    } finally {
+      this.cockpitLoading.set(false);
+    }
+  }
+
+  onPeriodPresetChange(preset: string): void {
+    const now = new Date();
+    let periodVal = '';
+    if (preset === 'TODAY') {
+      periodVal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    } else if (preset === 'THIS_MONTH') {
+      periodVal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    } else if (preset === 'THIS_QUARTER') {
+      const q = Math.floor(now.getMonth() / 3) + 1;
+      periodVal = `${now.getFullYear()}-Q${q}`;
+    } else if (preset === 'THIS_YEAR') {
+      periodVal = `${now.getFullYear()}`;
+    }
+    this.cockpitFilterForm.patchValue({ periodPreset: preset, period: periodVal });
+    void this.loadCockpit();
+  }
+
+  setTab(tab: 'cockpit' | 'overview' | 'trends' | 'registry' | 'snapshots'): void {
+    this.activeTab.set(tab);
+    if (tab === 'cockpit' && !this.cockpitData()) {
+      void this.loadCockpit();
+    } else if (tab === 'overview' && !this.overview()) {
+      void this.loadAll();
+    }
+  }
+
+  openTargetModal(): void {
+    const targets = this.cockpitData()?.targets;
+    const currentPeriod = this.cockpitFilterForm.value.period || '2026-Q3';
+    this.targetForm.patchValue({
+      periodKey: targets?.periodKey || currentPeriod,
+      targetRevenue: targets?.targetRevenue ?? 1500000,
+      targetGrossMarginPercent: targets?.targetGrossMarginPercent ?? 35,
+      targetMaxOpex: targets?.targetMaxOpex ?? 250000,
+      targetMinLiquidity: targets?.targetMinLiquidity ?? 300000,
+      targetMaxOverdueAr: targets?.targetMaxOverdueAr ?? 50000,
+      notes: targets?.notes || '',
+    });
+    this.targetModalOpen.set(true);
+  }
+
+  closeTargetModal(): void {
+    this.targetModalOpen.set(false);
+  }
+
+  async submitTarget(): Promise<void> {
+    if (this.targetForm.invalid) return;
+    this.savingTarget.set(true);
+    try {
+      const val = this.targetForm.getRawValue();
+      const payload: SaveCockpitTargetRequest = {
+        periodKey: val.periodKey!,
+        targetRevenue: Number(val.targetRevenue),
+        targetGrossMarginPercent: Number(val.targetGrossMarginPercent),
+        targetMaxOpex: Number(val.targetMaxOpex),
+        targetMinLiquidity: Number(val.targetMinLiquidity),
+        targetMaxOverdueAr: Number(val.targetMaxOverdueAr),
+        notes: val.notes || '',
+      };
+      await firstValueFrom(this.service.saveTargets(payload));
+      this.notification.success(this.i18n.t('executive.saveTargetSuccess'));
+      this.closeTargetModal();
+      await this.loadCockpit();
+    } catch (err) {
+      this.notification.error(apiErrorMessage(err, this.i18n));
+    } finally {
+      this.savingTarget.set(false);
+    }
+  }
+
+  async exportCockpitExcel(): Promise<void> {
+    this.exportingExcel.set(true);
+    try {
+      const formVal = this.cockpitFilterForm.value;
+      const blob = await firstValueFrom(
+        this.service.exportCockpitExcel(
+          formVal.period || undefined,
+          formVal.companyId || undefined,
+          formVal.branchId || undefined
+        )
+      );
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const p = formVal.period ? formVal.period : 'ALL';
+      a.download = `Executive_Cockpit_${p}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      this.notification.error(apiErrorMessage(err, this.i18n));
+    } finally {
+      this.exportingExcel.set(false);
+    }
   }
 
   async loadAll(): Promise<void> {
@@ -186,3 +347,4 @@ export class ExecutiveAnalyticsPage implements OnInit {
     }
   }
 }
+

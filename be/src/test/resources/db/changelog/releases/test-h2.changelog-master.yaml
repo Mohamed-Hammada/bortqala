@@ -1143,6 +1143,14 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/update/20260904_v458_multi_branch_control_translations.yaml
       relativeToChangelogFile: false
+  # TASK-05: Owner Executive Cockpit & Profit Pulse
+  - include:
+      file: db/changelog/schema/create/20260905_v459_owner_executive_cockpit_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260905_v460_owner_executive_cockpit_translations.yaml
+      relativeToChangelogFile: false
+
 
 
 

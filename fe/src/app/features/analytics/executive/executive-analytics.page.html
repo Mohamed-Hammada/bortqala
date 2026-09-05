@@ -6,7 +6,11 @@
       <p>{{ i18n.t('analytics.description') }}</p>
     </div>
     <div class="header-actions">
-      <button class="button primary" (click)="openSnapshotModal()">📸 {{ i18n.t('analytics.takeSnapshot') }}</button>
+      <button class="button secondary" type="button" (click)="openTargetModal()">🎯 {{ i18n.t('executive.setTargets') }}</button>
+      <button class="button secondary" type="button" [disabled]="exportingExcel()" (click)="exportCockpitExcel()">
+        📥 {{ i18n.t('executive.exportExcel') }}
+      </button>
+      <button class="button primary" type="button" (click)="openSnapshotModal()">📸 {{ i18n.t('analytics.takeSnapshot') }}</button>
     </div>
   </header>
 
@@ -17,36 +21,421 @@
     <div class="alert error">{{ error() }}</div>
   }
 
-  <!-- Global Filter Toolbar -->
-  <form [formGroup]="filterForm" (ngSubmit)="loadAll()" class="filter-toolbar">
-    <div class="filter-group">
-      <label>{{ i18n.t('analytics.periodFilter') }}</label>
-      <input formControlName="period" placeholder="e.g. 2026-08" class="ltr" />
-    </div>
-    <div class="filter-actions">
-      <button type="submit" class="button secondary">🔍 {{ i18n.t('common.filter') }}</button>
-    </div>
-  </form>
-
   <!-- Tab Navigation -->
   <nav class="app-tabs app-tabs-wrap" [attr.aria-label]="i18n.t('analytics.title')">
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'cockpit'" (click)="setTab('cockpit')">
+      👑 {{ i18n.t('executive.tabCockpit') }}
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'overview'" (click)="setTab('overview')">
       📊 {{ i18n.t('analytics.tabOverview') }}
     </button>
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'trends'" (click)="activeTab.set('trends')">
-      📈 {{ i18n.t('analytics.tabTrends') }}
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'trends'" (click)="setTab('trends')">
+      📈 {{ i18n.t('executive.tabTrends') }}
     </button>
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'registry'" (click)="activeTab.set('registry')">
-      📚 {{ i18n.t('analytics.tabRegistry') }} ({{ registry().length }})
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'registry'" (click)="setTab('registry')">
+      📚 {{ i18n.t('executive.tabRegistry') }} ({{ registry().length }})
     </button>
-    <button type="button" class="app-tab" [class.active]="activeTab() === 'snapshots'" (click)="activeTab.set('snapshots')">
-      📑 {{ i18n.t('analytics.tabSnapshots') }} ({{ snapshots().length }})
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'snapshots'" (click)="setTab('snapshots')">
+      📑 {{ i18n.t('executive.tabSnapshots') }} ({{ snapshots().length }})
     </button>
   </nav>
 
   @if (!loading()) {
+    <!-- Tab 0: Owner Executive Cockpit & Profit Pulse -->
+    @if (activeTab() === 'cockpit') {
+      <form [formGroup]="cockpitFilterForm" (ngSubmit)="loadCockpit()" class="filter-toolbar cockpit-toolbar">
+        <div class="preset-pills">
+          <button type="button" class="preset-pill" [class.active]="cockpitFilterForm.value.periodPreset === 'TODAY'" (click)="onPeriodPresetChange('TODAY')">
+            {{ i18n.t('executive.periodToday') }}
+          </button>
+          <button type="button" class="preset-pill" [class.active]="cockpitFilterForm.value.periodPreset === 'THIS_MONTH'" (click)="onPeriodPresetChange('THIS_MONTH')">
+            {{ i18n.t('executive.periodThisMonth') }}
+          </button>
+          <button type="button" class="preset-pill" [class.active]="cockpitFilterForm.value.periodPreset === 'THIS_QUARTER'" (click)="onPeriodPresetChange('THIS_QUARTER')">
+            {{ i18n.t('executive.periodThisQuarter') }}
+          </button>
+          <button type="button" class="preset-pill" [class.active]="cockpitFilterForm.value.periodPreset === 'THIS_YEAR'" (click)="onPeriodPresetChange('THIS_YEAR')">
+            {{ i18n.t('executive.periodThisYear') }}
+          </button>
+        </div>
+
+        <div class="filter-group">
+          <label>{{ i18n.t('executive.filterPeriod') }}</label>
+          <input formControlName="period" placeholder="YYYY-MM" class="ltr" />
+        </div>
+
+        <div class="filter-group">
+          <label>{{ i18n.t('executive.filterBranch') }}</label>
+          <select formControlName="branchId">
+            <option value="">{{ i18n.t('executive.allBranches') }}</option>
+            @for (b of branches(); track b.id) {
+              <option [value]="b.id">{{ b.name }} ({{ b.code }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="button secondary">🔍 {{ i18n.t('common.filter') }}</button>
+        </div>
+      </form>
+
+      @if (cockpitLoading()) {
+        <div class="loading"></div>
+      } @else if (cockpitData(); as cp) {
+        <!-- Owner Pulse Hero Cards (8 Grid) -->
+        <div class="kpi-grid cockpit-hero-grid">
+          <a routerLink="/trade/sales" class="kpi-card highlight click-card" [title]="i18n.t('executive.drilldownHint')">
+            <span class="kpi-label">{{ i18n.t('executive.todaySales') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.todaySales | number:'1.2-2' }} <small>ج.م</small></span>
+          </a>
+          <a routerLink="/trade/sales" class="kpi-card success click-card" [title]="i18n.t('executive.drilldownHint')">
+            <span class="kpi-label">{{ i18n.t('executive.todayCollections') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.todayCollections | number:'1.2-2' }} <small>ج.م</small></span>
+          </a>
+          <a routerLink="/finance/accounts" class="kpi-card info click-card" [title]="i18n.t('executive.drilldownHint')">
+            <span class="kpi-label">{{ i18n.t('executive.netLiquidity') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.netLiquidity | number:'1.2-2' }} <small>ج.م</small></span>
+          </a>
+          <div class="kpi-card info">
+            <span class="kpi-label">{{ i18n.t('executive.cashInHand') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.cashInHand | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card info">
+            <span class="kpi-label">{{ i18n.t('executive.bankBalances') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.bankBalances | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card highlight">
+            <span class="kpi-label">{{ i18n.t('executive.revenue') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.totalRevenue | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card success">
+            <span class="kpi-label">{{ i18n.t('executive.grossMargin') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.grossMarginPercent }}%</span>
+          </div>
+          <div class="kpi-card warning">
+            <span class="kpi-label">{{ i18n.t('executive.opex') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.totalOpex | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card highlight">
+            <span class="kpi-label">{{ i18n.t('executive.netProfit') }}</span>
+            <span class="kpi-value ltr">{{ cp.kpiSummary.netProfit | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+        </div>
+
+        <!-- AR & AP Aging Waterfall -->
+        <div class="cockpit-dual-row">
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.arAgingTitle') }}</h3>
+              <a routerLink="/trade/sales" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
+            </div>
+            <div class="aging-summary-stat">
+              <div>
+                <span class="stat-label">{{ i18n.t('executive.totalReceivables') }}:</span>
+                <strong class="stat-val ltr">{{ cp.arAging.total | number:'1.2-2' }} ج.م</strong>
+              </div>
+              <div>
+                <span class="stat-label text-danger">{{ i18n.t('executive.overdueReceivables') }}:</span>
+                <strong class="stat-val text-danger ltr">{{ cp.arAging.totalOverdue | number:'1.2-2' }} ج.م</strong>
+              </div>
+            </div>
+            <div class="waterfall-bars">
+              <div class="bar-row">
+                <span class="bar-name">{{ i18n.t('executive.bucketCurrent') }}</span>
+                <div class="bar-track"><div class="bar-fill current" [style.width.%]="cp.arAging.current.percentOfTotal"></div></div>
+                <span class="bar-amt ltr">{{ cp.arAging.current.amount | number:'1.0-0' }} ({{ cp.arAging.current.percentOfTotal }}%)</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-name">{{ i18n.t('executive.bucket30to60') }}</span>
+                <div class="bar-track"><div class="bar-fill overdue-low" [style.width.%]="cp.arAging.days30To60.percentOfTotal"></div></div>
+                <span class="bar-amt ltr">{{ cp.arAging.days30To60.amount | number:'1.0-0' }} ({{ cp.arAging.days30To60.percentOfTotal }}%)</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-name">{{ i18n.t('executive.bucket60to90') }}</span>
+                <div class="bar-track"><div class="bar-fill overdue-med" [style.width.%]="cp.arAging.days60To90.percentOfTotal"></div></div>
+                <span class="bar-amt ltr">{{ cp.arAging.days60To90.amount | number:'1.0-0' }} ({{ cp.arAging.days60To90.percentOfTotal }}%)</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-name">{{ i18n.t('executive.bucketOver90') }}</span>
+                <div class="bar-track"><div class="bar-fill overdue-high" [style.width.%]="cp.arAging.daysOver90.percentOfTotal"></div></div>
+                <span class="bar-amt ltr">{{ cp.arAging.daysOver90.amount | number:'1.0-0' }} ({{ cp.arAging.daysOver90.percentOfTotal }}%)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.apAgingTitle') }}</h3>
+              <a routerLink="/trade/procurement" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
+            </div>
+            <div class="aging-summary-stat">
+              <div>
+                <span class="stat-label">{{ i18n.t('executive.totalPayables') }}:</span>
+                <strong class="stat-val ltr">{{ cp.apAging.total | number:'1.2-2' }} ج.م</strong>
+              </div>
+              <div>
+                <span class="stat-label text-warning">{{ i18n.t('executive.overduePayables') }}:</span>
+                <strong class="stat-val text-warning ltr">{{ cp.apAging.totalOverdue | number:'1.2-2' }} ج.م</strong>
+              </div>
+            </div>
+            <div class="waterfall-bars">
+              <div class="bar-row">
+                <span class="bar-name">{{ i18n.t('executive.bucketCurrent') }}</span>
+                <div class="bar-track"><div class="bar-fill current" [style.width.%]="cp.apAging.current.percentOfTotal"></div></div>
+                <span class="bar-amt ltr">{{ cp.apAging.current.amount | number:'1.0-0' }} ({{ cp.apAging.current.percentOfTotal }}%)</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-name">{{ i18n.t('executive.bucket30to60') }}</span>
+                <div class="bar-track"><div class="bar-fill overdue-low" [style.width.%]="cp.apAging.days30To60.percentOfTotal"></div></div>
+                <span class="bar-amt ltr">{{ cp.apAging.days30To60.amount | number:'1.0-0' }} ({{ cp.apAging.days30To60.percentOfTotal }}%)</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-name">{{ i18n.t('executive.bucket60to90') }}</span>
+                <div class="bar-track"><div class="bar-fill overdue-med" [style.width.%]="cp.apAging.days60To90.percentOfTotal"></div></div>
+                <span class="bar-amt ltr">{{ cp.apAging.days60To90.amount | number:'1.0-0' }} ({{ cp.apAging.days60To90.percentOfTotal }}%)</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-name">{{ i18n.t('executive.bucketOver90') }}</span>
+                <div class="bar-track"><div class="bar-fill overdue-high" [style.width.%]="cp.apAging.daysOver90.percentOfTotal"></div></div>
+                <span class="bar-amt ltr">{{ cp.apAging.daysOver90.amount | number:'1.0-0' }} ({{ cp.apAging.daysOver90.percentOfTotal }}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profit Pulse Waterfall & Expense Breakdown -->
+        <div class="cockpit-dual-row">
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.profitPulse') }}</h3>
+            </div>
+            <div class="profit-waterfall">
+              <div class="waterfall-node revenue">
+                <span class="node-label">{{ i18n.t('executive.revenue') }}</span>
+                <strong class="node-val ltr">{{ cp.kpiSummary.totalRevenue | number:'1.2-2' }} ج.م</strong>
+              </div>
+              <div class="waterfall-operator">−</div>
+              <div class="waterfall-node cogs">
+                <span class="node-label">{{ i18n.t('executive.cogs') }}</span>
+                <strong class="node-val ltr">{{ cp.kpiSummary.totalCogs | number:'1.2-2' }} ج.م</strong>
+              </div>
+              <div class="waterfall-operator">=</div>
+              <div class="waterfall-node gross">
+                <span class="node-label">{{ i18n.t('executive.grossMargin') }} ({{ cp.kpiSummary.grossMarginPercent }}%)</span>
+                <strong class="node-val ltr">{{ cp.kpiSummary.grossMarginAmount | number:'1.2-2' }} ج.م</strong>
+              </div>
+              <div class="waterfall-operator">−</div>
+              <div class="waterfall-node opex">
+                <span class="node-label">{{ i18n.t('executive.opex') }}</span>
+                <strong class="node-val ltr">{{ cp.kpiSummary.totalOpex | number:'1.2-2' }} ج.م</strong>
+              </div>
+              <div class="waterfall-operator">=</div>
+              <div class="waterfall-node net">
+                <span class="node-label">{{ i18n.t('executive.netProfit') }} ({{ cp.kpiSummary.netMarginPercent }}%)</span>
+                <strong class="node-val ltr">{{ cp.kpiSummary.netProfit | number:'1.2-2' }} ج.م</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.expenseBreakdown') }}</h3>
+            </div>
+            <div class="expense-breakdown-list">
+              @for (exp of cp.expenseBreakdown; track exp.category) {
+                <div class="expense-row">
+                  <div class="exp-info">
+                    <span class="exp-name">{{ i18n.t(exp.nameKey) }}</span>
+                    <span class="exp-pct">{{ exp.percentOfTotal }}%</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill opex-fill" [style.width.%]="exp.percentOfTotal"></div>
+                  </div>
+                  <div class="exp-amt ltr">{{ exp.amount | number:'1.2-2' }} ج.م</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Branch Performance Leaderboard -->
+        <div class="cockpit-card full-width">
+          <div class="card-header-bar">
+            <h3 class="card-title">{{ i18n.t('executive.branchLeaderboard') }}</h3>
+            <a routerLink="/organization/branches" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('common.name') }}</th>
+                  <th>{{ i18n.t('executive.revenue') }}</th>
+                  <th>{{ i18n.t('executive.cogs') }}</th>
+                  <th>{{ i18n.t('executive.grossMargin') }}</th>
+                  <th>{{ i18n.t('executive.opex') }}</th>
+                  <th>{{ i18n.t('executive.netProfit') }}</th>
+                  <th>{{ i18n.t('executive.netLiquidity') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (br of cp.branchLeaderboard; track br.branchId) {
+                  <tr>
+                    <td>
+                      <strong>{{ br.branchName }}</strong> ({{ br.branchCode }})
+                      @if (br.isMainBranch) {
+                        <span class="badge primary">★</span>
+                      }
+                    </td>
+                    <td class="ltr">{{ br.revenue | number:'1.2-2' }} ج.م</td>
+                    <td class="ltr">{{ br.cogs | number:'1.2-2' }} ج.م</td>
+                    <td class="ltr">{{ br.grossProfit | number:'1.2-2' }} ({{ br.grossMarginPercent }}%)</td>
+                    <td class="ltr">{{ br.opex | number:'1.2-2' }} ج.م</td>
+                    <td class="ltr" [class.text-success]="br.netProfit >= 0" [class.text-danger]="br.netProfit < 0">
+                      {{ br.netProfit | number:'1.2-2' }} ج.م
+                    </td>
+                    <td class="ltr">{{ br.cashAndBank | number:'1.2-2' }} ج.م</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top Customers & Top Products -->
+        <div class="cockpit-dual-row">
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.topCustomers') }}</h3>
+              <a routerLink="/trade/sales" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>{{ i18n.t('common.name') }}</th>
+                    <th>{{ i18n.t('executive.revenue') }}</th>
+                    <th>{{ i18n.t('executive.totalReceivables') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of cp.topCustomers; track c.customerId) {
+                    <tr>
+                      <td>{{ c.customerName }}</td>
+                      <td class="ltr">{{ c.totalInvoiced | number:'1.2-2' }} ج.م</td>
+                      <td class="ltr text-danger">{{ c.outstandingBalance | number:'1.2-2' }} ج.م</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.topProducts') }}</h3>
+              <a routerLink="/operations/items" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>{{ i18n.t('common.name') }}</th>
+                    <th>{{ i18n.t('executive.revenue') }}</th>
+                    <th>{{ i18n.t('executive.grossMargin') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of cp.topProducts; track p.itemId) {
+                    <tr>
+                      <td><strong>{{ p.itemName }}</strong> ({{ p.itemCode }})</td>
+                      <td class="ltr">{{ p.revenue | number:'1.2-2' }} ج.م</td>
+                      <td class="ltr">{{ p.marginPercent | number:'1.1-1' }}%</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Operational Watch: Stock Alerts, Manufacturing WIP, Project Budget Control -->
+        <div class="cockpit-tri-row">
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.lowStockAlerts') }}</h3>
+              <a routerLink="/operations/items" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
+            </div>
+            <div class="alerts-list">
+              @for (stk of cp.lowStockAlerts; track stk.itemId) {
+                <div class="alert-item warning">
+                  <div class="alert-item-header">
+                    <strong>{{ stk.itemName }}</strong> ({{ stk.itemCode }})
+                  </div>
+                  <div class="alert-item-details ltr">
+                    <span>{{ stk.currentStock }} / {{ stk.reorderPoint }}</span>
+                    <span>{{ stk.estimatedValue | number:'1.2-2' }} ج.م</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.manufacturingWip') }}</h3>
+              <a routerLink="/manufacturing/orders" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
+            </div>
+            <div class="alerts-list">
+              @for (w of cp.manufacturingWip; track w.orderId) {
+                <div class="alert-item info">
+                  <div class="alert-item-header">
+                    <strong>#{{ w.orderNumber }}</strong> — {{ w.itemName }}
+                  </div>
+                  <div class="alert-item-details ltr">
+                    <span>{{ w.actualOutputQuantity }} / {{ w.targetQuantity }}</span>
+                    <span>{{ w.materialCost | number:'1.2-2' }} ج.م</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="cockpit-card">
+            <div class="card-header-bar">
+              <h3 class="card-title">{{ i18n.t('executive.projectBudgetVsActual') }}</h3>
+              <a routerLink="/projects" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
+            </div>
+            <div class="alerts-list">
+              @for (prj of cp.projectBudgetControl; track prj.projectId) {
+                <div class="alert-item" [class.danger]="prj.costVariance < 0" [class.success]="prj.costVariance >= 0">
+                  <div class="alert-item-header">
+                    <strong>{{ prj.name }}</strong>
+                  </div>
+                  <div class="alert-item-details ltr">
+                    <span>{{ i18n.t('executive.bac') }}: {{ prj.budgetAmount | number:'1.0-0' }}</span>
+                    <span>{{ i18n.t('executive.costVariance') }}: {{ prj.costVariance | number:'1.0-0' }} ج.م</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    }
+
     <!-- Tab 1: Executive Overview -->
     @if (activeTab() === 'overview') {
+      <!-- Global Filter Toolbar -->
+      <form [formGroup]="filterForm" (ngSubmit)="loadAll()" class="filter-toolbar">
+        <div class="filter-group">
+          <label>{{ i18n.t('analytics.periodFilter') }}</label>
+          <input formControlName="period" placeholder="e.g. 2026-08" class="ltr" />
+        </div>
+        <div class="filter-actions">
+          <button type="submit" class="button secondary">🔍 {{ i18n.t('common.filter') }}</button>
+        </div>
+      </form>
+
       @if (overview(); as ov) {
         <div class="kpi-grid">
           <div class="kpi-card highlight">
@@ -101,48 +490,45 @@
       }
     }
 
-    <!-- Tab 2: Period & Trends Comparison -->
+    <!-- Tab 2: Comparative Trends -->
     @if (activeTab() === 'trends') {
-      <div class="trends-control">
-        <div class="pills-group">
-          <button type="button" class="pill-btn" [class.active]="selectedMonths() === 3" (click)="changeMonths(3)">{{ i18n.t('analytics.months3') }}</button>
-          <button type="button" class="pill-btn" [class.active]="selectedMonths() === 6" (click)="changeMonths(6)">{{ i18n.t('analytics.months6') }}</button>
-          <button type="button" class="pill-btn" [class.active]="selectedMonths() === 12" (click)="changeMonths(12)">{{ i18n.t('analytics.months12') }}</button>
-          <button type="button" class="pill-btn" [class.active]="selectedMonths() === 24" (click)="changeMonths(24)">{{ i18n.t('analytics.months24') }}</button>
+      <div class="trends-toolbar">
+        <label>{{ i18n.t('analytics.timeHorizon') }}</label>
+        <div class="horizon-buttons">
+          <button type="button" class="button" [class.primary]="selectedMonths() === 3" [class.secondary]="selectedMonths() !== 3" (click)="changeMonths(3)">3 {{ i18n.t('analytics.months') }}</button>
+          <button type="button" class="button" [class.primary]="selectedMonths() === 6" [class.secondary]="selectedMonths() !== 6" (click)="changeMonths(6)">6 {{ i18n.t('analytics.months') }}</button>
+          <button type="button" class="button" [class.primary]="selectedMonths() === 12" [class.secondary]="selectedMonths() !== 12" (click)="changeMonths(12)">12 {{ i18n.t('analytics.months') }}</button>
+          <button type="button" class="button" [class.primary]="selectedMonths() === 24" [class.secondary]="selectedMonths() !== 24" (click)="changeMonths(24)">24 {{ i18n.t('analytics.months') }}</button>
         </div>
       </div>
 
       @if (trends(); as tr) {
-        <div class="table-card">
-          <table>
+        <div class="table-responsive">
+          <table class="data-table">
             <thead>
               <tr>
-                <th>{{ i18n.t('analytics.periodFilter') }}</th>
+                <th>{{ i18n.t('analytics.period') }}</th>
                 <th>{{ i18n.t('analytics.totalRevenue') }}</th>
                 <th>{{ i18n.t('analytics.totalOpex') }}</th>
-                <th>{{ i18n.t('analytics.grossProfit') }}</th>
+                <th>{{ i18n.t('analytics.netProfit') }}</th>
                 <th>{{ i18n.t('analytics.netMargin') }}</th>
                 <th>{{ i18n.t('analytics.salesBookings') }}</th>
-                <th>{{ i18n.t('analytics.inventoryValuation') }}</th>
+                <th>{{ i18n.t('analytics.inventoryValue') }}</th>
                 <th>{{ i18n.t('analytics.payrollDisbursed') }}</th>
-                <th>{{ i18n.t('analytics.projectPortfolioValue') }}</th>
               </tr>
             </thead>
             <tbody>
-              @for (p of tr.trendPoints; track p.period) {
+              @for (point of tr.trendPoints; track point.period) {
                 <tr>
-                  <td><strong class="ltr">{{ p.period }}</strong></td>
-                  <td class="ltr">{{ p.revenue | number:'1.2-2' }}</td>
-                  <td class="ltr">{{ p.opex | number:'1.2-2' }}</td>
-                  <td class="ltr font-bold text-success">{{ p.netProfit | number:'1.2-2' }}</td>
-                  <td><span class="badge success">{{ p.marginPercent }}%</span></td>
-                  <td class="ltr">{{ p.salesBookings | number:'1.2-2' }}</td>
-                  <td class="ltr">{{ p.inventoryValue | number:'1.2-2' }}</td>
-                  <td class="ltr">{{ p.payrollDisbursed | number:'1.2-2' }}</td>
-                  <td class="ltr">{{ p.projectEarnedValue | number:'1.2-2' }}</td>
+                  <td><strong class="ltr">{{ point.period }}</strong></td>
+                  <td class="ltr">{{ point.revenue | number:'1.2-2' }}</td>
+                  <td class="ltr">{{ point.opex | number:'1.2-2' }}</td>
+                  <td class="ltr font-bold" [class.positive]="point.netProfit > 0" [class.negative]="point.netProfit < 0">{{ point.netProfit | number:'1.2-2' }}</td>
+                  <td class="ltr">{{ point.marginPercent }}%</td>
+                  <td class="ltr">{{ point.salesBookings | number:'1.2-2' }}</td>
+                  <td class="ltr">{{ point.inventoryValue | number:'1.2-2' }}</td>
+                  <td class="ltr">{{ point.payrollDisbursed | number:'1.2-2' }}</td>
                 </tr>
-              } @empty {
-                <tr><td colspan="9"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
               }
             </tbody>
           </table>
@@ -150,14 +536,14 @@
       }
     }
 
-    <!-- Tab 3: KPI Semantic Registry -->
+    <!-- Tab 3: KPI Registry -->
     @if (activeTab() === 'registry') {
-      <div class="table-card">
-        <table>
+      <div class="table-responsive">
+        <table class="data-table">
           <thead>
             <tr>
               <th>{{ i18n.t('analytics.kpiKey') }}</th>
-              <th>{{ i18n.t('analytics.kpiName') }}</th>
+              <th>{{ i18n.t('common.name') }}</th>
               <th>{{ i18n.t('common.category') }}</th>
               <th>{{ i18n.t('analytics.grain') }}</th>
               <th>{{ i18n.t('analytics.unit') }}</th>
@@ -169,34 +555,32 @@
             @for (k of registry(); track k.key) {
               <tr>
                 <td><code class="ltr">{{ k.key }}</code></td>
-                <td><strong>{{ k.nameAr }}</strong> <small class="text-muted">({{ k.nameEn }})</small></td>
+                <td><strong>{{ k.nameAr }}</strong> <small class="text-muted d-block">{{ k.nameEn }}</small></td>
                 <td><span class="badge info">{{ getCategoryLabel(k.category) }}</span></td>
-                <td><span class="badge">{{ k.grain }}</span></td>
-                <td><span class="badge">{{ k.unit }}</span></td>
-                <td class="ltr">{{ k.formulaAr }}</td>
-                <td><strong>{{ k.sourceModule }}</strong></td>
+                <td>{{ k.grain }}</td>
+                <td>{{ k.unit }}</td>
+                <td><small class="ltr formula-text">{{ k.formulaAr }}</small></td>
+                <td>{{ k.sourceModule }}</td>
               </tr>
-            } @empty {
-              <tr><td colspan="7"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
             }
           </tbody>
         </table>
       </div>
     }
 
-    <!-- Tab 4: Snapshots & Reconciliation -->
+    <!-- Tab 4: Snapshots -->
     @if (activeTab() === 'snapshots') {
-      <div class="table-card">
-        <table>
+      <div class="table-responsive">
+        <table class="data-table">
           <thead>
             <tr>
-              <th>{{ i18n.t('analytics.periodFilter') }}</th>
+              <th>{{ i18n.t('analytics.period') }}</th>
               <th>{{ i18n.t('analytics.kpiKey') }}</th>
               <th>{{ i18n.t('common.category') }}</th>
               <th>{{ i18n.t('analytics.actualValue') }}</th>
               <th>{{ i18n.t('analytics.targetValue') }}</th>
               <th>{{ i18n.t('analytics.trend') }}</th>
-              <th>{{ i18n.t('analytics.reconciliation') }}</th>
+              <th>{{ i18n.t('analytics.reconciliationStatus') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -218,6 +602,61 @@
       </div>
     }
   }
+
+  <!-- Target Setting Modal -->
+  <app-modal-dialog
+    [isOpen]="targetModalOpen()"
+    [title]="i18n.t('executive.targetsModalTitle')"
+    size="normal"
+    [preventOutsideClose]="true"
+    (close)="closeTargetModal()">
+
+    <form [formGroup]="targetForm" (ngSubmit)="submitTarget()" id="target-form" class="modal-form">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label>{{ i18n.t('executive.filterPeriod') }} *</label>
+          <input formControlName="periodKey" placeholder="e.g. 2026-Q3" class="ltr" />
+        </div>
+
+        <div class="field">
+          <label>{{ i18n.t('executive.targetRevenue') }} *</label>
+          <input type="number" step="1000" formControlName="targetRevenue" class="ltr" />
+        </div>
+
+        <div class="field">
+          <label>{{ i18n.t('executive.targetMargin') }} *</label>
+          <input type="number" step="0.1" formControlName="targetGrossMarginPercent" class="ltr" />
+        </div>
+
+        <div class="field">
+          <label>{{ i18n.t('executive.targetOpex') }} *</label>
+          <input type="number" step="1000" formControlName="targetMaxOpex" class="ltr" />
+        </div>
+
+        <div class="field">
+          <label>{{ i18n.t('executive.targetLiquidity') }} *</label>
+          <input type="number" step="1000" formControlName="targetMinLiquidity" class="ltr" />
+        </div>
+
+        <div class="field span-2">
+          <label>{{ i18n.t('executive.targetOverdueAr') }} *</label>
+          <input type="number" step="1000" formControlName="targetMaxOverdueAr" class="ltr" />
+        </div>
+
+        <div class="field span-2">
+          <label>{{ i18n.t('common.notes') }}</label>
+          <textarea formControlName="notes" rows="2"></textarea>
+        </div>
+      </div>
+    </form>
+
+    <div modal-actions class="modal-form-actions">
+      <button class="button secondary" type="button" (click)="closeTargetModal()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="submit" form="target-form" [disabled]="targetForm.invalid || savingTarget()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </app-modal-dialog>
 
   <!-- Create Snapshot Modal -->
   <app-modal-dialog
