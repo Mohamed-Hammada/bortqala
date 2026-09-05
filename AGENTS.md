@@ -1,3 +1,17 @@
+# AGENTS.md — Historical Session Log
+
+> **Status: historical archive.** This file is a chronological, append-only log of past agent work sessions. It is **not required reading for routine development** and is **not the source of truth** for current architecture, rules, or implementation guidance. A rule or fact mentioned only in an old entry below may since have changed — verify against current source/tests/migrations, not this log.
+>
+> For current guidance, use instead:
+> - `CLAUDE.md` — project orientation, core rules, verification commands
+> - `.claude/rules/` — scoped backend/frontend/database/erp-domain/qa/security/menu-registration rules
+> - `be/skills/hr-backend/SKILL.md`, `fe/skills/hr-frontend/SKILL.md`, `fe/skills/no-static-labels/SKILL.md` — detailed domain skills
+> - `PROJECT_MAP.md`, `docs/TECHNICAL_GUIDE_CHECKLIST.md`, `docs/TEST_EVIDENCE.md` — architecture/verification evidence
+>
+> No skill or rule should instruct an agent to read this file in full; if you find one that does, that instruction is stale.
+
+---
+
 # AGENT SESSION SUMMARY — September 5, 2026
 ## Session 18: Owner / Executive Cockpit & Profit Pulse (TASK 05)
 - **Comprehensive Owner/Executive Cockpit Architecture**:
@@ -117,32 +131,11 @@
 ## Session 5: Dynamic Permission-Aware Screen Shortcuts (UX-SHORTCUTS-001)
 - **UX-SHORTCUTS-001: Dynamic Permission-Aware Screen Shortcuts** — Liquibase `v114` (`user_shortcut_profiles`, `user_screen_shortcuts`) & `v115` (`20260806_v115_screen_shortcut_translations.csv`). Backend package `com.bemo.hr.shared.shortcut` with `UserShortcutProfile` (`@Entity`, `@TenantId`, `@Version`), `UserScreenShortcut` (`@Entity`, `@TenantId`), `UserScreenShortcutService`, `DefaultScreenShortcutProvider`, `ScreenShortcutController` (`/api/v1/auth/preferences/shortcuts`), unit test suite `UserScreenShortcutServiceTests` & `ScreenShortcutControllerTests`. Frontend core `ScreenShortcutService`, `screen-shortcut.models.ts`, `shortcut-key.util.ts` (`KeyboardEvent.code` physical key matching e.g. `KeyH`, `Digit1`), `BroadcastChannel('bemo-screen-shortcuts')` cross-tab sync, refactored `app-shortcuts.ts`, updated `app-shell.component.ts` dynamic chord listener, and settings management UI `ShortcutSettingsComponent`. All 239 backend tests and 136 frontend tests pass 100% cleanly.
 
-# HR platform handoff
+# HR platform handoff (historical)
 
-This repository intentionally contains two applications:
+> The two-application overview and the menu registration/permission synchronization protocol formerly written out here have been extracted, since they are live rules rather than history. See `.claude/rules/menu-registration.md` for the current, authoritative version of both. The paragraph below is left as originally written, for session-history continuity only.
 
-- `be/`: Spring Boot backend. Before changing it, read `be/skills/hr-backend/SKILL.md` completely.
-- `fe/`: Angular frontend. Before changing it, read `fe/skills/hr-frontend/SKILL.md` completely.
-
-For changes spanning both applications, define the backend API contract first, then update the typed frontend model and data-access layer. Keep business calculations in the backend; the frontend may format results but must not reimplement attendance or payroll rules.
-
-Current phase: the end-to-end MVP is implemented and verified on PostgreSQL. It includes SaaS app-scoped JWT authentication, per-user theme/density/locale preferences, database-backed Arabic/English translations, multi-role authorization, dynamic attendance categories and schedules, custom report ranges and pay-cycle presets, biometric imports, attendance review, approval/reopen, dashboards, Excel exports, epoch-millisecond API dates, and structured tracing. Tenant-owned entities must keep `@TenantId`; mutable aggregates keep `created_at`/`updated_at`, while immutable evidence uses semantic creation/import timestamps. Read both local skills before extending it.
-
-## Menu Registration & Permission Synchronization Protocol
-
-Whenever creating or adding a new feature/module with sidebar menu items, enforce the following 4-part synchronization protocol to guarantee instant menu visibility across all user roles and sessions:
-
-1. **Frontend Visibility (`app-shell.component.ts`)**:
-   - Register items in `items` array with appropriate `workspace` group key.
-   - Update `visible(item)` and `AuthService.hasMenuAccess(menuId)` so that admin roles (`SUPER_ADMIN`, `ADMIN`) and new feature menu IDs (e.g. `workforce-*`) are explicitly returned as `true`, overriding obsolete local storage session arrays.
-2. **Database Translation Keys & Fallbacks (`i18n.service.ts` & CSV)**:
-   - Add the workspace section key (`workspace.<name>`) and nav label keys to `DEFAULT_FALLBACKS` in `i18n.service.ts` (both `ar-EG` and `en-US`).
-   - Add translation rows to the Liquibase translation CSV (e.g. `workspace.workforce`).
-3. **Database User Schema Migration (`v37` Liquibase)**:
-   - Add a Liquibase changeset executing SQL update on `app_users.allowed_menus` to append the new menu IDs to existing user rows in PostgreSQL.
-   - Update default fallback strings in `AppUser.java` and `AuthService.java` for new user creation.
-4. **User Management UI (`users.page.ts`)**:
-   - Add the new menu IDs to `menuOptions` in `users.page.ts` for explicit admin toggle control.
+Current phase (as of this entry): the end-to-end MVP is implemented and verified on PostgreSQL. It includes SaaS app-scoped JWT authentication, per-user theme/density/locale preferences, database-backed Arabic/English translations, multi-role authorization, dynamic attendance categories and schedules, custom report ranges and pay-cycle presets, biometric imports, attendance review, approval/reopen, dashboards, Excel exports, epoch-millisecond API dates, and structured tracing. Tenant-owned entities must keep `@TenantId`; mutable aggregates keep `created_at`/`updated_at`, while immutable evidence uses semantic creation/import timestamps.
 
 ## Session 6: FIN-002 Fixes + Approval Catalog Parity + Roadmap (Aug 6, 2026)
 - **FIN-002 unified numbering fixes** — `JournalEntryServiceTests`/`SupplierPaymentValidationTests` green (repo stub NPE via `Collectors.toMap` fixed with `businessPartyRepository` mock; `lenient()` save stub). H2 mirror v116 DDL/DML must quote `"year"`; context load verified via `MeIdentityIntegrationTests`. Frontend: `journal-entries.page.spec.ts` needed the `GET /api/v1/finance/numbering-settings` request stubbed/flushed in `beforeEach` — after the fix, `ng test` is 136/136 (26 files) under node 24; `npm run check:i18n` passes (1424 keys); `ng build` succeeds (pre-existing SCSS budget warnings only). **Liquibase V118** added the 6 numbering UI keys missing from the DB catalog (`journal.lineOneSideOnly`, `journal.numberAutoGenerated`, `journal.numberAutoHint`, `settings.documentNumberingTitle`/`Automatic`/`Hint`; 12 rows ar-EG+en-US, ids `v118-001`…`v118-012`, registered in `next` + `test-h2` changelogs) — `check-i18n` was red (12 missing) until these rows landed.

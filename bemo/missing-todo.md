@@ -228,7 +228,7 @@
 
 ## 13. 💭 Imagined Features (mined from competitor marketing — NOT committed scope) — 82%
 
-> Largely delivered by the 30-feature roadmap (`docs/BEMO_ROADMAP_IMPLEMENTATION_STATUS.md`, 30/30) plus Epics 1–5.
+> Largely delivered by the 30-feature roadmap (`docs/status/BEMO_ROADMAP_IMPLEMENTATION_STATUS.md`, 30/30) plus Epics 1–5.
 
 ### 13.1 Accounting & Finance — 100%
 - [x] ⭐ Automatic journal entries from operational documents. `(100%)` — settlements, invoices, payments post debit/credit partner-ledger + journal entries automatically. Missing: nothing.

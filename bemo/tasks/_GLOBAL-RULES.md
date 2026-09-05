@@ -24,7 +24,7 @@
 6. States before happy path: loading/empty/error/stale/permission/success.
 7. Confirm destructive actions with affected counts; touch targets ≥40px; never color alone.
 
-## New page/menu protocol (AGENTS.md 4-part)
+## New page/menu protocol (see `.claude/rules/menu-registration.md`)
 Shell nav item + visible() gate → i18n fallbacks + CSV rows → SQL UPDATE on `app_users.allowed_menus` (idempotent) + defaults in `AppUser.java`/`AuthService.java` → `USER_MENU_OPTIONS` in `users.page.ts` (+ AccessCatalog if permissions added).
 
 ## Definition of Done (every task)

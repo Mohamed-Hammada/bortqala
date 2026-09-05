@@ -10,7 +10,7 @@ Build the backend as a modular monolith on Spring Boot 4.1, Java 21, Gradle, Pos
 ## Start every task
 
 1. Inspect `build.gradle`, `src/main/resources`, and the affected feature package.
-2. Read the root `AGENTS.md`; read the frontend skill when changing an API consumed by `fe`.
+2. Read root `CLAUDE.md` and the relevant `.claude/rules/` (`backend.md`, `erp-domain.md`, `security.md`; `menu-registration.md` if the change adds a sidebar menu item). Read the frontend skill when changing an API consumed by `fe`. `AGENTS.md` is a historical session log only — do not read it as a prerequisite.
 3. State the business rule and acceptance cases before coding.
 4. Implement one vertical slice, then run `./gradlew.bat test` on Windows or `./gradlew test` elsewhere.
 5. Update **Current state** only when the handoff facts change.

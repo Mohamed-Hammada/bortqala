@@ -43,10 +43,10 @@ bemo-erp/
 │   │       └── ...
 │   └── src/app/app.routes.ts    # All route definitions
 ├── docs/
-│   ├── ROADMAP_STATUS.md        # 30-feature status tracker
+│   ├── status/ROADMAP_STATUS.md # 30-feature status tracker (historical/point-in-time)
 │   ├── TEST_EVIDENCE.md         # Quality gate evidence
 │   └── ROADMAP_DEVELOPER_GUIDE.md  # This file
-└── AGENTS.md                    # Session history
+└── AGENTS.md                    # Historical session log only — not authoritative
 ```
 
 ---
@@ -392,9 +392,10 @@ When adding a new sidebar menu item, enforce this 4-part sync:
 
 ## 9. References
 
-- `docs/ROADMAP_STATUS.md` — Current status of all 30 features
+- `docs/status/ROADMAP_STATUS.md` — Status of all 30 features (historical/point-in-time; verify against source before relying on it)
 - `docs/TEST_EVIDENCE.md` — Quality gate evidence
-- `docs/BEMO_ROADMAP_IMPLEMENTATION_STATUS.md` — Central tracker
-- `AGENTS.md` — Session history
+- `docs/status/BEMO_ROADMAP_IMPLEMENTATION_STATUS.md` — Central tracker (historical/point-in-time)
+- `CLAUDE.md` and `.claude/rules/` — current, authoritative project rules
+- `AGENTS.md` — historical session log only, not authoritative
 - `be/skills/hr-backend/SKILL.md` — Backend coding rules
 - `fe/skills/hr-frontend/SKILL.md` — Frontend coding rules

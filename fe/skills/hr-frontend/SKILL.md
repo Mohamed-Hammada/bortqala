@@ -10,7 +10,7 @@ Build a calm, table-first Arabic RTL application on Angular 22 standalone APIs, 
 ## Start every task
 
 1. Inspect `package.json`, `src/app/app.routes.ts`, global styles, and the affected feature.
-2. Read the root `AGENTS.md`; read the backend skill before inventing or changing an API.
+2. Read root `CLAUDE.md` and the relevant `.claude/rules/` (`frontend.md`, `security.md`; `menu-registration.md` if the change adds a sidebar menu item). Read the backend skill before inventing or changing an API. `AGENTS.md` is a historical session log only — do not read it as a prerequisite.
 3. Define loading, empty, error, stale, permission, and success states before the happy path.
 4. Implement one lazy feature slice, then run `npm test -- --watch=false` and `npm run build`.
 5. Update **Current state** only when the handoff facts change.

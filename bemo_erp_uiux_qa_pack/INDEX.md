@@ -25,7 +25,7 @@ A green build, passing unit tests, or "implemented" in the code is not sufficien
 
 ## Important distinction
 
-The repository's STATUS.md currently reports `UX-ALL` as COMPLETED, but this document deliberately treats each UX requirement as an independently verifiable acceptance item. Completion must be based on evidence, not the status label.
+The repository's `docs/status/STATUS.md` currently reports `UX-ALL` as COMPLETED, but this document deliberately treats each UX requirement as an independently verifiable acceptance item. Completion must be based on evidence, not the status label.
 
 ## Index
 
