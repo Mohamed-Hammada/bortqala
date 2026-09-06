@@ -13,7 +13,9 @@ Implementation claims in historical notes are not authoritative. Verify behavior
 
 Current remediation status: all implementation items through `O2C-001` plus `FIN-UI-001`, `SEC-001`, and `UI-001` are verified complete. The fiscal-period page is now the consolidated Finance Reports & Close workbench, with matching backend, route, catalog, and shell permissions. `PAY-001` enforces `DRAFT → CALCULATED → REVIEWED → APPROVED → POSTED → PAID`, row locks, expected versions, role-scoped transitions, and frozen snapshots; its PostgreSQL concurrent-payment proof remains the only open P0 verification gate.
 
-P2 status: Java builds intentionally use the Java 21 toolchain with Java 17-compatible bytecode; frontend builds are standardized on Node 24; business-sensitive AR aging/collections require an explicit as-of date; the Nginx frontend boundary applies a restrictive CSP without `unsafe-eval`. Partial manufacturing issue/receipt is explicitly out of the current all-or-nothing production-order scope.
+P2 status: Java builds intentionally use the Java 21 toolchain with Java 17-compatible bytecode; frontend builds are standardized on Node 24; the Nginx frontend boundary applies a restrictive CSP without `unsafe-eval`. Partial manufacturing issue/receipt is explicitly out of the current all-or-nothing production-order scope.
+
+**Known gap (found 2026-09-06, not yet fixed):** AR aging (`GET /api/v1/parties/reports/aging`) accepts an optional `asOfDate`, but `PartyFinancialPositionService.getFinancialPosition()` always buckets against `System.currentTimeMillis()` regardless of the parameter — the as-of date has no effect on aging buckets. Do not rely on it for a historical aging cutoff until fixed. See `docs/DOCUMENTATION_IMPLEMENTATION_RECONCILIATION.md` §9.5.
 
 ## Local verification
 

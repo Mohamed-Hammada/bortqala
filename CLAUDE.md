@@ -56,6 +56,7 @@ npm run check:hardcoded
 npm run test -- --watch=false
 npm run build
 ```
+Frontend tests require Node 24 exactly (`fe/.nvmrc`, `engines: ">=24.0.0 <25"`). On any other Node major (e.g. 26), Vitest's jsdom loses `localStorage`, which cascades into ~250+ false failures in `i18n.service`/`auth.service`-dependent specs — a real, previously-hit failure mode, not a regression. Run `nvm use 24` (or source `$NVM_DIR/nvm.sh` first in non-login shells) before `npm run test`. `check:i18n`, `check:hardcoded`, and `npm run build` are unaffected by Node version.
 
 Full integration/CI validation should include PostgreSQL/Testcontainers where the affected path requires it.
 

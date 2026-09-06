@@ -80,13 +80,24 @@ below a recorded baseline or reports failures fails the release gate.
 
 ## Baselines (enforced by CI)
 
-| Suite | Baseline | Command | Threshold rule |
+**Corrected 2026-09-06** — this table had not been updated since 2026-08-13 even though `be/tools/check-test-count.py` and `fe/tools/check-test-count.mjs` were raised repeatedly since (most recently in commit `aa9d26b`, 2026-09-01, which touched only the two scripts, not this file). The table below now reflects what the scripts actually enforce as of `aa9d26b` plus the fresh full-suite run recorded in the entry directly below. Older entries further down are left untouched as historical record — see "How to refresh a baseline" above them.
+
+| Suite | Baseline (as enforced by the scripts today) | Command | Threshold rule |
 |-------|----------|---------|----------------|
-| Backend (non-Docker, H2) | **535 tests / 146 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 535 AND failures = 0 |
-| Backend (full, incl. Testcontainers) | **310 tests** expected when Docker available | `./gradlew test` | failures = 0 |
-| Frontend (Angular + Vitest) | **284 tests / 50 files / 0 failures** | `npx ng test --watch=false` | count ≥ 284 AND failures = 0 |
+| Backend (non-Docker, H2) | **1,469 tests / 280 suites / 0 failures** (`be/tools/check-test-count.py` `MIN_TESTS`/`MIN_SUITES`) | `./gradlew test -PskipDockerTests` | count ≥ 1,469 AND failures = 0 |
+| Backend (full, incl. Testcontainers) | Not independently re-verified in this pass (no Docker daemon in this environment) | `./gradlew test` | failures = 0 |
+| Frontend (Angular + Vitest) | **710 tests / 144 files / 0 failures** (matches `PROJECT_MAP.md` Session 18) | `npx ng test --watch=false` (requires Node 24 — see `CLAUDE.md`) | count ≥ current `fe/tools/check-test-count.mjs` floor |
 
 ## Evidence log
+
+### 2026-09-06 — Documentation/implementation reconciliation verification pass (HEAD `0238a35`)
+
+- Backend: full suite (not `-x` excluded) `./gradlew test -PskipDockerTests` run from a native-ext4 rsync mirror (`/tmp/opencode/be-build`, per `docs/BUILD_TOOLING.md` — native Gradle on `/mnt/d` did not progress past 3 of 286 suites after ~40 minutes; the mirror finished in **5m 37s**) → **BUILD SUCCESSFUL**; summed JUnit XML: **1,510 tests / 286 suites / 0 failures / 0 errors / 1 skipped**. Above the script's 1,469/280 floor.
+- Static gates: `check-error-codes.py` **821/821 PASS**; `check-translation-catalog.py` **18,364 rows PASS**; `check-authorization-contract.py` **21/21 PASS**.
+- Frontend under Node **26.5.1 (system default)**: `npm run test -- --watch=false` → **254 failed / 456 passed of 710**, 51/144 files failing — all failures are `localStorage`-undefined errors in jsdom (`i18n.service`/`auth.service`), a known Node-version artifact (see the 2026-08-29 entry below), **not a regression**.
+- Frontend under **Node 24.18.1 (nvm)**: same command → **710 tests / 144 files / 0 failures** — matches `PROJECT_MAP.md` Session 18 exactly. `check:i18n` **6,050 keys PASS**; `check:hardcoded` **0 violations, 148 HTML + 330 TS PASS**; `ng build` **PASS** (2 pre-existing non-blocking budget warnings: initial bundle +30.8 kB, `users.page.scss` +1.79 kB).
+- Docker/PostgreSQL: **not run** — no Docker daemon in this environment (confirmed: `docker` command not found in this WSL distro). `PayrollPaymentConcurrencyTests` and other `@PostgresIntegrationTest`-tagged suites remain unverified here, consistent with every prior entry in this log.
+- Full findings, including several implementation/documentation gaps discovered during this pass (stale baseline table above, two orphaned Liquibase migrations, a missing-`@PreAuthorize` exception in `serviceops`, and an AR-aging as-of-date defect), are recorded in `docs/DOCUMENTATION_IMPLEMENTATION_RECONCILIATION.md`.
 
 ### 2026-08-12 — release-checklist remediation working tree (baseline `a9430d34fa6f52bd9968ced3e6baa3d718cfc3c8`)
 

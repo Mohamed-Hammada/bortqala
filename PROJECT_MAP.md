@@ -80,7 +80,7 @@
 - **P0-08 (deferred, external)**: GitHub Actions still requires resolving the account/billing lock before the three CI jobs can produce independent evidence.
 - **Technical-Review Hardening Batch (P0)**:
   - **P0-1/P0-2/P0-4 — Tenant & Evidence Integrity**: Tenant-owned aggregates keep `@TenantId` app scoping with immutable audit timestamps on evidence; shared idempotency (`operationId`) handling verified across bulk decisions, payroll transitions, and supplier payments; API dates remain epoch-milliseconds.
-  - **P0-3 — Role-Based Security Parity**: Every domain controller now carries explicit `@PreAuthorize` sets matching backend role codes. Finance (`FINANCE_MANAGER`, `ACCOUNTANT`, `TREASURY_USER`, `HR_MANAGER`, `AUDITOR`), procurement (readers include `PROCUREMENT_USER`, `INVENTORY_MANAGER`; writes restricted to `PROCUREMENT_MANAGER`), sales/manufacturing/quality/payroll sets enforced; HR-domain controllers intentionally keep HR/ADMIN roles. Violations return `403`.
+  - **P0-3 — Role-Based Security Parity**: Every domain controller now carries explicit `@PreAuthorize` sets matching backend role codes. Finance (`FINANCE_MANAGER`, `ACCOUNTANT`, `TREASURY_USER`, `HR_MANAGER`, `AUDITOR`), procurement (readers include `PROCUREMENT_USER`, `INVENTORY_MANAGER`; writes restricted to `PROCUREMENT_MANAGER`), sales/manufacturing/quality/payroll sets enforced; HR-domain controllers intentionally keep HR/ADMIN roles. Violations return `403`. **Exception found 2026-09-06 (not yet fixed):** `com.bemo.hr.serviceops.api.BookingController`, `WorkOrderController`, and `RentalController` carry no `@PreAuthorize`/`@Secured` of any kind — their mutating endpoints (including invoice-generating work-order delivery) are reachable by any authenticated user of any role. Tenant isolation is intact (`@TenantId` + `TenantContext` checked in the underlying services), so this is a role/permission gap, not a cross-tenant leak. `check-authorization-contract.py` cannot detect this class of gap — it only validates role strings inside `@PreAuthorize` annotations that already exist. See `docs/DOCUMENTATION_IMPLEMENTATION_RECONCILIATION.md` §10.
   - **P0-5 — Finance Journal State Machine**: Journal entries expose explicit state (`DRAFT`/`POSTED`/`REVERSED`) with guarded post/reverse transitions, and fiscal periods enforce open/closed lifecycle (`FiscalPeriodGuard`) so posting into a closed period is blocked.
   - **P0-6 — Fiscal Close Enforcement in Procurement**: `ProcurementService` now applies `FiscalPeriodGuard` to supplier-invoice and payment posting dates, preventing documents dated inside closed periods.
   - **P0-7 — Optimistic Locking**: `@Version` optimistic locking added to 14 mutable aggregates (PurchaseOrder, GoodsReceipt, SupplierInvoice, SupplierPayment, SalesOrder, ProductionOrder, QualityInspection, WorkforceSettlementPeriod, WorkforceAdvance, ManualAttendanceEntry, LaborRequest, BankAccount, Currency, TaxRate) with Liquibase V84 columns; concurrent edits now fail with a stale-state conflict.
@@ -195,10 +195,25 @@
   - **Frontend UI**: Integrated into `OrganizationPage` (`/organization/branches`) with 3 tabs: Branches Directory, Stock Transfers Hub (with Dispatch modal, Inspection Receiving modal, Discrepancy Resolution modal), and Consolidated Group Reporting (P&L, Balance Sheet, Branch Comparison Matrix, date/branch filtering, Excel export).
   - **Evidence**: 709 frontend tests across 144 suites pass, 6,004 i18n keys, 0 hardcoded strings, 820 error codes PASS, 18,216 translation catalog PASS.
 
+## [FEATURES FOUND BUT UNDOCUMENTED — 2026-09-06 reconciliation]
+
+A route/feature inventory of `fe/src/app/app.routes.ts` (2026-09-06, see `docs/DOCUMENTATION_IMPLEMENTATION_RECONCILIATION.md` §13) found ~107 current lazy-loaded frontend routes against roughly 60-odd distinct features actually named anywhere in this file, `README.md`, or `docs/TECHNICAL_GUIDE_CHECKLIST.md`. The following have real pages/components wired into routing but are named nowhere in active documentation. **Existence and routing are confirmed; full backend/business behavior was not audited in this pass** — treat these as "known to exist, not yet characterized," not as verified-complete:
+
+- **A full clinic/medical vertical** (`fe/src/app/features/clinic/`): `clinic/patients` (+`:id/chart`), `clinic/queue`, `clinic/commissions`, `clinic/appointments`, `clinic/pharmacy`, `clinic/lab`, `clinic/insurance`, `clinic/hospital`, `clinic/dental`, `clinic/tools` — 10 pages.
+- `crm` (CrmPage) — a CRM page.
+- `verticals/specialized` (VerticalsPage) — distinct from the documented tenant vertical-feature-flag concept.
+- `service-ops` (booking/rental/work-order backend confirmed to exist in `com.bemo.hr.serviceops`, but with an authorization gap — see P0-3 above).
+- `smart-import` (+`:workflow`), `server-setup`, `selfie-punch`, `migration` (DataMigrationComponent), `imports/device-integrations`, `automation`, `growth`, `report-builder`, `documents`, `notifications/send`, `admin/setup-readiness`, `admin/product-insights`, `platform-admin/outbox`, `access/policy-groups`.
+- `finance/payment-links` — the backend webhook-signature work (WP-29) is documented above; this frontend page/route was not.
+- `kb`, `helpdesk` (a *separate* ticket system from the documented Epic-11 `support` module — see the "two ticket systems" note under workforce/support findings in the reconciliation doc §11.6), `marketing`.
+- The public storefront/payment pages (`PublicPayPage`, `PublicCatalogPage`, `PublicProductDetailPage`) — the backend capability (P1-01/WP-29) is documented above; these frontend page names were not.
+
+Also found: `fe/src/app/features/clinic/clinic.routes.ts` and `fe/src/app/features/approvals/approvals.routes.ts` are dead/orphaned route-config files, never imported anywhere (the real clinic/approvals routes are wired as flat paths directly in `app.routes.ts` instead) — leftover scaffolding, not a second reachable route tree.
+
 ## [ORPHANS & PENDING]
 
 Tracking Commercial Readiness Roadmap Tasks (C:\Users\wolfn\Downloads\Next_ERP_Commercial_Readiness_Task_Pack):
-- **TASK 05 — Owner Executive Cockpit** [P1, IN PROGRESS]: Real-time executive KPIs, AR/AP aging waterfall, net liquidity, low stock, branch performance leaderboard.
+- **TASK 05 — Owner Executive Cockpit** — moved to `[COMPLETED & VERIFIED]` (Session 18, Liquibase v459/v460, confirmed on disk during the 2026-09-06 documentation reconciliation); this list previously showed it as IN PROGRESS/PENDING in three places, which was stale and contradicted the completed entry above. Corrected here.
 - **TASK 06 — Field Sales Representative Workspace** [P1, PENDING]: Rep daily visit planning, route view, customer balance, visit outcome, mobile flow.
 - **TASK 07 — Customer Portal** [P1, PENDING]: Customer statement, invoices, delivery status, online reorders.
 - **TASK 08 — WhatsApp & Document Delivery Center** [P1, PENDING]: Document sharing via WhatsApp & email, localized templates, delivery audit.
@@ -212,7 +227,7 @@ Completed in Prior Sessions:
 - **TASK 02 — Offline Field Sales Mobile & Local Sync** [P0, VERIFIED]: Offline-first IndexedDB catalog & customer sync, offline sales order/invoice/receipt creation, local numbering, signature capture, idempotent sync queue.
 - **TASK 03 — Thermal Printer & Receipt Printing (ESC/POS)** [P0, VERIFIED]: Standard ESC/POS binary byte generator, 58mm/80mm layouts, Arabic/English rendering, QR/barcode, branch/device printer config, POS & sales reprint with audit log.
 - **TASK 04 — Multi-Branch Control Center & Consolidated Group Reporting** [P1, VERIFIED]: Branch operational scoping, branch defaults & prefix, in-transit cross-branch transfers, inspection & discrepancy resolution, consolidated P&L and Balance Sheet with eliminations, Excel export.
-- **TASK 05 — Owner Executive Cockpit** [P1, PENDING]: Real-time executive KPIs, AR/AP aging waterfall, net liquidity, low stock, branch performance leaderboard.
+- **TASK 05 — Owner Executive Cockpit** [P1, VERIFIED]: Real-time executive KPIs, AR/AP aging waterfall, net liquidity, low stock, branch performance leaderboard. (Corrected 2026-09-06: this duplicate list entry previously said PENDING, contradicting the COMPLETED & VERIFIED entry above; see `docs/DOCUMENTATION_IMPLEMENTATION_RECONCILIATION.md` Finding C-1.)
 - **TASK 06 — Field Sales Representative Workspace** [P1, PENDING]: Rep daily visit planning, route view, customer balance, visit outcome, mobile flow.
 - **TASK 07 — Customer Portal** [P1, PENDING]: Customer statement, invoices, delivery status, online reorders.
 - **TASK 08 — WhatsApp & Document Delivery Center** [P1, PENDING]: Document sharing via WhatsApp & email, localized templates, delivery audit.
@@ -343,7 +358,7 @@ Completed in Prior Sessions:
 - [x] **TASK 03 — ESC/POS Thermal Printing & Hardware Integration (P0)**: Direct ESC/POS byte generator (58mm/80mm, QR TLV, Code128, drawer kick, cut paper), Web Bluetooth GATT driver, network socket dispatch, reprint audit engine, and printer management UI. (Session 15 - VERIFIED).
 - [x] **TASK 02 — Offline Field Sales Mobile (P0)**: Authenticated local session, offline bundle download (assigned customers, catalog, stock summaries), offline draft creation (quotation, order, invoice, receipt, return) with deterministic local numbering (`OFF-...`), signature capture canvas, outbox sync queue with idempotency keys, conflict handling, and mobile phone-optimized UI. (Session 16 - VERIFIED).
 - [x] **TASK 04 — Multi-Branch Inventory Transfer & In-Transit Tracking (P1)**: Multi-branch operational defaults, prefix, main branch flags, in-transit dispatch, inspection receiving, discrepancy resolution, consolidated group reporting (P&L, Balance Sheet, comparison matrix) with eliminations. (Session 17 - VERIFIED).
-- [/] **TASK 05 — Owner / Executive Mobile KPI Cockpit (P1)**: [IN PROGRESS] Real-time executive KPIs, AR/AP aging waterfall, net liquidity, low stock, branch performance leaderboard.
+- [x] **TASK 05 — Owner / Executive Mobile KPI Cockpit (P1)**: Real-time executive KPIs, AR/AP aging waterfall, net liquidity, low stock, branch performance leaderboard. (Session 18 - VERIFIED; corrected 2026-09-06 from a stale IN PROGRESS marker — see `docs/DOCUMENTATION_IMPLEMENTATION_RECONCILIATION.md` Finding C-1.)
 - [ ] **TASK 06 — Field Sales Rep Route Planning & Visit Verification (P1)**
 - [ ] **TASK 07 — Customer Self-Service Portal (P1)**
 - [ ] **TASK 08 — WhatsApp Document & Invoice Delivery (P1)**

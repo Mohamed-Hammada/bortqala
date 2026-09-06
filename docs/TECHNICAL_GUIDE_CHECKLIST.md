@@ -1,5 +1,7 @@
 # Bemo ERP — Technical Guide Implementation Checklist
 
+> **Point-in-time snapshot — 2026-08-01 through 2026-08-04.** The verification runs and the §4 page-by-page table below were never updated after early August, while substantial work landed afterward. A 2026-09-06 documentation/implementation reconciliation (`docs/DOCUMENTATION_IMPLEMENTATION_RECONCILIATION.md`) found several of this file's `PARTIAL`/`NOT_STARTED` verdicts are now stale and contradicted by later, source-verified work — notably §4.11 Sales (a real quotation→order→delivery→invoice→receipt→return pipeline now exists), §4.16 Journal Entries and §4.20 Fiscal Periods (a real `FiscalPeriodGuard` closed-period check and a close-orchestration package now exist), and the "31 routes" count in §3 (current count is ~107 lazy-loaded routes). Some verdicts are still accurate (e.g. Quality Inspection's core workflow, several procurement reverse-endpoint gaps). **Treat every verdict below as historical unless corroborated against current source** — use `PROJECT_MAP.md`, `docs/TEST_EVIDENCE.md`, and `docs/DOCUMENTATION_IMPLEMENTATION_RECONCILIATION.md` for current status.
+
 Source: `BEMO_ERP_PAGE_BY_PAGE_TECHNICAL_GUIDE_README.md` (source review date 1 August 2026).
 
 Status values: `NOT_STARTED` | `BACKEND_ONLY` | `FRONTEND_ONLY` | `PARTIAL` | `IMPLEMENTED_NOT_TESTED` | `VERIFIED`.
