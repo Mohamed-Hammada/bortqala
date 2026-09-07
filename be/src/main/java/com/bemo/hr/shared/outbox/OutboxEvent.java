@@ -28,8 +28,7 @@ public class OutboxEvent {
     @Column(name = "aggregate_id", length = 60, nullable = false)
     private String aggregateId;
 
-    @Lob
-    @Column(name = "payload_json", nullable = false)
+    @Column(name = "payload_json", nullable = false, columnDefinition = "TEXT")
     private String payloadJson;
 
     @Column(name = "status", length = 30, nullable = false)

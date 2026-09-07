@@ -24,7 +24,7 @@ public class WorkforceImportBatch {
     private String contentType;
     @Column(nullable = false, length = 64)
     private String checksum;
-    @Lob
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARBINARY)
     @Column(name = "original_file", nullable = false)
     private byte[] originalFile;
     @Column(nullable = false, length = 30)

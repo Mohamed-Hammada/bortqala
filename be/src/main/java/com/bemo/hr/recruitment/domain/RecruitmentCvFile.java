@@ -25,7 +25,7 @@ public class RecruitmentCvFile {
     @Column(name = "size_bytes", nullable = false)
     private long sizeBytes;
 
-    @Lob
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARBINARY)
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "content", nullable = false)
     private byte[] content;

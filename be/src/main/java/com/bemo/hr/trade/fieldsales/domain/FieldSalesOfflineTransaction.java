@@ -60,8 +60,7 @@ public class FieldSalesOfflineTransaction {
     @Column(name = "conflict_reason")
     private String conflictReason;
 
-    @Lob
-    @Column(name = "customer_signature_png")
+    @Column(name = "customer_signature_png", columnDefinition = "TEXT")
     private String customerSignaturePng;
 
     @Column(name = "customer_confirmation_name")
@@ -70,8 +69,7 @@ public class FieldSalesOfflineTransaction {
     @Column(name = "gps_coordinates", length = 64)
     private String gpsCoordinates;
 
-    @Lob
-    @Column(name = "payload_json")
+    @Column(name = "payload_json", columnDefinition = "TEXT")
     private String payloadJson;
 
     @Column(name = "client_created_at")
