@@ -28,6 +28,13 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
 
     List<Project> findByCompanyIdOrderByCreatedAtDesc(String companyId);
 
+    /**
+     * 2026-09-07 remediation (branch-filtering hardening): Project.branchId is real and populated
+     * — used to give the Owner Cockpit's project budget/actual/WIP figures real, branch-scoped
+     * results when a specific branch is requested.
+     */
+    List<Project> findByBranchIdOrderByCreatedAtDesc(String branchId);
+
     long countByStatus(ProjectStatus status);
 
     @Query("SELECT COALESCE(SUM(p.contractValue), 0) FROM Project p")

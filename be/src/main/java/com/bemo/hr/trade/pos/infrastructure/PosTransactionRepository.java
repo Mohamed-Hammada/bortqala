@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,4 +33,15 @@ public interface PosTransactionRepository extends JpaRepository<PosTransaction, 
      */
     @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM PosTransaction t WHERE t.createdAt >= :startInclusive AND t.createdAt <= :endInclusive AND t.status = 'COMPLETED'")
     java.math.BigDecimal sumCompletedInRange(@Param("startInclusive") long startInclusive, @Param("endInclusive") long endInclusive);
+
+    /**
+     * 2026-09-07 remediation (branch-filtering hardening, docs/FINAL_REMEDIATION_VERIFICATION):
+     * PosTransaction has no branchId of its own, but a real join through terminalId ->
+     * PosTerminal.branchId exists. Used to give the Owner Cockpit real, branch-scoped POS revenue
+     * instead of either ignoring the requested branchId (tenant-wide leakage) or fabricating a split.
+     */
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM PosTransaction t WHERE t.terminalId IN :terminalIds AND t.createdAt >= :startInclusive AND t.createdAt <= :endInclusive AND t.status = 'COMPLETED'")
+    BigDecimal sumCompletedInRangeForTerminals(@Param("terminalIds") Collection<String> terminalIds,
+                                               @Param("startInclusive") long startInclusive,
+                                               @Param("endInclusive") long endInclusive);
 }

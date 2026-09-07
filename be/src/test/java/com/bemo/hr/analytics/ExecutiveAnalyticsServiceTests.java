@@ -9,6 +9,7 @@ import com.bemo.hr.compliance.eta.domain.EtaInvoiceSubmission;
 import com.bemo.hr.compliance.eta.infrastructure.EtaInvoiceSubmissionRepository;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.expenses.domain.ExpenseClaim;
 import com.bemo.hr.expenses.infrastructure.ExpenseClaimRepository;
 import com.bemo.hr.finance.application.FinancialStatementsReportService;
 import com.bemo.hr.finance.application.TreasuryPositionService;
@@ -97,6 +98,8 @@ class ExecutiveAnalyticsServiceTests {
     @Mock private InventoryValuationService inventoryValuationService;
     @Mock private TreasuryPositionService treasuryPositionService;
     @Mock private com.bemo.hr.finance.infrastructure.FiscalPeriodRepository fiscalPeriodRepository;
+    @Mock private com.bemo.hr.trade.pos.infrastructure.PosTerminalRepository posTerminalRepository;
+    @Mock private com.bemo.hr.organization.infrastructure.WarehouseRepository warehouseRepository;
 
     private ExecutiveAnalyticsService service;
     private final String currentPeriod = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
@@ -111,7 +114,7 @@ class ExecutiveAnalyticsServiceTests {
                 productionOrderRepository, costLedgerRepository, expenseClaimRepository,
                 salaryPaymentRepository, cockpitTargetRepository, businessPartyRepository, authEvaluator,
                 financialStatementsReportService, inventoryValuationService, treasuryPositionService,
-                fiscalPeriodRepository
+                fiscalPeriodRepository, posTerminalRepository, warehouseRepository
         );
     }
 
@@ -285,6 +288,203 @@ class ExecutiveAnalyticsServiceTests {
         assertThat(item.revenue()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(item.cogs()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(item.netProfit()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    @DisplayName("BRANCH FILTERING: cockpit(branchId=A1) never returns Branch A2's data and vice versa; tenant-wide (no branchId) combines both")
+    void branchFilteringGenuinelyIsolatesEachBranchsDataAndNeverLeaksTheOtherBranch() {
+        stubEverythingEmpty();
+
+        Branch branchA1 = mock(Branch.class);
+        when(branchA1.getId()).thenReturn("branch-a1");
+        when(branchA1.getCode()).thenReturn("A1");
+        when(branchA1.getName()).thenReturn("Branch A1");
+        when(branchA1.isMainBranch()).thenReturn(true);
+        Branch branchA2 = mock(Branch.class);
+        when(branchA2.getId()).thenReturn("branch-a2");
+        when(branchA2.getCode()).thenReturn("A2");
+        when(branchA2.getName()).thenReturn("Branch A2");
+        when(branchA2.isMainBranch()).thenReturn(false);
+        when(authEvaluator.hasBranchAccess("branch-a1")).thenReturn(true);
+        when(authEvaluator.hasBranchAccess("branch-a2")).thenReturn(true);
+        when(branchRepository.findById("branch-a1")).thenReturn(Optional.of(branchA1));
+        when(branchRepository.findById("branch-a2")).thenReturn(Optional.of(branchA2));
+        when(branchRepository.findAllByOrderByCodeAsc()).thenReturn(List.of(branchA1, branchA2));
+
+        // Deterministic, materially different headcount per branch: A1 has 2 active + 1 inactive
+        // (inactive must not count); A2 has 1 active.
+        Employee a1Emp1 = mock(Employee.class);
+        when(a1Emp1.isActive()).thenReturn(true);
+        when(a1Emp1.getBranchId()).thenReturn("branch-a1");
+        Employee a1Emp2 = mock(Employee.class);
+        when(a1Emp2.isActive()).thenReturn(true);
+        when(a1Emp2.getBranchId()).thenReturn("branch-a1");
+        Employee a1Emp3Inactive = mock(Employee.class);
+        when(a1Emp3Inactive.isActive()).thenReturn(false);
+        when(a1Emp3Inactive.getBranchId()).thenReturn("branch-a1");
+        Employee a2Emp1 = mock(Employee.class);
+        when(a2Emp1.isActive()).thenReturn(true);
+        when(a2Emp1.getBranchId()).thenReturn("branch-a2");
+        when(employeeRepository.findByBranchId("branch-a1")).thenReturn(List.of(a1Emp1, a1Emp2, a1Emp3Inactive));
+        when(employeeRepository.findByBranchId("branch-a2")).thenReturn(List.of(a2Emp1));
+        when(employeeRepository.findAll()).thenReturn(List.of(a1Emp1, a1Emp2, a1Emp3Inactive, a2Emp1));
+
+        // Deterministic, materially different cash/bank per branch.
+        when(treasuryPositionService.cashBalanceByBranch()).thenReturn(
+                java.util.Map.of("branch-a1", BigDecimal.valueOf(10_000), "branch-a2", BigDecimal.valueOf(500_000)));
+        when(treasuryPositionService.bankBalanceByBranch()).thenReturn(
+                java.util.Map.of("branch-a1", BigDecimal.valueOf(20_000), "branch-a2", BigDecimal.valueOf(700_000)));
+
+        // Deterministic, materially different POS revenue per branch, via real terminalId -> branchId join.
+        com.bemo.hr.trade.pos.domain.PosTerminal a1Terminal = mock(com.bemo.hr.trade.pos.domain.PosTerminal.class);
+        when(a1Terminal.getId()).thenReturn("term-a1");
+        com.bemo.hr.trade.pos.domain.PosTerminal a2Terminal = mock(com.bemo.hr.trade.pos.domain.PosTerminal.class);
+        when(a2Terminal.getId()).thenReturn("term-a2");
+        when(posTerminalRepository.findByBranchId("branch-a1")).thenReturn(List.of(a1Terminal));
+        when(posTerminalRepository.findByBranchId("branch-a2")).thenReturn(List.of(a2Terminal));
+        when(posTransactionRepository.sumCompletedInRangeForTerminals(eq(List.of("term-a1")), anyLong(), anyLong()))
+                .thenReturn(BigDecimal.valueOf(1_111));
+        when(posTransactionRepository.sumCompletedInRangeForTerminals(eq(List.of("term-a2")), anyLong(), anyLong()))
+                .thenReturn(BigDecimal.valueOf(9_999));
+
+        // Deterministic, materially different payroll per branch, via real employeeId -> branchId join.
+        SalaryPayment a1Payment = mock(SalaryPayment.class);
+        when(a1Payment.getPaymentStatus()).thenReturn(com.bemo.hr.payroll.domain.PaymentStatus.PAID);
+        when(a1Payment.getNetAmount()).thenReturn(BigDecimal.valueOf(3_000));
+        SalaryPayment a2Payment = mock(SalaryPayment.class);
+        when(a2Payment.getPaymentStatus()).thenReturn(com.bemo.hr.payroll.domain.PaymentStatus.PAID);
+        when(a2Payment.getNetAmount()).thenReturn(BigDecimal.valueOf(70_000));
+        YearMonth ym = YearMonth.parse(currentPeriod);
+        // Mockito matches by the ACTUAL list content passed by the service (order of
+        // findByBranchId's mocked return), so stub using the exact lists the service will build.
+        when(salaryPaymentRepository.findByEmployeeIdInAndPeriodYearAndPeriodMonth(
+                argThat(ids -> ids != null && ids.size() == 3), eq(ym.getYear()), eq(ym.getMonthValue())))
+                .thenReturn(List.of(a1Payment));
+        when(salaryPaymentRepository.findByEmployeeIdInAndPeriodYearAndPeriodMonth(
+                argThat(ids -> ids != null && ids.size() == 1), eq(ym.getYear()), eq(ym.getMonthValue())))
+                .thenReturn(List.of(a2Payment));
+
+        OwnerCockpitResponse a1Response = service.getOwnerCockpit(currentPeriod, "branch-a1");
+        OwnerCockpitResponse a2Response = service.getOwnerCockpit(currentPeriod, "branch-a2");
+        OwnerCockpitResponse tenantWide = service.getOwnerCockpit(currentPeriod, null);
+
+        // --- Branch A1: exactly A1's own data, never A2's ---
+        assertThat(a1Response.kpiSummary().activeHeadcount()).isEqualTo(2);
+        assertThat(a1Response.kpiSummary().cashInHand()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
+        assertThat(a1Response.kpiSummary().bankBalances()).isEqualByComparingTo(BigDecimal.valueOf(20_000));
+        assertThat(a1Response.kpiSummary().todaySales()).isEqualByComparingTo(BigDecimal.valueOf(1_111));
+        assertThat(a1Response.kpiSummary().payrollDisbursed()).isEqualByComparingTo(BigDecimal.valueOf(3_000));
+        assertThat(a1Response.branchLeaderboard()).hasSize(1);
+        assertThat(a1Response.branchLeaderboard().get(0).branchId()).isEqualTo("branch-a1");
+
+        // --- Branch A2: exactly A2's own data, never A1's ---
+        assertThat(a2Response.kpiSummary().activeHeadcount()).isEqualTo(1);
+        assertThat(a2Response.kpiSummary().cashInHand()).isEqualByComparingTo(BigDecimal.valueOf(500_000));
+        assertThat(a2Response.kpiSummary().bankBalances()).isEqualByComparingTo(BigDecimal.valueOf(700_000));
+        assertThat(a2Response.kpiSummary().todaySales()).isEqualByComparingTo(BigDecimal.valueOf(9_999));
+        assertThat(a2Response.kpiSummary().payrollDisbursed()).isEqualByComparingTo(BigDecimal.valueOf(70_000));
+        assertThat(a2Response.branchLeaderboard()).hasSize(1);
+        assertThat(a2Response.branchLeaderboard().get(0).branchId()).isEqualTo("branch-a2");
+
+        // --- Cross-check: neither branch's response ever equals the other's distinctive values ---
+        assertThat(a1Response.kpiSummary().cashInHand()).isNotEqualByComparingTo(a2Response.kpiSummary().cashInHand());
+        assertThat(a1Response.kpiSummary().todaySales()).isNotEqualByComparingTo(a2Response.kpiSummary().todaySales());
+        assertThat(a1Response.kpiSummary().payrollDisbursed()).isNotEqualByComparingTo(a2Response.kpiSummary().payrollDisbursed());
+
+        // --- Tenant-wide (no branchId): a real combined total, not either branch's isolated figure ---
+        assertThat(tenantWide.kpiSummary().activeHeadcount()).isEqualTo(3); // 2 (A1) + 1 (A2)
+        assertThat(tenantWide.branchLeaderboard()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("BRANCH FILTERING: GL-sourced revenue/OPEX/net-profit and AR/AP/top-customers/top-products/manufacturing-WIP have no real branch attribution, so they report real zero/empty when branch-scoped — never the tenant-wide figure and never a fabricated split")
+    void branchFilteringReportsHonestZeroForFieldsWithNoRealBranchAttribution() {
+        stubEverythingEmpty();
+        Branch branch = mock(Branch.class);
+        when(branch.getId()).thenReturn("branch-x");
+        when(branch.getCode()).thenReturn("X");
+        when(branch.getName()).thenReturn("Branch X");
+        when(branch.isMainBranch()).thenReturn(true);
+        when(authEvaluator.hasBranchAccess("branch-x")).thenReturn(true);
+        when(branchRepository.findById("branch-x")).thenReturn(Optional.of(branch));
+
+        // Real, non-zero tenant-wide GL figures exist — a branch-scoped request must NOT leak them.
+        // (The service does not even call this when branch-scoped — see getOwnerCockpit step 2 —
+        // so this stub is lenient: it documents that real data exists tenant-wide.)
+        lenient().when(financialStatementsReportService.getIncomeStatement(any(), any())).thenReturn(
+                new FinancialStatementsReportService.IncomeStatementReport(
+                        BigDecimal.valueOf(5_000_000), BigDecimal.valueOf(3_000_000), BigDecimal.valueOf(2_000_000)));
+        // Real, non-zero tenant-wide open invoices/top-customers exist — a branch-scoped request
+        // must not leak them. (The service does not even query this repository when branch-scoped
+        // — see getOwnerCockpit step 6 — so this stub is lenient: it documents that real data
+        // exists tenant-wide, without asserting the branch-scoped path calls it.)
+        CustomerInvoice invoice = mock(CustomerInvoice.class);
+        lenient().when(invoice.getOutstandingAmount()).thenReturn(BigDecimal.valueOf(80_000));
+        lenient().when(invoice.getDueDate()).thenReturn(LocalDate.now().minusDays(10));
+        lenient().when(customerInvoiceRepository.findByOutstandingAmountGreaterThan(any())).thenReturn(List.of(invoice));
+
+        OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, "branch-x");
+
+        assertThat(response.kpiSummary().totalRevenue()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().totalOpex()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().netProfit()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().totalReceivables()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.arAging().current().invoiceCount()).isZero();
+        assertThat(response.topCustomers()).isEmpty();
+        assertThat(response.topProducts()).isEmpty();
+        assertThat(response.manufacturingWip()).isEmpty();
+        // The branch leaderboard entry itself still reports zero for these same fields, consistent
+        // with the tenant-wide leaderboard's existing "no attribution -> zero" convention.
+        assertThat(response.branchLeaderboard()).hasSize(1);
+        assertThat(response.branchLeaderboard().get(0).revenue()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    @DisplayName("BRANCH FILTERING: project budget/actual (Project.branchId) and expense breakdown (ExpenseClaim.employeeId -> Employee.branchId) are genuinely branch-scoped, not tenant-wide")
+    void branchFilteringScopesProjectsAndExpensesViaRealJoins() {
+        stubEverythingEmpty();
+        Branch branch = mock(Branch.class);
+        when(branch.getId()).thenReturn("branch-y");
+        when(branch.getCode()).thenReturn("Y");
+        when(branch.getName()).thenReturn("Branch Y");
+        when(branch.isMainBranch()).thenReturn(true);
+        when(authEvaluator.hasBranchAccess("branch-y")).thenReturn(true);
+        when(branchRepository.findById("branch-y")).thenReturn(Optional.of(branch));
+
+        // A real project belonging to Branch Y, plus a real tenant-wide project belonging to a
+        // DIFFERENT branch that must NOT leak into Branch Y's response.
+        Project branchYProject = mock(Project.class);
+        when(branchYProject.getId()).thenReturn("proj-y");
+        when(branchYProject.getCode()).thenReturn("PRJ-Y");
+        when(branchYProject.getName()).thenReturn("Branch Y Project");
+        when(branchYProject.getContractValue()).thenReturn(BigDecimal.valueOf(9_000_000));
+        when(branchYProject.getStatus()).thenReturn(ProjectStatus.ACTIVE);
+        when(projectRepository.findByBranchIdOrderByCreatedAtDesc("branch-y")).thenReturn(List.of(branchYProject));
+        // A different branch's project exists tenant-wide (via plain findAll()) — must not appear.
+        Project otherBranchProject = mock(Project.class);
+        lenient().when(otherBranchProject.getId()).thenReturn("proj-other");
+        lenient().when(otherBranchProject.getStatus()).thenReturn(ProjectStatus.ACTIVE);
+        lenient().when(projectRepository.findAll()).thenReturn(List.of(otherBranchProject));
+
+        // Real Employee.branchId join for expense claims.
+        Employee branchYEmployee = mock(Employee.class);
+        when(branchYEmployee.getId()).thenReturn("emp-y");
+        when(branchYEmployee.isActive()).thenReturn(true);
+        when(employeeRepository.findByBranchId("branch-y")).thenReturn(List.of(branchYEmployee));
+        ExpenseClaim branchYExpense = mock(ExpenseClaim.class);
+        when(branchYExpense.getCategory()).thenReturn("TRAVEL");
+        when(branchYExpense.getAmount()).thenReturn(BigDecimal.valueOf(4_500));
+        when(expenseClaimRepository.findByEmployeeIdInAndSpentOnBetween(eq(List.of("emp-y")), any(), any()))
+                .thenReturn(List.of(branchYExpense));
+
+        OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, "branch-y");
+
+        assertThat(response.projectBudgetControl()).hasSize(1);
+        assertThat(response.projectBudgetControl().get(0).projectId()).isEqualTo("proj-y");
+        assertThat(response.projectBudgetControl()).noneMatch(p -> "proj-other".equals(p.projectId()));
+
+        assertThat(response.expenseBreakdown()).anyMatch(e -> "TRAVEL".equals(e.category())
+                && e.amount().compareTo(BigDecimal.valueOf(4_500)) == 0);
     }
 
     @Test

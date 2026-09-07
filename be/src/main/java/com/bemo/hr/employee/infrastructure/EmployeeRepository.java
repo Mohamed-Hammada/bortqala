@@ -60,4 +60,12 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
             LocalDate from1, LocalDate from2, LocalDate to);
 
     long countByAppIdAndCreatedAtBefore(String appId, Instant before);
+
+    /**
+     * 2026-09-07 remediation (branch-filtering hardening): used to derive the set of employee IDs
+     * belonging to a branch, so payroll/expense data — which has no branchId column of its own —
+     * can be legitimately scoped by joining through Employee.branchId, rather than either ignoring
+     * branchId (returning tenant-wide totals) or fabricating a split.
+     */
+    List<Employee> findByBranchId(String branchId);
 }

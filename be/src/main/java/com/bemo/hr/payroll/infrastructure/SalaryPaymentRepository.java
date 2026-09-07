@@ -7,11 +7,19 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface SalaryPaymentRepository extends JpaRepository<SalaryPayment, String> {
     List<SalaryPayment> findByPeriodYearAndPeriodMonthOrderByCreatedAtDesc(int periodYear, int periodMonth);
+
+    /**
+     * 2026-09-07 remediation (branch-filtering hardening): SalaryPayment has no branchId of its
+     * own, but a real join through employeeId -> Employee.branchId exists — used to give the Owner
+     * Cockpit real, branch-scoped payroll figures when a specific branch is requested.
+     */
+    List<SalaryPayment> findByEmployeeIdInAndPeriodYearAndPeriodMonth(Collection<String> employeeIds, int periodYear, int periodMonth);
 
     List<SalaryPayment> findByPayrollRunId(String payrollRunId);
 

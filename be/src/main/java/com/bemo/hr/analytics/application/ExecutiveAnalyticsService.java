@@ -20,7 +20,9 @@ import com.bemo.hr.operations.InventoryItemRepository;
 import com.bemo.hr.operations.InventoryValuationService;
 import com.bemo.hr.operations.OperationsApi;
 import com.bemo.hr.organization.domain.Branch;
+import com.bemo.hr.organization.domain.Warehouse;
 import com.bemo.hr.organization.infrastructure.BranchRepository;
+import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import com.bemo.hr.party.BusinessParty;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.payroll.domain.PaymentStatus;
@@ -36,7 +38,9 @@ import com.bemo.hr.project.infrastructure.ProjectCostLedgerEntryRepository;
 import com.bemo.hr.project.infrastructure.ProjectRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.access.application.SecurityAuthorizationEvaluator;
+import com.bemo.hr.trade.pos.domain.PosTerminal;
 import com.bemo.hr.trade.pos.domain.PosTransaction;
+import com.bemo.hr.trade.pos.infrastructure.PosTerminalRepository;
 import com.bemo.hr.trade.pos.infrastructure.PosTransactionRepository;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
@@ -114,6 +118,8 @@ public class ExecutiveAnalyticsService {
     private final InventoryValuationService inventoryValuationService;
     private final TreasuryPositionService treasuryPositionService;
     private final com.bemo.hr.finance.infrastructure.FiscalPeriodRepository fiscalPeriodRepository;
+    private final PosTerminalRepository posTerminalRepository;
+    private final WarehouseRepository warehouseRepository;
 
     @Autowired
     public ExecutiveAnalyticsService(
@@ -140,7 +146,9 @@ public class ExecutiveAnalyticsService {
             FinancialStatementsReportService financialStatementsReportService,
             InventoryValuationService inventoryValuationService,
             TreasuryPositionService treasuryPositionService,
-            com.bemo.hr.finance.infrastructure.FiscalPeriodRepository fiscalPeriodRepository
+            com.bemo.hr.finance.infrastructure.FiscalPeriodRepository fiscalPeriodRepository,
+            PosTerminalRepository posTerminalRepository,
+            WarehouseRepository warehouseRepository
     ) {
         this.snapshotRepository = snapshotRepository;
         this.projectRepository = projectRepository;
@@ -166,6 +174,8 @@ public class ExecutiveAnalyticsService {
         this.inventoryValuationService = inventoryValuationService;
         this.treasuryPositionService = treasuryPositionService;
         this.fiscalPeriodRepository = fiscalPeriodRepository;
+        this.posTerminalRepository = posTerminalRepository;
+        this.warehouseRepository = warehouseRepository;
     }
 
     private static final List<KpiDefinition> REGISTRY = List.of(
@@ -556,7 +566,8 @@ public class ExecutiveAnalyticsService {
 
     @Transactional(readOnly = true)
     public OwnerCockpitResponse getOwnerCockpit(String period, String branchId) {
-        if (branchId != null && !branchId.isBlank() && !authEvaluator.hasBranchAccess(branchId)) {
+        boolean branchScoped = branchId != null && !branchId.isBlank();
+        if (branchScoped && !authEvaluator.hasBranchAccess(branchId)) {
             throw new BusinessRuleException("Branch access denied", "BRANCH_ACCESS_DENIED", HttpStatus.FORBIDDEN);
         }
 
@@ -566,42 +577,80 @@ public class ExecutiveAnalyticsService {
         LocalDate periodEnd = ym.atEndOfMonth();
         LocalDate today = LocalDate.now();
 
-        // 2026-09-07 remediation (Performance Review P-1): every section below used to share one
-        // or two `findAll()` calls loading the tenant's ENTIRE invoice/POS/receipt history into
-        // memory, then filter/group in Java streams. Each section now uses a targeted, SQL-side
-        // query scoped to exactly what it needs (today, the period, "currently open", or a
-        // SQL-side GROUP BY) — see the repository methods this calls for the specific index each
-        // relies on. No section's *result* changed except the two correctness fixes noted below.
+        // 2026-09-07 remediation, round 2 (branch-filtering correctness): `branchId` used to be
+        // checked ONLY for authorization (BRANCH_ACCESS_DENIED) — every KPI below was still computed
+        // tenant-wide regardless of which branch was requested. This is now fixed: every KPI that
+        // has a REAL, canonical branch-attribution path (Employee.branchId, Cashbox/BankAccount
+        // branchId, PosTerminal.branchId, Project.branchId, Warehouse.branchId) is genuinely scoped
+        // to the requested branch. Every KPI whose canonical source has NO branch attribution today
+        // (JournalEntry.branchId exists but is never populated anywhere in the codebase;
+        // CustomerInvoice/SupplierInvoice/SalesDeliveryLine/ProductionOrder have no branch or
+        // warehouse column at all) returns real zero/empty when branch-scoped — never a fabricated
+        // split of the tenant total, never silently returning the tenant-wide figure. See
+        // docs/FINAL_REMEDIATION_VERIFICATION_2026-09-07.md for the full per-KPI evidence table.
+        List<String> branchEmployeeIds = branchScoped
+                ? employeeRepository.findByBranchId(branchId).stream().map(Employee::getId).toList()
+                : List.of();
+        List<String> branchTerminalIds = branchScoped
+                ? posTerminalRepository.findByBranchId(branchId).stream().map(PosTerminal::getId).toList()
+                : List.of();
+        List<String> branchWarehouseIds = branchScoped
+                ? warehouseRepository.findByBranchIdOrderByCodeAsc(branchId).stream().map(Warehouse::getId).toList()
+                : List.of();
 
         // 1. Today's sales & collections — real, may legitimately be zero on a slow day.
+        // POS revenue is genuinely branch-scoped (PosTransaction.terminalId -> PosTerminal.branchId).
+        // Invoice-based revenue has NO branch attribution anywhere (CustomerInvoice has no
+        // branchId/terminalId/warehouseId column) — contributes 0 when branch-scoped, not the
+        // tenant-wide invoice total.
         long todayStartMillis = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long todayEndMillis = today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
-        BigDecimal todaySalesInvoices = sumAmounts(
+        BigDecimal todaySalesInvoices = branchScoped ? BigDecimal.ZERO : sumAmounts(
                 customerInvoiceRepository.findByInvoiceDateBetween(today, today), CustomerInvoice::getAmount);
-        BigDecimal todayPosSales = posTransactionRepository.sumCompletedInRange(todayStartMillis, todayEndMillis);
+        BigDecimal todayPosSales = branchScoped
+                ? sumPosForTerminals(branchTerminalIds, todayStartMillis, todayEndMillis)
+                : posTransactionRepository.sumCompletedInRange(todayStartMillis, todayEndMillis);
         BigDecimal todaySales = todaySalesInvoices.add(todayPosSales);
 
-        BigDecimal todayReceipts = sumAmounts(
+        BigDecimal todayReceipts = branchScoped ? BigDecimal.ZERO : sumAmounts(
                 customerReceiptRepository.findByReceiptDateBetween(today, today), CustomerReceipt::getAmount);
         BigDecimal todayCollections = todayReceipts.add(todayPosSales);
 
-        // 2. Headline P&L for the period — real, GL-sourced (same figures Finance Reports shows).
-        FinancialStatementsReportService.IncomeStatementReport incomeStatement =
-                financialStatementsReportService.getIncomeStatement(periodStart, periodEnd);
-        BigDecimal totalRevenue = incomeStatement.totalRevenue();
-        BigDecimal totalOpex = incomeStatement.totalExpenses();
-        BigDecimal netProfit = incomeStatement.netIncome();
+        // 2. Headline P&L for the period — real, GL-sourced (same figures Finance Reports shows) for
+        // the tenant-wide view. NOT branch-attributable: JournalEntry.branchId/JournalEntryLine.branchId
+        // columns exist but `setBranchId()` is never called anywhere in the codebase (confirmed by a
+        // repository-wide search) — so there is no real per-branch GL data to query. Returns 0 rather
+        // than the tenant-wide figure when a specific branch is requested.
+        BigDecimal totalRevenue;
+        BigDecimal totalOpex;
+        BigDecimal netProfit;
+        if (branchScoped) {
+            totalRevenue = BigDecimal.ZERO;
+            totalOpex = BigDecimal.ZERO;
+            netProfit = BigDecimal.ZERO;
+        } else {
+            FinancialStatementsReportService.IncomeStatementReport incomeStatement =
+                    financialStatementsReportService.getIncomeStatement(periodStart, periodEnd);
+            totalRevenue = incomeStatement.totalRevenue();
+            totalOpex = incomeStatement.totalExpenses();
+            netProfit = incomeStatement.netIncome();
+        }
         BigDecimal operatingProfit = netProfit; // no separate operating/net split is modeled
         BigDecimal netMarginPercent = percentOf(netProfit, totalRevenue);
 
         // 3. Gross margin — a separate, sales-only view (real delivery-line revenue/COGS), not
-        // forced to reconcile with the GL P&L above (see class-level note).
+        // forced to reconcile with the GL P&L above (see class-level note). NOT branch-attributable:
+        // SalesDeliveryLine has no branchId/warehouseId column, so COGS cannot be scoped to a branch
+        // either — both revenue and COGS are 0 when branch-scoped (a partial figure — e.g. real
+        // branch-scoped POS revenue divided by a forced-zero COGS — would show a misleading 100%
+        // margin, which is worse than an honest "no data").
         long periodStartMillis = periodStart.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long periodEndMillis = periodEnd.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
-        BigDecimal periodSalesRevenue = sumAmounts(
+        BigDecimal periodSalesRevenue = branchScoped ? BigDecimal.ZERO : sumAmounts(
                         customerInvoiceRepository.findByInvoiceDateBetween(periodStart, periodEnd), CustomerInvoice::getAmount)
                 .add(posTransactionRepository.sumCompletedInRange(periodStartMillis, periodEndMillis));
-        List<SalesDeliveryLine> periodDeliveryLines = salesDeliveryLineRepository.findByCreatedAtBetween(periodStartMillis, periodEndMillis);
+        List<SalesDeliveryLine> periodDeliveryLines = branchScoped ? List.of()
+                : salesDeliveryLineRepository.findByCreatedAtBetween(periodStartMillis, periodEndMillis);
         BigDecimal totalCogs = periodDeliveryLines.stream()
                 .map(l -> l.getCogsAmount() != null ? l.getCogsAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -620,11 +669,11 @@ public class ExecutiveAnalyticsService {
                 ? percentOf(deliveryLineRevenue, periodSalesRevenue).min(BigDecimal.valueOf(100))
                 : BigDecimal.valueOf(100); // nothing to under-cover when there's no revenue at all
 
-        // 4. Payroll — real, period-scoped (previously summed ALL-TIME payroll regardless of the
-        // requested period, and fabricated a constant when zero). Query already scopes to the
-        // period (P-1) — no findAll() + Java-side year/month filter needed.
-        List<SalaryPayment> periodPayments =
-                salaryPaymentRepository.findByPeriodYearAndPeriodMonthOrderByCreatedAtDesc(ym.getYear(), ym.getMonthValue());
+        // 4. Payroll — real, period-scoped. Genuinely branch-attributable via
+        // SalaryPayment.employeeId -> Employee.branchId (SalaryPayment has no branchId of its own).
+        List<SalaryPayment> periodPayments = branchScoped
+                ? salaryPaymentRepository.findByEmployeeIdInAndPeriodYearAndPeriodMonth(branchEmployeeIds, ym.getYear(), ym.getMonthValue())
+                : salaryPaymentRepository.findByPeriodYearAndPeriodMonthOrderByCreatedAtDesc(ym.getYear(), ym.getMonthValue());
         BigDecimal totalPayrollDisbursed = periodPayments.stream()
                 .filter(s -> s.getPaymentStatus() == PaymentStatus.PAID)
                 .map(s -> s.getNetAmount() != null ? s.getNetAmount() : BigDecimal.ZERO)
@@ -635,14 +684,18 @@ public class ExecutiveAnalyticsService {
                 .map(s -> s.getNetAmount() != null ? s.getNetAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 5. Cash & bank position — real, from TreasuryPositionService (no more count*450000 / *0.62 guesses).
-        BigDecimal cashInHand = treasuryPositionService.totalCashBalance();
-        BigDecimal bankBalances = treasuryPositionService.totalBankBalance();
+        // 5. Cash & bank position — real, from TreasuryPositionService. Genuinely branch-attributable
+        // via Cashbox.branchId / BankAccount.branchId — already computed per-branch by the maps below.
+        Map<String, BigDecimal> cashByBranch = treasuryPositionService.cashBalanceByBranch();
+        Map<String, BigDecimal> bankByBranch = treasuryPositionService.bankBalanceByBranch();
+        BigDecimal cashInHand = branchScoped ? cashByBranch.getOrDefault(branchId, BigDecimal.ZERO) : treasuryPositionService.totalCashBalance();
+        BigDecimal bankBalances = branchScoped ? bankByBranch.getOrDefault(branchId, BigDecimal.ZERO) : treasuryPositionService.totalBankBalance();
 
         // 6. AR aging — real invoice-level bucketing; a zero total is reported as zero, not
-        // overwritten with fabricated bucket amounts/counts. Query already restricts to open
-        // invoices (P-1) — no further Java-side filtering needed.
-        List<CustomerInvoice> openInvoices = customerInvoiceRepository.findByOutstandingAmountGreaterThan(BigDecimal.ZERO);
+        // overwritten with fabricated bucket amounts/counts. NOT branch-attributable: CustomerInvoice
+        // has no branchId column — empty (not the tenant-wide list) when branch-scoped.
+        List<CustomerInvoice> openInvoices = branchScoped ? List.of()
+                : customerInvoiceRepository.findByOutstandingAmountGreaterThan(BigDecimal.ZERO);
         AgingTotals arTotals = bucketAgingByDueDate(openInvoices, today,
                 CustomerInvoice::getOutstandingAmount,
                 i -> i.getDueDate() != null ? i.getDueDate() : (i.getInvoiceDate() != null ? i.getInvoiceDate().plusDays(30) : today));
@@ -650,8 +703,10 @@ public class ExecutiveAnalyticsService {
         BigDecimal totalReceivables = arTotals.total();
         BigDecimal overdueReceivables = arTotals.overdue();
 
-        // 7. AP aging — same treatment for supplier invoices. Query already excludes PAID (P-1).
-        List<SupplierInvoice> openSupplierInvoices = supplierInvoiceRepository.findByStatusNot("PAID");
+        // 7. AP aging — same treatment for supplier invoices. NOT branch-attributable: SupplierInvoice
+        // has no branchId column — empty when branch-scoped.
+        List<SupplierInvoice> openSupplierInvoices = branchScoped ? List.of()
+                : supplierInvoiceRepository.findByStatusNot("PAID");
         AgingTotals apTotals = bucketAgingByDueDate(openSupplierInvoices, today,
                 i -> i.getNetAmount() != null ? i.getNetAmount() : BigDecimal.ZERO,
                 i -> i.getDueDate() != null ? i.getDueDate() : i.getInvoiceDate().plusDays(30));
@@ -663,9 +718,17 @@ public class ExecutiveAnalyticsService {
 
         // 8. Stock pulse — real on-hand quantities and real valued cost from InventoryValuationService
         // (previously derived a fake "current stock" from reorderPoint*0.4, never the real balance).
-        OperationsApi.ValuationReport valuationReport = inventoryValuationService.report();
+        // Genuinely branch-attributable via Warehouse.branchId: InventoryValuationService.report()
+        // accepts a warehouseId, so this merges the report for every warehouse belonging to the
+        // requested branch (a branch typically has few warehouses — this is a real, bounded,
+        // correctness-driven set of calls, not the N+1 the tenant-wide path was fixed for in P-1).
+        OperationsApi.ValuationReport valuationReport = branchScoped
+                ? branchScopedValuationReport(branchWarehouseIds)
+                : inventoryValuationService.report();
         Map<String, OperationsApi.ItemValuationView> valuationByItem = valuationReport.items().stream()
                 .collect(Collectors.toMap(OperationsApi.ItemValuationView::itemId, v -> v));
+        // The item CATALOG itself is tenant-wide (an item is not owned by a branch — only its stock
+        // location is), so this list is unaffected by branchId; only `valuationByItem` above differs.
         List<InventoryItem> items = inventoryItemRepository.findAll();
         List<StockAlertItem> lowStockAlerts = new ArrayList<>();
         List<StockAlertItem> deadStockAlerts = new ArrayList<>();
@@ -684,7 +747,10 @@ public class ExecutiveAnalyticsService {
         }
 
         // 9. Manufacturing WIP — real in-progress/planned orders only; empty when there are none.
-        List<ProductionOrder> prodOrders = productionOrderRepository.findAllByOrderByStartDateDescCreatedAtDesc();
+        // NOT branch-attributable: ProductionOrder has no branchId/warehouseId column — empty when
+        // branch-scoped.
+        List<ProductionOrder> prodOrders = branchScoped ? List.of()
+                : productionOrderRepository.findAllByOrderByStartDateDescCreatedAtDesc();
         List<ManufacturingWipItem> wipItems = new ArrayList<>();
         BigDecimal wipValuation = BigDecimal.ZERO;
         for (ProductionOrder po : prodOrders) {
@@ -703,8 +769,9 @@ public class ExecutiveAnalyticsService {
 
         // 10. Project budget vs. actual — real approved budget + real cost-ledger actuals, batched
         // (fixes the confirmed N+1 — one query per project — and removes the contractValue*0.85
-        // "budget" guess and the budget*0.72 "actual" guess).
-        ProjectFinancials projectFinancials = computeProjectFinancials();
+        // "budget" guess and the budget*0.72 "actual" guess). Genuinely branch-attributable via
+        // Project.branchId.
+        ProjectFinancials projectFinancials = computeProjectFinancials(branchScoped ? branchId : null);
         List<ProjectBudgetVarianceItem> projectControlItems = projectFinancials.items();
         BigDecimal totalProjectBudget = projectFinancials.totalBudget();
         BigDecimal totalProjectActual = projectFinancials.totalActual();
@@ -716,31 +783,45 @@ public class ExecutiveAnalyticsService {
         // CustomerInvoice/PosTransaction/ExpenseClaim/SalaryPayment) — reported as zero rather than
         // a fabricated proportional split of the tenant totals. See
         // docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Implementation Gap / Critical Finding C-1.
-        List<Employee> employees = employeeRepository.findAll();
-        Map<String, BigDecimal> cashByBranch = treasuryPositionService.cashBalanceByBranch();
-        Map<String, BigDecimal> bankByBranch = treasuryPositionService.bankBalanceByBranch();
-        List<Branch> branches = branchRepository.findAllByOrderByCodeAsc();
+        // When a specific branch is requested, the leaderboard now correctly shows ONLY that one
+        // branch's entry (a "leaderboard" of every branch when the caller explicitly filtered to one
+        // is a contradiction of the filter) instead of every branch the caller can access.
+        List<Employee> scopedEmployees = branchScoped ? employeeRepository.findByBranchId(branchId) : employeeRepository.findAll();
         List<BranchPerformanceItem> branchLeaderboard = new ArrayList<>();
-        for (Branch b : branches) {
-            if (!authEvaluator.hasBranchAccess(b.getId())) continue;
-            int branchHeadcount = (int) employees.stream()
-                    .filter(e -> b.getId().equals(e.getBranchId()) && e.isActive())
-                    .count();
-            BigDecimal branchCash = cashByBranch.getOrDefault(b.getId(), BigDecimal.ZERO);
-            BigDecimal branchBank = bankByBranch.getOrDefault(b.getId(), BigDecimal.ZERO);
-            branchLeaderboard.add(new BranchPerformanceItem(
-                    b.getId(), b.getCode(), b.getName(), b.isMainBranch(),
-                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                    branchHeadcount, branchCash.add(branchBank)
-            ));
+        if (branchScoped) {
+            Branch b = branchRepository.findById(branchId).orElse(null);
+            if (b != null) {
+                int branchHeadcount = (int) scopedEmployees.stream().filter(Employee::isActive).count();
+                branchLeaderboard.add(new BranchPerformanceItem(
+                        b.getId(), b.getCode(), b.getName(), b.isMainBranch(),
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                        branchHeadcount, cashInHand.add(bankBalances)
+                ));
+            }
+        } else {
+            List<Branch> branches = branchRepository.findAllByOrderByCodeAsc();
+            for (Branch b : branches) {
+                if (!authEvaluator.hasBranchAccess(b.getId())) continue;
+                int branchHeadcount = (int) scopedEmployees.stream()
+                        .filter(e -> b.getId().equals(e.getBranchId()) && e.isActive())
+                        .count();
+                BigDecimal branchCash = cashByBranch.getOrDefault(b.getId(), BigDecimal.ZERO);
+                BigDecimal branchBank = bankByBranch.getOrDefault(b.getId(), BigDecimal.ZERO);
+                branchLeaderboard.add(new BranchPerformanceItem(
+                        b.getId(), b.getCode(), b.getName(), b.isMainBranch(),
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                        branchHeadcount, branchCash.add(branchBank)
+                ));
+            }
         }
 
-        // 12. Top customers — real invoice aggregation only; empty when there are no invoices.
+        // 12. Top customers — real invoice aggregation only; empty when there are no invoices. NOT
+        // branch-attributable: CustomerInvoice has no branchId column — empty when branch-scoped.
         // 2026-09-07 remediation (Performance Review P-1): this used to load EVERY invoice the
         // tenant has ever issued into memory just to group/sum/sort/limit them in a Java stream.
         // The grouping, summing, and ordering now happen in SQL, and only the top 5 rows are ever
         // returned — see CustomerInvoiceRepository.topCustomersByInvoicedAmount's Javadoc.
-        List<TopCustomerItem> topCustomers = customerInvoiceRepository
+        List<TopCustomerItem> topCustomers = branchScoped ? List.of() : customerInvoiceRepository
                 .topCustomersByInvoicedAmount(org.springframework.data.domain.PageRequest.of(0, 5))
                 .stream()
                 .map(row -> {
@@ -755,7 +836,8 @@ public class ExecutiveAnalyticsService {
         // 13. Top products — real, from SalesDeliveryLine (quantity/unitPrice/cogsAmount), grouped
         // by item and ranked by revenue. Previously this was *always* fabricated via
         // `qty = 150 - i*20` array-index arithmetic whenever any inventory item existed at all,
-        // regardless of any real sales data.
+        // regardless of any real sales data. NOT branch-attributable (periodDeliveryLines is already
+        // empty when branch-scoped, per step 3 above), so this naturally computes to empty too.
         Map<String, InventoryItem> itemsById = items.stream().collect(Collectors.toMap(InventoryItem::getId, i -> i));
         List<TopProductItem> topProducts = periodDeliveryLines.stream()
                 .filter(l -> l.getItemId() != null)
@@ -784,17 +866,22 @@ public class ExecutiveAnalyticsService {
         // 14. Expense breakdown — real per-category ExpenseClaim sums for the period, plus real
         // payroll disbursed. Percentages are relative to their own combined total (this is an
         // operational "what did we spend on" breakdown, not GL-reconciled OPEX — see class-level note).
-        List<ExpenseClaim> periodExpenseClaims = expenseClaimRepository.findBySpentOnBetween(periodStart, periodEnd);
+        // Genuinely branch-attributable via ExpenseClaim.employeeId -> Employee.branchId.
+        List<ExpenseClaim> periodExpenseClaims = branchScoped
+                ? expenseClaimRepository.findByEmployeeIdInAndSpentOnBetween(branchEmployeeIds, periodStart, periodEnd)
+                : expenseClaimRepository.findBySpentOnBetween(periodStart, periodEnd);
         List<ExpenseCategoryItem> expenseBreakdown = buildExpenseBreakdown(periodExpenseClaims, totalPayrollDisbursed);
 
         // 15. Targets — real, tenant-configured (or the documented system default when none exists).
+        // Intentionally NOT branch-scoped: ExecutiveCockpitTarget has no branch dimension at all —
+        // targets are a tenant-level concept by design, not a missing-attribution gap.
         CockpitTargetResponse targets = getTargets(effectivePeriod);
 
         OwnerCockpitKpiSummary summary = new OwnerCockpitKpiSummary(
                 todaySales, todayCollections, netLiquidity, cashInHand, bankBalances,
                 totalRevenue, totalCogs, grossMarginAmount, grossMarginPercent, totalOpex,
                 operatingProfit, netProfit, netMarginPercent, totalPayrollDisbursed, payrollPending,
-                (int) employees.stream().filter(Employee::isActive).count(),
+                (int) scopedEmployees.stream().filter(Employee::isActive).count(),
                 wipItems.size(), wipValuation, totalProjectBudget, totalProjectActual, totalProjectVariance,
                 lowStockAlerts.size(), deadStockAlerts.size(),
                 totalReceivables, overdueReceivables, totalPayables, overduePayables,
@@ -806,6 +893,49 @@ public class ExecutiveAnalyticsService {
                 branchLeaderboard, topCustomers, topProducts, expenseBreakdown, lowStockAlerts, deadStockAlerts,
                 wipItems, projectControlItems, targets
         );
+    }
+
+    private BigDecimal sumPosForTerminals(List<String> terminalIds, long startInclusive, long endInclusive) {
+        if (terminalIds.isEmpty()) return BigDecimal.ZERO;
+        return posTransactionRepository.sumCompletedInRangeForTerminals(terminalIds, startInclusive, endInclusive);
+    }
+
+    /**
+     * Merges {@link InventoryValuationService#report(Long, String, String)} across every warehouse
+     * belonging to one branch (a branch typically has a small, bounded number of warehouses — this
+     * is a real, correctness-driven set of calls, not an unbounded scan). Sums quantityOnHand and
+     * inventoryValue per item across those warehouses; an item with no stock in any of the branch's
+     * warehouses simply does not appear (equivalent to zero).
+     */
+    private OperationsApi.ValuationReport branchScopedValuationReport(List<String> warehouseIds) {
+        if (warehouseIds.isEmpty()) {
+            return new OperationsApi.ValuationReport(null, BigDecimal.ZERO, List.of(), List.of(), null, null);
+        }
+        Map<String, BigDecimal> qtyByItem = new HashMap<>();
+        Map<String, BigDecimal> valueByItem = new HashMap<>();
+        Map<String, OperationsApi.ItemValuationView> firstViewByItem = new HashMap<>();
+        for (String warehouseId : warehouseIds) {
+            OperationsApi.ValuationReport report = inventoryValuationService.report(null, warehouseId, null);
+            for (OperationsApi.ItemValuationView view : report.items()) {
+                if (view.quantityOnHand() != null && view.quantityOnHand().compareTo(BigDecimal.ZERO) == 0
+                        && (view.inventoryValue() == null || view.inventoryValue().compareTo(BigDecimal.ZERO) == 0)) {
+                    continue; // no stock of this item in this warehouse — skip rather than pollute the merge
+                }
+                qtyByItem.merge(view.itemId(), view.quantityOnHand() != null ? view.quantityOnHand() : BigDecimal.ZERO, BigDecimal::add);
+                valueByItem.merge(view.itemId(), view.inventoryValue() != null ? view.inventoryValue() : BigDecimal.ZERO, BigDecimal::add);
+                firstViewByItem.putIfAbsent(view.itemId(), view);
+            }
+        }
+        List<OperationsApi.ItemValuationView> merged = firstViewByItem.values().stream()
+                .map(v -> new OperationsApi.ItemValuationView(
+                        v.itemId(), v.itemCode(), v.itemName(),
+                        qtyByItem.getOrDefault(v.itemId(), BigDecimal.ZERO),
+                        qtyByItem.getOrDefault(v.itemId(), BigDecimal.ZERO),
+                        valueByItem.getOrDefault(v.itemId(), BigDecimal.ZERO),
+                        v.averageUnitCost(), v.openingQuantityGap(), v.valuationMethod()))
+                .toList();
+        BigDecimal total = valueByItem.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new OperationsApi.ValuationReport(null, total, merged, List.of(), null, null);
     }
 
     private List<ExpenseCategoryItem> buildExpenseBreakdown(List<ExpenseClaim> claims, BigDecimal payrollDisbursed) {
@@ -837,7 +967,19 @@ public class ExecutiveAnalyticsService {
      * contract value.
      */
     private ProjectFinancials computeProjectFinancials() {
-        List<Project> projects = projectRepository.findAll().stream()
+        return computeProjectFinancials(null);
+    }
+
+    /**
+     * 2026-09-07 remediation (branch-filtering hardening): {@code Project.branchId} is real and
+     * populated, so when a specific branch is requested, projects are genuinely filtered to that
+     * branch rather than either ignoring the filter (tenant-wide leakage) or fabricating a split.
+     */
+    private ProjectFinancials computeProjectFinancials(String branchId) {
+        List<Project> projects = (branchId != null && !branchId.isBlank()
+                ? projectRepository.findByBranchIdOrderByCreatedAtDesc(branchId)
+                : projectRepository.findAll())
+                .stream()
                 .filter(p -> p.getStatus() != ProjectStatus.CLOSED)
                 .toList();
         if (projects.isEmpty()) {

@@ -4,6 +4,7 @@ import com.bemo.hr.expenses.domain.ExpenseClaim;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 public interface ExpenseClaimRepository extends JpaRepository<ExpenseClaim, String> {
@@ -17,4 +18,11 @@ public interface ExpenseClaimRepository extends JpaRepository<ExpenseClaim, Stri
      * the filter into SQL. Supported by {@code idx_expense_claims_app_spent_on}.
      */
     List<ExpenseClaim> findBySpentOnBetween(LocalDate start, LocalDate end);
+
+    /**
+     * 2026-09-07 remediation (branch-filtering hardening): ExpenseClaim has no branchId of its
+     * own, but a real join through employeeId -> Employee.branchId exists — used to give the Owner
+     * Cockpit's expense breakdown real, branch-scoped figures when a specific branch is requested.
+     */
+    List<ExpenseClaim> findByEmployeeIdInAndSpentOnBetween(Collection<String> employeeIds, LocalDate start, LocalDate end);
 }
