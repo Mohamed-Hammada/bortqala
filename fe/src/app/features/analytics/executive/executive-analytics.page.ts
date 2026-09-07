@@ -63,6 +63,12 @@ export class ExecutiveAnalyticsPage implements OnInit {
   savingTarget = signal<boolean>(false);
   exportingExcel = signal<boolean>(false);
 
+  // Guards against rapid filter changes (e.g. clicking period-preset pills quickly): only the
+  // response from the MOST RECENT request is applied, so a slower, older response can never
+  // overwrite a newer one's data.
+  private cockpitRequestSeq = 0;
+  private overviewRequestSeq = 0;
+
   cockpitFilterForm = this.fb.group({
     periodPreset: ['THIS_MONTH'],
     period: [''],
@@ -117,6 +123,7 @@ export class ExecutiveAnalyticsPage implements OnInit {
   }
 
   async loadCockpit(): Promise<void> {
+    const seq = ++this.cockpitRequestSeq;
     this.cockpitLoading.set(true);
     this.error.set(null);
     try {
@@ -124,11 +131,16 @@ export class ExecutiveAnalyticsPage implements OnInit {
       const data = await firstValueFrom(
         this.service.getCockpit(val.period || undefined, val.branchId || undefined)
       );
+      if (seq !== this.cockpitRequestSeq) return; // a newer request has since superseded this one
       this.cockpitData.set(data);
     } catch (err) {
+      if (seq !== this.cockpitRequestSeq) return;
+      // Never leave a previous filter's numbers rendered under a decoupled error banner — clear
+      // them so the template's "no data" fallback shows instead of stale figures.
+      this.cockpitData.set(null);
       this.error.set(apiErrorMessage(err, this.i18n));
     } finally {
-      this.cockpitLoading.set(false);
+      if (seq === this.cockpitRequestSeq) this.cockpitLoading.set(false);
     }
   }
 
@@ -226,6 +238,7 @@ export class ExecutiveAnalyticsPage implements OnInit {
   }
 
   async loadAll(): Promise<void> {
+    const seq = ++this.overviewRequestSeq;
     this.loading.set(true);
     this.error.set(null);
     try {
@@ -236,23 +249,35 @@ export class ExecutiveAnalyticsPage implements OnInit {
         firstValueFrom(this.service.getKpiRegistry()),
         firstValueFrom(this.service.getSnapshots()),
       ]);
+      if (seq !== this.overviewRequestSeq) return; // a newer request has since superseded this one
       this.overview.set(overviewData);
       this.trends.set(trendsData);
       this.registry.set(registryData);
       this.snapshots.set(snapshotsData);
     } catch (err) {
+      if (seq !== this.overviewRequestSeq) return;
+      // Promise.all means a single failed request discards the other results too — never leave a
+      // previous filter's stale numbers rendered under a decoupled error banner.
+      this.overview.set(null);
+      this.trends.set(null);
+      this.registry.set([]);
+      this.snapshots.set([]);
       this.error.set(apiErrorMessage(err, this.i18n));
     } finally {
-      this.loading.set(false);
+      if (seq === this.overviewRequestSeq) this.loading.set(false);
     }
   }
 
   async changeMonths(months: number): Promise<void> {
+    const seq = ++this.overviewRequestSeq;
     this.selectedMonths.set(months);
     try {
       const data = await firstValueFrom(this.service.getTrends(months));
+      if (seq !== this.overviewRequestSeq) return; // a newer request has since superseded this one
       this.trends.set(data);
     } catch (err) {
+      if (seq !== this.overviewRequestSeq) return;
+      this.trends.set(null);
       this.error.set(apiErrorMessage(err, this.i18n));
     }
   }

@@ -85,6 +85,7 @@ public class Patient {
         this.emergencyContactPhone = emergencyContactPhone;
         this.createdAt = Instant.now();
         this.updatedAt = this.createdAt;
-        this.version = 0L;
+        // Do NOT set version here - Spring Data JPA's isNew() check for @Version entities
+        // needs version == null to route save() through persist() (insert) rather than merge().
     }
 }

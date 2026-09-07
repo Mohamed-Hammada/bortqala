@@ -7,6 +7,7 @@ import com.bemo.hr.analytics.domain.ReconciliationStatus;
 import com.bemo.hr.analytics.domain.TrendDirection;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -86,9 +87,9 @@ public final class ExecutiveAnalyticsApi {
     ) {}
 
     public record CreateSnapshotPayload(
-            @NotBlank String periodKey,
+            @NotBlank @Size(max = 32) String periodKey,
             @NotNull KpiCategory category,
-            @NotBlank String kpiKey,
+            @NotBlank @Size(max = 64) String kpiKey,
             BigDecimal targetValue,
             @NotNull BigDecimal actualValue,
             BigDecimal varianceValue,
@@ -219,7 +220,7 @@ public final class ExecutiveAnalyticsApi {
     ) {}
 
     public record SaveCockpitTargetRequest(
-            @NotBlank String periodKey,
+            @NotBlank @Size(max = 20) String periodKey,
             BigDecimal targetRevenue,
             BigDecimal targetGrossMarginPercent,
             BigDecimal targetMaxOpex,

@@ -434,6 +434,8 @@
             </div>
           </div>
         </div>
+      } @else {
+        <div class="empty-state">{{ i18n.t('common.noData') }}</div>
       }
     }
 
@@ -501,6 +503,8 @@
             </div>
           }
         </div>
+      } @else {
+        <div class="empty-state">{{ i18n.t('common.noData') }}</div>
       }
     }
 
@@ -547,6 +551,8 @@
             </tbody>
           </table>
         </div>
+      } @else {
+        <div class="empty-state">{{ i18n.t('common.noData') }}</div>
       }
     }
 

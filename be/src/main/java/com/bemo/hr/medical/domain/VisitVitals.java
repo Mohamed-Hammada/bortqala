@@ -96,7 +96,8 @@ public class VisitVitals {
         this.recordedAt = Instant.now().toEpochMilli();
         this.createdAt = this.recordedAt;
         this.updatedAt = this.recordedAt;
-        this.version = 0L;
+        // Do NOT set version here - Spring Data JPA's isNew() check for @Version entities
+        // needs version == null to route save() through persist() (insert) rather than merge().
         this.bmi = calculateBmi(weightKg, heightCm);
     }
 

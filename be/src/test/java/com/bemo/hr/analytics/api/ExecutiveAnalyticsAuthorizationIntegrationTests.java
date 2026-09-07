@@ -266,6 +266,22 @@ class ExecutiveAnalyticsAuthorizationIntegrationTests {
     }
 
     @Test
+    void saveTargetsRejectsOverLengthPeriodKeyAsACleanValidationErrorNotAConflict() throws Exception {
+        // period_key is VARCHAR(20); before @Size(max = 20) was added, a longer value reached the
+        // DB, threw DataIntegrityViolationException, and was misreported as
+        // EXECUTIVE_TARGET_CONCURRENT_CREATE (409) instead of a validation error (400).
+        AppUser projectManager = createUser("exectgtlong", Set.of(RoleCode.PROJECT_MANAGER), appId);
+        String tooLong = "T" + UUID.randomUUID().toString(); // well over 20 characters
+        String payload = "{\"periodKey\":\"" + tooLong + "\"}";
+
+        mockMvc.perform(post("/api/v1/analytics/executive/targets")
+                        .header("Authorization", "Bearer " + mintAccessToken(projectManager, appCode))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void unauthenticatedCallerIsRejected() throws Exception {
         mockMvc.perform(get("/api/v1/analytics/executive/cockpit"))
                 .andExpect(status().isUnauthorized());
