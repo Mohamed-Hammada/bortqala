@@ -49,7 +49,11 @@ export class ExecutiveAnalyticsService {
   }
 
   // companyId removed (see getOverview note above); branchId is kept — it is genuinely enforced
-  // and used to filter the branch leaderboard.
+  // AND genuinely scopes every branch-attributable KPI in the cockpit response (headcount, cash/
+  // bank, POS sales, payroll, expenses, projects, inventory, and the branch leaderboard), not just
+  // the leaderboard. KPIs with no real branch attribution (GL revenue/OPEX/net profit, AR/AP,
+  // top customers/products) report honest zero/empty when branchId is set — see
+  // docs/FINAL_REMEDIATION_VERIFICATION_2026-09-07.md for the full per-KPI attribution table.
   getCockpit(period?: string, branchId?: string): Observable<OwnerCockpitResponse> {
     let params = new HttpParams();
     if (period) params = params.set('period', period);

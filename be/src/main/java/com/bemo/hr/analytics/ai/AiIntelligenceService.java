@@ -2,6 +2,7 @@ package com.bemo.hr.analytics.ai;
 
 import com.bemo.hr.operations.InventoryItem;
 import com.bemo.hr.operations.InventoryItemRepository;
+import com.bemo.hr.operations.StockMovementRepository;
 import com.bemo.hr.party.BusinessParty;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
@@ -31,15 +32,18 @@ public class AiIntelligenceService {
     private final SupplierInvoiceRepository supplierInvoiceRepository;
     private final InventoryItemRepository inventoryItemRepository;
     private final BusinessPartyRepository businessPartyRepository;
+    private final StockMovementRepository stockMovementRepository;
 
     public AiIntelligenceService(CustomerInvoiceRepository customerInvoiceRepository,
                                  SupplierInvoiceRepository supplierInvoiceRepository,
                                  InventoryItemRepository inventoryItemRepository,
-                                 BusinessPartyRepository businessPartyRepository) {
+                                 BusinessPartyRepository businessPartyRepository,
+                                 StockMovementRepository stockMovementRepository) {
         this.customerInvoiceRepository = customerInvoiceRepository;
         this.supplierInvoiceRepository = supplierInvoiceRepository;
         this.inventoryItemRepository = inventoryItemRepository;
         this.businessPartyRepository = businessPartyRepository;
+        this.stockMovementRepository = stockMovementRepository;
     }
 
     public AiIntelligenceApi.CashFlowForecastResponse getCashFlowForecast(int months) {
@@ -146,7 +150,11 @@ public class AiIntelligenceService {
         List<AiIntelligenceApi.DemandForecastDto> forecasts = new ArrayList<>();
 
         for (InventoryItem item : items) {
-            BigDecimal currentStock = item.getReorderPoint() != null ? item.getReorderPoint() : BigDecimal.ZERO;
+            // 2026-09-07 remediation (final hardening audit): this used to report the item's
+            // configured reorderPoint (a re-order THRESHOLD) as if it were the actual on-hand
+            // quantity — the same fabrication class as the reorderPoint*0.4 bug already fixed in
+            // ExecutiveAnalyticsService. Real on-hand quantity is the net of all stock movements.
+            BigDecimal currentStock = stockMovementRepository.balance(item.getId());
             BigDecimal monthlyConsumption = item.getReorderQuantity() != null && item.getReorderQuantity().signum() > 0
                     ? item.getReorderQuantity()
                     : new BigDecimal("30.00");
@@ -240,46 +248,68 @@ public class AiIntelligenceService {
         List<Map<String, Object>> rows = new ArrayList<>();
         String answer;
 
+        // 2026-09-07 remediation (final hardening audit, fabricated-data sweep): every branch below
+        // used to return a hardcoded number ("285,400.00 EGP across 42 orders", cashPosition
+        // 154200.00, activeEmployees 38) regardless of which tenant asked or what its real data was
+        // — a fabricated KPI presented as a genuine query result. Each branch now either computes a
+        // real figure from a repository this service already has, or — where no real source is
+        // wired into this service (cash position, headcount) — honestly reports that the figure is
+        // not available here instead of inventing one (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md
+        // Critical Finding C-1 for the precedent: never fabricate a value; document the limitation).
         if (q.contains("sale") || q.contains("مبيع") || q.contains("عميل") || q.contains("customer")) {
             dataset = "SALES_REVENUE";
             intent = "TOTAL_SALES_SUMMARY";
-            filters.add("status=CONFIRMED");
+            filters.add("status<>DRAFT");
             filters.add("period=CURRENT_YEAR");
+
+            LocalDate yearStart = LocalDate.now().withDayOfYear(1);
+            LocalDate today = LocalDate.now();
+            List<CustomerInvoice> yearInvoices = customerInvoiceRepository.findByInvoiceDateBetween(yearStart, today).stream()
+                    .filter(i -> i.getStatus() != CustomerInvoice.Status.DRAFT)
+                    .toList();
+            BigDecimal totalSales = yearInvoices.stream()
+                    .map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             Map<String, Object> summary = new HashMap<>();
             summary.put("metric", "Total Sales Volume");
-            summary.put("value", 285400.00);
+            summary.put("value", totalSales);
             summary.put("currency", "EGP");
-            summary.put("ordersCount", 42);
+            summary.put("ordersCount", yearInvoices.size());
             rows.add(summary);
 
-            answer = "إجمالي المبيعات المؤكدة للعام الحالي يبلغ 285,400.00 ج.م عبر 42 أمر بيع معتمد.";
+            answer = "إجمالي المبيعات المؤكدة للعام الحالي يبلغ " + totalSales.setScale(2, RoundingMode.HALF_UP)
+                    + " ج.م عبر " + yearInvoices.size() + " فاتورة مبيعات مؤكدة.";
         } else if (q.contains("مخزون") || q.contains("stock") || q.contains("item") || q.contains("صنف")) {
             dataset = "INVENTORY_LEVELS";
             intent = "LOW_STOCK_ALERT";
             filters.add("stock_status=BELOW_REORDER");
 
-            List<InventoryItem> lowStock = inventoryItemRepository.findAll();
-            for (InventoryItem item : lowStock.stream().limit(5).toList()) {
+            List<InventoryItem> belowReorder = inventoryItemRepository.findAll().stream()
+                    .filter(item -> item.getReorderPoint() != null && item.getReorderPoint().signum() > 0)
+                    .filter(item -> stockMovementRepository.balance(item.getId()).compareTo(item.getReorderPoint()) <= 0)
+                    .toList();
+            for (InventoryItem item : belowReorder.stream().limit(5).toList()) {
                 Map<String, Object> r = new HashMap<>();
                 r.put("itemCode", item.getCode());
                 r.put("name", item.getName());
+                r.put("currentStock", stockMovementRepository.balance(item.getId()));
                 r.put("reorderPoint", item.getReorderPoint());
                 rows.add(r);
             }
 
-            answer = "تم فحص مستويات المخزون: يوجد عدد أصناف تقترب من حد إعادة الطلب.";
+            answer = "تم فحص مستويات المخزون: يوجد " + belowReorder.size() + " صنف عند أو تحت حد إعادة الطلب.";
         } else {
             dataset = "FINANCE_SUMMARY";
             intent = "GENERAL_KPI_LOOKUP";
             filters.add("scope=ACTIVE_TENANT");
 
-            Map<String, Object> kpi = new HashMap<>();
-            kpi.put("cashPosition", 154200.00);
-            kpi.put("activeEmployees", 38);
-            rows.add(kpi);
-
-            answer = "تم استرجاع المؤشرات العامة للحساب بنجاح وفقاً لمعايير الأمان المحددة.";
+            // No cash-position or headcount repository is wired into this service; rather than
+            // fabricate those two figures, this honestly reports that they are outside this NL
+            // query surface's current scope. Real cash/bank figures are available via the
+            // Executive Cockpit (GET /api/v1/analytics/executive/cockpit).
+            answer = "لا يمكن حالياً استرجاع مؤشرات الرصيد النقدي وعدد الموظفين عبر هذا الاستعلام؛ "
+                    + "يرجى مراجعة لوحة القيادة التنفيذية للحصول على أرقام حقيقية.";
         }
 
         return new AiIntelligenceApi.NlQueryResponse(

@@ -2,10 +2,12 @@ package com.bemo.hr.analytics.ai;
 
 import com.bemo.hr.operations.InventoryItem;
 import com.bemo.hr.operations.InventoryItemRepository;
+import com.bemo.hr.operations.StockMovementRepository;
 import com.bemo.hr.party.BusinessParty;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
+import com.bemo.hr.trade.sales.domain.CustomerInvoice;
 import com.bemo.hr.trade.sales.infrastructure.CustomerInvoiceRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +32,8 @@ public class AiIntelligenceServiceTests {
     private InventoryItemRepository inventoryItemRepository;
     @Mock
     private BusinessPartyRepository businessPartyRepository;
+    @Mock
+    private StockMovementRepository stockMovementRepository;
 
     @InjectMocks
     private AiIntelligenceService aiService;
@@ -117,22 +121,82 @@ public class AiIntelligenceServiceTests {
 
     @Test
     void shouldExecuteNlQueryAndMapToWhitelistedDataset_ACP4() {
+        // 2026-09-07 remediation: this used to hardcode "285,400.00 EGP / 42 orders" regardless of
+        // the mocked repository's real data — proving nothing about correctness. This now stubs two
+        // real invoices (one DRAFT, correctly excluded; one ISSUED, correctly included) and asserts
+        // the response reflects exactly their real sum — a genuine regression test against
+        // reintroducing the fabricated figure (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md C-1).
+        CustomerInvoice draftInvoice = mock(CustomerInvoice.class);
+        when(draftInvoice.getStatus()).thenReturn(CustomerInvoice.Status.DRAFT);
+        // Deliberately never consumed: the DRAFT filter must skip getAmount() entirely for this
+        // invoice. lenient() documents that intent instead of tripping UnnecessaryStubbingException.
+        lenient().when(draftInvoice.getAmount()).thenReturn(new BigDecimal("999999.00"));
+
+        CustomerInvoice issuedInvoice = mock(CustomerInvoice.class);
+        when(issuedInvoice.getStatus()).thenReturn(CustomerInvoice.Status.ISSUED);
+        when(issuedInvoice.getAmount()).thenReturn(new BigDecimal("12345.50"));
+
+        when(customerInvoiceRepository.findByInvoiceDateBetween(any(), any()))
+                .thenReturn(List.of(draftInvoice, issuedInvoice));
+
         AiIntelligenceApi.NlQueryResponse res = aiService.executeNlQuery(
                 new AiIntelligenceApi.NlQueryRequest("ما هو إجمالي المبيعات المؤكدة هذا العام؟", null)
         );
 
         assertThat(res.success()).isTrue();
         assertThat(res.targetDataset()).isEqualTo("SALES_REVENUE");
-        assertThat(res.appliedFilters()).contains("status=CONFIRMED");
-        assertThat(res.summaryAnswer()).contains("285,400.00");
+        assertThat(res.summaryAnswer()).contains("12345.50").doesNotContain("285,400.00").doesNotContain("999999.00");
+        assertThat(res.records()).hasSize(1);
+        assertThat((BigDecimal) res.records().get(0).get("value")).isEqualByComparingTo("12345.50");
+        assertThat((Integer) res.records().get(0).get("ordersCount")).isEqualTo(1);
+    }
+
+    @Test
+    void shouldNotFabricateCashPositionOrHeadcountWhenNoRealSourceIsWired_ACP4b() {
+        // The FINANCE_SUMMARY fallback branch used to hardcode cashPosition=154200.00 and
+        // activeEmployees=38 for every tenant. This service has no cash/headcount repository, so
+        // the correct behavior is an honest "not available here" answer, not an invented number.
+        AiIntelligenceApi.NlQueryResponse res = aiService.executeNlQuery(
+                new AiIntelligenceApi.NlQueryRequest("give me a general status update", null)
+        );
+
+        assertThat(res.success()).isTrue();
+        assertThat(res.targetDataset()).isEqualTo("FINANCE_SUMMARY");
+        assertThat(res.summaryAnswer()).doesNotContain("154200").doesNotContain("38");
+        assertThat(res.records()).isEmpty();
+    }
+
+    @Test
+    void demandForecastReportsRealOnHandBalanceNotTheReorderPointThreshold() {
+        // 2026-09-07 remediation: getDemandForecast() used to report currentStock =
+        // item.getReorderPoint() — a configured re-order THRESHOLD, not the real on-hand quantity.
+        // Real on-hand quantity (the net of all stock movements) can legitimately differ from the
+        // threshold in either direction; this proves the service now reports that real balance.
+        InventoryItem item = mock(InventoryItem.class);
+        when(item.getId()).thenReturn("ITEM-1");
+        when(item.getCode()).thenReturn("SKU-1");
+        when(item.getName()).thenReturn("Test Item");
+        when(item.getReorderQuantity()).thenReturn(new BigDecimal("100"));
+
+        when(inventoryItemRepository.findAll()).thenReturn(List.of(item));
+        // A distinctive value with no relationship to any item-configuration field — proving
+        // currentStock is genuinely sourced from stockMovementRepository, not item configuration.
+        when(stockMovementRepository.balance("ITEM-1")).thenReturn(new BigDecimal("777"));
+
+        List<AiIntelligenceApi.DemandForecastDto> forecasts = aiService.getDemandForecast();
+
+        assertThat(forecasts).hasSize(1);
+        assertThat(forecasts.get(0).currentStock()).isEqualByComparingTo("777");
     }
 
     @Test
     void shouldVerifyZeroDatabaseMutatingWrites_ACP5() {
+        when(customerInvoiceRepository.findByInvoiceDateBetween(any(), any())).thenReturn(List.of());
         aiService.getCashFlowForecast(6);
         aiService.detectExpenseAnomalies();
         aiService.getDemandForecast();
         aiService.getCollectionsRisk();
+        aiService.executeNlQuery(new AiIntelligenceApi.NlQueryRequest("sales this year", null));
 
         verify(supplierInvoiceRepository, never()).save(any());
         verify(customerInvoiceRepository, never()).save(any());
