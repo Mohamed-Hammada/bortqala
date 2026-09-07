@@ -5,6 +5,12 @@ databaseChangeLog:
   # then apply only V92, mirroring a real in-place upgrade.
   - include:
       file: db/changelog/releases/20260729_v1_v67.changelog-master.yaml
+  # Test-only: v1_v67's nested v3 changeset loads translations.csv, which has since (2026-09-01)
+  # absorbed the content of the v70/v73/v74/v76/v81/v85/v88/v91 translation-insert changesets
+  # below. Remove that now-duplicated content before replaying those changesets, or they violate
+  # uq_translations_key_locale. See test-v92-pre_dedupe_consolidated_translations.yaml.
+  - include:
+      file: db/changelog/data/insert/test-v92-pre_dedupe_consolidated_translations.yaml
   - include:
       file: db/changelog/schema/create/20260729_v68_system_settings.yaml
   - include:

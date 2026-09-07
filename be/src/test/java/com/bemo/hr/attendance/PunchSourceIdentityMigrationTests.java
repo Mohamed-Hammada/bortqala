@@ -122,7 +122,7 @@ class PunchSourceIdentityMigrationTests {
             assertThat(rows.getString(1)).isEqualTo("DEVICE");
             assertThat(rows.next()).isTrue();
             assertThat(rows.getString(1)).isEqualTo("FILE_DEVICE");
-            assertThat(rows.getString(2)).isEqualTo("gate one");
+            assertThat(rows.getString(2)).isEqualTo("gate_one");
         }
         try (ResultSet deviceSources = statement.executeQuery("""
                 SELECT COUNT(*) FROM biometric_sources
@@ -133,7 +133,7 @@ class PunchSourceIdentityMigrationTests {
         }
         try (ResultSet fileSources = statement.executeQuery("""
                 SELECT COUNT(*) FROM biometric_sources
-                WHERE app_id = 'app1' AND source_type = 'FILE_DEVICE' AND normalized_code = 'gate one'
+                WHERE app_id = 'app1' AND source_type = 'FILE_DEVICE' AND normalized_code = 'gate_one'
                 """)) {
             fileSources.next();
             assertThat(fileSources.getInt(1)).isEqualTo(1);
@@ -156,12 +156,12 @@ class PunchSourceIdentityMigrationTests {
             assertThat(rows.next()).isTrue();
             assertThat(rows.getString(1)).isEqualTo("p-file");
             assertThat(rows.getString(2)).isEqualTo("FILE_DEVICE");
-            assertThat(rows.getString(3)).isEqualTo("gate one");
+            assertThat(rows.getString(3)).isEqualTo("gate_one");
 
             assertThat(rows.next()).isTrue();
             assertThat(rows.getString(1)).isEqualTo("p-file3");
             assertThat(rows.getString(2)).isEqualTo("FILE_DEVICE");
-            assertThat(rows.getString(3)).isEqualTo("gate one");
+            assertThat(rows.getString(3)).isEqualTo("gate_one");
 
             assertThat(rows.next()).isFalse();
         }

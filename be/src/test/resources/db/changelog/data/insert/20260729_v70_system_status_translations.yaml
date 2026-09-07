@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v70-system-status-translations
+      author: Mohamed-Hammada
+      validCheckSum: 9:91492a7619580e2a30a0f4ea1718c0f1
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/system_status_translations_v70.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete:
+            tableName: translations
+            where: "id LIKE 'x70-%'"

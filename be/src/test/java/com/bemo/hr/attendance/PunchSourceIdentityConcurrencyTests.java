@@ -300,12 +300,16 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
                 .count();
         assertThat(batches).as("concurrent identical uploads create exactly one batch").isEqualTo(1);
 
+        // The one CSV data row carries both an official/actual check-in (08:12) and an
+        // official/actual check-out (16:20) for the same employee-day, so the reader correctly
+        // produces two distinct PunchRow entries from it — the real assertion is that the losing
+        // upload does not duplicate them (2, not 4), not that a single physical row exists.
         long stored = punchRecordRepository.findInRange(
                         Instant.parse("2026-08-04T00:00:00Z"), Instant.parse("2026-08-05T00:00:00Z"))
                 .stream()
                 .filter(punch -> punch.getSourceId().equals(sourceId))
                 .count();
-        assertThat(stored).as("the winning upload stores the punch exactly once").isEqualTo(1);
+        assertThat(stored).as("the winning upload stores the check-in and check-out punches exactly once each, not duplicated").isEqualTo(2);
     }
 
     @Test

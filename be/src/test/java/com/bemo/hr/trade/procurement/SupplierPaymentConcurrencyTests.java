@@ -2,6 +2,10 @@ package com.bemo.hr.trade.procurement;
 
 import com.bemo.hr.PostgresIntegrationTest;
 import com.bemo.hr.finance.domain.FiscalPeriod;
+import com.bemo.hr.finance.domain.posting.PostingProfile;
+import com.bemo.hr.finance.domain.posting.PostingProfileLine;
+import com.bemo.hr.finance.domain.posting.PostingProfileLineRepository;
+import com.bemo.hr.finance.domain.posting.PostingProfileRepository;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.party.BusinessParty;
@@ -44,12 +48,15 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
     private final TenantApplicationRepository tenantApplicationRepository;
     private final BusinessPartyRepository businessPartyRepository;
     private final FiscalPeriodRepository fiscalPeriodRepository;
+    private final PostingProfileRepository postingProfileRepository;
+    private final PostingProfileLineRepository postingProfileLineRepository;
 
     private final List<String> createdAppIds = new ArrayList<>();
     private final List<String> createdPartyIds = new ArrayList<>();
     private final List<String> createdInvoiceIds = new ArrayList<>();
     private final List<String> createdFiscalPeriodIds = new ArrayList<>();
     private final List<String> createdOperationIds = new CopyOnWriteArrayList<>();
+    private final List<String> createdPostingProfileIds = new ArrayList<>();
 
     @Autowired
     SupplierPaymentConcurrencyTests(ProcurementService procurementService,
@@ -59,7 +66,9 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
                                     IdempotencyKeyRepository idempotencyKeyRepository,
                                     TenantApplicationRepository tenantApplicationRepository,
                                     BusinessPartyRepository businessPartyRepository,
-                                    FiscalPeriodRepository fiscalPeriodRepository) {
+                                    FiscalPeriodRepository fiscalPeriodRepository,
+                                    PostingProfileRepository postingProfileRepository,
+                                    PostingProfileLineRepository postingProfileLineRepository) {
         this.procurementService = procurementService;
         this.supplierInvoiceRepository = supplierInvoiceRepository;
         this.supplierPaymentRepository = supplierPaymentRepository;
@@ -68,6 +77,8 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.businessPartyRepository = businessPartyRepository;
         this.fiscalPeriodRepository = fiscalPeriodRepository;
+        this.postingProfileRepository = postingProfileRepository;
+        this.postingProfileLineRepository = postingProfileLineRepository;
     }
 
     @AfterEach
@@ -86,6 +97,11 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
                             .forEach(payment -> supplierPaymentRepository.deleteById(payment.getId()));
                     supplierInvoiceRepository.deleteById(invoiceId);
                 });
+                createdPostingProfileIds.forEach(profileId -> {
+                    postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(profileId)
+                            .forEach(line -> postingProfileLineRepository.deleteById(line.getId()));
+                    postingProfileRepository.deleteById(profileId);
+                });
             }
             businessPartyRepository.deleteAllById(createdPartyIds);
             createdFiscalPeriodIds.forEach(fiscalPeriodRepository::deleteById);
@@ -96,6 +112,7 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
             createdInvoiceIds.clear();
             createdFiscalPeriodIds.clear();
             createdOperationIds.clear();
+            createdPostingProfileIds.clear();
             TenantContext.clear();
         }
     }
@@ -111,7 +128,7 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
         BusinessParty supplier = businessPartyRepository.save(new BusinessParty(
                 "SUPP-CONC-" + suffix, "Concurrency Supplier", null, "SUPPLIER",
                 null, null, null, null, null, true,
-                "DIRECT", null, null, null, "EGP", "E_INVOICE", "CASH", null, null));
+                "DIRECT", null, null, null, "EGP", "E_INVOICE", "CASH", null, "EG123456789012345678901234"));
         createdPartyIds.add(supplier.getId());
 
         SupplierInvoice invoice = supplierInvoiceRepository.save(new SupplierInvoice(
@@ -124,6 +141,16 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
                 2026, 8, "August 2026",
                 LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), FiscalPeriod.Status.OPEN));
         createdFiscalPeriodIds.add(period.getId());
+
+        // A brand-new tenant has no posting profile configured; the real payment flow posts to the
+        // subledger and requires one for "SUPPLIER_PAYMENT_BANK_TRANSFER" (the businessEvent built
+        // from the BANK_TRANSFER method used below). Without this, every concurrent attempt fails
+        // with SUBLEDGER_POSTING_PROFILE_REQUIRED before the concurrency-conflict logic is exercised.
+        PostingProfile profile = postingProfileRepository.save(
+                new PostingProfile("CPAY-PROFILE", "SUPPLIER_PAYMENT_BANK_TRANSFER", LocalDate.of(2026, 1, 1), null));
+        createdPostingProfileIds.add(profile.getId());
+        postingProfileLineRepository.save(new PostingProfileLine(profile.getId(), 1, "DEBIT", "FIXED", UUID.randomUUID().toString(), "AMOUNT"));
+        postingProfileLineRepository.save(new PostingProfileLine(profile.getId(), 2, "CREDIT", "FIXED", UUID.randomUUID().toString(), "AMOUNT"));
 
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);

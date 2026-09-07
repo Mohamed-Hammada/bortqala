@@ -144,6 +144,17 @@ public class BiometricImportService {
             int reserved = importBatchRepository.insertIfAbsent(batchId, appId, checksum, fileName,
                     sourceId, source.getName(), errorRows == 0 ? ImportStatus.COMPLETED.name() : ImportStatus.COMPLETED_WITH_ERRORS.name(),
                     totalRows, validRows, errorRows, actor);
+            if (reserved == 0) {
+                // Another concurrent import won the (source, checksum) reservation race between our
+                // duplicate check above and this insert; the row we tried to create under batchId was
+                // never written, so load the winner's row instead of the id we just generated (same
+                // pattern as the equivalent race handling in BiometricDeviceSyncService).
+                ImportBatch winningBatch = importBatchRepository
+                        .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(sourceId, checksum, ImportStatus.REVERSED)
+                        .orElseThrow(() -> new IllegalStateException("Concurrent batch reservation could not be loaded for sourceId=" + sourceId));
+                log.info("[IMPORT] Lost concurrent batch reservation race, returning winner: batchId={}, appId={}", winningBatch.getId(), appId);
+                return toResponse(winningBatch, true);
+            }
             ImportBatch batch = importBatchRepository.findById(batchId)
                     .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + batchId));
             log.info("[IMPORT] Reserved new batch: batchId={}, appId={}", batchId, appId);

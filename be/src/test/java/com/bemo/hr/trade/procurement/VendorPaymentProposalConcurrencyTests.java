@@ -3,6 +3,10 @@ package com.bemo.hr.trade.procurement;
 import com.bemo.hr.PostgresIntegrationTest;
 import com.bemo.hr.audit.infrastructure.AuditLogRepository;
 import com.bemo.hr.finance.domain.FiscalPeriod;
+import com.bemo.hr.finance.domain.posting.PostingProfile;
+import com.bemo.hr.finance.domain.posting.PostingProfileLine;
+import com.bemo.hr.finance.domain.posting.PostingProfileLineRepository;
+import com.bemo.hr.finance.domain.posting.PostingProfileRepository;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.party.BusinessParty;
@@ -22,6 +26,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -57,12 +63,19 @@ class VendorPaymentProposalConcurrencyTests extends PostgresIntegrationTest {
     private TenantApplicationRepository appRepository;
     @Autowired
     private DocumentNumberSequenceRepository documentNumberSequenceRepository;
+    @Autowired
+    private PostingProfileRepository postingProfileRepository;
+    @Autowired
+    private PostingProfileLineRepository postingProfileLineRepository;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private String appId;
     private String supplierId;
     private String invoiceId;
     private String proposalId;
     private String fiscalPeriodId;
+    private String postingProfileId;
 
     @AfterEach
     void cleanup() {
@@ -83,8 +96,16 @@ class VendorPaymentProposalConcurrencyTests extends PostgresIntegrationTest {
             }
             if (supplierId != null) partyRepository.deleteById(supplierId);
             if (fiscalPeriodId != null) fiscalPeriodRepository.deleteById(fiscalPeriodId);
-            documentNumberSequenceRepository.findByDocumentTypeAndYear("SUPPLIER_PAYMENT", LocalDate.now().getYear())
-                    .ifPresent(documentNumberSequenceRepository::delete);
+            if (postingProfileId != null) {
+                postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(postingProfileId)
+                        .forEach(line -> postingProfileLineRepository.deleteById(line.getId()));
+                postingProfileRepository.deleteById(postingProfileId);
+            }
+            // findByDocumentTypeAndYear takes a pessimistic write lock and requires an active
+            // transaction; this plain @AfterEach method has none, so wrap just this lookup+delete.
+            new TransactionTemplate(transactionManager).executeWithoutResult(status ->
+                    documentNumberSequenceRepository.findByDocumentTypeAndYear("SUPPLIER_PAYMENT", LocalDate.now().getYear())
+                            .ifPresent(documentNumberSequenceRepository::delete));
             appRepository.deleteById(appId);
         } finally {
             TenantContext.clear();
@@ -110,6 +131,18 @@ class VendorPaymentProposalConcurrencyTests extends PostgresIntegrationTest {
                 null, "EGP", supplierId, null, null, null, today, new BigDecimal("100.00"),
                 BigDecimal.ZERO, BigDecimal.ZERO, today, null));
         invoiceId = invoice.getId();
+
+        // A brand-new tenant has no posting profile configured; executeProposal ultimately posts a
+        // supplier payment to the subledger and requires a profile for "SUPPLIER_PAYMENT_BANK_TRANSFER"
+        // (the businessEvent built from the BANK_TRANSFER method used below). Without this, every
+        // concurrent execution attempt fails with SUBLEDGER_POSTING_PROFILE_REQUIRED before the
+        // concurrency-conflict logic under test is ever exercised.
+        PostingProfile profile = postingProfileRepository.save(
+                new PostingProfile("PROP-PROFILE", "SUPPLIER_PAYMENT_BANK_TRANSFER", today.minusYears(1), null));
+        postingProfileId = profile.getId();
+        postingProfileLineRepository.save(new PostingProfileLine(profile.getId(), 1, "DEBIT", "FIXED", UUID.randomUUID().toString(), "AMOUNT"));
+        postingProfileLineRepository.save(new PostingProfileLine(profile.getId(), 2, "CREDIT", "FIXED", UUID.randomUUID().toString(), "AMOUNT"));
+
         var created = proposalService.createProposal(supplierId,
                 List.of(new VendorPaymentProposalService.AllocationInput(invoiceId, new BigDecimal("60.00"))),
                 today, "maker");

@@ -5,6 +5,12 @@ import com.bemo.hr.audit.infrastructure.AuditLogRepository;
 import com.bemo.hr.employee.domain.*;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.finance.domain.FiscalPeriod;
+import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
+import com.bemo.hr.finance.domain.posting.PostingProfile;
+import com.bemo.hr.finance.domain.posting.PostingProfileLine;
+import com.bemo.hr.finance.domain.posting.PostingProfileLineRepository;
+import com.bemo.hr.finance.domain.posting.PostingProfileRepository;
 import com.bemo.hr.payroll.api.PayrollApi;
 import com.bemo.hr.payroll.application.PayrollService;
 import com.bemo.hr.payroll.domain.*;
@@ -40,6 +46,9 @@ class PayrollPaymentConcurrencyTests extends PostgresIntegrationTest {
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final AuditLogRepository auditLogRepository;
     private final TenantApplicationRepository tenantApplicationRepository;
+    private final PostingProfileRepository postingProfileRepository;
+    private final PostingProfileLineRepository postingProfileLineRepository;
+    private final FiscalPeriodRepository fiscalPeriodRepository;
 
     private String appId;
 
@@ -52,7 +61,10 @@ class PayrollPaymentConcurrencyTests extends PostgresIntegrationTest {
                                    EmployeeRepository employeeRepository,
                                    AttendanceCategoryRepository attendanceCategoryRepository,
                                    AuditLogRepository auditLogRepository,
-                                   TenantApplicationRepository tenantApplicationRepository) {
+                                   TenantApplicationRepository tenantApplicationRepository,
+                                   PostingProfileRepository postingProfileRepository,
+                                   PostingProfileLineRepository postingProfileLineRepository,
+                                   FiscalPeriodRepository fiscalPeriodRepository) {
         this.payrollService = payrollService;
         this.salaryPaymentRepository = salaryPaymentRepository;
         this.payrollRunHeaderRepository = payrollRunHeaderRepository;
@@ -62,6 +74,9 @@ class PayrollPaymentConcurrencyTests extends PostgresIntegrationTest {
         this.attendanceCategoryRepository = attendanceCategoryRepository;
         this.auditLogRepository = auditLogRepository;
         this.tenantApplicationRepository = tenantApplicationRepository;
+        this.postingProfileRepository = postingProfileRepository;
+        this.postingProfileLineRepository = postingProfileLineRepository;
+        this.fiscalPeriodRepository = fiscalPeriodRepository;
     }
 
     @AfterEach
@@ -70,6 +85,9 @@ class PayrollPaymentConcurrencyTests extends PostgresIntegrationTest {
             if (appId != null) {
                 TenantContext.set(appId);
                 auditLogRepository.deleteAll();
+                postingProfileLineRepository.deleteAll();
+                postingProfileRepository.deleteAll();
+                fiscalPeriodRepository.deleteAll();
                 salaryPaymentRepository.deleteAll();
                 payrollInputSnapshotRepository.deleteAll();
                 payrollRunHeaderRepository.deleteAll();
@@ -91,6 +109,17 @@ class PayrollPaymentConcurrencyTests extends PostgresIntegrationTest {
                 new TenantApplication("PAYCON-" + suffix, "Payroll concurrency test"));
         appId = tenantApplication.getId();
         TenantContext.set(appId);
+
+        // A brand-new tenant has no open fiscal period; SubledgerPostingService requires one that
+        // covers the disbursement's real event date. The payment request below passes a null
+        // paidAtEpochMs, so PayrollPaymentAccountingService.postDisbursement resolves the event date
+        // from Instant.now() (today), not the payroll period (2026-08) — the fiscal period must
+        // cover TODAY, not the payroll period, or every concurrent payment attempt fails with
+        // "No open fiscal period covers this date" before the concurrency-conflict logic is exercised.
+        LocalDate today = LocalDate.now();
+        fiscalPeriodRepository.save(new FiscalPeriod(
+                today.getYear(), today.getMonthValue(), "Payroll concurrency",
+                today.withDayOfMonth(1), today.withDayOfMonth(today.lengthOfMonth()), FiscalPeriod.Status.OPEN));
 
         AttendanceCategory category = attendanceCategoryRepository.save(new AttendanceCategory(
                 "PAYCON-" + suffix, "Payroll concurrency", 480, PayCycle.MONTHLY,
@@ -129,6 +158,16 @@ class PayrollPaymentConcurrencyTests extends PostgresIntegrationTest {
         payment.transitionTo(PaymentStatus.POSTED);
         payment.attachCalculationEvidence(run.getId(), snapshot.getId());
         payment = salaryPaymentRepository.saveAndFlush(payment);
+
+        // A brand-new tenant has no posting profile configured; recordPayment posts the disbursement
+        // to the subledger and requires a profile for "PAYROLL_DISBURSEMENT_BANK_TRANSFER" (the
+        // businessEvent built from the BANK_TRANSFER method used below). Without this, every
+        // concurrent payment attempt fails with SUBLEDGER_POSTING_PROFILE_REQUIRED before the
+        // concurrency-conflict/optimistic-locking logic under test is ever exercised.
+        PostingProfile profile = postingProfileRepository.save(
+                new PostingProfile("PAYCON-PROFILE", "PAYROLL_DISBURSEMENT_BANK_TRANSFER", LocalDate.of(2026, 1, 1), null));
+        postingProfileLineRepository.save(new PostingProfileLine(profile.getId(), 1, "DEBIT", "FIXED", UUID.randomUUID().toString(), "AMOUNT"));
+        postingProfileLineRepository.save(new PostingProfileLine(profile.getId(), 2, "CREDIT", "FIXED", UUID.randomUUID().toString(), "AMOUNT"));
 
         long expectedVersion = payment.getVersion();
         CountDownLatch ready = new CountDownLatch(2);
