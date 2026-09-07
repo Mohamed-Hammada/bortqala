@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260907-v462-cogs-coverage-translations
+      author: bemo-tech-lead
+      comment: >
+        Deep-engineering remediation (2026-09-07, Frontend Finding #1): adds a provenance signal
+        for the Owner Cockpit's Gross Margin KPI — when cogsDataCoveragePercent < 100, some real
+        revenue has no matching costed SalesDeliveryLine (COGS defaults to 0 for that portion,
+        never a guessed ratio, per Critical Finding C-1), so margin may be overstated. Adds the
+        bilingual labels for the resulting frontend warning badge.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009239-ar', 'executive.cogsCoverage', 'ar-EG', 'تغطية بيانات التكلفة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.cogsCoverage' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009239-en', 'executive.cogsCoverage', 'en-US', 'Cost data coverage', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.cogsCoverage' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009240-ar', 'executive.cogsCoverageHint', 'ar-EG', 'لا تتوفر بيانات تكلفة فعلية لجزء من إيرادات هذه الفترة، فقد لا يعكس هامش الربح المعروض التكلفة الحقيقية بالكامل.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.cogsCoverageHint' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009240-en', 'executive.cogsCoverageHint', 'en-US', 'Part of this period''s revenue has no matching cost data yet, so the displayed margin may not fully reflect real cost.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.cogsCoverageHint' AND locale = 'en-US');

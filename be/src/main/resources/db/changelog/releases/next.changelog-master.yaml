@@ -667,6 +667,20 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260906_v461_executive_kpi_snapshot_uniqueness.yaml
   - include:
       file: db/changelog/data/update/20260906_v461_executive_target_concurrent_translation.yaml
+  - include:
+      file: db/changelog/schema/update/20260907_v462_executive_kpi_snapshot_created_at_index.yaml
+  - include:
+      file: db/changelog/data/update/20260907_v462_payroll_disbursed_label_clarification.yaml
+  - include:
+      file: db/changelog/data/update/20260907_v462_cogs_coverage_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260907_v462_executive_analytics_p1_indexes.yaml
+  - include:
+      file: db/changelog/schema/update/20260907_v463_executive_cockpit_target_precision_alignment.yaml
+  - include:
+      file: db/changelog/data/update/20260907_v463_fiscal_period_status_translations.yaml
+  - include:
+      file: db/changelog/data/update/20260907_v463_ar_aging_methodology_hint_translation.yaml
 
 
 

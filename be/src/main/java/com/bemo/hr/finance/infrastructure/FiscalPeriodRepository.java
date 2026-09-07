@@ -21,6 +21,14 @@ public interface FiscalPeriodRepository extends JpaRepository<FiscalPeriod, Stri
     Optional<FiscalPeriod> findByStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
             LocalDate startDate, LocalDate endDate, java.util.Collection<FiscalPeriod.Status> statuses);
 
+    /**
+     * 2026-09-07 remediation (Low Finding L-1): all fiscal periods that overlap a requested
+     * calendar range (period.startDate &lt;= rangeEnd AND period.endDate &gt;= rangeStart) — used
+     * to give Executive Analytics an honest, read-only signal about fiscal-calendar coverage/status
+     * for the period it's summarizing, without adding any new locking/validation behavior.
+     */
+    List<FiscalPeriod> findByStartDateLessThanEqualAndEndDateGreaterThanEqual(LocalDate rangeEnd, LocalDate rangeStart);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from FiscalPeriod p where p.id = :id")
     Optional<FiscalPeriod> findByIdForUpdate(@Param("id") String id);

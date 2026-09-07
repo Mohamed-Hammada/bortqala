@@ -21,4 +21,15 @@ public interface PosTransactionRepository extends JpaRepository<PosTransaction, 
 
     @Query("SELECT COUNT(t) FROM PosTransaction t WHERE t.createdAt >= :startOfDay")
     long countTodayTransactions(@Param("startOfDay") long startOfDay);
+
+    /**
+     * 2026-09-07 remediation (Performance Review P-1, plus a correctness fix found while
+     * addressing it): Executive Analytics used to call {@code findAll()} and sum
+     * {@code totalAmount} in a Java stream with NO status filter at all — silently counting
+     * VOIDED and REFUNDED transactions as real revenue. This pushes the date-range filter into SQL
+     * AND restricts to COMPLETED, matching {@link #sumTodaySales}'s existing convention. Supported
+     * by {@code idx_pos_transactions_app_created_at}.
+     */
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM PosTransaction t WHERE t.createdAt >= :startInclusive AND t.createdAt <= :endInclusive AND t.status = 'COMPLETED'")
+    java.math.BigDecimal sumCompletedInRange(@Param("startInclusive") long startInclusive, @Param("endInclusive") long endInclusive);
 }

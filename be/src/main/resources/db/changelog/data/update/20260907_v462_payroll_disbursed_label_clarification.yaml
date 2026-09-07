@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260907-v462-payroll-disbursed-label-clarification
+      author: bemo-tech-lead
+      comment: >
+        Deep-engineering remediation (2026-09-06, Medium Finding M-7): "Payroll Disbursed" reads
+        SalaryPayment.netAmount (employee take-home pay) — an owner reading the unqualified label
+        as "total workforce cost" would understate it, since employer social-insurance
+        contributions (computed separately by the Payroll module) are not included. Relabels to
+        make clear this is net pay, not total employer cost, matching the existing "Net Pay"
+        terminology already used elsewhere (ess.netPay).
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              UPDATE translations SET text_value = 'الرواتب المنصرفة (صافي الأجر)' WHERE translation_key = 'analytics.payrollDisbursed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'Payroll Disbursed (Net Pay)' WHERE translation_key = 'analytics.payrollDisbursed' AND locale = 'en-US';

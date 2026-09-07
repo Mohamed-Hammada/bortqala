@@ -228,6 +228,14 @@
     background: rgba(39, 174, 96, 0.15);
     color: #27ae60;
   }
+
+  &.warning {
+    background: rgba(230, 126, 34, 0.15);
+    color: var(--warning, #e67e22);
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+  }
 }
 
 .text-muted {

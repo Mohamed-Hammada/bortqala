@@ -15,6 +15,14 @@ import java.util.Optional;
 public interface SupplierInvoiceRepository extends JpaRepository<SupplierInvoice, String> {
     List<SupplierInvoice> findAllByOrderByInvoiceDateDesc();
 
+    /**
+     * 2026-09-07 remediation (Performance Review P-1): Executive Analytics' AP-aging path used to
+     * call {@code findAll()} and filter non-PAID invoices in a Java stream. Pushes the filter into
+     * SQL. {@code status} is always an uppercase {@code Status.name()} value, so a plain string
+     * comparison is safe. Supported by {@code idx_supplier_invoices_app_status}.
+     */
+    List<SupplierInvoice> findByStatusNot(String status);
+
     List<SupplierInvoice> findBySupplierId(String supplierId);
 
     List<SupplierInvoice> findByPurchaseOrderId(String purchaseOrderId);

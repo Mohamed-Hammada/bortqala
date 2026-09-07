@@ -66,7 +66,18 @@ public final class ExecutiveAnalyticsApi {
             BigDecimal payrollDisbursed,
             BigDecimal attendanceRatePercent,
             BigDecimal etaTaxCompliancePercent,
-            List<ModuleSummary> moduleSummaries
+            List<ModuleSummary> moduleSummaries,
+            /**
+             * Real, read-only fiscal-calendar coverage signal for the requested calendar period
+             * (docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Low Finding L-1: "period" here is pure
+             * calendar-string matching, independent of the tenant's fiscal calendar). One of:
+             * {@code "NOT_CONFIGURED"} (no fiscal period overlaps this calendar range at all),
+             * {@code "OPEN"} (every overlapping fiscal period is OPEN or SOFT_CLOSED), or
+             * {@code "CONTAINS_CLOSED_PERIOD"} (at least one overlapping fiscal period is CLOSED or
+             * LOCKED — Finance may already consider part of this range final). This is purely
+             * informational; it does not gate, validate, or change any calculation above.
+             */
+            String fiscalPeriodStatus
     ) {}
 
     public record TrendPeriodPoint(
@@ -256,7 +267,17 @@ public final class ExecutiveAnalyticsApi {
             BigDecimal totalReceivables,
             BigDecimal overdueReceivables,
             BigDecimal totalPayables,
-            BigDecimal overduePayables
+            BigDecimal overduePayables,
+            /**
+             * % of {@code totalRevenue} for the period that is actually represented in
+             * {@code SalesDeliveryLine} records (the source {@code totalCogs}/{@code grossMarginAmount}
+             * are computed from). Revenue outside that coverage contributes 0 to COGS — never a
+             * guessed ratio (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Critical Finding C-1) —
+             * but that means gross margin is a genuine underestimate of COGS whenever this is below
+             * 100, since some real revenue has no costed delivery line at all yet. 100 when
+             * totalRevenue is 0 (nothing to under-cover).
+             */
+            BigDecimal cogsDataCoveragePercent
     ) {}
 
     public record OwnerCockpitResponse(

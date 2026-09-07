@@ -45,6 +45,7 @@ describe('ExecutiveAnalyticsPage', () => {
       overdueReceivables: 120000,
       totalPayables: 450000,
       overduePayables: 60000,
+      cogsDataCoveragePercent: 100,
     },
     targets: {
       id: 'tgt-1',
@@ -196,6 +197,7 @@ describe('ExecutiveAnalyticsPage', () => {
         ],
       },
     ],
+    fiscalPeriodStatus: 'OPEN',
   };
 
   const mockTrends: ComparativeTrends = {

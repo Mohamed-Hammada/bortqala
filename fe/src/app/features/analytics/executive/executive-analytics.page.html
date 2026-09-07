@@ -111,6 +111,11 @@
           <div class="kpi-card success">
             <span class="kpi-label">{{ i18n.t('executive.grossMargin') }}</span>
             <span class="kpi-value ltr">{{ cp.kpiSummary.grossMarginPercent }}%</span>
+            @if (cp.kpiSummary.cogsDataCoveragePercent < 100) {
+              <span class="badge warning" [title]="i18n.t('executive.cogsCoverageHint')">
+                ⚠ {{ i18n.t('executive.cogsCoverage') }}: {{ cp.kpiSummary.cogsDataCoveragePercent | number:'1.0-0' }}%
+              </span>
+            }
           </div>
           <div class="kpi-card warning">
             <span class="kpi-label">{{ i18n.t('executive.opex') }}</span>
@@ -126,7 +131,7 @@
         <div class="cockpit-dual-row">
           <div class="cockpit-card">
             <div class="card-header-bar">
-              <h3 class="card-title">{{ i18n.t('executive.arAgingTitle') }}</h3>
+              <h3 class="card-title" [title]="i18n.t('executive.arAgingMethodologyHint')">{{ i18n.t('executive.arAgingTitle') }} ⓘ</h3>
               <a routerLink="/trade/sales" class="drilldown-link">{{ i18n.t('executive.drilldownHint') }} →</a>
             </div>
             <div class="aging-summary-stat">
@@ -453,6 +458,15 @@
       </form>
 
       @if (overview(); as ov) {
+        @if (ov.fiscalPeriodStatus !== 'OPEN') {
+          <div class="alert warning">
+            @if (ov.fiscalPeriodStatus === 'NOT_CONFIGURED') {
+              {{ i18n.t('executive.fiscalPeriodNotConfigured') }}
+            } @else {
+              {{ i18n.t('executive.fiscalPeriodContainsClosed') }}
+            }
+          </div>
+        }
         <div class="kpi-grid">
           <div class="kpi-card highlight">
             <span class="kpi-label">{{ i18n.t('analytics.totalRevenue') }}</span>

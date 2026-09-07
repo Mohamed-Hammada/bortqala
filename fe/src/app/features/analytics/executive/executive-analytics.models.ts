@@ -66,6 +66,8 @@ export interface ExecutiveOverview {
   attendanceRatePercent: number;
   etaTaxCompliancePercent: number;
   moduleSummaries: ModuleSummary[];
+  /** Real fiscal-calendar coverage for this period: 'NOT_CONFIGURED' | 'OPEN' | 'CONTAINS_CLOSED_PERIOD'. */
+  fiscalPeriodStatus: string;
 }
 
 export interface TrendPeriodPoint {
@@ -256,6 +258,9 @@ export interface OwnerCockpitKpiSummary {
   overdueReceivables: number;
   totalPayables: number;
   overduePayables: number;
+  /** % of period revenue actually backed by a costed delivery line; below 100 means gross margin
+   *  understates COGS for the uncovered portion (real data gap, not a fabricated number). */
+  cogsDataCoveragePercent: number;
 }
 
 export interface OwnerCockpitResponse {

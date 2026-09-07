@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260907-v463-ar-aging-methodology-hint-translation
+      author: bemo-tech-lead
+      comment: >
+        Deep-engineering remediation (2026-09-07, third pass, High Finding H-1): the Owner Cockpit's
+        AR aging (invoice-level, flat 30-day "current" bucket) and Party Financial Position's AR
+        aging (subledger-level, per-customer payment-terms-aware) are two deliberately distinct,
+        intentional conventions — the shipped bucket labels ("0-30 (current)") already confirm this
+        was product design, not a bug, so this remediation does not unify them (a breaking,
+        user-visible contract change nobody asked for). It does add a small (ⓘ) tooltip so a viewer
+        comparing the two screens understands why the numbers can legitimately differ, addressing
+        the review's actual underlying concern (confusion) without changing any calculation.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009243-ar', 'executive.arAgingMethodologyHint', 'ar-EG', 'تصنيف حسب تاريخ استحقاق الفاتورة الفعلي (يشمل "حالي" ما لم يتجاوز استحقاقه 30 يومًا). لتصنيف مبني على شروط السداد الخاصة بكل عميل، راجع شاشة المركز المالي للأطراف.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.arAgingMethodologyHint' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009243-en', 'executive.arAgingMethodologyHint', 'en-US', 'Buckets by each invoice''s actual due date ("current" includes anything up to 30 days past due). For payment-terms-aware, per-customer aging, see Party Financial Position.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.arAgingMethodologyHint' AND locale = 'en-US');

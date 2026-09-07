@@ -22,19 +22,22 @@ public class ExecutiveCockpitTarget {
     @Column(name = "period_key", length = 20, nullable = false)
     private String periodKey;
 
-    @Column(name = "target_revenue", precision = 15, scale = 2)
+    // 2026-09-07 remediation (Low Finding L-2): widened to match ExecutiveKpiSnapshot's
+    // precision/scale (NUMERIC(19,4) for amounts, NUMERIC(7,2) for percentages) so a
+    // target-vs-actual variance calculation no longer crosses two different stored precisions.
+    @Column(name = "target_revenue", precision = 19, scale = 4)
     private BigDecimal targetRevenue;
 
-    @Column(name = "target_gross_margin_percent", precision = 5, scale = 2)
+    @Column(name = "target_gross_margin_percent", precision = 7, scale = 2)
     private BigDecimal targetGrossMarginPercent;
 
-    @Column(name = "target_max_opex", precision = 15, scale = 2)
+    @Column(name = "target_max_opex", precision = 19, scale = 4)
     private BigDecimal targetMaxOpex;
 
-    @Column(name = "target_min_liquidity", precision = 15, scale = 2)
+    @Column(name = "target_min_liquidity", precision = 19, scale = 4)
     private BigDecimal targetMinLiquidity;
 
-    @Column(name = "target_max_overdue_ar", precision = 15, scale = 2)
+    @Column(name = "target_max_overdue_ar", precision = 19, scale = 4)
     private BigDecimal targetMaxOverdueAr;
 
     @Column(name = "notes", length = 500)

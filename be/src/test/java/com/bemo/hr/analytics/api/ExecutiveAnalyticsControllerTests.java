@@ -61,7 +61,8 @@ class ExecutiveAnalyticsControllerTests {
                 BigDecimal.valueOf(500_000),
                 BigDecimal.valueOf(98.0),
                 BigDecimal.valueOf(100.0),
-                List.of()
+                List.of(),
+                "OPEN"
         );
         when(analyticsService.getExecutiveOverview(any())).thenReturn(mockOverview);
 

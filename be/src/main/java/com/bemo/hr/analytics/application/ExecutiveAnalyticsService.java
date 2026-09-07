@@ -113,6 +113,7 @@ public class ExecutiveAnalyticsService {
     private final FinancialStatementsReportService financialStatementsReportService;
     private final InventoryValuationService inventoryValuationService;
     private final TreasuryPositionService treasuryPositionService;
+    private final com.bemo.hr.finance.infrastructure.FiscalPeriodRepository fiscalPeriodRepository;
 
     @Autowired
     public ExecutiveAnalyticsService(
@@ -138,7 +139,8 @@ public class ExecutiveAnalyticsService {
             SecurityAuthorizationEvaluator authEvaluator,
             FinancialStatementsReportService financialStatementsReportService,
             InventoryValuationService inventoryValuationService,
-            TreasuryPositionService treasuryPositionService
+            TreasuryPositionService treasuryPositionService,
+            com.bemo.hr.finance.infrastructure.FiscalPeriodRepository fiscalPeriodRepository
     ) {
         this.snapshotRepository = snapshotRepository;
         this.projectRepository = projectRepository;
@@ -163,6 +165,7 @@ public class ExecutiveAnalyticsService {
         this.financialStatementsReportService = financialStatementsReportService;
         this.inventoryValuationService = inventoryValuationService;
         this.treasuryPositionService = treasuryPositionService;
+        this.fiscalPeriodRepository = fiscalPeriodRepository;
     }
 
     private static final List<KpiDefinition> REGISTRY = List.of(
@@ -299,11 +302,16 @@ public class ExecutiveAnalyticsService {
 
         BigDecimal inventoryValuation = inventoryValuationService.report().totalInventoryValue();
 
-        List<PosTransaction> posTxs = posTransactionRepository.findAll();
-        BigDecimal posGross = sumAmounts(posTxs, PosTransaction::getTotalAmount);
-
-        List<SalesQuotation> quotes = salesQuotationRepository.findAll();
-        BigDecimal salesBookings = sumAmounts(quotes, SalesQuotation::getTotalAmount);
+        // 2026-09-07 remediation (Performance Review P-1, plus two correctness fixes found while
+        // addressing it): both figures used to be summed over the tenant's ENTIRE history
+        // (unscoped by the requested period — a "period" response field that never actually
+        // varied by period), and posGross additionally counted VOIDED/REFUNDED transactions as
+        // revenue (no status filter). Both are now real, period-scoped, SQL-side aggregates.
+        BigDecimal posGross = posTransactionRepository.sumCompletedInRange(
+                periodStart.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                periodEnd.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1);
+        BigDecimal salesBookings = sumAmounts(
+                salesQuotationRepository.findByQuoteDateBetween(periodStart, periodEnd), SalesQuotation::getTotalAmount);
 
         List<Employee> employees = employeeRepository.findAll();
         int activeHeadcount = (int) employees.stream().filter(Employee::isActive).count();
@@ -326,13 +334,13 @@ public class ExecutiveAnalyticsService {
         BigDecimal operatingCashFlow = financialStatementsReportService
                 .getCashFlowStatement(periodStart, periodEnd).operatingCashFlow();
 
-        BigDecimal openReceivables = customerInvoiceRepository.findAll().stream()
-                .map(CustomerInvoice::getOutstandingAmount)
-                .filter(Objects::nonNull)
-                .filter(a -> a.compareTo(BigDecimal.ZERO) > 0)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Open receivables is intentionally an ALL-TIME aggregate (currently outstanding, regardless
+        // of when the invoice was issued) — only the query changed (P-1), not this method's semantics.
+        BigDecimal openReceivables = sumAmounts(
+                customerInvoiceRepository.findByOutstandingAmountGreaterThan(BigDecimal.ZERO), CustomerInvoice::getOutstandingAmount);
 
         ExecutiveCockpitTarget target = cockpitTargetRepository.findByPeriodKey(effectivePeriod).orElse(null);
+        String fiscalPeriodStatus = fiscalPeriodStatus(periodStart, periodEnd);
 
         List<ModuleSummary> moduleSummaries = buildModuleSummaries(
                 totalRevenue, totalOpex, netProfit, netMarginPercent, operatingCashFlow,
@@ -359,8 +367,28 @@ public class ExecutiveAnalyticsService {
                 BigDecimal.ZERO,
                 attendanceRate.setScale(2, RoundingMode.HALF_UP),
                 etaComplianceRate.setScale(2, RoundingMode.HALF_UP),
-                moduleSummaries
+                moduleSummaries,
+                fiscalPeriodStatus
         );
+    }
+
+    /**
+     * 2026-09-07 remediation (Low Finding L-1): a real, read-only fiscal-calendar coverage signal
+     * for a calendar range — see {@link ExecutiveOverviewResponse#fiscalPeriodStatus} for the
+     * exact semantics. Deliberately informational only: does not gate posting, reject snapshot
+     * recording, or change any calculation — adding that behavior would be new feature work, not
+     * a fix to this reporting endpoint.
+     */
+    private String fiscalPeriodStatus(LocalDate periodStart, LocalDate periodEnd) {
+        List<com.bemo.hr.finance.domain.FiscalPeriod> overlapping =
+                fiscalPeriodRepository.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(periodEnd, periodStart);
+        if (overlapping.isEmpty()) {
+            return "NOT_CONFIGURED";
+        }
+        boolean anyClosedOrLocked = overlapping.stream().anyMatch(p ->
+                p.getStatus() == com.bemo.hr.finance.domain.FiscalPeriod.Status.CLOSED
+                        || p.getStatus() == com.bemo.hr.finance.domain.FiscalPeriod.Status.LOCKED);
+        return anyClosedOrLocked ? "CONTAINS_CLOSED_PERIOD" : "OPEN";
     }
 
     private BigDecimal etaComplianceRate(List<EtaInvoiceSubmission> submissions) {
@@ -437,10 +465,6 @@ public class ExecutiveAnalyticsService {
         int boundedMonths = Math.max(3, Math.min(months, 24));
         List<TrendPeriodPoint> points = new ArrayList<>();
 
-        List<CustomerInvoice> allInvoices = customerInvoiceRepository.findAll();
-        List<PosTransaction> allPos = posTransactionRepository.findAll();
-        List<SalaryPayment> allPayments = salaryPaymentRepository.findAll();
-
         YearMonth current = YearMonth.now();
         for (int i = boundedMonths - 1; i >= 0; i--) {
             YearMonth ym = current.minusMonths(i);
@@ -455,17 +479,23 @@ public class ExecutiveAnalyticsService {
             BigDecimal profit = income.netIncome();
             BigDecimal margin = percentOf(profit, revenue);
 
-            BigDecimal sales = sumInvoicesInRange(allInvoices, start, end)
-                    .add(sumPosInRange(allPos, start, end));
+            long monthStartMs = start.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            long monthEndMs = end.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
+            // 2026-09-07 remediation (Performance Review P-1, plus a correctness fix found while
+            // addressing it): this used to share one findAll()-loaded, ALL-TIME list per repository
+            // across every month of the loop and filter it in Java — including counting
+            // VOIDED/REFUNDED POS transactions as sales (no status filter). Now a targeted,
+            // SQL-side query per month, matching the granularity getIncomeStatement() above already
+            // uses.
+            BigDecimal sales = sumAmounts(customerInvoiceRepository.findByInvoiceDateBetween(start, end), CustomerInvoice::getAmount)
+                    .add(posTransactionRepository.sumCompletedInRange(monthStartMs, monthEndMs));
 
-            long asOfMs = end.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
-            BigDecimal inventoryValue = inventoryValuationService.report(asOfMs, null, null).totalInventoryValue();
+            BigDecimal inventoryValue = inventoryValuationService.report(monthEndMs, null, null).totalInventoryValue();
 
-            BigDecimal payroll = allPayments.stream()
-                    .filter(s -> s.getPeriodYear() == ym.getYear() && s.getPeriodMonth() == ym.getMonthValue())
-                    .filter(s -> s.getPaymentStatus() == PaymentStatus.PAID)
-                    .map(s -> s.getNetAmount() != null ? s.getNetAmount() : BigDecimal.ZERO)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal payroll = sumAmounts(
+                    salaryPaymentRepository.findByPeriodYearAndPeriodMonthOrderByCreatedAtDesc(ym.getYear(), ym.getMonthValue())
+                            .stream().filter(s -> s.getPaymentStatus() == PaymentStatus.PAID).toList(),
+                    SalaryPayment::getNetAmount);
 
             // No tenant-wide, month-sliced project earned-value aggregation exists yet (would need a
             // new grouped-by-month cost-ledger query). Returning 0 for historical months rather than
@@ -480,23 +510,6 @@ public class ExecutiveAnalyticsService {
         }
 
         return new ComparativeTrendsResponse(boundedMonths, points);
-    }
-
-    private BigDecimal sumInvoicesInRange(List<CustomerInvoice> invoices, LocalDate start, LocalDate end) {
-        return invoices.stream()
-                .filter(i -> i.getInvoiceDate() != null && !i.getInvoiceDate().isBefore(start) && !i.getInvoiceDate().isAfter(end))
-                .map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private BigDecimal sumPosInRange(List<PosTransaction> transactions, LocalDate start, LocalDate end) {
-        return transactions.stream()
-                .filter(tx -> {
-                    LocalDate d = Instant.ofEpochMilli(tx.getCreatedAt()).atZone(ZoneId.systemDefault()).toLocalDate();
-                    return !d.isBefore(start) && !d.isAfter(end);
-                })
-                .map(tx -> tx.getTotalAmount() != null ? tx.getTotalAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Transactional
@@ -553,22 +566,23 @@ public class ExecutiveAnalyticsService {
         LocalDate periodEnd = ym.atEndOfMonth();
         LocalDate today = LocalDate.now();
 
-        List<CustomerInvoice> allInvoices = customerInvoiceRepository.findAll();
-        List<PosTransaction> posTxs = posTransactionRepository.findAll();
+        // 2026-09-07 remediation (Performance Review P-1): every section below used to share one
+        // or two `findAll()` calls loading the tenant's ENTIRE invoice/POS/receipt history into
+        // memory, then filter/group in Java streams. Each section now uses a targeted, SQL-side
+        // query scoped to exactly what it needs (today, the period, "currently open", or a
+        // SQL-side GROUP BY) — see the repository methods this calls for the specific index each
+        // relies on. No section's *result* changed except the two correctness fixes noted below.
 
         // 1. Today's sales & collections — real, may legitimately be zero on a slow day.
-        BigDecimal todaySalesInvoices = allInvoices.stream()
-                .filter(i -> today.equals(i.getInvoiceDate()))
-                .map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal todayPosSales = sumPosInRange(posTxs, today, today);
+        long todayStartMillis = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long todayEndMillis = today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
+        BigDecimal todaySalesInvoices = sumAmounts(
+                customerInvoiceRepository.findByInvoiceDateBetween(today, today), CustomerInvoice::getAmount);
+        BigDecimal todayPosSales = posTransactionRepository.sumCompletedInRange(todayStartMillis, todayEndMillis);
         BigDecimal todaySales = todaySalesInvoices.add(todayPosSales);
 
-        List<CustomerReceipt> allReceipts = customerReceiptRepository.findAll();
-        BigDecimal todayReceipts = allReceipts.stream()
-                .filter(r -> today.equals(r.getReceiptDate()))
-                .map(r -> r.getAmount() != null ? r.getAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal todayReceipts = sumAmounts(
+                customerReceiptRepository.findByReceiptDateBetween(today, today), CustomerReceipt::getAmount);
         BigDecimal todayCollections = todayReceipts.add(todayPosSales);
 
         // 2. Headline P&L for the period — real, GL-sourced (same figures Finance Reports shows).
@@ -582,25 +596,35 @@ public class ExecutiveAnalyticsService {
 
         // 3. Gross margin — a separate, sales-only view (real delivery-line revenue/COGS), not
         // forced to reconcile with the GL P&L above (see class-level note).
-        BigDecimal periodSalesRevenue = sumInvoicesInRange(allInvoices, periodStart, periodEnd)
-                .add(sumPosInRange(posTxs, periodStart, periodEnd));
-        List<SalesDeliveryLine> periodDeliveryLines = salesDeliveryLineRepository.findAll().stream()
-                .filter(l -> {
-                    LocalDate d = Instant.ofEpochMilli(l.getCreatedAt()).atZone(ZoneId.systemDefault()).toLocalDate();
-                    return !d.isBefore(periodStart) && !d.isAfter(periodEnd);
-                })
-                .toList();
+        long periodStartMillis = periodStart.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long periodEndMillis = periodEnd.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
+        BigDecimal periodSalesRevenue = sumAmounts(
+                        customerInvoiceRepository.findByInvoiceDateBetween(periodStart, periodEnd), CustomerInvoice::getAmount)
+                .add(posTransactionRepository.sumCompletedInRange(periodStartMillis, periodEndMillis));
+        List<SalesDeliveryLine> periodDeliveryLines = salesDeliveryLineRepository.findByCreatedAtBetween(periodStartMillis, periodEndMillis);
         BigDecimal totalCogs = periodDeliveryLines.stream()
                 .map(l -> l.getCogsAmount() != null ? l.getCogsAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal grossMarginAmount = periodSalesRevenue.subtract(totalCogs);
         BigDecimal grossMarginPercent = percentOf(grossMarginAmount, periodSalesRevenue);
 
+        // Provenance signal for the frontend (docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Frontend
+        // Finding #1): revenue with no matching SalesDeliveryLine contributes 0 to totalCogs above
+        // (never a guessed ratio) — but that silently understates COGS/overstates margin whenever
+        // real revenue exists outside delivery-line coverage. Report what fraction of period revenue
+        // is actually delivery-line-costed so the UI can flag an incomplete-data margin as such.
+        BigDecimal deliveryLineRevenue = periodDeliveryLines.stream()
+                .map(l -> l.getQuantity() != null && l.getUnitPrice() != null ? l.getQuantity().multiply(l.getUnitPrice()) : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal cogsDataCoveragePercent = periodSalesRevenue.compareTo(BigDecimal.ZERO) > 0
+                ? percentOf(deliveryLineRevenue, periodSalesRevenue).min(BigDecimal.valueOf(100))
+                : BigDecimal.valueOf(100); // nothing to under-cover when there's no revenue at all
+
         // 4. Payroll — real, period-scoped (previously summed ALL-TIME payroll regardless of the
-        // requested period, and fabricated a constant when zero).
-        List<SalaryPayment> periodPayments = salaryPaymentRepository.findAll().stream()
-                .filter(s -> s.getPeriodYear() == ym.getYear() && s.getPeriodMonth() == ym.getMonthValue())
-                .toList();
+        // requested period, and fabricated a constant when zero). Query already scopes to the
+        // period (P-1) — no findAll() + Java-side year/month filter needed.
+        List<SalaryPayment> periodPayments =
+                salaryPaymentRepository.findByPeriodYearAndPeriodMonthOrderByCreatedAtDesc(ym.getYear(), ym.getMonthValue());
         BigDecimal totalPayrollDisbursed = periodPayments.stream()
                 .filter(s -> s.getPaymentStatus() == PaymentStatus.PAID)
                 .map(s -> s.getNetAmount() != null ? s.getNetAmount() : BigDecimal.ZERO)
@@ -616,10 +640,9 @@ public class ExecutiveAnalyticsService {
         BigDecimal bankBalances = treasuryPositionService.totalBankBalance();
 
         // 6. AR aging — real invoice-level bucketing; a zero total is reported as zero, not
-        // overwritten with fabricated bucket amounts/counts.
-        List<CustomerInvoice> openInvoices = allInvoices.stream()
-                .filter(i -> i.getOutstandingAmount() != null && i.getOutstandingAmount().compareTo(BigDecimal.ZERO) > 0)
-                .toList();
+        // overwritten with fabricated bucket amounts/counts. Query already restricts to open
+        // invoices (P-1) — no further Java-side filtering needed.
+        List<CustomerInvoice> openInvoices = customerInvoiceRepository.findByOutstandingAmountGreaterThan(BigDecimal.ZERO);
         AgingTotals arTotals = bucketAgingByDueDate(openInvoices, today,
                 CustomerInvoice::getOutstandingAmount,
                 i -> i.getDueDate() != null ? i.getDueDate() : (i.getInvoiceDate() != null ? i.getInvoiceDate().plusDays(30) : today));
@@ -627,10 +650,8 @@ public class ExecutiveAnalyticsService {
         BigDecimal totalReceivables = arTotals.total();
         BigDecimal overdueReceivables = arTotals.overdue();
 
-        // 7. AP aging — same treatment for supplier invoices.
-        List<SupplierInvoice> openSupplierInvoices = supplierInvoiceRepository.findAll().stream()
-                .filter(i -> !"PAID".equalsIgnoreCase(i.getStatus()))
-                .toList();
+        // 7. AP aging — same treatment for supplier invoices. Query already excludes PAID (P-1).
+        List<SupplierInvoice> openSupplierInvoices = supplierInvoiceRepository.findByStatusNot("PAID");
         AgingTotals apTotals = bucketAgingByDueDate(openSupplierInvoices, today,
                 i -> i.getNetAmount() != null ? i.getNetAmount() : BigDecimal.ZERO,
                 i -> i.getDueDate() != null ? i.getDueDate() : i.getInvoiceDate().plusDays(30));
@@ -715,21 +736,19 @@ public class ExecutiveAnalyticsService {
         }
 
         // 12. Top customers — real invoice aggregation only; empty when there are no invoices.
-        Map<String, List<CustomerInvoice>> custInvoices = allInvoices.stream()
-                .filter(i -> i.getCustomerId() != null)
-                .collect(Collectors.groupingBy(CustomerInvoice::getCustomerId));
-        List<TopCustomerItem> topCustomers = custInvoices.entrySet().stream()
-                .sorted((e1, e2) -> sumAmounts(e2.getValue(), CustomerInvoice::getAmount)
-                        .compareTo(sumAmounts(e1.getValue(), CustomerInvoice::getAmount)))
-                .limit(5)
-                .map(e -> {
-                    String custId = e.getKey();
-                    List<CustomerInvoice> list = e.getValue();
-                    BigDecimal invoiced = sumAmounts(list, CustomerInvoice::getAmount);
-                    BigDecimal outstanding = sumAmounts(list, CustomerInvoice::getOutstandingAmount);
+        // 2026-09-07 remediation (Performance Review P-1): this used to load EVERY invoice the
+        // tenant has ever issued into memory just to group/sum/sort/limit them in a Java stream.
+        // The grouping, summing, and ordering now happen in SQL, and only the top 5 rows are ever
+        // returned — see CustomerInvoiceRepository.topCustomersByInvoicedAmount's Javadoc.
+        List<TopCustomerItem> topCustomers = customerInvoiceRepository
+                .topCustomersByInvoicedAmount(org.springframework.data.domain.PageRequest.of(0, 5))
+                .stream()
+                .map(row -> {
+                    BigDecimal invoiced = row.getInvoiced();
+                    BigDecimal outstanding = row.getOutstanding();
                     BigDecimal collected = invoiced.subtract(outstanding);
-                    String custName = businessPartyRepository.findById(custId).map(BusinessParty::getName).orElse(custId);
-                    return new TopCustomerItem(custId, custName, invoiced, collected, outstanding, list.size());
+                    String custName = businessPartyRepository.findById(row.getCustomerId()).map(BusinessParty::getName).orElse(row.getCustomerId());
+                    return new TopCustomerItem(row.getCustomerId(), custName, invoiced, collected, outstanding, (int) row.getInvoiceCount());
                 })
                 .toList();
 
@@ -765,9 +784,7 @@ public class ExecutiveAnalyticsService {
         // 14. Expense breakdown — real per-category ExpenseClaim sums for the period, plus real
         // payroll disbursed. Percentages are relative to their own combined total (this is an
         // operational "what did we spend on" breakdown, not GL-reconciled OPEX — see class-level note).
-        List<ExpenseClaim> periodExpenseClaims = expenseClaimRepository.findAll().stream()
-                .filter(c -> c.getSpentOn() != null && !c.getSpentOn().isBefore(periodStart) && !c.getSpentOn().isAfter(periodEnd))
-                .toList();
+        List<ExpenseClaim> periodExpenseClaims = expenseClaimRepository.findBySpentOnBetween(periodStart, periodEnd);
         List<ExpenseCategoryItem> expenseBreakdown = buildExpenseBreakdown(periodExpenseClaims, totalPayrollDisbursed);
 
         // 15. Targets — real, tenant-configured (or the documented system default when none exists).
@@ -780,7 +797,8 @@ public class ExecutiveAnalyticsService {
                 (int) employees.stream().filter(Employee::isActive).count(),
                 wipItems.size(), wipValuation, totalProjectBudget, totalProjectActual, totalProjectVariance,
                 lowStockAlerts.size(), deadStockAlerts.size(),
-                totalReceivables, overdueReceivables, totalPayables, overduePayables
+                totalReceivables, overdueReceivables, totalPayables, overduePayables,
+                cogsDataCoveragePercent
         );
 
         return new OwnerCockpitResponse(

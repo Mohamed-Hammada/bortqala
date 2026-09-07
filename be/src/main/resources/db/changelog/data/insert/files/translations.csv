@@ -2501,8 +2501,8 @@ t-001250-ar;analytics.noUsage;ar-EG;لم يسجل استخدام بعد
 t-001250-en;analytics.noUsage;en-US;No usage recorded yet
 t-001251-ar;analytics.operatingCashFlow;ar-EG;التدفق النقدي التشغيلي
 t-001251-en;analytics.operatingCashFlow;en-US;Operating Cash Flow
-t-001252-ar;analytics.payrollDisbursed;ar-EG;الرواتب المنصرفة
-t-001252-en;analytics.payrollDisbursed;en-US;Payroll Disbursed
+t-001252-ar;analytics.payrollDisbursed;ar-EG;الرواتب المنصرفة (صافي الأجر)
+t-001252-en;analytics.payrollDisbursed;en-US;Payroll Disbursed (Net Pay)
 t-001253-ar;analytics.pendingReview;ar-EG;قيد المراجعة
 t-001253-en;analytics.pendingReview;en-US;Pending Review
 t-001254-ar;analytics.periodFilter;ar-EG;الفترة الزمنية
@@ -18366,3 +18366,13 @@ t-009237-ar;executive.costVariance;ar-EG;انحراف التكلفة (CV)
 t-009237-en;executive.costVariance;en-US;Cost Variance (CV)
 t-009238-ar;EXECUTIVE_TARGET_CONCURRENT_CREATE;ar-EG;تم إنشاء مستهدفات هذه الفترة للتو بواسطة طلب آخر. أعد التحميل وحاول مرة أخرى.
 t-009238-en;EXECUTIVE_TARGET_CONCURRENT_CREATE;en-US;Targets for this period were just created by another request. Reload and try again.
+t-009239-ar;executive.cogsCoverage;ar-EG;تغطية بيانات التكلفة
+t-009239-en;executive.cogsCoverage;en-US;Cost data coverage
+t-009240-ar;executive.cogsCoverageHint;ar-EG;لا تتوفر بيانات تكلفة فعلية لجزء من إيرادات هذه الفترة، فقد لا يعكس هامش الربح المعروض التكلفة الحقيقية بالكامل.
+t-009240-en;executive.cogsCoverageHint;en-US;Part of this period's revenue has no matching cost data yet, so the displayed margin may not fully reflect real cost.
+t-009241-ar;executive.fiscalPeriodNotConfigured;ar-EG;لا يوجد تقويم مالي معرف لهذه الفترة. الأرقام أعلاه تعتمد على التقويم الميلادي فقط.
+t-009241-en;executive.fiscalPeriodNotConfigured;en-US;No fiscal calendar is configured for this period. The figures above are based on the calendar month/quarter/year only.
+t-009242-ar;executive.fiscalPeriodContainsClosed;ar-EG;جزء من هذه الفترة مقفل بالفعل في الحسابات المالية. راجع الفترات المالية للتأكد من دقة الأرقام.
+t-009242-en;executive.fiscalPeriodContainsClosed;en-US;Part of this period is already closed in Finance. Check Fiscal Periods to confirm these figures are final.
+t-009243-ar;executive.arAgingMethodologyHint;ar-EG;تصنيف حسب تاريخ استحقاق الفاتورة الفعلي (يشمل "حالي" ما لم يتجاوز استحقاقه 30 يومًا). لتصنيف مبني على شروط السداد الخاصة بكل عميل، راجع شاشة المركز المالي للأطراف.
+t-009243-en;executive.arAgingMethodologyHint;en-US;Buckets by each invoice's actual due date ("current" includes anything up to 30 days past due). For payment-terms-aware, per-customer aging, see Party Financial Position.

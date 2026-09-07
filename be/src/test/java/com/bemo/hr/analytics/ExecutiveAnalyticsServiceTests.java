@@ -31,6 +31,7 @@ import com.bemo.hr.access.application.SecurityAuthorizationEvaluator;
 import com.bemo.hr.trade.pos.infrastructure.PosTransactionRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.sales.domain.CustomerInvoice;
+import com.bemo.hr.trade.sales.domain.SalesDeliveryLine;
 import com.bemo.hr.trade.sales.domain.SalesQuotation;
 import com.bemo.hr.trade.sales.infrastructure.CustomerInvoiceRepository;
 import com.bemo.hr.trade.sales.infrastructure.CustomerReceiptRepository;
@@ -54,6 +55,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -93,6 +96,7 @@ class ExecutiveAnalyticsServiceTests {
     @Mock private FinancialStatementsReportService financialStatementsReportService;
     @Mock private InventoryValuationService inventoryValuationService;
     @Mock private TreasuryPositionService treasuryPositionService;
+    @Mock private com.bemo.hr.finance.infrastructure.FiscalPeriodRepository fiscalPeriodRepository;
 
     private ExecutiveAnalyticsService service;
     private final String currentPeriod = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
@@ -106,7 +110,8 @@ class ExecutiveAnalyticsServiceTests {
                 customerReceiptRepository, supplierInvoiceRepository, branchRepository,
                 productionOrderRepository, costLedgerRepository, expenseClaimRepository,
                 salaryPaymentRepository, cockpitTargetRepository, businessPartyRepository, authEvaluator,
-                financialStatementsReportService, inventoryValuationService, treasuryPositionService
+                financialStatementsReportService, inventoryValuationService, treasuryPositionService,
+                fiscalPeriodRepository
         );
     }
 
@@ -117,18 +122,21 @@ class ExecutiveAnalyticsServiceTests {
                 new OperationsApi.ValuationReport(null, BigDecimal.ZERO, List.of(), List.of(), null, null));
         lenient().when(inventoryValuationService.report(any(), any(), any())).thenReturn(
                 new OperationsApi.ValuationReport(null, BigDecimal.ZERO, List.of(), List.of(), null, null));
-        lenient().when(posTransactionRepository.findAll()).thenReturn(List.of());
-        lenient().when(salesQuotationRepository.findAll()).thenReturn(List.of());
-        lenient().when(salesDeliveryLineRepository.findAll()).thenReturn(List.of());
+        lenient().when(posTransactionRepository.sumCompletedInRange(anyLong(), anyLong())).thenReturn(BigDecimal.ZERO);
+        lenient().when(fiscalPeriodRepository.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(any(), any())).thenReturn(List.of());
+        lenient().when(salesQuotationRepository.findByQuoteDateBetween(any(), any())).thenReturn(List.of());
+        lenient().when(salesDeliveryLineRepository.findByCreatedAtBetween(anyLong(), anyLong())).thenReturn(List.of());
         lenient().when(employeeRepository.findAll()).thenReturn(List.of());
         lenient().when(etaSubmissionRepository.findAll()).thenReturn(List.of());
-        lenient().when(customerInvoiceRepository.findAll()).thenReturn(List.of());
-        lenient().when(customerReceiptRepository.findAll()).thenReturn(List.of());
-        lenient().when(supplierInvoiceRepository.findAll()).thenReturn(List.of());
+        lenient().when(customerInvoiceRepository.findByInvoiceDateBetween(any(), any())).thenReturn(List.of());
+        lenient().when(customerInvoiceRepository.findByOutstandingAmountGreaterThan(any())).thenReturn(List.of());
+        lenient().when(customerInvoiceRepository.topCustomersByInvoicedAmount(any())).thenReturn(List.of());
+        lenient().when(customerReceiptRepository.findByReceiptDateBetween(any(), any())).thenReturn(List.of());
+        lenient().when(supplierInvoiceRepository.findByStatusNot(any())).thenReturn(List.of());
         lenient().when(branchRepository.findAllByOrderByCodeAsc()).thenReturn(List.of());
         lenient().when(productionOrderRepository.findAllByOrderByStartDateDescCreatedAtDesc()).thenReturn(List.of());
-        lenient().when(expenseClaimRepository.findAll()).thenReturn(List.of());
-        lenient().when(salaryPaymentRepository.findAll()).thenReturn(List.of());
+        lenient().when(expenseClaimRepository.findBySpentOnBetween(any(), any())).thenReturn(List.of());
+        lenient().when(salaryPaymentRepository.findByPeriodYearAndPeriodMonthOrderByCreatedAtDesc(anyInt(), anyInt())).thenReturn(List.of());
         lenient().when(cockpitTargetRepository.findByPeriodKey(any())).thenReturn(Optional.empty());
         lenient().when(inventoryItemRepository.findAll()).thenReturn(List.of());
         lenient().when(financialStatementsReportService.getIncomeStatement(any(), any())).thenReturn(
@@ -168,6 +176,40 @@ class ExecutiveAnalyticsServiceTests {
         assertThat(response.projectBudgetControl()).isEmpty();
         assertThat(response.branchLeaderboard()).isEmpty();
         assertThat(response.topCustomers()).noneMatch(c -> c.customerName().contains("الأهرام"));
+        // No revenue at all means there is nothing for COGS to under-cover — reported as full
+        // (100%) coverage, not a misleading 0%.
+        assertThat(response.kpiSummary().cogsDataCoveragePercent()).isEqualByComparingTo(BigDecimal.valueOf(100));
+    }
+
+    @Test
+    @DisplayName("cogsDataCoveragePercent flags real revenue that has no matching costed delivery line, instead of silently overstating margin")
+    void cogsDataCoveragePercentReflectsIncompleteDeliveryLineData() {
+        stubEverythingEmpty();
+        CustomerInvoice invoice = mock(CustomerInvoice.class);
+        when(invoice.getAmount()).thenReturn(BigDecimal.valueOf(100_000));
+        when(customerInvoiceRepository.findByInvoiceDateBetween(any(), any())).thenReturn(List.of(invoice));
+        // No SalesDeliveryLine exists for this revenue at all (matches stubEverythingEmpty's default).
+
+        OwnerCockpitResponse noCoverage = service.getOwnerCockpit(currentPeriod, null);
+
+        assertThat(noCoverage.kpiSummary().cogsDataCoveragePercent()).isEqualByComparingTo(BigDecimal.ZERO);
+        // COGS silently defaults to 0 (never a guessed ratio) — but that means margin is
+        // overstated here (100% of revenue counted as pure profit) whenever coverage is 0.
+        assertThat(noCoverage.kpiSummary().totalCogs()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(noCoverage.kpiSummary().grossMarginAmount()).isEqualByComparingTo(BigDecimal.valueOf(100_000));
+
+        // Now the SAME revenue is fully represented by a real, costed delivery line.
+        SalesDeliveryLine line = mock(SalesDeliveryLine.class);
+        when(line.getQuantity()).thenReturn(BigDecimal.TEN);
+        when(line.getUnitPrice()).thenReturn(BigDecimal.valueOf(10_000));
+        when(line.getCogsAmount()).thenReturn(BigDecimal.valueOf(60_000));
+        when(line.getItemId()).thenReturn(null);
+        when(salesDeliveryLineRepository.findByCreatedAtBetween(anyLong(), anyLong())).thenReturn(List.of(line));
+
+        OwnerCockpitResponse fullCoverage = service.getOwnerCockpit(currentPeriod, null);
+
+        assertThat(fullCoverage.kpiSummary().cogsDataCoveragePercent()).isEqualByComparingTo(BigDecimal.valueOf(100));
+        assertThat(fullCoverage.kpiSummary().totalCogs()).isEqualByComparingTo(BigDecimal.valueOf(60_000));
     }
 
     @Test
@@ -195,9 +237,7 @@ class ExecutiveAnalyticsServiceTests {
         CustomerInvoice invoice = mock(CustomerInvoice.class);
         when(invoice.getOutstandingAmount()).thenReturn(BigDecimal.valueOf(50_000));
         when(invoice.getDueDate()).thenReturn(LocalDate.now().minusDays(45)); // 45 days overdue -> 31-60 bucket
-        when(invoice.getInvoiceDate()).thenReturn(LocalDate.now().minusDays(75));
-        when(invoice.getCustomerId()).thenReturn(null);
-        when(customerInvoiceRepository.findAll()).thenReturn(List.of(invoice));
+        when(customerInvoiceRepository.findByOutstandingAmountGreaterThan(any())).thenReturn(List.of(invoice));
 
         OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, null);
 
@@ -269,12 +309,36 @@ class ExecutiveAnalyticsServiceTests {
         when(item.getId()).thenReturn("item-1");
         when(inventoryItemRepository.findAll()).thenReturn(List.of(item));
 
-        // But NO SalesDeliveryLine exists for it.
-        when(salesDeliveryLineRepository.findAll()).thenReturn(List.of());
-
+        // No SalesDeliveryLine exists for it (matches stubEverythingEmpty's default).
         OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, null);
 
         assertThat(response.topProducts()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getExecutiveOverview scopes POS gross and sales bookings to the requested period, not the tenant's entire history")
+    void executiveOverviewScopesPosGrossAndSalesBookingsToThePeriod() {
+        stubEverythingEmpty();
+        YearMonth ym = YearMonth.parse(currentPeriod);
+        long periodStartMs = ym.atDay(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long periodEndMs = ym.atEndOfMonth().plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
+
+        // 2026-09-07 remediation (Performance Review P-1, correctness fix found while addressing
+        // it): these two figures used to sum the tenant's ENTIRE POS/quotation history regardless
+        // of the requested period — a "period" response field that never actually varied by
+        // period. A stray, out-of-period value must not leak into this period's response.
+        when(posTransactionRepository.sumCompletedInRange(anyLong(), anyLong())).thenReturn(BigDecimal.valueOf(999_999)); // any other range: must not be used
+        when(posTransactionRepository.sumCompletedInRange(periodStartMs, periodEndMs)).thenReturn(BigDecimal.valueOf(5_000));
+
+        SalesQuotation quote = mock(SalesQuotation.class);
+        when(quote.getTotalAmount()).thenReturn(BigDecimal.valueOf(20_000));
+        when(salesQuotationRepository.findByQuoteDateBetween(ym.atDay(1), ym.atEndOfMonth())).thenReturn(List.of(quote));
+
+        ExecutiveOverviewResponse response = service.getExecutiveOverview(currentPeriod);
+
+        assertThat(response.posGross()).isEqualByComparingTo(BigDecimal.valueOf(5_000));
+        assertThat(response.salesBookings()).isEqualByComparingTo(BigDecimal.valueOf(20_000));
+        verify(salesQuotationRepository, never()).findAll();
     }
 
     @Test
@@ -306,6 +370,32 @@ class ExecutiveAnalyticsServiceTests {
         assertThat(response.etaTaxCompliancePercent()).isEqualByComparingTo(BigDecimal.valueOf(50.00));
         assertThat(response.totalRevenue()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.moduleSummaries()).hasSize(6);
+        // No FiscalPeriod overlaps this range at all (default empty stub) — honestly reported as
+        // NOT_CONFIGURED, not silently ignored (Low Finding L-1).
+        assertThat(response.fiscalPeriodStatus()).isEqualTo("NOT_CONFIGURED");
+    }
+
+    @Test
+    @DisplayName("fiscalPeriodStatus reports OPEN when every overlapping fiscal period is open/soft-closed, and CONTAINS_CLOSED_PERIOD when any is closed or locked")
+    void fiscalPeriodStatusReflectsRealFiscalCalendarCoverage() {
+        stubEverythingEmpty();
+        YearMonth ym = YearMonth.parse(currentPeriod);
+
+        com.bemo.hr.finance.domain.FiscalPeriod openPeriod = new com.bemo.hr.finance.domain.FiscalPeriod(
+                ym.getYear(), ym.getMonthValue(), "Test Period", ym.atDay(1), ym.atEndOfMonth(),
+                com.bemo.hr.finance.domain.FiscalPeriod.Status.OPEN);
+        when(fiscalPeriodRepository.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(ym.atEndOfMonth(), ym.atDay(1)))
+                .thenReturn(List.of(openPeriod));
+
+        assertThat(service.getExecutiveOverview(currentPeriod).fiscalPeriodStatus()).isEqualTo("OPEN");
+
+        com.bemo.hr.finance.domain.FiscalPeriod closedPeriod = new com.bemo.hr.finance.domain.FiscalPeriod(
+                ym.getYear(), ym.getMonthValue(), "Test Period", ym.atDay(1), ym.atEndOfMonth(),
+                com.bemo.hr.finance.domain.FiscalPeriod.Status.CLOSED);
+        when(fiscalPeriodRepository.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(ym.atEndOfMonth(), ym.atDay(1)))
+                .thenReturn(List.of(closedPeriod));
+
+        assertThat(service.getExecutiveOverview(currentPeriod).fiscalPeriodStatus()).isEqualTo("CONTAINS_CLOSED_PERIOD");
     }
 
     @Test

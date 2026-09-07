@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260907-v463-executive-cockpit-target-precision-alignment
+      author: bemo-tech-lead
+      comment: >
+        Deep-engineering remediation (2026-09-07, third pass, Low Finding L-2): a variance
+        calculation comparing a saved ExecutiveCockpitTarget against an ExecutiveKpiSnapshot's
+        actual value crossed two different stored precisions — targets were NUMERIC(15,2)/(5,2)
+        while snapshots are NUMERIC(19,4)/(7,2). Every comparison in the codebase already uses
+        BigDecimal.compareTo() (scale-independent, so this was never a correctness bug — confirmed
+        no .equals() comparison between the two exists anywhere), but the storage mismatch is real
+        and worth closing. Widening (more digits, more decimal places) never truncates existing
+        data, so this is a safe, non-lossy ALTER on a small, low-traffic table.
+      changes:
+        - modifyDataType:
+            tableName: executive_cockpit_targets
+            columnName: target_revenue
+            newDataType: NUMERIC(19, 4)
+        - modifyDataType:
+            tableName: executive_cockpit_targets
+            columnName: target_max_opex
+            newDataType: NUMERIC(19, 4)
+        - modifyDataType:
+            tableName: executive_cockpit_targets
+            columnName: target_min_liquidity
+            newDataType: NUMERIC(19, 4)
+        - modifyDataType:
+            tableName: executive_cockpit_targets
+            columnName: target_max_overdue_ar
+            newDataType: NUMERIC(19, 4)
+        - modifyDataType:
+            tableName: executive_cockpit_targets
+            columnName: target_gross_margin_percent
+            newDataType: NUMERIC(7, 2)

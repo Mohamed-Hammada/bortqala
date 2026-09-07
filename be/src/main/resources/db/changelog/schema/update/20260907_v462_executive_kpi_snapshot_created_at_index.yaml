@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260907-v462-executive-kpi-snapshot-created-at-index
+      author: bemo-tech-lead
+      comment: >
+        Deep-engineering remediation (2026-09-06/07, Performance Review P-4): GET /snapshots with
+        no periodKey filter runs `findAllByOrderByCreatedAtDesc()`, executed by Hibernate as
+        `WHERE app_id = ? ORDER BY created_at DESC` (the tenant predicate is injected automatically
+        by the @TenantId filter). No index covered this access path. Now that M-2's uniqueness fix
+        prevents unbounded duplicate rows, this listing's growth is bounded by real KPI-snapshot
+        volume, but the missing index still means a full per-tenant table scan on every unfiltered
+        listing — this closes that gap.
+      changes:
+        - createIndex:
+            indexName: idx_kpi_snapshot_app_created_at
+            tableName: executive_kpi_snapshots
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: created_at
+                  descending: true

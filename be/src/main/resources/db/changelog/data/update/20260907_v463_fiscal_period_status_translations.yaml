@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260907-v463-fiscal-period-status-translations
+      author: bemo-tech-lead
+      comment: >
+        Deep-engineering remediation (2026-09-07, third pass, Low Finding L-1): adds bilingual
+        labels for the new real, read-only fiscalPeriodStatus signal on GET
+        /api/v1/analytics/executive/overview — surfaces whether the requested calendar period has
+        no fiscal calendar configured at all, or overlaps a fiscal period Finance has already
+        closed/locked. Purely informational; adds no new locking/validation behavior.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009241-ar', 'executive.fiscalPeriodNotConfigured', 'ar-EG', 'لا يوجد تقويم مالي معرف لهذه الفترة. الأرقام أعلاه تعتمد على التقويم الميلادي فقط.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.fiscalPeriodNotConfigured' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009241-en', 'executive.fiscalPeriodNotConfigured', 'en-US', 'No fiscal calendar is configured for this period. The figures above are based on the calendar month/quarter/year only.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.fiscalPeriodNotConfigured' AND locale = 'en-US');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009242-ar', 'executive.fiscalPeriodContainsClosed', 'ar-EG', 'جزء من هذه الفترة مقفل بالفعل في الحسابات المالية. راجع الفترات المالية للتأكد من دقة الأرقام.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.fiscalPeriodContainsClosed' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009242-en', 'executive.fiscalPeriodContainsClosed', 'en-US', 'Part of this period is already closed in Finance. Check Fiscal Periods to confirm these figures are final.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'executive.fiscalPeriodContainsClosed' AND locale = 'en-US');
