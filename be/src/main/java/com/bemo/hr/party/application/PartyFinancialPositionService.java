@@ -27,10 +27,24 @@ public class PartyFinancialPositionService {
     private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
 
     public PartyFinancialPositionSummary getFinancialPosition(String partyId) {
+        return getFinancialPosition(partyId, null);
+    }
+
+    /**
+     * @param asOfDate epoch-millis cutoff. When present, ledger entries that occurred after this
+     *                 instant are excluded from both the balance and the aging computation (a
+     *                 historical view must not reflect transactions that hadn't happened yet), and
+     *                 aging is computed relative to this instant instead of "now". When {@code null},
+     *                 behaves exactly like {@link #getFinancialPosition(String)} (as-of now).
+     */
+    public PartyFinancialPositionSummary getFinancialPosition(String partyId, Long asOfDate) {
         BusinessParty party = businessPartyRepository.findById(partyId)
                 .orElseThrow(() -> new BusinessRuleException("Business party not found", "PARTY_NOT_FOUND", HttpStatus.NOT_FOUND));
 
-        List<PartnerLedgerEntry> entries = partnerLedgerEntryRepository.findByPartyIdOrderByOccurredAtDesc(partyId);
+        long now = asOfDate != null ? asOfDate : System.currentTimeMillis();
+        List<PartnerLedgerEntry> entries = partnerLedgerEntryRepository.findByPartyIdOrderByOccurredAtDesc(partyId).stream()
+                .filter(entry -> entry.getOccurredAt().toEpochMilli() <= now)
+                .toList();
 
         BigDecimal totalDebits = BigDecimal.ZERO;
         BigDecimal totalCredits = BigDecimal.ZERO;
@@ -46,8 +60,9 @@ public class PartyFinancialPositionService {
 
         BigDecimal netBalance = totalDebits.subtract(totalCredits);
 
-        // Compute aging buckets based on entry dates
-        long now = System.currentTimeMillis();
+        // Compute aging buckets relative to `now` (either the real current time, or the
+        // requested historical as-of date) — entries after `now` were already excluded above,
+        // so a payment/receipt that happens after the as-of date cannot reduce a historical balance.
         BigDecimal currentNotDue = BigDecimal.ZERO;
         BigDecimal b1To30 = BigDecimal.ZERO;
         BigDecimal b31To60 = BigDecimal.ZERO;
@@ -165,7 +180,7 @@ public class PartyFinancialPositionService {
                 continue;
             }
 
-            PartyFinancialPositionSummary pos = getFinancialPosition(party.getId());
+            PartyFinancialPositionSummary pos = getFinancialPosition(party.getId(), asOfDate);
             if (pos.netClosingBalance().compareTo(BigDecimal.ZERO) == 0 && pos.aging().totalOverdue().compareTo(BigDecimal.ZERO) == 0) {
                 continue;
             }

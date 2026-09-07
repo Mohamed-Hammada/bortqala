@@ -3,12 +3,19 @@ package com.bemo.hr.serviceops.api;
 import com.bemo.hr.serviceops.application.RentalService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * No {@code @TenantId}-scoped entity here carries a branchId, so no branch-access check applies
+ * to this module — confirmed by inspection of RentalItem/RentalContract during the 2026-09-06
+ * security remediation.
+ */
 @RestController
 @RequestMapping("/api/v1/service-ops/rentals")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER', 'GENERAL_MANAGER')")
 public class RentalController {
 
     private final RentalService rentalService;
@@ -20,6 +27,7 @@ public class RentalController {
     // Items
     @PostMapping("/items")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER')")
     public ServiceOpsApi.RentalItemResponse createItem(@Valid @RequestBody ServiceOpsApi.RentalItemCreateRequest request) {
         return rentalService.createItem(request);
     }
@@ -37,6 +45,7 @@ public class RentalController {
     // Contracts
     @PostMapping("/contracts")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER')")
     public ServiceOpsApi.RentalContractResponse createContract(@Valid @RequestBody ServiceOpsApi.RentalContractCreateRequest request) {
         return rentalService.createContract(request);
     }
@@ -52,11 +61,13 @@ public class RentalController {
     }
 
     @PostMapping("/contracts/{id}/activate")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER')")
     public ServiceOpsApi.RentalContractResponse activateContract(@PathVariable String id) {
         return rentalService.activateContract(id);
     }
 
     @PostMapping("/contracts/{id}/close")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER')")
     public ServiceOpsApi.RentalContractResponse returnAndCloseContract(
             @PathVariable String id,
             @RequestBody(required = false) ServiceOpsApi.ReturnRentalContractRequest request) {
@@ -64,6 +75,7 @@ public class RentalController {
     }
 
     @PostMapping("/contracts/{id}/cancel")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER')")
     public ServiceOpsApi.RentalContractResponse cancelContract(@PathVariable String id) {
         return rentalService.cancelContract(id);
     }

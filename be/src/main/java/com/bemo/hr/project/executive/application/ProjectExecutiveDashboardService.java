@@ -1,5 +1,6 @@
 package com.bemo.hr.project.executive.application;
 
+import com.bemo.hr.finance.application.TreasuryPositionService;
 import com.bemo.hr.project.domain.*;
 import com.bemo.hr.project.executive.api.ProjectExecutiveDashboardApi.*;
 import com.bemo.hr.project.infrastructure.*;
@@ -24,6 +25,7 @@ public class ProjectExecutiveDashboardService {
     private final ProjectScheduleRepository scheduleRepository;
     private final ProjectScheduleTaskRepository scheduleTaskRepository;
     private final DailyLaborSnapshotRepository dailyLaborSnapshotRepository;
+    private final TreasuryPositionService treasuryPositionService;
 
     public ProjectExecutiveDashboardService(
             ProjectRepository projectRepository,
@@ -32,7 +34,8 @@ public class ProjectExecutiveDashboardService {
             ProjectProgressClaimRepository claimRepository,
             ProjectScheduleRepository scheduleRepository,
             ProjectScheduleTaskRepository scheduleTaskRepository,
-            DailyLaborSnapshotRepository dailyLaborSnapshotRepository) {
+            DailyLaborSnapshotRepository dailyLaborSnapshotRepository,
+            TreasuryPositionService treasuryPositionService) {
         this.projectRepository = projectRepository;
         this.budgetVersionRepository = budgetVersionRepository;
         this.costLedgerRepository = costLedgerRepository;
@@ -40,6 +43,7 @@ public class ProjectExecutiveDashboardService {
         this.scheduleRepository = scheduleRepository;
         this.scheduleTaskRepository = scheduleTaskRepository;
         this.dailyLaborSnapshotRepository = dailyLaborSnapshotRepository;
+        this.treasuryPositionService = treasuryPositionService;
     }
 
     public ProjectExecutiveDashboardResponse getExecutiveDashboard(String companyId, String branchId, boolean canViewTreasury) {
@@ -72,6 +76,14 @@ public class ProjectExecutiveDashboardService {
         List<ProjectMatrixRowResponse> matrixRows = new ArrayList<>();
         LocalDate today = LocalDate.now();
 
+        // Batched cost-ledger sums (one grouped query per entry type) instead of one query per
+        // project per entry type — fixes the N+1 confirmed in docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md
+        // Performance Review P-2 for the sibling ExecutiveAnalyticsService (same repository, same pattern).
+        List<String> projectIds = allProjects.stream().map(Project::getId).toList();
+        Map<String, BigDecimal> committedByProject = sumByProjectId(projectIds, CostLedgerEntryType.COMMITTED);
+        Map<String, BigDecimal> actualByProject = sumByProjectId(projectIds, CostLedgerEntryType.ACTUAL);
+        Map<String, BigDecimal> revenueByProject = sumByProjectId(projectIds, CostLedgerEntryType.REVENUE);
+
         for (Project p : allProjects) {
             BigDecimal pContract = p.getContractValue() != null ? p.getContractValue() : BigDecimal.ZERO;
             totalContractValue = totalContractValue.add(pContract);
@@ -81,16 +93,13 @@ public class ProjectExecutiveDashboardService {
             BigDecimal pBudget = budgetOpt.map(ProjectBudgetVersion::getTotalBudgetAmount).orElse(BigDecimal.ZERO);
             totalBudget = totalBudget.add(pBudget);
 
-            BigDecimal pCommitted = costLedgerRepository.sumAmountByProjectIdAndEntryType(p.getId(), CostLedgerEntryType.COMMITTED);
-            if (pCommitted == null) pCommitted = BigDecimal.ZERO;
+            BigDecimal pCommitted = committedByProject.getOrDefault(p.getId(), BigDecimal.ZERO);
             totalCommitted = totalCommitted.add(pCommitted);
 
-            BigDecimal pActual = costLedgerRepository.sumAmountByProjectIdAndEntryType(p.getId(), CostLedgerEntryType.ACTUAL);
-            if (pActual == null) pActual = BigDecimal.ZERO;
+            BigDecimal pActual = actualByProject.getOrDefault(p.getId(), BigDecimal.ZERO);
             totalActual = totalActual.add(pActual);
 
-            BigDecimal pRevenue = costLedgerRepository.sumAmountByProjectIdAndEntryType(p.getId(), CostLedgerEntryType.REVENUE);
-            if (pRevenue == null) pRevenue = BigDecimal.ZERO;
+            BigDecimal pRevenue = revenueByProject.getOrDefault(p.getId(), BigDecimal.ZERO);
             totalRevenue = totalRevenue.add(pRevenue);
 
             BigDecimal pProfit = pRevenue.subtract(pActual);
@@ -170,12 +179,17 @@ public class ProjectExecutiveDashboardService {
             log.warn("Could not aggregate labor headcount for executive dashboard; using 0", ex);
         }
 
-        // Treasury (Cash & Banks)
+        // Treasury (Cash & Banks) — real tenant-wide cash/bank position from TreasuryPositionService.
+        // Previously this was `revenue*0.40`/`actual*0.05`/`committed*0.10` — arbitrary ratios with no
+        // relationship to the tenant's real balances (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md,
+        // Critical Finding C-1). "Uncleared" has no real equivalent yet (no bank-reconciliation-in-
+        // transit figure is exposed by TreasuryPositionService), so it is honestly reported as zero
+        // rather than guessed.
         TreasurySummaryResponse treasury;
         if (canViewTreasury) {
-            BigDecimal bankBal = totalRevenue.multiply(BigDecimal.valueOf(0.40)).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal cashBal = totalActual.multiply(BigDecimal.valueOf(0.05)).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal uncleared = totalCommitted.multiply(BigDecimal.valueOf(0.10)).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal bankBal = treasuryPositionService.totalBankBalance();
+            BigDecimal cashBal = treasuryPositionService.totalCashBalance();
+            BigDecimal uncleared = BigDecimal.ZERO;
             BigDecimal netLiquid = bankBal.add(cashBal).subtract(uncleared);
 
             treasury = new TreasurySummaryResponse(bankBal, cashBal, uncleared, netLiquid);
@@ -208,5 +222,16 @@ public class ProjectExecutiveDashboardService {
                 "EGP",
                 System.currentTimeMillis()
         );
+    }
+
+    /** Batched replacement for one {@code sumAmountByProjectIdAndEntryType} call per project. */
+    private Map<String, BigDecimal> sumByProjectId(List<String> projectIds, CostLedgerEntryType entryType) {
+        if (projectIds.isEmpty()) return Map.of();
+        Map<String, BigDecimal> result = new HashMap<>();
+        for (ProjectCostLedgerEntryRepository.ProjectAmountByType row
+                : costLedgerRepository.sumAmountByProjectIdInAndEntryType(projectIds, entryType)) {
+            result.put(row.getProjectId(), row.getTotal());
+        }
+        return result;
     }
 }

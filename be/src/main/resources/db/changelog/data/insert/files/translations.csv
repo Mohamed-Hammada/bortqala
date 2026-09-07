@@ -18364,3 +18364,5 @@ t-009236-ar;executive.bac;ar-EG;الموازنة المعتمدة (BAC)
 t-009236-en;executive.bac;en-US;Budget (BAC)
 t-009237-ar;executive.costVariance;ar-EG;انحراف التكلفة (CV)
 t-009237-en;executive.costVariance;en-US;Cost Variance (CV)
+t-009238-ar;EXECUTIVE_TARGET_CONCURRENT_CREATE;ar-EG;تم إنشاء مستهدفات هذه الفترة للتو بواسطة طلب آخر. أعد التحميل وحاول مرة أخرى.
+t-009238-en;EXECUTIVE_TARGET_CONCURRENT_CREATE;en-US;Targets for this period were just created by another request. Reload and try again.

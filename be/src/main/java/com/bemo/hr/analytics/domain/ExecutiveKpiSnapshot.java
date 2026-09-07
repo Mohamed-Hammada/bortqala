@@ -65,9 +65,14 @@ public class ExecutiveKpiSnapshot {
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
 
+    // Must stay null until Hibernate assigns it on first insert — Spring Data JPA's isNew() check
+    // for @Version entities requires version == null to route save() through persist() rather than
+    // merge(). A `= 0L` field initializer here made every new recordSnapshot() call throw
+    // ObjectOptimisticLockingFailureException (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md
+    // remediation notes) — a latent bug the previous Mockito-only tests could not catch.
     @Version
     @Column(name = "version", nullable = false)
-    private Long version = 0L;
+    private Long version;
 
     protected ExecutiveKpiSnapshot() {}
 
@@ -99,6 +104,33 @@ public class ExecutiveKpiSnapshot {
         long now = Instant.now().toEpochMilli();
         this.snapshotDate = now;
         this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    /**
+     * Re-records this KPI/period snapshot with new values instead of leaving the caller to insert
+     * a duplicate row — used by the upsert in {@code ExecutiveAnalyticsService.recordSnapshot}.
+     */
+    public void update(
+            BigDecimal targetValue,
+            BigDecimal actualValue,
+            BigDecimal varianceValue,
+            BigDecimal variancePercent,
+            TrendDirection trendDirection,
+            ReconciliationStatus reconciliationStatus,
+            String drilldownUrl,
+            String metadataJson
+    ) {
+        this.targetValue = targetValue;
+        this.actualValue = Objects.requireNonNull(actualValue, "actualValue cannot be null");
+        this.varianceValue = varianceValue;
+        this.variancePercent = variancePercent;
+        this.trendDirection = trendDirection != null ? trendDirection : TrendDirection.STABLE;
+        this.reconciliationStatus = reconciliationStatus != null ? reconciliationStatus : ReconciliationStatus.RECONCILED;
+        this.drilldownUrl = drilldownUrl;
+        this.metadataJson = metadataJson;
+        long now = Instant.now().toEpochMilli();
+        this.snapshotDate = now;
         this.updatedAt = now;
     }
 

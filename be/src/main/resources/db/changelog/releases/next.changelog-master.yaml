@@ -662,6 +662,11 @@ databaseChangeLog:
       file: db/changelog/schema/create/20260905_v459_owner_executive_cockpit_schema.yaml
   - include:
       file: db/changelog/data/update/20260905_v460_owner_executive_cockpit_translations.yaml
+  # 2026-09-06 deep-engineering remediation: executive_kpi_snapshots uniqueness
+  - include:
+      file: db/changelog/schema/update/20260906_v461_executive_kpi_snapshot_uniqueness.yaml
+  - include:
+      file: db/changelog/data/update/20260906_v461_executive_target_concurrent_translation.yaml
 
 
 

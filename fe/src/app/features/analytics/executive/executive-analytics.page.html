@@ -253,6 +253,8 @@
                   </div>
                   <div class="exp-amt ltr">{{ exp.amount | number:'1.2-2' }} ج.م</div>
                 </div>
+              } @empty {
+                <div class="empty-state">{{ i18n.t('common.noData') }}</div>
               }
             </div>
           </div>
@@ -295,6 +297,8 @@
                     </td>
                     <td class="ltr">{{ br.cashAndBank | number:'1.2-2' }} ج.م</td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="7"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
                 }
               </tbody>
             </table>
@@ -324,6 +328,8 @@
                       <td class="ltr">{{ c.totalInvoiced | number:'1.2-2' }} ج.م</td>
                       <td class="ltr text-danger">{{ c.outstandingBalance | number:'1.2-2' }} ج.م</td>
                     </tr>
+                  } @empty {
+                    <tr><td colspan="3"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
                   }
                 </tbody>
               </table>
@@ -351,6 +357,8 @@
                       <td class="ltr">{{ p.revenue | number:'1.2-2' }} ج.م</td>
                       <td class="ltr">{{ p.marginPercent | number:'1.1-1' }}%</td>
                     </tr>
+                  } @empty {
+                    <tr><td colspan="3"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
                   }
                 </tbody>
               </table>
@@ -376,6 +384,8 @@
                     <span>{{ stk.estimatedValue | number:'1.2-2' }} ج.م</span>
                   </div>
                 </div>
+              } @empty {
+                <div class="empty-state">{{ i18n.t('common.noData') }}</div>
               }
             </div>
           </div>
@@ -396,6 +406,8 @@
                     <span>{{ w.materialCost | number:'1.2-2' }} ج.م</span>
                   </div>
                 </div>
+              } @empty {
+                <div class="empty-state">{{ i18n.t('common.noData') }}</div>
               }
             </div>
           </div>
@@ -416,6 +428,8 @@
                     <span>{{ i18n.t('executive.costVariance') }}: {{ prj.costVariance | number:'1.0-0' }} ج.م</span>
                   </div>
                 </div>
+              } @empty {
+                <div class="empty-state">{{ i18n.t('common.noData') }}</div>
               }
             </div>
           </div>
@@ -447,8 +461,8 @@
             <span class="kpi-value ltr">{{ ov.totalOpex | number:'1.2-2' }} <small>ج.م</small></span>
           </div>
           <div class="kpi-card success">
-            <span class="kpi-label">{{ i18n.t('analytics.grossProfit') }}</span>
-            <span class="kpi-value ltr">{{ ov.grossProfit | number:'1.2-2' }} <small>ج.م</small></span>
+            <span class="kpi-label">{{ i18n.t('analytics.netProfit') }}</span>
+            <span class="kpi-value ltr">{{ ov.netProfit | number:'1.2-2' }} <small>ج.م</small></span>
           </div>
           <div class="kpi-card highlight">
             <span class="kpi-label">{{ i18n.t('analytics.netMargin') }}</span>

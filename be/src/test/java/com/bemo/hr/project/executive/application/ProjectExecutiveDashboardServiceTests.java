@@ -1,5 +1,6 @@
 package com.bemo.hr.project.executive.application;
 
+import com.bemo.hr.finance.application.TreasuryPositionService;
 import com.bemo.hr.project.domain.*;
 import com.bemo.hr.project.executive.api.ProjectExecutiveDashboardApi.*;
 import com.bemo.hr.project.infrastructure.*;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +43,9 @@ class ProjectExecutiveDashboardServiceTests {
     @Mock
     private DailyLaborSnapshotRepository dailyLaborSnapshotRepository;
 
+    @Mock
+    private TreasuryPositionService treasuryPositionService;
+
     private ProjectExecutiveDashboardService service;
 
     private Project p1;
@@ -55,8 +60,13 @@ class ProjectExecutiveDashboardServiceTests {
                 claimRepository,
                 scheduleRepository,
                 scheduleTaskRepository,
-                dailyLaborSnapshotRepository
+                dailyLaborSnapshotRepository,
+                treasuryPositionService
         );
+        lenient().when(treasuryPositionService.totalBankBalance()).thenReturn(BigDecimal.ZERO);
+        lenient().when(treasuryPositionService.totalCashBalance()).thenReturn(BigDecimal.ZERO);
+        lenient().when(costLedgerRepository.sumAmountByProjectIdInAndEntryType(org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of());
 
         p1 = new Project(
                 "PRJ-001",
@@ -108,19 +118,19 @@ class ProjectExecutiveDashboardServiceTests {
         when(budgetVersionRepository.findByProjectIdAndStatus(p2.getId(), BudgetVersionStatus.APPROVED))
                 .thenReturn(Optional.empty());
 
-        when(costLedgerRepository.sumAmountByProjectIdAndEntryType(p1.getId(), CostLedgerEntryType.COMMITTED))
-                .thenReturn(BigDecimal.valueOf(10000000));
-        when(costLedgerRepository.sumAmountByProjectIdAndEntryType(p1.getId(), CostLedgerEntryType.ACTUAL))
-                .thenReturn(BigDecimal.valueOf(15000000));
-        when(costLedgerRepository.sumAmountByProjectIdAndEntryType(p1.getId(), CostLedgerEntryType.REVENUE))
-                .thenReturn(BigDecimal.valueOf(25000000));
-
-        when(costLedgerRepository.sumAmountByProjectIdAndEntryType(p2.getId(), CostLedgerEntryType.COMMITTED))
-                .thenReturn(BigDecimal.valueOf(5000000));
-        when(costLedgerRepository.sumAmountByProjectIdAndEntryType(p2.getId(), CostLedgerEntryType.ACTUAL))
-                .thenReturn(BigDecimal.valueOf(5000000));
-        when(costLedgerRepository.sumAmountByProjectIdAndEntryType(p2.getId(), CostLedgerEntryType.REVENUE))
-                .thenReturn(BigDecimal.valueOf(10000000));
+        List<String> bothProjectIds = List.of(p1.getId(), p2.getId());
+        List<ProjectCostLedgerEntryRepository.ProjectAmountByType> committedRows =
+                List.of(row(p1.getId(), BigDecimal.valueOf(10000000)), row(p2.getId(), BigDecimal.valueOf(5000000)));
+        List<ProjectCostLedgerEntryRepository.ProjectAmountByType> actualRows =
+                List.of(row(p1.getId(), BigDecimal.valueOf(15000000)), row(p2.getId(), BigDecimal.valueOf(5000000)));
+        List<ProjectCostLedgerEntryRepository.ProjectAmountByType> revenueRows =
+                List.of(row(p1.getId(), BigDecimal.valueOf(25000000)), row(p2.getId(), BigDecimal.valueOf(10000000)));
+        when(costLedgerRepository.sumAmountByProjectIdInAndEntryType(bothProjectIds, CostLedgerEntryType.COMMITTED))
+                .thenReturn(committedRows);
+        when(costLedgerRepository.sumAmountByProjectIdInAndEntryType(bothProjectIds, CostLedgerEntryType.ACTUAL))
+                .thenReturn(actualRows);
+        when(costLedgerRepository.sumAmountByProjectIdInAndEntryType(bothProjectIds, CostLedgerEntryType.REVENUE))
+                .thenReturn(revenueRows);
 
         when(scheduleRepository.findByProjectId(p1.getId())).thenReturn(Optional.empty());
         when(scheduleRepository.findByProjectId(p2.getId())).thenReturn(Optional.empty());
@@ -165,5 +175,45 @@ class ProjectExecutiveDashboardServiceTests {
         assertThat(res).isNotNull();
         assertThat(res.treasury().totalBankBalance()).isEqualTo(BigDecimal.ZERO);
         assertThat(res.treasury().netLiquidCapital()).isEqualTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("Treasury figures come from TreasuryPositionService, not a ratio of revenue/actual/committed")
+    void getExecutiveDashboard_withTreasuryAccess_usesRealBalancesNotFabricatedRatios() {
+        when(projectRepository.findAll()).thenReturn(List.of(p1));
+        when(budgetVersionRepository.findByProjectIdAndStatus(p1.getId(), BudgetVersionStatus.APPROVED))
+                .thenReturn(Optional.empty());
+        when(scheduleRepository.findByProjectId(p1.getId())).thenReturn(Optional.empty());
+        when(claimRepository.findByProjectIdOrderByClaimSequenceNumberDesc(p1.getId())).thenReturn(List.of());
+        List<ProjectCostLedgerEntryRepository.ProjectAmountByType> revenueRows =
+                List.of(row(p1.getId(), BigDecimal.valueOf(1_000_000))); // would have produced bankBal=400000 under the old *0.40 formula
+        List<ProjectCostLedgerEntryRepository.ProjectAmountByType> actualRows =
+                List.of(row(p1.getId(), BigDecimal.valueOf(1_000_000))); // would have produced cashBal=50000 under the old *0.05 formula
+        List<ProjectCostLedgerEntryRepository.ProjectAmountByType> committedRows =
+                List.of(row(p1.getId(), BigDecimal.valueOf(1_000_000)));
+        when(costLedgerRepository.sumAmountByProjectIdInAndEntryType(List.of(p1.getId()), CostLedgerEntryType.REVENUE))
+                .thenReturn(revenueRows);
+        when(costLedgerRepository.sumAmountByProjectIdInAndEntryType(List.of(p1.getId()), CostLedgerEntryType.ACTUAL))
+                .thenReturn(actualRows);
+        when(costLedgerRepository.sumAmountByProjectIdInAndEntryType(List.of(p1.getId()), CostLedgerEntryType.COMMITTED))
+                .thenReturn(committedRows);
+        when(treasuryPositionService.totalBankBalance()).thenReturn(BigDecimal.valueOf(777_777));
+        when(treasuryPositionService.totalCashBalance()).thenReturn(BigDecimal.valueOf(12_345));
+
+        ProjectExecutiveDashboardResponse res = service.getExecutiveDashboard(null, null, true);
+
+        // Real values from the injected service, unrelated to revenue/actual/committed magnitude —
+        // proves the fabricated *0.40 / *0.05 ratios are gone.
+        assertThat(res.treasury().totalBankBalance()).isEqualByComparingTo(BigDecimal.valueOf(777_777));
+        assertThat(res.treasury().totalCashOnHand()).isEqualByComparingTo(BigDecimal.valueOf(12_345));
+        assertThat(res.treasury().netLiquidCapital()).isEqualByComparingTo(BigDecimal.valueOf(790_122));
+    }
+
+    private static ProjectCostLedgerEntryRepository.ProjectAmountByType row(String projectId, BigDecimal total) {
+        ProjectCostLedgerEntryRepository.ProjectAmountByType mockRow =
+                org.mockito.Mockito.mock(ProjectCostLedgerEntryRepository.ProjectAmountByType.class);
+        lenient().when(mockRow.getProjectId()).thenReturn(projectId);
+        lenient().when(mockRow.getTotal()).thenReturn(total);
+        return mockRow;
     }
 }

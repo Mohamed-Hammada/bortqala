@@ -29,15 +29,14 @@ public class ExecutiveAnalyticsController {
         return analyticsService.getKpiRegistry();
     }
 
+    // 2026-09-06: removed the `companyId`/`branchId`/`projectId` parameters this endpoint used to
+    // accept — none were ever used to filter anything (docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md,
+    // Medium Finding M-1 / API Contract Review). A parameter that is silently ignored is worse than
+    // no parameter at all.
     @GetMapping("/overview")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'GENERAL_MANAGER')")
-    public ExecutiveOverviewResponse getExecutiveOverview(
-            @RequestParam(required = false) String period,
-            @RequestParam(required = false) String companyId,
-            @RequestParam(required = false) String branchId,
-            @RequestParam(required = false) String projectId
-    ) {
-        return analyticsService.getExecutiveOverview(period, companyId, branchId, projectId);
+    public ExecutiveOverviewResponse getExecutiveOverview(@RequestParam(required = false) String period) {
+        return analyticsService.getExecutiveOverview(period);
     }
 
     @GetMapping("/trends")
@@ -64,24 +63,25 @@ public class ExecutiveAnalyticsController {
         return analyticsService.recordSnapshot(payload);
     }
 
+    // 2026-09-06: removed the unused `companyId` parameter (see note above); `branchId` is kept —
+    // it is genuinely enforced via SecurityAuthorizationEvaluator.hasBranchAccess and used to filter
+    // the branch leaderboard.
     @GetMapping("/cockpit")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'GENERAL_MANAGER')")
     public OwnerCockpitResponse getOwnerCockpit(
             @RequestParam(required = false) String period,
-            @RequestParam(required = false) String companyId,
             @RequestParam(required = false) String branchId
     ) {
-        return analyticsService.getOwnerCockpit(period, companyId, branchId);
+        return analyticsService.getOwnerCockpit(period, branchId);
     }
 
     @GetMapping(value = "/cockpit/export.xlsx", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'GENERAL_MANAGER')")
     public ResponseEntity<byte[]> exportExecutiveCockpit(
             @RequestParam(required = false) String period,
-            @RequestParam(required = false) String companyId,
             @RequestParam(required = false) String branchId
     ) {
-        byte[] bytes = analyticsService.exportExecutiveCockpitExcel(period, companyId, branchId);
+        byte[] bytes = analyticsService.exportExecutiveCockpitExcel(period, branchId);
         String filename = "Executive_Cockpit_" + (period != null && !period.isBlank() ? period : "ALL") + ".xlsx";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")

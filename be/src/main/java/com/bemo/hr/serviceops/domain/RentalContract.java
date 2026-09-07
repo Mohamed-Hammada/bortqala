@@ -109,7 +109,9 @@ public class RentalContract {
         this.totalAmount = BigDecimal.ZERO;
         this.status = Status.DRAFT;
         this.notes = notes;
-        this.version = 0L;
+        // Do NOT set `version` here — see BookableResource's constructor for why (defeats Spring
+        // Data JPA's isNew() detection, causing save() to merge() instead of persist() and throw
+        // ObjectOptimisticLockingFailureException on every create).
         long now = System.currentTimeMillis();
         this.createdAt = now;
         this.updatedAt = now;

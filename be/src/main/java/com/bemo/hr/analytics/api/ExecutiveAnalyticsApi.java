@@ -52,7 +52,7 @@ public final class ExecutiveAnalyticsApi {
             long timestamp,
             BigDecimal totalRevenue,
             BigDecimal totalOpex,
-            BigDecimal grossProfit,
+            BigDecimal netProfit,
             BigDecimal netMarginPercent,
             BigDecimal operatingCashFlow,
             BigDecimal salesBookings,
@@ -260,7 +260,6 @@ public final class ExecutiveAnalyticsApi {
 
     public record OwnerCockpitResponse(
             String period,
-            String companyId,
             String branchId,
             long timestamp,
             OwnerCockpitKpiSummary kpiSummary,

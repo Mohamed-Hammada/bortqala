@@ -72,7 +72,11 @@ public class ExecutiveCockpitTarget {
         this.notes = notes != null ? notes.trim() : null;
         this.createdAt = System.currentTimeMillis();
         this.updatedAt = this.createdAt;
-        this.version = 0L;
+        // Do NOT set `version` here — Spring Data JPA's isNew() check for @Version entities needs
+        // version == null to route save() through persist() (insert) rather than merge(). Setting it
+        // explicitly made every first-time saveTargets() call for a new period throw
+        // ObjectOptimisticLockingFailureException (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md
+        // remediation notes) — a latent bug the previous Mockito-only tests could not catch.
     }
 
     public void update(

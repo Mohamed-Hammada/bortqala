@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260906-v461-executive-target-concurrent-translation
+      author: bemo-tech-lead
+      comment: >
+        Deep-engineering remediation (2026-09-06): saveTargets() now reports a specific
+        EXECUTIVE_TARGET_CONCURRENT_CREATE error code (instead of a raw ObjectOptimisticLockingFailureException)
+        when two first-time saves for the same not-yet-existing period race each other
+        (docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md remediation notes). Adds its translation rows.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009238-ar', 'EXECUTIVE_TARGET_CONCURRENT_CREATE', 'ar-EG', 'تم إنشاء مستهدفات هذه الفترة للتو بواسطة طلب آخر. أعد التحميل وحاول مرة أخرى.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'EXECUTIVE_TARGET_CONCURRENT_CREATE' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              SELECT 't-009238-en', 'EXECUTIVE_TARGET_CONCURRENT_CREATE', 'en-US', 'Targets for this period were just created by another request. Reload and try again.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'EXECUTIVE_TARGET_CONCURRENT_CREATE' AND locale = 'en-US');

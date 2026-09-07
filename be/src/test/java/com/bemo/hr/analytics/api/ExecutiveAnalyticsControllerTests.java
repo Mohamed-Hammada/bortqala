@@ -63,13 +63,13 @@ class ExecutiveAnalyticsControllerTests {
                 BigDecimal.valueOf(100.0),
                 List.of()
         );
-        when(analyticsService.getExecutiveOverview(any(), any(), any(), any())).thenReturn(mockOverview);
+        when(analyticsService.getExecutiveOverview(any())).thenReturn(mockOverview);
 
-        var result = controller.getExecutiveOverview("2026-08", null, null, null);
+        var result = controller.getExecutiveOverview("2026-08");
 
         assertThat(result.totalRevenue()).isEqualByComparingTo(BigDecimal.valueOf(1_000_000));
-        assertThat(result.grossProfit()).isEqualByComparingTo(BigDecimal.valueOf(300_000));
-        verify(analyticsService).getExecutiveOverview("2026-08", null, null, null);
+        assertThat(result.netProfit()).isEqualByComparingTo(BigDecimal.valueOf(300_000));
+        verify(analyticsService).getExecutiveOverview("2026-08");
     }
 
     @Test
@@ -114,26 +114,26 @@ class ExecutiveAnalyticsControllerTests {
     @Test
     void getOwnerCockpitDelegatesToService() {
         OwnerCockpitResponse mockResponse = mock(OwnerCockpitResponse.class);
-        when(analyticsService.getOwnerCockpit("2026-09", "comp-1", "branch-1")).thenReturn(mockResponse);
+        when(analyticsService.getOwnerCockpit("2026-09", "branch-1")).thenReturn(mockResponse);
 
-        var result = controller.getOwnerCockpit("2026-09", "comp-1", "branch-1");
+        var result = controller.getOwnerCockpit("2026-09", "branch-1");
 
         assertThat(result).isSameAs(mockResponse);
-        verify(analyticsService).getOwnerCockpit("2026-09", "comp-1", "branch-1");
+        verify(analyticsService).getOwnerCockpit("2026-09", "branch-1");
     }
 
     @Test
     void exportExecutiveCockpitReturnsExcelAttachment() {
         byte[] mockBytes = new byte[]{1, 2, 3};
-        when(analyticsService.exportExecutiveCockpitExcel("2026-09", null, null)).thenReturn(mockBytes);
+        when(analyticsService.exportExecutiveCockpitExcel("2026-09", null)).thenReturn(mockBytes);
 
-        var response = controller.exportExecutiveCockpit("2026-09", null, null);
+        var response = controller.exportExecutiveCockpit("2026-09", null);
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(response.getBody()).isEqualTo(mockBytes);
         assertThat(response.getHeaders().getContentType().toString()).contains("spreadsheetml.sheet");
         assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("Executive_Cockpit_2026-09.xlsx");
-        verify(analyticsService).exportExecutiveCockpitExcel("2026-09", null, null);
+        verify(analyticsService).exportExecutiveCockpitExcel("2026-09", null);
     }
 
     @Test

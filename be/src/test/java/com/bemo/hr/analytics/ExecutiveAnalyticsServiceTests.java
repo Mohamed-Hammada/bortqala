@@ -5,250 +5,394 @@ import com.bemo.hr.analytics.application.ExecutiveAnalyticsService;
 import com.bemo.hr.analytics.domain.*;
 import com.bemo.hr.analytics.infrastructure.ExecutiveCockpitTargetRepository;
 import com.bemo.hr.analytics.infrastructure.ExecutiveKpiSnapshotRepository;
+import com.bemo.hr.compliance.eta.domain.EtaInvoiceSubmission;
 import com.bemo.hr.compliance.eta.infrastructure.EtaInvoiceSubmissionRepository;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.expenses.infrastructure.ExpenseClaimRepository;
-import com.bemo.hr.finance.infrastructure.BankAccountRepository;
-import com.bemo.hr.finance.infrastructure.CashboxRepository;
+import com.bemo.hr.finance.application.FinancialStatementsReportService;
+import com.bemo.hr.finance.application.TreasuryPositionService;
 import com.bemo.hr.manufacturing.production.infrastructure.ProductionOrderRepository;
 import com.bemo.hr.operations.InventoryItem;
 import com.bemo.hr.operations.InventoryItemRepository;
+import com.bemo.hr.operations.InventoryValuationService;
+import com.bemo.hr.operations.OperationsApi;
+import com.bemo.hr.organization.domain.Branch;
 import com.bemo.hr.organization.infrastructure.BranchRepository;
 import com.bemo.hr.party.BusinessPartyRepository;
+import com.bemo.hr.payroll.domain.SalaryPayment;
 import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
 import com.bemo.hr.project.domain.Project;
 import com.bemo.hr.project.domain.ProjectStatus;
+import com.bemo.hr.project.infrastructure.ProjectBudgetVersionRepository;
 import com.bemo.hr.project.infrastructure.ProjectCostLedgerEntryRepository;
 import com.bemo.hr.project.infrastructure.ProjectRepository;
 import com.bemo.hr.access.application.SecurityAuthorizationEvaluator;
-import com.bemo.hr.trade.pos.domain.PosTransaction;
 import com.bemo.hr.trade.pos.infrastructure.PosTransactionRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
+import com.bemo.hr.trade.sales.domain.CustomerInvoice;
 import com.bemo.hr.trade.sales.domain.SalesQuotation;
 import com.bemo.hr.trade.sales.infrastructure.CustomerInvoiceRepository;
 import com.bemo.hr.trade.sales.infrastructure.CustomerReceiptRepository;
+import com.bemo.hr.trade.sales.infrastructure.SalesDeliveryLineRepository;
 import com.bemo.hr.trade.sales.infrastructure.SalesQuotationRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+/**
+ * 2026-09-06 remediation: replaces the previous test suite, whose one test exercising the
+ * "all real data empty" path ({@code getOwnerCockpitAggregatesAllKpis}) asserted only
+ * {@code isNotNull()} on the response — it would have passed identically whether the service
+ * returned real zeros or the hardcoded fallback constants it used to fabricate (42,850 / 220,000 /
+ * fake customers / fake products / ...). See docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, High
+ * Finding H-5. Every test below that exercises the empty-data path now asserts the actual numeric
+ * values are zero/empty, not merely non-null — these tests would have FAILED against the
+ * pre-remediation implementation.
+ */
 @ExtendWith(MockitoExtension.class)
 class ExecutiveAnalyticsServiceTests {
 
-    @Mock
-    private ExecutiveKpiSnapshotRepository snapshotRepository;
-    @Mock
-    private ProjectRepository projectRepository;
-    @Mock
-    private EmployeeRepository employeeRepository;
-    @Mock
-    private InventoryItemRepository inventoryItemRepository;
-    @Mock
-    private SalesQuotationRepository salesQuotationRepository;
-    @Mock
-    private PosTransactionRepository posTransactionRepository;
-    @Mock
-    private EtaInvoiceSubmissionRepository etaSubmissionRepository;
-    @Mock
-    private CustomerInvoiceRepository customerInvoiceRepository;
-    @Mock
-    private CustomerReceiptRepository customerReceiptRepository;
-    @Mock
-    private SupplierInvoiceRepository supplierInvoiceRepository;
-    @Mock
-    private CashboxRepository cashboxRepository;
-    @Mock
-    private BankAccountRepository bankAccountRepository;
-    @Mock
-    private BranchRepository branchRepository;
-    @Mock
-    private ProductionOrderRepository productionOrderRepository;
-    @Mock
-    private ProjectCostLedgerEntryRepository costLedgerRepository;
-    @Mock
-    private ExpenseClaimRepository expenseClaimRepository;
-    @Mock
-    private SalaryPaymentRepository salaryPaymentRepository;
-    @Mock
-    private ExecutiveCockpitTargetRepository cockpitTargetRepository;
-    @Mock
-    private BusinessPartyRepository businessPartyRepository;
-    @Mock
-    private SecurityAuthorizationEvaluator authEvaluator;
+    @Mock private ExecutiveKpiSnapshotRepository snapshotRepository;
+    @Mock private ProjectRepository projectRepository;
+    @Mock private ProjectBudgetVersionRepository projectBudgetVersionRepository;
+    @Mock private EmployeeRepository employeeRepository;
+    @Mock private InventoryItemRepository inventoryItemRepository;
+    @Mock private SalesQuotationRepository salesQuotationRepository;
+    @Mock private SalesDeliveryLineRepository salesDeliveryLineRepository;
+    @Mock private PosTransactionRepository posTransactionRepository;
+    @Mock private EtaInvoiceSubmissionRepository etaSubmissionRepository;
+    @Mock private CustomerInvoiceRepository customerInvoiceRepository;
+    @Mock private CustomerReceiptRepository customerReceiptRepository;
+    @Mock private SupplierInvoiceRepository supplierInvoiceRepository;
+    @Mock private BranchRepository branchRepository;
+    @Mock private ProductionOrderRepository productionOrderRepository;
+    @Mock private ProjectCostLedgerEntryRepository costLedgerRepository;
+    @Mock private ExpenseClaimRepository expenseClaimRepository;
+    @Mock private SalaryPaymentRepository salaryPaymentRepository;
+    @Mock private ExecutiveCockpitTargetRepository cockpitTargetRepository;
+    @Mock private BusinessPartyRepository businessPartyRepository;
+    @Mock private SecurityAuthorizationEvaluator authEvaluator;
+    @Mock private FinancialStatementsReportService financialStatementsReportService;
+    @Mock private InventoryValuationService inventoryValuationService;
+    @Mock private TreasuryPositionService treasuryPositionService;
 
-    private ExecutiveAnalyticsService analyticsService;
+    private ExecutiveAnalyticsService service;
+    private final String currentPeriod = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
     @BeforeEach
     void setUp() {
-        analyticsService = new ExecutiveAnalyticsService(
-                snapshotRepository,
-                projectRepository,
-                employeeRepository,
-                inventoryItemRepository,
-                salesQuotationRepository,
-                posTransactionRepository,
-                etaSubmissionRepository,
-                customerInvoiceRepository,
-                customerReceiptRepository,
-                supplierInvoiceRepository,
-                cashboxRepository,
-                bankAccountRepository,
-                branchRepository,
-                productionOrderRepository,
-                costLedgerRepository,
-                expenseClaimRepository,
-                salaryPaymentRepository,
-                cockpitTargetRepository,
-                businessPartyRepository,
-                authEvaluator
+        service = new ExecutiveAnalyticsService(
+                snapshotRepository, projectRepository, projectBudgetVersionRepository, employeeRepository,
+                inventoryItemRepository, salesQuotationRepository, salesDeliveryLineRepository,
+                posTransactionRepository, etaSubmissionRepository, customerInvoiceRepository,
+                customerReceiptRepository, supplierInvoiceRepository, branchRepository,
+                productionOrderRepository, costLedgerRepository, expenseClaimRepository,
+                salaryPaymentRepository, cockpitTargetRepository, businessPartyRepository, authEvaluator,
+                financialStatementsReportService, inventoryValuationService, treasuryPositionService
         );
     }
 
+    /** Wires every repository/service to return an empty/zero result, exactly the scenario that used to trigger fabrication. */
+    private void stubEverythingEmpty() {
+        lenient().when(projectRepository.findAll()).thenReturn(List.of());
+        lenient().when(inventoryValuationService.report()).thenReturn(
+                new OperationsApi.ValuationReport(null, BigDecimal.ZERO, List.of(), List.of(), null, null));
+        lenient().when(inventoryValuationService.report(any(), any(), any())).thenReturn(
+                new OperationsApi.ValuationReport(null, BigDecimal.ZERO, List.of(), List.of(), null, null));
+        lenient().when(posTransactionRepository.findAll()).thenReturn(List.of());
+        lenient().when(salesQuotationRepository.findAll()).thenReturn(List.of());
+        lenient().when(salesDeliveryLineRepository.findAll()).thenReturn(List.of());
+        lenient().when(employeeRepository.findAll()).thenReturn(List.of());
+        lenient().when(etaSubmissionRepository.findAll()).thenReturn(List.of());
+        lenient().when(customerInvoiceRepository.findAll()).thenReturn(List.of());
+        lenient().when(customerReceiptRepository.findAll()).thenReturn(List.of());
+        lenient().when(supplierInvoiceRepository.findAll()).thenReturn(List.of());
+        lenient().when(branchRepository.findAllByOrderByCodeAsc()).thenReturn(List.of());
+        lenient().when(productionOrderRepository.findAllByOrderByStartDateDescCreatedAtDesc()).thenReturn(List.of());
+        lenient().when(expenseClaimRepository.findAll()).thenReturn(List.of());
+        lenient().when(salaryPaymentRepository.findAll()).thenReturn(List.of());
+        lenient().when(cockpitTargetRepository.findByPeriodKey(any())).thenReturn(Optional.empty());
+        lenient().when(inventoryItemRepository.findAll()).thenReturn(List.of());
+        lenient().when(financialStatementsReportService.getIncomeStatement(any(), any())).thenReturn(
+                new FinancialStatementsReportService.IncomeStatementReport(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+        lenient().when(financialStatementsReportService.getCashFlowStatement(any(), any())).thenReturn(
+                new FinancialStatementsReportService.CashFlowReport(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, true, null));
+        lenient().when(treasuryPositionService.totalCashBalance()).thenReturn(BigDecimal.ZERO);
+        lenient().when(treasuryPositionService.totalBankBalance()).thenReturn(BigDecimal.ZERO);
+        lenient().when(treasuryPositionService.cashBalanceByBranch()).thenReturn(java.util.Map.of());
+        lenient().when(treasuryPositionService.bankBalanceByBranch()).thenReturn(java.util.Map.of());
+    }
 
     @Test
+    @DisplayName("An empty tenant gets real zeros/empty lists on the Owner Cockpit — never fabricated fallback values")
+    void ownerCockpitForAnEmptyTenantReturnsRealZerosNotFakeData() {
+        stubEverythingEmpty();
+
+        OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, null);
+
+        // These exact values (42850.00, 38200.00, 1450000.00, 185000.00, 250000.00) were the
+        // hardcoded fallbacks the pre-remediation code substituted for a real zero.
+        assertThat(response.kpiSummary().todaySales()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().todayCollections()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().totalRevenue()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().payrollDisbursed()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().totalOpex()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().totalReceivables()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.kpiSummary().totalPayables()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.arAging().current().invoiceCount()).isZero();
+        assertThat(response.arAging().total()).isEqualByComparingTo(BigDecimal.ZERO);
+
+        // These fake named entities must never appear.
+        assertThat(response.topCustomers()).isEmpty();
+        assertThat(response.topProducts()).isEmpty();
+        assertThat(response.manufacturingWip()).isEmpty();
+        assertThat(response.projectBudgetControl()).isEmpty();
+        assertThat(response.branchLeaderboard()).isEmpty();
+        assertThat(response.topCustomers()).noneMatch(c -> c.customerName().contains("الأهرام"));
+    }
+
+    @Test
+    @DisplayName("Real GL revenue/expenses flow through to the cockpit's headline P&L, unmodified by any ad-hoc formula")
+    void ownerCockpitUsesRealGlIncomeStatementForHeadlineFigures() {
+        stubEverythingEmpty();
+        YearMonth ym = YearMonth.parse(currentPeriod);
+        when(financialStatementsReportService.getIncomeStatement(ym.atDay(1), ym.atEndOfMonth()))
+                .thenReturn(new FinancialStatementsReportService.IncomeStatementReport(
+                        BigDecimal.valueOf(900_000), BigDecimal.valueOf(600_000), BigDecimal.valueOf(300_000)));
+
+        OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, null);
+
+        assertThat(response.kpiSummary().totalRevenue()).isEqualByComparingTo(BigDecimal.valueOf(900_000));
+        assertThat(response.kpiSummary().totalOpex()).isEqualByComparingTo(BigDecimal.valueOf(600_000));
+        assertThat(response.kpiSummary().netProfit()).isEqualByComparingTo(BigDecimal.valueOf(300_000));
+        // 300000 / 900000 * 100 = 33.33
+        assertThat(response.kpiSummary().netMarginPercent()).isEqualByComparingTo(BigDecimal.valueOf(33.33));
+    }
+
+    @Test
+    @DisplayName("Real AR invoice aging buckets a specific overdue invoice correctly (no fabricated fallback)")
+    void ownerCockpitAgesARInvoicesByRealDueDate() {
+        stubEverythingEmpty();
+        CustomerInvoice invoice = mock(CustomerInvoice.class);
+        when(invoice.getOutstandingAmount()).thenReturn(BigDecimal.valueOf(50_000));
+        when(invoice.getDueDate()).thenReturn(LocalDate.now().minusDays(45)); // 45 days overdue -> 31-60 bucket
+        when(invoice.getInvoiceDate()).thenReturn(LocalDate.now().minusDays(75));
+        when(invoice.getCustomerId()).thenReturn(null);
+        when(customerInvoiceRepository.findAll()).thenReturn(List.of(invoice));
+
+        OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, null);
+
+        assertThat(response.arAging().days30To60().amount()).isEqualByComparingTo(BigDecimal.valueOf(50_000));
+        assertThat(response.arAging().days30To60().invoiceCount()).isEqualTo(1);
+        assertThat(response.arAging().current().amount()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.arAging().total()).isEqualByComparingTo(BigDecimal.valueOf(50_000));
+    }
+
+    @Test
+    @DisplayName("Branch leaderboard reports real headcount/cash but zero revenue (no per-branch attribution exists) — never a proportional split")
+    void branchLeaderboardHasRealHeadcountAndZeroRevenueNotAFabricatedSplit() {
+        stubEverythingEmpty();
+        Branch branch = mock(Branch.class);
+        when(branch.getId()).thenReturn("br-1");
+        when(branch.getCode()).thenReturn("MAIN");
+        when(branch.getName()).thenReturn("Main Branch");
+        when(branch.isMainBranch()).thenReturn(true);
+        when(branchRepository.findAllByOrderByCodeAsc()).thenReturn(List.of(branch));
+        when(authEvaluator.hasBranchAccess("br-1")).thenReturn(true);
+
+        Employee emp1 = mock(Employee.class);
+        when(emp1.getBranchId()).thenReturn("br-1");
+        when(emp1.isActive()).thenReturn(true);
+        Employee emp2 = mock(Employee.class);
+        when(emp2.getBranchId()).thenReturn("br-1");
+        when(emp2.isActive()).thenReturn(false); // inactive — must not be counted
+        when(employeeRepository.findAll()).thenReturn(List.of(emp1, emp2));
+
+        when(treasuryPositionService.cashBalanceByBranch()).thenReturn(java.util.Map.of("br-1", BigDecimal.valueOf(10_000)));
+        when(treasuryPositionService.bankBalanceByBranch()).thenReturn(java.util.Map.of("br-1", BigDecimal.valueOf(5_000)));
+
+        // Revenue is real and non-zero at the tenant level, so a fixed-percentage split (the old
+        // *0.6/*0.4 formula) would have produced a non-zero branch revenue. It must not.
+        when(financialStatementsReportService.getIncomeStatement(any(), any())).thenReturn(
+                new FinancialStatementsReportService.IncomeStatementReport(
+                        BigDecimal.valueOf(2_000_000), BigDecimal.valueOf(1_000_000), BigDecimal.valueOf(1_000_000)));
+
+        OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, null);
+
+        assertThat(response.branchLeaderboard()).hasSize(1);
+        BranchPerformanceItem item = response.branchLeaderboard().get(0);
+        assertThat(item.headcount()).isEqualTo(1); // only the active employee
+        assertThat(item.cashAndBank()).isEqualByComparingTo(BigDecimal.valueOf(15_000));
+        assertThat(item.revenue()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(item.cogs()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(item.netProfit()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    @DisplayName("A branch the caller cannot access is excluded from the leaderboard, and BRANCH_ACCESS_DENIED fires for a direct branch filter")
+    void branchAccessDenialIsEnforced() {
+        stubEverythingEmpty();
+        when(authEvaluator.hasBranchAccess("restricted-branch")).thenReturn(false);
+
+        assertThatThrownBy(() -> service.getOwnerCockpit(currentPeriod, "restricted-branch"))
+                .isInstanceOf(BusinessRuleException.class)
+                .extracting("code")
+                .isEqualTo("BRANCH_ACCESS_DENIED");
+    }
+
+    @Test
+    @DisplayName("Top products are real, from SalesDeliveryLine, never the old qty=150-i*20 index-arithmetic fabrication")
+    void topProductsAreRealFromDeliveryLinesNotIndexArithmetic() {
+        stubEverythingEmpty();
+        // Real inventory items exist — under the old code this alone was enough to trigger fully
+        // fabricated "top products" regardless of any real sales data.
+        InventoryItem item = mock(InventoryItem.class);
+        when(item.getId()).thenReturn("item-1");
+        when(inventoryItemRepository.findAll()).thenReturn(List.of(item));
+
+        // But NO SalesDeliveryLine exists for it.
+        when(salesDeliveryLineRepository.findAll()).thenReturn(List.of());
+
+        OwnerCockpitResponse response = service.getOwnerCockpit(currentPeriod, null);
+
+        assertThat(response.topProducts()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getKpiRegistry returns all semantic definitions")
     void getKpiRegistryReturnsAllSemanticDefinitions() {
-        List<KpiDefinitionResponse> registry = analyticsService.getKpiRegistry();
+        List<KpiDefinitionResponse> registry = service.getKpiRegistry();
 
         assertThat(registry).isNotEmpty();
         assertThat(registry).hasSizeGreaterThanOrEqualTo(8);
         assertThat(registry).anyMatch(k -> k.key().equals("NET_PROFIT_MARGIN") && k.unit() == KpiUnit.PERCENT);
-        assertThat(registry).anyMatch(k -> k.key().equals("OPERATING_CASH_FLOW") && k.category() == KpiCategory.FINANCIAL);
-        assertThat(registry).anyMatch(k -> k.key().equals("INVENTORY_VALUATION") && k.sourceModule().contains("Inventory"));
-        assertThat(registry).anyMatch(k -> k.key().equals("PROJECT_PORTFOLIO_VALUE") && k.category() == KpiCategory.PROJECTS);
+        assertThat(registry).anyMatch(k -> k.key().equals("ETA_COMPLIANCE_RATE"));
     }
 
     @Test
-    void getExecutiveOverviewAggregatesMultiModuleMetrics() {
-        Project mockProject = mock(Project.class);
-        when(mockProject.getStatus()).thenReturn(ProjectStatus.ACTIVE);
-        when(mockProject.getContractValue()).thenReturn(BigDecimal.valueOf(1_000_000));
-        when(projectRepository.findAll()).thenReturn(List.of(mockProject));
+    @DisplayName("getExecutiveOverview: an empty tenant gets real zeros, and ETA compliance matches its own documented formula")
+    void executiveOverviewComputesEtaComplianceFromRealAcceptedRatio() {
+        stubEverythingEmpty();
+        EtaInvoiceSubmission valid1 = mock(EtaInvoiceSubmission.class);
+        when(valid1.getStatus()).thenReturn(com.bemo.hr.compliance.eta.domain.EtaSubmissionStatus.VALID);
+        EtaInvoiceSubmission invalid = mock(EtaInvoiceSubmission.class);
+        when(invalid.getStatus()).thenReturn(com.bemo.hr.compliance.eta.domain.EtaSubmissionStatus.INVALID);
+        when(etaSubmissionRepository.findAll()).thenReturn(List.of(valid1, invalid));
 
-        InventoryItem mockItem = mock(InventoryItem.class);
-        when(mockItem.getReorderQuantity()).thenReturn(BigDecimal.valueOf(100));
-        when(inventoryItemRepository.findAll()).thenReturn(List.of(mockItem));
+        ExecutiveOverviewResponse response = service.getExecutiveOverview(currentPeriod);
 
-        PosTransaction mockPos = mock(PosTransaction.class);
-        when(mockPos.getTotalAmount()).thenReturn(BigDecimal.valueOf(15_000));
-        when(posTransactionRepository.findAll()).thenReturn(List.of(mockPos));
-
-        SalesQuotation mockQuote = mock(SalesQuotation.class);
-        when(mockQuote.getTotalAmount()).thenReturn(BigDecimal.valueOf(60_000));
-        when(salesQuotationRepository.findAll()).thenReturn(List.of(mockQuote));
-
-        Employee mockEmp = mock(Employee.class);
-        when(mockEmp.isActive()).thenReturn(true);
-        when(employeeRepository.findAll()).thenReturn(List.of(mockEmp));
-
-        when(etaSubmissionRepository.findAll()).thenReturn(List.of());
-
-        ExecutiveOverviewResponse response = analyticsService.getExecutiveOverview("2026-08", null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.period()).isEqualTo("2026-08");
-        assertThat(response.projectPortfolioValue()).isEqualByComparingTo(BigDecimal.valueOf(1_000_000));
-        assertThat(response.inventoryValuation()).isEqualByComparingTo(BigDecimal.valueOf(15_000));
-        assertThat(response.posGross()).isEqualByComparingTo(BigDecimal.valueOf(15_000));
-        assertThat(response.salesBookings()).isEqualByComparingTo(BigDecimal.valueOf(60_000));
-        assertThat(response.activeHeadcount()).isEqualTo(1);
+        // 1 VALID out of 2 total = 50.00%, matching the KPI registry's own documented formula
+        // ("Accepted (VALID) ETA Documents / Total Submissions * 100") — previously this was a
+        // hardcoded 98.4/100.0 that ignored the real submissions entirely.
+        assertThat(response.etaTaxCompliancePercent()).isEqualByComparingTo(BigDecimal.valueOf(50.00));
+        assertThat(response.totalRevenue()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.moduleSummaries()).hasSize(6);
     }
 
     @Test
-    void getComparativeTrendsBoundsMonthsAndReturnsSeries() {
-        ComparativeTrendsResponse response = analyticsService.getComparativeTrends(6, KpiCategory.FINANCIAL);
+    @DisplayName("getComparativeTrends bounds months and returns real (zero, for an empty tenant) series, never the old synthetic growth curve")
+    void getComparativeTrendsReturnsRealDataNotASyntheticGrowthCurve() {
+        stubEverythingEmpty();
+
+        ComparativeTrendsResponse response = service.getComparativeTrends(6, KpiCategory.FINANCIAL);
 
         assertThat(response.months()).isEqualTo(6);
         assertThat(response.trendPoints()).hasSize(6);
-        assertThat(response.trendPoints().get(0).revenue()).isPositive();
-        assertThat(response.trendPoints().get(0).netProfit()).isPositive();
+        // The old fabricated series was ALWAYS positive and ALWAYS growing (rev = 1_200_000 * factor);
+        // a real empty tenant must show zero, not a fabricated upward curve.
+        assertThat(response.trendPoints()).allMatch(p -> p.revenue().compareTo(BigDecimal.ZERO) == 0);
+        assertThat(response.trendPoints()).allMatch(p -> p.netProfit().compareTo(BigDecimal.ZERO) == 0);
 
         // Bounds test: 1 should clamp to 3
-        ComparativeTrendsResponse bounded3 = analyticsService.getComparativeTrends(1, null);
-        assertThat(bounded3.months()).isEqualTo(3);
-        assertThat(bounded3.trendPoints()).hasSize(3);
-
+        assertThat(service.getComparativeTrends(1, null).months()).isEqualTo(3);
         // Bounds test: 50 should clamp to 24
-        ComparativeTrendsResponse bounded24 = analyticsService.getComparativeTrends(50, null);
-        assertThat(bounded24.months()).isEqualTo(24);
-        assertThat(bounded24.trendPoints()).hasSize(24);
+        assertThat(service.getComparativeTrends(50, null).months()).isEqualTo(24);
     }
 
     @Test
-    void recordSnapshotSavesAndReturnsResponse() {
-        CreateSnapshotPayload payload = new CreateSnapshotPayload(
-                "2026-Q3",
-                KpiCategory.FINANCIAL,
-                "NET_PROFIT_MARGIN",
-                BigDecimal.valueOf(25.0),
-                BigDecimal.valueOf(28.5),
-                BigDecimal.valueOf(3.5),
-                BigDecimal.valueOf(14.0),
-                TrendDirection.UP,
-                ReconciliationStatus.RECONCILED,
-                "/finance/accounts",
-                "{\"audit\":\"verified\"}"
-        );
-
+    @DisplayName("recordSnapshot upserts an existing period/category/kpiKey row instead of creating a duplicate")
+    void recordSnapshotUpsertsRatherThanDuplicating() {
+        ExecutiveKpiSnapshot existing = new ExecutiveKpiSnapshot("2026-Q3", KpiCategory.FINANCIAL, "NET_PROFIT_MARGIN",
+                BigDecimal.valueOf(25.0), BigDecimal.valueOf(20.0), BigDecimal.valueOf(-5.0), BigDecimal.valueOf(-20.0),
+                TrendDirection.DOWN, ReconciliationStatus.RECONCILED, "/finance/accounts", "{}");
+        when(snapshotRepository.findByPeriodKeyAndCategoryAndKpiKey("2026-Q3", KpiCategory.FINANCIAL, "NET_PROFIT_MARGIN"))
+                .thenReturn(Optional.of(existing));
         when(snapshotRepository.save(any(ExecutiveKpiSnapshot.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ExecutiveKpiSnapshotResponse response = analyticsService.recordSnapshot(payload);
+        CreateSnapshotPayload payload = new CreateSnapshotPayload("2026-Q3", KpiCategory.FINANCIAL, "NET_PROFIT_MARGIN",
+                BigDecimal.valueOf(25.0), BigDecimal.valueOf(28.5), BigDecimal.valueOf(3.5), BigDecimal.valueOf(14.0),
+                TrendDirection.UP, ReconciliationStatus.RECONCILED, "/finance/accounts", "{\"audit\":\"verified\"}");
 
-        assertThat(response).isNotNull();
-        assertThat(response.periodKey()).isEqualTo("2026-Q3");
-        assertThat(response.category()).isEqualTo(KpiCategory.FINANCIAL);
-        assertThat(response.kpiKey()).isEqualTo("NET_PROFIT_MARGIN");
+        ExecutiveKpiSnapshotResponse response = service.recordSnapshot(payload);
+
+        assertThat(response.id()).isEqualTo(existing.getId()); // same row, not a new one
         assertThat(response.actualValue()).isEqualByComparingTo(BigDecimal.valueOf(28.5));
-        assertThat(response.reconciliationStatus()).isEqualTo(ReconciliationStatus.RECONCILED);
+        verify(snapshotRepository, never()).save(argThat(s -> !s.getId().equals(existing.getId())));
         verify(snapshotRepository).save(any(ExecutiveKpiSnapshot.class));
     }
 
     @Test
+    @DisplayName("recordSnapshot creates a new row only when none exists for that period/category/kpiKey")
+    void recordSnapshotCreatesWhenNoneExists() {
+        when(snapshotRepository.findByPeriodKeyAndCategoryAndKpiKey("2026-Q4", KpiCategory.FINANCIAL, "NET_PROFIT_MARGIN"))
+                .thenReturn(Optional.empty());
+        when(snapshotRepository.save(any(ExecutiveKpiSnapshot.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        CreateSnapshotPayload payload = new CreateSnapshotPayload("2026-Q4", KpiCategory.FINANCIAL, "NET_PROFIT_MARGIN",
+                BigDecimal.valueOf(25.0), BigDecimal.valueOf(28.5), BigDecimal.valueOf(3.5), BigDecimal.valueOf(14.0),
+                TrendDirection.UP, ReconciliationStatus.RECONCILED, "/finance/accounts", "{}");
+
+        ExecutiveKpiSnapshotResponse response = service.recordSnapshot(payload);
+
+        assertThat(response.periodKey()).isEqualTo("2026-Q4");
+        verify(snapshotRepository).save(any(ExecutiveKpiSnapshot.class));
+    }
+
+    @Test
+    @DisplayName("getTargetsReturnsDefaultWhenNotFound")
     void getTargetsReturnsDefaultWhenNotFound() {
         when(cockpitTargetRepository.findByPeriodKey("2026-Q3")).thenReturn(Optional.empty());
 
-        CockpitTargetResponse response = analyticsService.getTargets("2026-Q3");
+        CockpitTargetResponse response = service.getTargets("2026-Q3");
 
         assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo("default");
         assertThat(response.periodKey()).isEqualTo("2026-Q3");
         assertThat(response.targetRevenue()).isEqualByComparingTo(BigDecimal.valueOf(1_500_000.00));
     }
 
     @Test
+    @DisplayName("saveTargetsPersistsAndReturnsResponse")
     void saveTargetsPersistsAndReturnsResponse() {
-        SaveCockpitTargetRequest request = new SaveCockpitTargetRequest(
-                "2026-Q3",
-                BigDecimal.valueOf(1_000_000),
-                BigDecimal.valueOf(30.0),
-                BigDecimal.valueOf(200_000),
-                BigDecimal.valueOf(500_000),
-                BigDecimal.valueOf(100_000),
-                "Q3 Targets"
-        );
-        ExecutiveCockpitTarget savedTarget = new ExecutiveCockpitTarget(
-                "2026-Q3",
-                BigDecimal.valueOf(1_000_000),
-                BigDecimal.valueOf(30.0),
-                BigDecimal.valueOf(200_000),
-                BigDecimal.valueOf(500_000),
-                BigDecimal.valueOf(100_000),
-                "Q3 Targets"
-        );
+        SaveCockpitTargetRequest request = new SaveCockpitTargetRequest("2026-Q3", BigDecimal.valueOf(1_000_000),
+                BigDecimal.valueOf(30.0), BigDecimal.valueOf(200_000), BigDecimal.valueOf(500_000),
+                BigDecimal.valueOf(100_000), "Q3 Targets");
+        ExecutiveCockpitTarget savedTarget = new ExecutiveCockpitTarget("2026-Q3", BigDecimal.valueOf(1_000_000),
+                BigDecimal.valueOf(30.0), BigDecimal.valueOf(200_000), BigDecimal.valueOf(500_000),
+                BigDecimal.valueOf(100_000), "Q3 Targets");
         when(cockpitTargetRepository.findByPeriodKey("2026-Q3")).thenReturn(Optional.empty());
         when(cockpitTargetRepository.save(any(ExecutiveCockpitTarget.class))).thenReturn(savedTarget);
 
-        CockpitTargetResponse response = analyticsService.saveTargets(request);
+        CockpitTargetResponse response = service.saveTargets(request);
 
         assertThat(response).isNotNull();
         assertThat(response.periodKey()).isEqualTo("2026-Q3");
@@ -257,52 +401,18 @@ class ExecutiveAnalyticsServiceTests {
     }
 
     @Test
-    void getOwnerCockpitAggregatesAllKpis() {
-        lenient().when(customerInvoiceRepository.findAll()).thenReturn(List.of());
-        lenient().when(customerReceiptRepository.findAll()).thenReturn(List.of());
-        lenient().when(supplierInvoiceRepository.findAll()).thenReturn(List.of());
-        lenient().when(cashboxRepository.findAll()).thenReturn(List.of());
-        lenient().when(bankAccountRepository.findAll()).thenReturn(List.of());
-        lenient().when(branchRepository.findAll()).thenReturn(List.of());
-        lenient().when(inventoryItemRepository.findAll()).thenReturn(List.of());
-        lenient().when(posTransactionRepository.findAll()).thenReturn(List.of());
-        lenient().when(productionOrderRepository.findAll()).thenReturn(List.of());
-        lenient().when(costLedgerRepository.findAll()).thenReturn(List.of());
-        lenient().when(expenseClaimRepository.findAll()).thenReturn(List.of());
-        lenient().when(salaryPaymentRepository.findAll()).thenReturn(List.of());
-        lenient().when(projectRepository.findAll()).thenReturn(List.of());
-        lenient().when(cockpitTargetRepository.findByPeriodKey(any())).thenReturn(Optional.empty());
+    @DisplayName("Concurrent target creation for the same not-yet-existing period reports a clean, specific conflict, not a raw 500")
+    void concurrentTargetCreationReportsCleanConflict() {
+        SaveCockpitTargetRequest request = new SaveCockpitTargetRequest("2026-Q3", BigDecimal.valueOf(1_000_000),
+                BigDecimal.valueOf(30.0), BigDecimal.valueOf(200_000), BigDecimal.valueOf(500_000),
+                BigDecimal.valueOf(100_000), "Q3 Targets");
+        when(cockpitTargetRepository.findByPeriodKey("2026-Q3")).thenReturn(Optional.empty());
+        when(cockpitTargetRepository.save(any(ExecutiveCockpitTarget.class)))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key"));
 
-        OwnerCockpitResponse response = analyticsService.getOwnerCockpit("2026-09", null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.period()).isEqualTo("2026-09");
-        assertThat(response.kpiSummary()).isNotNull();
-        assertThat(response.arAging()).isNotNull();
-        assertThat(response.apAging()).isNotNull();
-    }
-
-    @Test
-    void exportExecutiveCockpitExcelGeneratesValidWorkbook() {
-        lenient().when(customerInvoiceRepository.findAll()).thenReturn(List.of());
-        lenient().when(customerReceiptRepository.findAll()).thenReturn(List.of());
-        lenient().when(supplierInvoiceRepository.findAll()).thenReturn(List.of());
-        lenient().when(cashboxRepository.findAll()).thenReturn(List.of());
-        lenient().when(bankAccountRepository.findAll()).thenReturn(List.of());
-        lenient().when(branchRepository.findAll()).thenReturn(List.of());
-        lenient().when(inventoryItemRepository.findAll()).thenReturn(List.of());
-        lenient().when(posTransactionRepository.findAll()).thenReturn(List.of());
-        lenient().when(productionOrderRepository.findAll()).thenReturn(List.of());
-        lenient().when(costLedgerRepository.findAll()).thenReturn(List.of());
-        lenient().when(expenseClaimRepository.findAll()).thenReturn(List.of());
-        lenient().when(salaryPaymentRepository.findAll()).thenReturn(List.of());
-        lenient().when(projectRepository.findAll()).thenReturn(List.of());
-        lenient().when(cockpitTargetRepository.findByPeriodKey(any())).thenReturn(Optional.empty());
-
-        byte[] bytes = analyticsService.exportExecutiveCockpitExcel("2026-09", null, null);
-
-        assertThat(bytes).isNotNull();
-        assertThat(bytes.length).isGreaterThan(100);
+        assertThatThrownBy(() -> service.saveTargets(request))
+                .isInstanceOf(BusinessRuleException.class)
+                .extracting("code")
+                .isEqualTo("EXECUTIVE_TARGET_CONCURRENT_CREATE");
     }
 }
-

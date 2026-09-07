@@ -24,17 +24,11 @@ export class ExecutiveAnalyticsService {
     return this.http.get<KpiDefinition[]>(`${this.baseUrl}/kpi-registry`);
   }
 
-  getOverview(
-    period?: string,
-    companyId?: string,
-    branchId?: string,
-    projectId?: string,
-  ): Observable<ExecutiveOverview> {
+  // 2026-09-06: companyId/branchId/projectId were removed from the request — the backend never
+  // used them to filter anything (docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Medium Finding M-1).
+  getOverview(period?: string): Observable<ExecutiveOverview> {
     let params = new HttpParams();
     if (period) params = params.set('period', period);
-    if (companyId) params = params.set('companyId', companyId);
-    if (branchId) params = params.set('branchId', branchId);
-    if (projectId) params = params.set('projectId', projectId);
     return this.http.get<ExecutiveOverview>(`${this.baseUrl}/overview`, { params });
   }
 
@@ -54,26 +48,18 @@ export class ExecutiveAnalyticsService {
     return this.http.post<ExecutiveKpiSnapshot>(`${this.baseUrl}/snapshots`, payload);
   }
 
-  getCockpit(
-    period?: string,
-    companyId?: string,
-    branchId?: string,
-  ): Observable<OwnerCockpitResponse> {
+  // companyId removed (see getOverview note above); branchId is kept — it is genuinely enforced
+  // and used to filter the branch leaderboard.
+  getCockpit(period?: string, branchId?: string): Observable<OwnerCockpitResponse> {
     let params = new HttpParams();
     if (period) params = params.set('period', period);
-    if (companyId) params = params.set('companyId', companyId);
     if (branchId) params = params.set('branchId', branchId);
     return this.http.get<OwnerCockpitResponse>(`${this.baseUrl}/cockpit`, { params });
   }
 
-  exportCockpitExcel(
-    period?: string,
-    companyId?: string,
-    branchId?: string,
-  ): Observable<Blob> {
+  exportCockpitExcel(period?: string, branchId?: string): Observable<Blob> {
     let params = new HttpParams();
     if (period) params = params.set('period', period);
-    if (companyId) params = params.set('companyId', companyId);
     if (branchId) params = params.set('branchId', branchId);
     return this.http.get(`${this.baseUrl}/cockpit/export.xlsx`, {
       params,

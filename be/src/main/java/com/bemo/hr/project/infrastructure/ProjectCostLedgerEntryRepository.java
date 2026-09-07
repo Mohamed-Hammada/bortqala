@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -29,4 +30,23 @@ public interface ProjectCostLedgerEntryRepository extends JpaRepository<ProjectC
             @Param("cat") CostCategory cat,
             @Param("entryType") CostLedgerEntryType entryType
     );
+
+    /**
+     * Batched replacement for calling {@link #sumAmountByProjectIdAndEntryType} once per project in
+     * a loop (a confirmed N+1 — see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Performance Review
+     * P-2). Callers must build a lookup from {@link ProjectAmountByType#getProjectId()} to
+     * {@link ProjectAmountByType#getTotal()}; a project with no matching entries is simply absent
+     * from the result (callers should default missing entries to zero, not omit the project).
+     */
+    @Query("SELECT e.projectId AS projectId, COALESCE(SUM(e.amount), 0) AS total FROM ProjectCostLedgerEntry e "
+            + "WHERE e.projectId IN :projectIds AND e.entryType = :entryType GROUP BY e.projectId")
+    List<ProjectAmountByType> sumAmountByProjectIdInAndEntryType(
+            @Param("projectIds") Collection<String> projectIds,
+            @Param("entryType") CostLedgerEntryType entryType
+    );
+
+    interface ProjectAmountByType {
+        String getProjectId();
+        BigDecimal getTotal();
+    }
 }

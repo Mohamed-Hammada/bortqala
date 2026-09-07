@@ -82,7 +82,10 @@ public class RentalItem {
         this.rateMonthly = rateMonthly != null ? rateMonthly : BigDecimal.ZERO;
         this.depositAmount = depositAmount != null ? depositAmount : BigDecimal.ZERO;
         this.status = Status.AVAILABLE;
-        this.version = 0L;
+        // Do NOT set `version` here — see BookableResource's constructor for why: Spring Data JPA's
+        // isNew() check needs version == null to route save() through persist() (insert), not
+        // merge(). This was a latent, untested bug — every RentalController create request failed
+        // with 409 before this fix (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md).
         long now = System.currentTimeMillis();
         this.createdAt = now;
         this.updatedAt = now;

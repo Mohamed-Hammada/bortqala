@@ -52,7 +52,7 @@ export interface ExecutiveOverview {
   timestamp: number;
   totalRevenue: number;
   totalOpex: number;
-  grossProfit: number;
+  netProfit: number;
   netMarginPercent: number;
   operatingCashFlow: number;
   salesBookings: number;
@@ -260,7 +260,6 @@ export interface OwnerCockpitKpiSummary {
 
 export interface OwnerCockpitResponse {
   period: string;
-  companyId?: string;
   branchId?: string;
   timestamp: number;
   kpiSummary: OwnerCockpitKpiSummary;

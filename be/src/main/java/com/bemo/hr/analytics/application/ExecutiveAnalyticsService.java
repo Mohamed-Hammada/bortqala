@@ -5,28 +5,33 @@ import com.bemo.hr.analytics.domain.*;
 import com.bemo.hr.analytics.infrastructure.ExecutiveCockpitTargetRepository;
 import com.bemo.hr.analytics.infrastructure.ExecutiveKpiSnapshotRepository;
 import com.bemo.hr.compliance.eta.domain.EtaInvoiceSubmission;
+import com.bemo.hr.compliance.eta.domain.EtaSubmissionStatus;
 import com.bemo.hr.compliance.eta.infrastructure.EtaInvoiceSubmissionRepository;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.expenses.domain.ExpenseClaim;
 import com.bemo.hr.expenses.infrastructure.ExpenseClaimRepository;
-import com.bemo.hr.finance.domain.BankAccount;
-import com.bemo.hr.finance.domain.treasury.Cashbox;
-import com.bemo.hr.finance.infrastructure.BankAccountRepository;
-import com.bemo.hr.finance.infrastructure.CashboxRepository;
+import com.bemo.hr.finance.application.FinancialStatementsReportService;
+import com.bemo.hr.finance.application.TreasuryPositionService;
 import com.bemo.hr.manufacturing.production.domain.ProductionOrder;
 import com.bemo.hr.manufacturing.production.infrastructure.ProductionOrderRepository;
 import com.bemo.hr.operations.InventoryItem;
 import com.bemo.hr.operations.InventoryItemRepository;
+import com.bemo.hr.operations.InventoryValuationService;
+import com.bemo.hr.operations.OperationsApi;
 import com.bemo.hr.organization.domain.Branch;
 import com.bemo.hr.organization.infrastructure.BranchRepository;
 import com.bemo.hr.party.BusinessParty;
 import com.bemo.hr.party.BusinessPartyRepository;
+import com.bemo.hr.payroll.domain.PaymentStatus;
 import com.bemo.hr.payroll.domain.SalaryPayment;
 import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
+import com.bemo.hr.project.domain.BudgetVersionStatus;
 import com.bemo.hr.project.domain.CostLedgerEntryType;
 import com.bemo.hr.project.domain.Project;
+import com.bemo.hr.project.domain.ProjectBudgetVersion;
 import com.bemo.hr.project.domain.ProjectStatus;
+import com.bemo.hr.project.infrastructure.ProjectBudgetVersionRepository;
 import com.bemo.hr.project.infrastructure.ProjectCostLedgerEntryRepository;
 import com.bemo.hr.project.infrastructure.ProjectRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
@@ -37,9 +42,11 @@ import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.sales.domain.CustomerInvoice;
 import com.bemo.hr.trade.sales.domain.CustomerReceipt;
+import com.bemo.hr.trade.sales.domain.SalesDeliveryLine;
 import com.bemo.hr.trade.sales.domain.SalesQuotation;
 import com.bemo.hr.trade.sales.infrastructure.CustomerInvoiceRepository;
 import com.bemo.hr.trade.sales.infrastructure.CustomerReceiptRepository;
+import com.bemo.hr.trade.sales.infrastructure.SalesDeliveryLineRepository;
 import com.bemo.hr.trade.sales.infrastructure.SalesQuotationRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -53,27 +60,48 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Owner Executive Cockpit / Profit Pulse and cross-module executive analytics.
+ *
+ * <p><b>2026-09-06 remediation:</b> this service previously replaced any zero/empty real
+ * aggregate with a hardcoded, plausible-looking constant (fake AR/AP totals, fake named
+ * customers/projects/production orders, an always-fabricated "top products" list, and a
+ * branch leaderboard built by splitting tenant totals with a fixed 60/40 weight rather than
+ * querying real branch-scoped data) — see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Critical
+ * Finding C-1. All of that has been removed: every figure below is either a real aggregate
+ * (possibly zero, possibly an empty collection) or explicitly documented as unavailable, never a
+ * guessed number.</p>
+ *
+ * <p>Revenue/OPEX/Net Profit for the headline KPIs are sourced from
+ * {@link FinancialStatementsReportService}'s posted-GL income statement — the same figures a
+ * Finance user sees on Finance Reports — rather than a separate, ad-hoc calculation (task
+ * requirement: "Executive Analytics must not calculate a different definition of Net Profit").
+ * "Gross Margin" is intentionally a separate, sales-only view (real delivery-line revenue minus
+ * real delivery-line COGS) since it answers a different question than the GL P&L; the two are not
+ * forced to reconcile to each other, and neither is fabricated.</p>
+ */
 @Service
 public class ExecutiveAnalyticsService {
 
     private final ExecutiveKpiSnapshotRepository snapshotRepository;
     private final ProjectRepository projectRepository;
+    private final ProjectBudgetVersionRepository projectBudgetVersionRepository;
     private final EmployeeRepository employeeRepository;
     private final InventoryItemRepository inventoryItemRepository;
     private final SalesQuotationRepository salesQuotationRepository;
+    private final SalesDeliveryLineRepository salesDeliveryLineRepository;
     private final PosTransactionRepository posTransactionRepository;
     private final EtaInvoiceSubmissionRepository etaSubmissionRepository;
     private final CustomerInvoiceRepository customerInvoiceRepository;
     private final CustomerReceiptRepository customerReceiptRepository;
     private final SupplierInvoiceRepository supplierInvoiceRepository;
-    private final CashboxRepository cashboxRepository;
-    private final BankAccountRepository bankAccountRepository;
     private final BranchRepository branchRepository;
     private final ProductionOrderRepository productionOrderRepository;
     private final ProjectCostLedgerEntryRepository costLedgerRepository;
@@ -82,21 +110,24 @@ public class ExecutiveAnalyticsService {
     private final ExecutiveCockpitTargetRepository cockpitTargetRepository;
     private final BusinessPartyRepository businessPartyRepository;
     private final SecurityAuthorizationEvaluator authEvaluator;
+    private final FinancialStatementsReportService financialStatementsReportService;
+    private final InventoryValuationService inventoryValuationService;
+    private final TreasuryPositionService treasuryPositionService;
 
     @Autowired
     public ExecutiveAnalyticsService(
             ExecutiveKpiSnapshotRepository snapshotRepository,
             ProjectRepository projectRepository,
+            ProjectBudgetVersionRepository projectBudgetVersionRepository,
             EmployeeRepository employeeRepository,
             InventoryItemRepository inventoryItemRepository,
             SalesQuotationRepository salesQuotationRepository,
+            SalesDeliveryLineRepository salesDeliveryLineRepository,
             PosTransactionRepository posTransactionRepository,
             EtaInvoiceSubmissionRepository etaSubmissionRepository,
             CustomerInvoiceRepository customerInvoiceRepository,
             CustomerReceiptRepository customerReceiptRepository,
             SupplierInvoiceRepository supplierInvoiceRepository,
-            CashboxRepository cashboxRepository,
-            BankAccountRepository bankAccountRepository,
             BranchRepository branchRepository,
             ProductionOrderRepository productionOrderRepository,
             ProjectCostLedgerEntryRepository costLedgerRepository,
@@ -104,20 +135,23 @@ public class ExecutiveAnalyticsService {
             SalaryPaymentRepository salaryPaymentRepository,
             ExecutiveCockpitTargetRepository cockpitTargetRepository,
             BusinessPartyRepository businessPartyRepository,
-            SecurityAuthorizationEvaluator authEvaluator
+            SecurityAuthorizationEvaluator authEvaluator,
+            FinancialStatementsReportService financialStatementsReportService,
+            InventoryValuationService inventoryValuationService,
+            TreasuryPositionService treasuryPositionService
     ) {
         this.snapshotRepository = snapshotRepository;
         this.projectRepository = projectRepository;
+        this.projectBudgetVersionRepository = projectBudgetVersionRepository;
         this.employeeRepository = employeeRepository;
         this.inventoryItemRepository = inventoryItemRepository;
         this.salesQuotationRepository = salesQuotationRepository;
+        this.salesDeliveryLineRepository = salesDeliveryLineRepository;
         this.posTransactionRepository = posTransactionRepository;
         this.etaSubmissionRepository = etaSubmissionRepository;
         this.customerInvoiceRepository = customerInvoiceRepository;
         this.customerReceiptRepository = customerReceiptRepository;
         this.supplierInvoiceRepository = supplierInvoiceRepository;
-        this.cashboxRepository = cashboxRepository;
-        this.bankAccountRepository = bankAccountRepository;
         this.branchRepository = branchRepository;
         this.productionOrderRepository = productionOrderRepository;
         this.costLedgerRepository = costLedgerRepository;
@@ -126,20 +160,9 @@ public class ExecutiveAnalyticsService {
         this.cockpitTargetRepository = cockpitTargetRepository;
         this.businessPartyRepository = businessPartyRepository;
         this.authEvaluator = authEvaluator;
-    }
-
-    public ExecutiveAnalyticsService(
-            ExecutiveKpiSnapshotRepository snapshotRepository,
-            ProjectRepository projectRepository,
-            EmployeeRepository employeeRepository,
-            InventoryItemRepository inventoryItemRepository,
-            SalesQuotationRepository salesQuotationRepository,
-            PosTransactionRepository posTransactionRepository,
-            EtaInvoiceSubmissionRepository etaSubmissionRepository
-    ) {
-        this(snapshotRepository, projectRepository, employeeRepository, inventoryItemRepository,
-                salesQuotationRepository, posTransactionRepository, etaSubmissionRepository,
-                null, null, null, null, null, null, null, null, null, null, null, null, null);
+        this.financialStatementsReportService = financialStatementsReportService;
+        this.inventoryValuationService = inventoryValuationService;
+        this.treasuryPositionService = treasuryPositionService;
     }
 
     private static final List<KpiDefinition> REGISTRY = List.of(
@@ -222,8 +245,8 @@ public class ExecutiveAnalyticsService {
                     KpiCategory.PROJECTS,
                     KpiGrain.MONTHLY,
                     KpiUnit.CURRENCY_EGP,
-                    "Approved Budget (BAC) - Forecast Estimate at Completion (EAC)",
-                    "الموازنة المعتمدة - التكلفة التقديرية عند الإنجاز",
+                    "Approved Budget (BAC) - Actual Cost to Date",
+                    "الموازنة المعتمدة - التكلفة الفعلية حتى الآن",
                     "Project Cost Control",
                     "P_PROJECT_READ"
             ),
@@ -246,7 +269,7 @@ public class ExecutiveAnalyticsService {
                     KpiCategory.COMPLIANCE,
                     KpiGrain.DAILY,
                     KpiUnit.PERCENT,
-                    "Accepted ETA Documents / Total Submissions * 100",
+                    "Accepted (VALID) ETA Documents / Total Submissions * 100",
                     "مستندات الضرائب المقبولة / إجمالي المستندات المرسلة * 100",
                     "ETA Tax Compliance",
                     "P_ETA_TAX_READ"
@@ -257,95 +280,65 @@ public class ExecutiveAnalyticsService {
     public List<KpiDefinitionResponse> getKpiRegistry() {
         return REGISTRY.stream()
                 .map(d -> new KpiDefinitionResponse(
-                        d.key(),
-                        d.nameEn(),
-                        d.nameAr(),
-                        d.category(),
-                        d.grain(),
-                        d.unit(),
-                        d.formulaEn(),
-                        d.formulaAr(),
-                        d.sourceModule(),
-                        d.requiredPermission()
+                        d.key(), d.nameEn(), d.nameAr(), d.category(), d.grain(), d.unit(),
+                        d.formulaEn(), d.formulaAr(), d.sourceModule(), d.requiredPermission()
                 ))
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public ExecutiveOverviewResponse getExecutiveOverview(String period, String companyId, String branchId, String projectId) {
-        String effectivePeriod = (period != null && !period.isBlank()) ? period : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+    public ExecutiveOverviewResponse getExecutiveOverview(String period) {
+        String effectivePeriod = effectivePeriod(period);
+        YearMonth ym = YearMonth.parse(effectivePeriod);
+        LocalDate periodStart = ym.atDay(1);
+        LocalDate periodEnd = ym.atEndOfMonth();
 
-        // 1. Projects aggregation
-        List<Project> projects = projectRepository != null ? projectRepository.findAll() : List.of();
-        BigDecimal portfolioValue = BigDecimal.ZERO;
-        BigDecimal projectEac = BigDecimal.ZERO;
-        for (Project p : projects) {
-            if (p.getStatus() != ProjectStatus.CLOSED) {
-                if (p.getContractValue() != null) {
-                    portfolioValue = portfolioValue.add(p.getContractValue());
-                    projectEac = projectEac.add(p.getContractValue().multiply(BigDecimal.valueOf(0.85)));
-                }
-            }
-        }
-        BigDecimal projectCostVariance = portfolioValue.subtract(projectEac);
+        ProjectFinancials projectFinancials = computeProjectFinancials();
+        BigDecimal portfolioValue = projectFinancials.totalContractValue();
+        BigDecimal projectCostVariance = projectFinancials.totalBudget().subtract(projectFinancials.totalActual());
 
-        // 2. Inventory valuation
-        List<InventoryItem> items = inventoryItemRepository != null ? inventoryItemRepository.findAll() : List.of();
-        BigDecimal inventoryValuation = BigDecimal.ZERO;
-        for (InventoryItem it : items) {
-            if (it.getReorderQuantity() != null && it.getReorderQuantity().compareTo(BigDecimal.ZERO) > 0) {
-                inventoryValuation = inventoryValuation.add(it.getReorderQuantity().multiply(BigDecimal.valueOf(150)));
-            }
-        }
-        if (inventoryValuation.compareTo(BigDecimal.ZERO) == 0) {
-            inventoryValuation = BigDecimal.valueOf(items.size()).multiply(BigDecimal.valueOf(5000));
-        }
+        BigDecimal inventoryValuation = inventoryValuationService.report().totalInventoryValue();
 
-        // 3. POS gross
-        List<PosTransaction> posTxs = posTransactionRepository != null ? posTransactionRepository.findAll() : List.of();
-        BigDecimal posGross = BigDecimal.ZERO;
-        for (PosTransaction tx : posTxs) {
-            if (tx.getTotalAmount() != null) {
-                posGross = posGross.add(tx.getTotalAmount());
-            }
-        }
+        List<PosTransaction> posTxs = posTransactionRepository.findAll();
+        BigDecimal posGross = sumAmounts(posTxs, PosTransaction::getTotalAmount);
 
-        // 4. Sales Quotations Bookings
-        List<SalesQuotation> quotes = salesQuotationRepository != null ? salesQuotationRepository.findAll() : List.of();
-        BigDecimal salesBookings = BigDecimal.ZERO;
-        for (SalesQuotation q : quotes) {
-            if (q.getTotalAmount() != null) {
-                salesBookings = salesBookings.add(q.getTotalAmount());
-            }
-        }
+        List<SalesQuotation> quotes = salesQuotationRepository.findAll();
+        BigDecimal salesBookings = sumAmounts(quotes, SalesQuotation::getTotalAmount);
 
-        // 5. Workforce headcount
-        List<Employee> employees = employeeRepository != null ? employeeRepository.findAll() : List.of();
+        List<Employee> employees = employeeRepository.findAll();
         int activeHeadcount = (int) employees.stream().filter(Employee::isActive).count();
-        BigDecimal payrollDisbursed = BigDecimal.valueOf(activeHeadcount).multiply(BigDecimal.valueOf(12_500));
-        BigDecimal attendanceRate = BigDecimal.valueOf(96.5);
 
-        // 6. ETA Compliance
-        List<EtaInvoiceSubmission> etaSubmissions = etaSubmissionRepository != null ? etaSubmissionRepository.findAll() : List.of();
-        BigDecimal etaComplianceRate = etaSubmissions.isEmpty() ? BigDecimal.valueOf(100.0) : BigDecimal.valueOf(98.4);
+        // No tenant-wide, readily-available attendance-rate aggregation exists yet (would require
+        // cross-referencing every open attendance report for the period). Returning 0 rather than a
+        // fabricated constant — see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Critical Finding C-1.
+        // Tracked as follow-up, not fixed in this remediation pass.
+        BigDecimal attendanceRate = BigDecimal.ZERO;
 
-        // Financial high-level rollups
-        BigDecimal totalRevenue = portfolioValue.multiply(BigDecimal.valueOf(0.35)).add(salesBookings).add(posGross);
-        BigDecimal totalOpex = payrollDisbursed.add(inventoryValuation.multiply(BigDecimal.valueOf(0.15)));
-        BigDecimal grossProfit = totalRevenue.subtract(totalOpex);
-        BigDecimal netMarginPercent = totalRevenue.compareTo(BigDecimal.ZERO) > 0
-                ? grossProfit.multiply(BigDecimal.valueOf(100)).divide(totalRevenue, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-        BigDecimal operatingCashFlow = grossProfit.multiply(BigDecimal.valueOf(0.85));
-        BigDecimal openReceivables = totalRevenue.multiply(BigDecimal.valueOf(0.22));
+        List<EtaInvoiceSubmission> etaSubmissions = etaSubmissionRepository.findAll();
+        BigDecimal etaComplianceRate = etaComplianceRate(etaSubmissions);
+
+        FinancialStatementsReportService.IncomeStatementReport incomeStatement =
+                financialStatementsReportService.getIncomeStatement(periodStart, periodEnd);
+        BigDecimal totalRevenue = incomeStatement.totalRevenue();
+        BigDecimal totalOpex = incomeStatement.totalExpenses();
+        BigDecimal netProfit = incomeStatement.netIncome();
+        BigDecimal netMarginPercent = percentOf(netProfit, totalRevenue);
+        BigDecimal operatingCashFlow = financialStatementsReportService
+                .getCashFlowStatement(periodStart, periodEnd).operatingCashFlow();
+
+        BigDecimal openReceivables = customerInvoiceRepository.findAll().stream()
+                .map(CustomerInvoice::getOutstandingAmount)
+                .filter(Objects::nonNull)
+                .filter(a -> a.compareTo(BigDecimal.ZERO) > 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        ExecutiveCockpitTarget target = cockpitTargetRepository.findByPeriodKey(effectivePeriod).orElse(null);
 
         List<ModuleSummary> moduleSummaries = buildModuleSummaries(
-                totalRevenue, totalOpex, grossProfit, netMarginPercent, operatingCashFlow,
-                salesBookings, posGross, openReceivables,
-                inventoryValuation,
-                portfolioValue, projectCostVariance,
-                activeHeadcount, payrollDisbursed, attendanceRate,
-                etaComplianceRate
+                totalRevenue, totalOpex, netProfit, netMarginPercent, operatingCashFlow,
+                salesBookings, posGross, openReceivables, inventoryValuation,
+                portfolioValue, projectCostVariance, activeHeadcount,
+                BigDecimal.ZERO, attendanceRate, etaComplianceRate, target
         );
 
         return new ExecutiveOverviewResponse(
@@ -353,7 +346,7 @@ public class ExecutiveAnalyticsService {
                 Instant.now().toEpochMilli(),
                 totalRevenue.setScale(2, RoundingMode.HALF_UP),
                 totalOpex.setScale(2, RoundingMode.HALF_UP),
-                grossProfit.setScale(2, RoundingMode.HALF_UP),
+                netProfit.setScale(2, RoundingMode.HALF_UP),
                 netMarginPercent.setScale(2, RoundingMode.HALF_UP),
                 operatingCashFlow.setScale(2, RoundingMode.HALF_UP),
                 salesBookings.setScale(2, RoundingMode.HALF_UP),
@@ -363,80 +356,80 @@ public class ExecutiveAnalyticsService {
                 portfolioValue.setScale(2, RoundingMode.HALF_UP),
                 projectCostVariance.setScale(2, RoundingMode.HALF_UP),
                 activeHeadcount,
-                payrollDisbursed.setScale(2, RoundingMode.HALF_UP),
+                BigDecimal.ZERO,
                 attendanceRate.setScale(2, RoundingMode.HALF_UP),
                 etaComplianceRate.setScale(2, RoundingMode.HALF_UP),
                 moduleSummaries
         );
     }
 
+    private BigDecimal etaComplianceRate(List<EtaInvoiceSubmission> submissions) {
+        if (submissions.isEmpty()) return BigDecimal.ZERO;
+        long valid = submissions.stream().filter(s -> s.getStatus() == EtaSubmissionStatus.VALID).count();
+        return BigDecimal.valueOf(valid * 100.0 / submissions.size()).setScale(2, RoundingMode.HALF_UP);
+    }
+
     private List<ModuleSummary> buildModuleSummaries(
-            BigDecimal revenue, BigDecimal opex, BigDecimal grossProfit, BigDecimal netMargin, BigDecimal ocf,
-            BigDecimal sales, BigDecimal pos, BigDecimal receivables,
-            BigDecimal inventory,
-            BigDecimal projectVal, BigDecimal projectVac,
-            int headcount, BigDecimal payroll, BigDecimal attendanceRate,
-            BigDecimal etaRate
+            BigDecimal revenue, BigDecimal opex, BigDecimal netProfit, BigDecimal netMargin, BigDecimal ocf,
+            BigDecimal sales, BigDecimal pos, BigDecimal receivables, BigDecimal inventory,
+            BigDecimal projectVal, BigDecimal projectVac, int headcount, BigDecimal payroll,
+            BigDecimal attendanceRate, BigDecimal etaRate, ExecutiveCockpitTarget target
     ) {
+        BigDecimal revenueTarget = target != null ? target.getTargetRevenue() : null;
+        BigDecimal opexTarget = target != null ? target.getTargetMaxOpex() : null;
+        BigDecimal liquidityTarget = target != null ? target.getTargetMinLiquidity() : null;
+        BigDecimal overdueArTarget = target != null ? target.getTargetMaxOverdueAr() : null;
+
         List<ModuleSummary> list = new ArrayList<>();
 
-        list.add(new ModuleSummary(
-                KpiCategory.FINANCIAL,
-                "General Ledger & Treasury",
-                List.of(
-                        new ExecutiveKpiCard("TOTAL_REVENUE", "Total Revenue", "إجمالي الإيرادات", KpiCategory.FINANCIAL, revenue, revenue.multiply(BigDecimal.valueOf(0.95)), BigDecimal.valueOf(5.2), TrendDirection.UP, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/finance/accounts"),
-                        new ExecutiveKpiCard("TOTAL_OPEX", "Total OPEX", "المصروفات التشغيلية", KpiCategory.FINANCIAL, opex, opex.multiply(BigDecimal.valueOf(1.05)), BigDecimal.valueOf(-4.8), TrendDirection.DOWN, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/finance/accounts"),
-                        new ExecutiveKpiCard("NET_PROFIT_MARGIN", "Net Profit Margin", "هامش صافي الربح", KpiCategory.FINANCIAL, netMargin, BigDecimal.valueOf(25.0), netMargin.subtract(BigDecimal.valueOf(25.0)), TrendDirection.UP, KpiUnit.PERCENT, ReconciliationStatus.RECONCILED, "/finance/accounts"),
-                        new ExecutiveKpiCard("OPERATING_CASH_FLOW", "Operating Cash Flow", "التدفق النقدي التشغيلي", KpiCategory.FINANCIAL, ocf, ocf.multiply(BigDecimal.valueOf(0.9)), BigDecimal.valueOf(11.1), TrendDirection.UP, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/finance/banks")
-                )
-        ));
+        list.add(new ModuleSummary(KpiCategory.FINANCIAL, "General Ledger & Treasury", List.of(
+                card("TOTAL_REVENUE", "Total Revenue", "إجمالي الإيرادات", KpiCategory.FINANCIAL, revenue, revenueTarget, KpiUnit.CURRENCY_EGP, "/finance/accounts"),
+                card("TOTAL_OPEX", "Total OPEX", "المصروفات التشغيلية", KpiCategory.FINANCIAL, opex, opexTarget, KpiUnit.CURRENCY_EGP, "/finance/accounts"),
+                card("NET_PROFIT_MARGIN", "Net Profit Margin", "هامش صافي الربح", KpiCategory.FINANCIAL, netMargin, null, KpiUnit.PERCENT, "/finance/accounts"),
+                card("OPERATING_CASH_FLOW", "Operating Cash Flow", "التدفق النقدي التشغيلي", KpiCategory.FINANCIAL, ocf, liquidityTarget, KpiUnit.CURRENCY_EGP, "/finance/banks")
+        )));
 
-        list.add(new ModuleSummary(
-                KpiCategory.COMMERCIAL,
-                "Sales & Point of Sale",
-                List.of(
-                        new ExecutiveKpiCard("SALES_BOOKINGS", "Sales Bookings", "المبيعات المؤكدة", KpiCategory.COMMERCIAL, sales, sales.multiply(BigDecimal.valueOf(0.9)), BigDecimal.valueOf(10.0), TrendDirection.UP, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/trade/sales"),
-                        new ExecutiveKpiCard("POS_RETAIL_GROSS", "POS Retail Gross", "مبيعات نقاط البيع", KpiCategory.COMMERCIAL, pos, pos.multiply(BigDecimal.valueOf(0.85)), BigDecimal.valueOf(15.0), TrendDirection.UP, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/trade/pos"),
-                        new ExecutiveKpiCard("OPEN_RECEIVABLES", "Open Receivables", "المستحقات المفتوحة", KpiCategory.COMMERCIAL, receivables, receivables.multiply(BigDecimal.valueOf(0.8)), BigDecimal.valueOf(8.5), TrendDirection.STABLE, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/trade/sales")
-                )
-        ));
+        list.add(new ModuleSummary(KpiCategory.COMMERCIAL, "Sales & Point of Sale", List.of(
+                card("SALES_BOOKINGS", "Sales Bookings", "المبيعات المؤكدة", KpiCategory.COMMERCIAL, sales, null, KpiUnit.CURRENCY_EGP, "/trade/sales"),
+                card("POS_RETAIL_GROSS", "POS Retail Gross", "مبيعات نقاط البيع", KpiCategory.COMMERCIAL, pos, null, KpiUnit.CURRENCY_EGP, "/trade/pos"),
+                card("OPEN_RECEIVABLES", "Open Receivables", "المستحقات المفتوحة", KpiCategory.COMMERCIAL, receivables, overdueArTarget, KpiUnit.CURRENCY_EGP, "/trade/sales")
+        )));
 
-        list.add(new ModuleSummary(
-                KpiCategory.OPERATIONS,
-                "Inventory & Supply Chain",
-                List.of(
-                        new ExecutiveKpiCard("INVENTORY_VALUATION", "Inventory Valuation", "قيمة المخزون", KpiCategory.OPERATIONS, inventory, inventory.multiply(BigDecimal.valueOf(0.95)), BigDecimal.valueOf(5.0), TrendDirection.STABLE, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/operations/inventory")
-                )
-        ));
+        list.add(new ModuleSummary(KpiCategory.OPERATIONS, "Inventory & Supply Chain", List.of(
+                card("INVENTORY_VALUATION", "Inventory Valuation", "قيمة المخزون", KpiCategory.OPERATIONS, inventory, null, KpiUnit.CURRENCY_EGP, "/operations/inventory")
+        )));
 
-        list.add(new ModuleSummary(
-                KpiCategory.PROJECTS,
-                "Project & Cost Control",
-                List.of(
-                        new ExecutiveKpiCard("PROJECT_PORTFOLIO_VALUE", "Portfolio Contract Value", "قيمة عقود المشاريع", KpiCategory.PROJECTS, projectVal, projectVal, BigDecimal.ZERO, TrendDirection.UP, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/projects/executive-dashboard"),
-                        new ExecutiveKpiCard("PROJECT_COST_VARIANCE", "Cost Variance (VAC)", "انحراف تكلفة المشاريع", KpiCategory.PROJECTS, projectVac, BigDecimal.ZERO, BigDecimal.valueOf(3.5), TrendDirection.UP, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/projects")
-                )
-        ));
+        list.add(new ModuleSummary(KpiCategory.PROJECTS, "Project & Cost Control", List.of(
+                card("PROJECT_PORTFOLIO_VALUE", "Portfolio Contract Value", "قيمة عقود المشاريع", KpiCategory.PROJECTS, projectVal, null, KpiUnit.CURRENCY_EGP, "/projects/executive-dashboard"),
+                card("PROJECT_COST_VARIANCE", "Cost Variance (VAC)", "انحراف تكلفة المشاريع", KpiCategory.PROJECTS, projectVac, null, KpiUnit.CURRENCY_EGP, "/projects")
+        )));
 
-        list.add(new ModuleSummary(
-                KpiCategory.WORKFORCE,
-                "HR & Workforce Management",
-                List.of(
-                        new ExecutiveKpiCard("ACTIVE_HEADCOUNT", "Active Headcount", "القوى العاملة النشطة", KpiCategory.WORKFORCE, BigDecimal.valueOf(headcount), BigDecimal.valueOf(headcount), BigDecimal.ZERO, TrendDirection.STABLE, KpiUnit.COUNT, ReconciliationStatus.RECONCILED, "/employees"),
-                        new ExecutiveKpiCard("PAYROLL_DISBURSED", "Payroll Disbursed", "الرواتب المنصرفة", KpiCategory.WORKFORCE, payroll, payroll, BigDecimal.ZERO, TrendDirection.STABLE, KpiUnit.CURRENCY_EGP, ReconciliationStatus.RECONCILED, "/payroll"),
-                        new ExecutiveKpiCard("ATTENDANCE_RATE", "Attendance Rate", "نسبة الحضور الإجمالية", KpiCategory.WORKFORCE, attendanceRate, BigDecimal.valueOf(95.0), BigDecimal.valueOf(1.5), TrendDirection.UP, KpiUnit.PERCENT, ReconciliationStatus.RECONCILED, "/reports/attendance-browser")
-                )
-        ));
+        list.add(new ModuleSummary(KpiCategory.WORKFORCE, "HR & Workforce Management", List.of(
+                card("ACTIVE_HEADCOUNT", "Active Headcount", "القوى العاملة النشطة", KpiCategory.WORKFORCE, BigDecimal.valueOf(headcount), null, KpiUnit.COUNT, "/employees"),
+                card("PAYROLL_DISBURSED", "Payroll Disbursed", "الرواتب المنصرفة", KpiCategory.WORKFORCE, payroll, null, KpiUnit.CURRENCY_EGP, "/payroll"),
+                card("ATTENDANCE_RATE", "Attendance Rate", "نسبة الحضور الإجمالية", KpiCategory.WORKFORCE, attendanceRate, null, KpiUnit.PERCENT, "/reports/attendance-browser")
+        )));
 
-        list.add(new ModuleSummary(
-                KpiCategory.COMPLIANCE,
-                "ETA E-Invoice & Tax Risk",
-                List.of(
-                        new ExecutiveKpiCard("ETA_COMPLIANCE_RATE", "ETA Compliance Rate", "نسبة الامتثال للضرائب", KpiCategory.COMPLIANCE, etaRate, BigDecimal.valueOf(98.0), BigDecimal.valueOf(0.4), TrendDirection.UP, KpiUnit.PERCENT, ReconciliationStatus.RECONCILED, "/compliance/eta-tax")
-                )
-        ));
+        list.add(new ModuleSummary(KpiCategory.COMPLIANCE, "ETA E-Invoice & Tax Risk", List.of(
+                card("ETA_COMPLIANCE_RATE", "ETA Compliance Rate", "نسبة الامتثال للضرائب", KpiCategory.COMPLIANCE, etaRate, null, KpiUnit.PERCENT, "/compliance/eta-tax")
+        )));
 
         return list;
+    }
+
+    /**
+     * Builds one KPI card. {@code target} is the real configured target for this KPI, or
+     * {@code null} when no target concept exists for it — in which case target/variance are also
+     * {@code null} and trend is reported as {@code STABLE} (no fabricated direction) rather than
+     * inventing a plausible-looking number, per the 2026-09-06 remediation.
+     */
+    private ExecutiveKpiCard card(String key, String nameEn, String nameAr, KpiCategory category,
+                                   BigDecimal actual, BigDecimal target, KpiUnit unit, String drilldownUrl) {
+        BigDecimal variancePercent = (target != null && target.compareTo(BigDecimal.ZERO) != 0)
+                ? actual.subtract(target).multiply(BigDecimal.valueOf(100)).divide(target, 2, RoundingMode.HALF_UP)
+                : null;
+        return new ExecutiveKpiCard(key, nameEn, nameAr, category, actual, target, variancePercent,
+                TrendDirection.STABLE, unit, ReconciliationStatus.RECONCILED, drilldownUrl);
     }
 
     @Transactional(readOnly = true)
@@ -444,42 +437,85 @@ public class ExecutiveAnalyticsService {
         int boundedMonths = Math.max(3, Math.min(months, 24));
         List<TrendPeriodPoint> points = new ArrayList<>();
 
-        LocalDate now = LocalDate.now();
+        List<CustomerInvoice> allInvoices = customerInvoiceRepository.findAll();
+        List<PosTransaction> allPos = posTransactionRepository.findAll();
+        List<SalaryPayment> allPayments = salaryPaymentRepository.findAll();
+
+        YearMonth current = YearMonth.now();
         for (int i = boundedMonths - 1; i >= 0; i--) {
-            LocalDate monthDate = now.minusMonths(i);
-            String periodKey = monthDate.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            YearMonth ym = current.minusMonths(i);
+            LocalDate start = ym.atDay(1);
+            LocalDate end = ym.atEndOfMonth();
+            String periodKey = ym.toString();
 
-            double factor = 1.0 + (boundedMonths - i) * 0.03;
-            BigDecimal rev = BigDecimal.valueOf(1_200_000 * factor).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal opex = BigDecimal.valueOf(800_000 * factor * 0.98).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal profit = rev.subtract(opex);
-            BigDecimal margin = rev.compareTo(BigDecimal.ZERO) > 0 ? profit.multiply(BigDecimal.valueOf(100)).divide(rev, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
-            BigDecimal sales = BigDecimal.valueOf(450_000 * factor).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal inv = BigDecimal.valueOf(600_000 * factor * 0.95).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal pay = BigDecimal.valueOf(320_000 * factor).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal prj = BigDecimal.valueOf(850_000 * factor).setScale(2, RoundingMode.HALF_UP);
+            FinancialStatementsReportService.IncomeStatementReport income =
+                    financialStatementsReportService.getIncomeStatement(start, end);
+            BigDecimal revenue = income.totalRevenue();
+            BigDecimal opex = income.totalExpenses();
+            BigDecimal profit = income.netIncome();
+            BigDecimal margin = percentOf(profit, revenue);
 
-            points.add(new TrendPeriodPoint(periodKey, rev, opex, profit, margin, sales, inv, pay, prj));
+            BigDecimal sales = sumInvoicesInRange(allInvoices, start, end)
+                    .add(sumPosInRange(allPos, start, end));
+
+            long asOfMs = end.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
+            BigDecimal inventoryValue = inventoryValuationService.report(asOfMs, null, null).totalInventoryValue();
+
+            BigDecimal payroll = allPayments.stream()
+                    .filter(s -> s.getPeriodYear() == ym.getYear() && s.getPeriodMonth() == ym.getMonthValue())
+                    .filter(s -> s.getPaymentStatus() == PaymentStatus.PAID)
+                    .map(s -> s.getNetAmount() != null ? s.getNetAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // No tenant-wide, month-sliced project earned-value aggregation exists yet (would need a
+            // new grouped-by-month cost-ledger query). Returning 0 for historical months rather than
+            // fabricating a growth curve — see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Low Finding L-3.
+            BigDecimal projectEarnedValue = BigDecimal.ZERO;
+
+            points.add(new TrendPeriodPoint(periodKey,
+                    revenue.setScale(2, RoundingMode.HALF_UP), opex.setScale(2, RoundingMode.HALF_UP),
+                    profit.setScale(2, RoundingMode.HALF_UP), margin.setScale(2, RoundingMode.HALF_UP),
+                    sales.setScale(2, RoundingMode.HALF_UP), inventoryValue.setScale(2, RoundingMode.HALF_UP),
+                    payroll.setScale(2, RoundingMode.HALF_UP), projectEarnedValue.setScale(2, RoundingMode.HALF_UP)));
         }
 
         return new ComparativeTrendsResponse(boundedMonths, points);
     }
 
+    private BigDecimal sumInvoicesInRange(List<CustomerInvoice> invoices, LocalDate start, LocalDate end) {
+        return invoices.stream()
+                .filter(i -> i.getInvoiceDate() != null && !i.getInvoiceDate().isBefore(start) && !i.getInvoiceDate().isAfter(end))
+                .map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal sumPosInRange(List<PosTransaction> transactions, LocalDate start, LocalDate end) {
+        return transactions.stream()
+                .filter(tx -> {
+                    LocalDate d = Instant.ofEpochMilli(tx.getCreatedAt()).atZone(ZoneId.systemDefault()).toLocalDate();
+                    return !d.isBefore(start) && !d.isAfter(end);
+                })
+                .map(tx -> tx.getTotalAmount() != null ? tx.getTotalAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     @Transactional
     public ExecutiveKpiSnapshotResponse recordSnapshot(CreateSnapshotPayload payload) {
-        ExecutiveKpiSnapshot snapshot = new ExecutiveKpiSnapshot(
-                payload.periodKey(),
-                payload.category(),
-                payload.kpiKey(),
-                payload.targetValue(),
-                payload.actualValue(),
-                payload.varianceValue(),
-                payload.variancePercent(),
-                payload.trendDirection(),
-                payload.reconciliationStatus(),
-                payload.drilldownUrl(),
-                payload.metadataJson()
-        );
+        ExecutiveKpiSnapshot snapshot = snapshotRepository
+                .findByPeriodKeyAndCategoryAndKpiKey(payload.periodKey(), payload.category(), payload.kpiKey())
+                .orElse(null);
+        if (snapshot != null) {
+            snapshot.update(payload.targetValue(), payload.actualValue(), payload.varianceValue(),
+                    payload.variancePercent(), payload.trendDirection(), payload.reconciliationStatus(),
+                    payload.drilldownUrl(), payload.metadataJson());
+        } else {
+            snapshot = new ExecutiveKpiSnapshot(
+                    payload.periodKey(), payload.category(), payload.kpiKey(), payload.targetValue(),
+                    payload.actualValue(), payload.varianceValue(), payload.variancePercent(),
+                    payload.trendDirection(), payload.reconciliationStatus(), payload.drilldownUrl(),
+                    payload.metadataJson()
+            );
+        }
         ExecutiveKpiSnapshot saved = snapshotRepository.save(snapshot);
         return toSnapshotResponse(saved);
     }
@@ -494,19 +530,9 @@ public class ExecutiveAnalyticsService {
 
     private ExecutiveKpiSnapshotResponse toSnapshotResponse(ExecutiveKpiSnapshot s) {
         return new ExecutiveKpiSnapshotResponse(
-                s.getId(),
-                s.getSnapshotDate(),
-                s.getPeriodKey(),
-                s.getCategory(),
-                s.getKpiKey(),
-                s.getTargetValue(),
-                s.getActualValue(),
-                s.getVarianceValue(),
-                s.getVariancePercent(),
-                s.getTrendDirection(),
-                s.getReconciliationStatus(),
-                s.getDrilldownUrl(),
-                s.getMetadataJson(),
+                s.getId(), s.getSnapshotDate(), s.getPeriodKey(), s.getCategory(), s.getKpiKey(),
+                s.getTargetValue(), s.getActualValue(), s.getVarianceValue(), s.getVariancePercent(),
+                s.getTrendDirection(), s.getReconciliationStatus(), s.getDrilldownUrl(), s.getMetadataJson(),
                 s.getCreatedAt()
         );
     }
@@ -516,494 +542,382 @@ public class ExecutiveAnalyticsService {
     // =========================================================================
 
     @Transactional(readOnly = true)
-    public OwnerCockpitResponse getOwnerCockpit(String period, String companyId, String branchId) {
-        if (branchId != null && !branchId.isBlank() && authEvaluator != null) {
-            if (!authEvaluator.hasBranchAccess(branchId)) {
-                throw new BusinessRuleException("Branch access denied", "BRANCH_ACCESS_DENIED", HttpStatus.FORBIDDEN);
-            }
+    public OwnerCockpitResponse getOwnerCockpit(String period, String branchId) {
+        if (branchId != null && !branchId.isBlank() && !authEvaluator.hasBranchAccess(branchId)) {
+            throw new BusinessRuleException("Branch access denied", "BRANCH_ACCESS_DENIED", HttpStatus.FORBIDDEN);
         }
 
-        String effectivePeriod = (period != null && !period.isBlank())
-                ? period
-                : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
+        String effectivePeriod = effectivePeriod(period);
+        YearMonth ym = YearMonth.parse(effectivePeriod);
+        LocalDate periodStart = ym.atDay(1);
+        LocalDate periodEnd = ym.atEndOfMonth();
         LocalDate today = LocalDate.now();
 
-        // 1. Sales & Invoices
-        List<CustomerInvoice> allInvoices = customerInvoiceRepository != null
-                ? customerInvoiceRepository.findAll()
-                : List.of();
+        List<CustomerInvoice> allInvoices = customerInvoiceRepository.findAll();
+        List<PosTransaction> posTxs = posTransactionRepository.findAll();
 
+        // 1. Today's sales & collections — real, may legitimately be zero on a slow day.
         BigDecimal todaySalesInvoices = allInvoices.stream()
                 .filter(i -> today.equals(i.getInvoiceDate()))
                 .map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        List<CustomerInvoice> periodInvoices = allInvoices.stream()
-                .filter(i -> i.getInvoiceDate() != null && i.getInvoiceDate().format(DateTimeFormatter.ofPattern("yyyy-MM")).equals(effectivePeriod))
-                .toList();
-
-        BigDecimal totalRevenueInvoices = (periodInvoices.isEmpty() ? allInvoices : periodInvoices).stream()
-                .map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalCogsInvoices = (periodInvoices.isEmpty() ? allInvoices : periodInvoices).stream()
-                .map(i -> i.getCogsAmount() != null ? i.getCogsAmount() : (i.getAmount() != null ? i.getAmount().multiply(BigDecimal.valueOf(0.65)) : BigDecimal.ZERO))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // 2. POS transactions
-        List<PosTransaction> posTxs = posTransactionRepository != null ? posTransactionRepository.findAll() : List.of();
-
-        BigDecimal todayPosSales = posTxs.stream()
-                .filter(tx -> {
-                    LocalDate txDate = Instant.ofEpochMilli(tx.getCreatedAt()).atZone(ZoneId.systemDefault()).toLocalDate();
-                    return today.equals(txDate);
-                })
-                .map(tx -> tx.getTotalAmount() != null ? tx.getTotalAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalPosSales = posTxs.stream()
-                .map(tx -> tx.getTotalAmount() != null ? tx.getTotalAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+        BigDecimal todayPosSales = sumPosInRange(posTxs, today, today);
         BigDecimal todaySales = todaySalesInvoices.add(todayPosSales);
-        if (todaySales.compareTo(BigDecimal.ZERO) == 0) {
-            todaySales = BigDecimal.valueOf(42_850.00);
-        }
 
-        // 3. Today's Collections
-        List<CustomerReceipt> allReceipts = customerReceiptRepository != null ? customerReceiptRepository.findAll() : List.of();
+        List<CustomerReceipt> allReceipts = customerReceiptRepository.findAll();
         BigDecimal todayReceipts = allReceipts.stream()
                 .filter(r -> today.equals(r.getReceiptDate()))
                 .map(r -> r.getAmount() != null ? r.getAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         BigDecimal todayCollections = todayReceipts.add(todayPosSales);
-        if (todayCollections.compareTo(BigDecimal.ZERO) == 0) {
-            todayCollections = BigDecimal.valueOf(38_200.00);
-        }
 
-        BigDecimal totalRevenue = totalRevenueInvoices.add(totalPosSales);
-        if (totalRevenue.compareTo(BigDecimal.ZERO) == 0) {
-            totalRevenue = BigDecimal.valueOf(1_450_000.00);
-        }
+        // 2. Headline P&L for the period — real, GL-sourced (same figures Finance Reports shows).
+        FinancialStatementsReportService.IncomeStatementReport incomeStatement =
+                financialStatementsReportService.getIncomeStatement(periodStart, periodEnd);
+        BigDecimal totalRevenue = incomeStatement.totalRevenue();
+        BigDecimal totalOpex = incomeStatement.totalExpenses();
+        BigDecimal netProfit = incomeStatement.netIncome();
+        BigDecimal operatingProfit = netProfit; // no separate operating/net split is modeled
+        BigDecimal netMarginPercent = percentOf(netProfit, totalRevenue);
 
-        BigDecimal totalCogs = totalCogsInvoices.add(totalPosSales.multiply(BigDecimal.valueOf(0.65)));
-        if (totalCogs.compareTo(BigDecimal.ZERO) == 0) {
-            totalCogs = totalRevenue.multiply(BigDecimal.valueOf(0.62)).setScale(2, RoundingMode.HALF_UP);
-        }
-
-        BigDecimal grossMarginAmount = totalRevenue.subtract(totalCogs);
-        BigDecimal grossMarginPercent = totalRevenue.compareTo(BigDecimal.ZERO) > 0
-                ? grossMarginAmount.multiply(BigDecimal.valueOf(100)).divide(totalRevenue, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
-        // 4. Expenses & OPEX
-        List<ExpenseClaim> expenseClaims = expenseClaimRepository != null ? expenseClaimRepository.findAll() : List.of();
-        BigDecimal totalClaimedExpenses = expenseClaims.stream()
-                .map(c -> c.getAmount() != null ? c.getAmount() : BigDecimal.ZERO)
+        // 3. Gross margin — a separate, sales-only view (real delivery-line revenue/COGS), not
+        // forced to reconcile with the GL P&L above (see class-level note).
+        BigDecimal periodSalesRevenue = sumInvoicesInRange(allInvoices, periodStart, periodEnd)
+                .add(sumPosInRange(posTxs, periodStart, periodEnd));
+        List<SalesDeliveryLine> periodDeliveryLines = salesDeliveryLineRepository.findAll().stream()
+                .filter(l -> {
+                    LocalDate d = Instant.ofEpochMilli(l.getCreatedAt()).atZone(ZoneId.systemDefault()).toLocalDate();
+                    return !d.isBefore(periodStart) && !d.isAfter(periodEnd);
+                })
+                .toList();
+        BigDecimal totalCogs = periodDeliveryLines.stream()
+                .map(l -> l.getCogsAmount() != null ? l.getCogsAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal grossMarginAmount = periodSalesRevenue.subtract(totalCogs);
+        BigDecimal grossMarginPercent = percentOf(grossMarginAmount, periodSalesRevenue);
 
-        List<SalaryPayment> salaryPayments = salaryPaymentRepository != null ? salaryPaymentRepository.findAll() : List.of();
-        BigDecimal totalPayrollDisbursed = salaryPayments.stream()
+        // 4. Payroll — real, period-scoped (previously summed ALL-TIME payroll regardless of the
+        // requested period, and fabricated a constant when zero).
+        List<SalaryPayment> periodPayments = salaryPaymentRepository.findAll().stream()
+                .filter(s -> s.getPeriodYear() == ym.getYear() && s.getPeriodMonth() == ym.getMonthValue())
+                .toList();
+        BigDecimal totalPayrollDisbursed = periodPayments.stream()
+                .filter(s -> s.getPaymentStatus() == PaymentStatus.PAID)
+                .map(s -> s.getNetAmount() != null ? s.getNetAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal payrollPending = periodPayments.stream()
+                .filter(s -> s.getPaymentStatus() != PaymentStatus.PAID
+                        && s.getPaymentStatus() != PaymentStatus.REVERSED)
                 .map(s -> s.getNetAmount() != null ? s.getNetAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (totalPayrollDisbursed.compareTo(BigDecimal.ZERO) == 0) {
-            totalPayrollDisbursed = BigDecimal.valueOf(185_000.00);
-        }
+        // 5. Cash & bank position — real, from TreasuryPositionService (no more count*450000 / *0.62 guesses).
+        BigDecimal cashInHand = treasuryPositionService.totalCashBalance();
+        BigDecimal bankBalances = treasuryPositionService.totalBankBalance();
 
-        BigDecimal totalOpex = totalClaimedExpenses.add(totalPayrollDisbursed).add(BigDecimal.valueOf(65_000));
-        if (totalOpex.compareTo(BigDecimal.ZERO) == 0) {
-            totalOpex = BigDecimal.valueOf(250_000.00);
-        }
-
-        BigDecimal operatingProfit = grossMarginAmount.subtract(totalOpex);
-        BigDecimal netProfit = operatingProfit;
-        BigDecimal netMarginPercent = totalRevenue.compareTo(BigDecimal.ZERO) > 0
-                ? netProfit.multiply(BigDecimal.valueOf(100)).divide(totalRevenue, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
-        // 5. Cash & Bank Position
-        List<Cashbox> cashboxes = cashboxRepository != null ? cashboxRepository.findAll() : List.of();
-        BigDecimal cashInHand = cashboxes.stream()
-                .map(c -> c.getCurrentBalance() != null ? c.getCurrentBalance() : BigDecimal.valueOf(15_000))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (cashInHand.compareTo(BigDecimal.ZERO) == 0) {
-            cashInHand = BigDecimal.valueOf(125_000.00);
-        }
-
-        List<BankAccount> bankAccounts = bankAccountRepository != null ? bankAccountRepository.findAll() : List.of();
-        BigDecimal bankBalances = BigDecimal.valueOf(Math.max(1, bankAccounts.size())).multiply(BigDecimal.valueOf(450_000.00));
-
-        // 6. AR Aging
+        // 6. AR aging — real invoice-level bucketing; a zero total is reported as zero, not
+        // overwritten with fabricated bucket amounts/counts.
         List<CustomerInvoice> openInvoices = allInvoices.stream()
                 .filter(i -> i.getOutstandingAmount() != null && i.getOutstandingAmount().compareTo(BigDecimal.ZERO) > 0)
                 .toList();
+        AgingTotals arTotals = bucketAgingByDueDate(openInvoices, today,
+                CustomerInvoice::getOutstandingAmount,
+                i -> i.getDueDate() != null ? i.getDueDate() : (i.getInvoiceDate() != null ? i.getInvoiceDate().plusDays(30) : today));
+        ArApAgingSummary arAging = buildAgingSummary(arTotals);
+        BigDecimal totalReceivables = arTotals.total();
+        BigDecimal overdueReceivables = arTotals.overdue();
 
-        BigDecimal arCurrent = BigDecimal.ZERO;
-        int arCurrentCount = 0;
-        BigDecimal ar30To60 = BigDecimal.ZERO;
-        int ar30To60Count = 0;
-        BigDecimal ar60To90 = BigDecimal.ZERO;
-        int ar60To90Count = 0;
-        BigDecimal arOver90 = BigDecimal.ZERO;
-        int arOver90Count = 0;
-
-        for (CustomerInvoice inv : openInvoices) {
-            BigDecimal outstanding = inv.getOutstandingAmount();
-            LocalDate due = inv.getDueDate() != null ? inv.getDueDate() : (inv.getInvoiceDate() != null ? inv.getInvoiceDate().plusDays(30) : today);
-            long days = ChronoUnit.DAYS.between(due, today);
-            if (days <= 0 || days <= 30) {
-                arCurrent = arCurrent.add(outstanding);
-                arCurrentCount++;
-            } else if (days <= 60) {
-                ar30To60 = ar30To60.add(outstanding);
-                ar30To60Count++;
-            } else if (days <= 90) {
-                ar60To90 = ar60To90.add(outstanding);
-                ar60To90Count++;
-            } else {
-                arOver90 = arOver90.add(outstanding);
-                arOver90Count++;
-            }
-        }
-
-        BigDecimal totalReceivables = arCurrent.add(ar30To60).add(ar60To90).add(arOver90);
-        if (totalReceivables.compareTo(BigDecimal.ZERO) == 0) {
-            arCurrent = BigDecimal.valueOf(220_000.00);
-            arCurrentCount = 14;
-            ar30To60 = BigDecimal.valueOf(75_000.00);
-            ar30To60Count = 5;
-            ar60To90 = BigDecimal.valueOf(30_000.00);
-            ar60To90Count = 2;
-            arOver90 = BigDecimal.valueOf(15_000.00);
-            arOver90Count = 1;
-            totalReceivables = BigDecimal.valueOf(340_000.00);
-        }
-        BigDecimal overdueReceivables = ar30To60.add(ar60To90).add(arOver90);
-        ArApAgingSummary arAging = buildAgingSummary(arCurrent, arCurrentCount, ar30To60, ar30To60Count, ar60To90, ar60To90Count, arOver90, arOver90Count, totalReceivables, overdueReceivables);
-
-        // 7. AP Aging
-        List<SupplierInvoice> allSupplierInvoices = supplierInvoiceRepository != null ? supplierInvoiceRepository.findAll() : List.of();
-        List<SupplierInvoice> openSupplierInvoices = allSupplierInvoices.stream()
+        // 7. AP aging — same treatment for supplier invoices.
+        List<SupplierInvoice> openSupplierInvoices = supplierInvoiceRepository.findAll().stream()
                 .filter(i -> !"PAID".equalsIgnoreCase(i.getStatus()))
                 .toList();
-
-        BigDecimal apCurrent = BigDecimal.ZERO;
-        int apCurrentCount = 0;
-        BigDecimal ap30To60 = BigDecimal.ZERO;
-        int ap30To60Count = 0;
-        BigDecimal ap60To90 = BigDecimal.ZERO;
-        int ap60To90Count = 0;
-        BigDecimal apOver90 = BigDecimal.ZERO;
-        int apOver90Count = 0;
-
-        for (SupplierInvoice inv : openSupplierInvoices) {
-            BigDecimal net = inv.getNetAmount() != null ? inv.getNetAmount() : BigDecimal.ZERO;
-            LocalDate due = inv.getDueDate() != null ? inv.getDueDate() : inv.getInvoiceDate().plusDays(30);
-            long days = ChronoUnit.DAYS.between(due, today);
-            if (days <= 0 || days <= 30) {
-                apCurrent = apCurrent.add(net);
-                apCurrentCount++;
-            } else if (days <= 60) {
-                ap30To60 = ap30To60.add(net);
-                ap30To60Count++;
-            } else if (days <= 90) {
-                ap60To90 = ap60To90.add(net);
-                ap60To90Count++;
-            } else {
-                apOver90 = apOver90.add(net);
-                apOver90Count++;
-            }
-        }
-
-        BigDecimal totalPayables = apCurrent.add(ap30To60).add(ap60To90).add(apOver90);
-        if (totalPayables.compareTo(BigDecimal.ZERO) == 0) {
-            apCurrent = BigDecimal.valueOf(140_000.00);
-            apCurrentCount = 8;
-            ap30To60 = BigDecimal.valueOf(45_000.00);
-            ap30To60Count = 3;
-            ap60To90 = BigDecimal.valueOf(18_000.00);
-            ap60To90Count = 1;
-            apOver90 = BigDecimal.valueOf(7_000.00);
-            apOver90Count = 1;
-            totalPayables = BigDecimal.valueOf(210_000.00);
-        }
-        BigDecimal overduePayables = ap30To60.add(ap60To90).add(apOver90);
-        ArApAgingSummary apAging = buildAgingSummary(apCurrent, apCurrentCount, ap30To60, ap30To60Count, ap60To90, ap60To90Count, apOver90, apOver90Count, totalPayables, overduePayables);
+        AgingTotals apTotals = bucketAgingByDueDate(openSupplierInvoices, today,
+                i -> i.getNetAmount() != null ? i.getNetAmount() : BigDecimal.ZERO,
+                i -> i.getDueDate() != null ? i.getDueDate() : i.getInvoiceDate().plusDays(30));
+        ArApAgingSummary apAging = buildAgingSummary(apTotals);
+        BigDecimal totalPayables = apTotals.total();
+        BigDecimal overduePayables = apTotals.overdue();
 
         BigDecimal netLiquidity = cashInHand.add(bankBalances).subtract(overduePayables);
 
-        // 8. Stock Pulse
-        List<InventoryItem> items = inventoryItemRepository != null ? inventoryItemRepository.findAll() : List.of();
+        // 8. Stock pulse — real on-hand quantities and real valued cost from InventoryValuationService
+        // (previously derived a fake "current stock" from reorderPoint*0.4, never the real balance).
+        OperationsApi.ValuationReport valuationReport = inventoryValuationService.report();
+        Map<String, OperationsApi.ItemValuationView> valuationByItem = valuationReport.items().stream()
+                .collect(Collectors.toMap(OperationsApi.ItemValuationView::itemId, v -> v));
+        List<InventoryItem> items = inventoryItemRepository.findAll();
         List<StockAlertItem> lowStockAlerts = new ArrayList<>();
         List<StockAlertItem> deadStockAlerts = new ArrayList<>();
-
         for (InventoryItem it : items) {
-            BigDecimal reorder = it.getReorderPoint() != null ? it.getReorderPoint() : BigDecimal.ZERO;
-            BigDecimal reorderQty = it.getReorderQuantity() != null ? it.getReorderQuantity() : BigDecimal.valueOf(50);
-            BigDecimal currentStock = reorder.compareTo(BigDecimal.ZERO) > 0 ? reorder.multiply(BigDecimal.valueOf(0.4)) : BigDecimal.valueOf(5);
-            BigDecimal estVal = currentStock.multiply(BigDecimal.valueOf(120));
-
-            if (reorder.compareTo(BigDecimal.ZERO) > 0 && currentStock.compareTo(reorder) <= 0) {
-                lowStockAlerts.add(new StockAlertItem(it.getId(), it.getCode(), it.getName(), currentStock, reorder, reorderQty, it.isDeadStock(), estVal));
+            OperationsApi.ItemValuationView valuation = valuationByItem.get(it.getId());
+            BigDecimal onHand = valuation != null ? valuation.quantityOnHand() : BigDecimal.ZERO;
+            BigDecimal estimatedValue = valuation != null ? valuation.inventoryValue() : BigDecimal.ZERO;
+            BigDecimal reorderPoint = it.getReorderPoint() != null ? it.getReorderPoint() : BigDecimal.ZERO;
+            BigDecimal reorderQuantity = it.getReorderQuantity() != null ? it.getReorderQuantity() : BigDecimal.ZERO;
+            if (reorderPoint.compareTo(BigDecimal.ZERO) > 0 && onHand.compareTo(reorderPoint) <= 0) {
+                lowStockAlerts.add(new StockAlertItem(it.getId(), it.getCode(), it.getName(), onHand, reorderPoint, reorderQuantity, it.isDeadStock(), estimatedValue));
             }
             if (it.isDeadStock()) {
-                deadStockAlerts.add(new StockAlertItem(it.getId(), it.getCode(), it.getName(), currentStock, reorder, reorderQty, true, estVal));
+                deadStockAlerts.add(new StockAlertItem(it.getId(), it.getCode(), it.getName(), onHand, reorderPoint, reorderQuantity, true, estimatedValue));
             }
         }
 
-        if (lowStockAlerts.isEmpty() && !items.isEmpty()) {
-            InventoryItem first = items.get(0);
-            lowStockAlerts.add(new StockAlertItem(first.getId(), first.getCode(), first.getName(), BigDecimal.valueOf(8), BigDecimal.valueOf(25), BigDecimal.valueOf(50), false, BigDecimal.valueOf(960)));
-        }
-
-        // 9. Manufacturing WIP
-        List<ProductionOrder> prodOrders = productionOrderRepository != null ? productionOrderRepository.findAllByOrderByStartDateDescCreatedAtDesc() : List.of();
+        // 9. Manufacturing WIP — real in-progress/planned orders only; empty when there are none.
+        List<ProductionOrder> prodOrders = productionOrderRepository.findAllByOrderByStartDateDescCreatedAtDesc();
         List<ManufacturingWipItem> wipItems = new ArrayList<>();
         BigDecimal wipValuation = BigDecimal.ZERO;
-
         for (ProductionOrder po : prodOrders) {
             if (po.getStatus() == ProductionOrder.Status.IN_PROGRESS || po.getStatus() == ProductionOrder.Status.PLANNED) {
-                BigDecimal matCost = po.getActualMaterialCost() != null ? po.getActualMaterialCost() : (po.getTargetQuantity() != null ? po.getTargetQuantity().multiply(BigDecimal.valueOf(180)) : BigDecimal.valueOf(5_000));
+                BigDecimal matCost = po.getActualMaterialCost() != null ? po.getActualMaterialCost() : BigDecimal.ZERO;
                 wipValuation = wipValuation.add(matCost);
                 wipItems.add(new ManufacturingWipItem(
-                        po.getId(),
-                        po.getOrderNumber(),
-                        po.getFinishedItemId() != null ? po.getFinishedItemId() : "منتج صناعي مصنع",
-                        po.getTargetQuantity() != null ? po.getTargetQuantity() : BigDecimal.ONE,
+                        po.getId(), po.getOrderNumber(), po.getFinishedItemId(),
+                        po.getTargetQuantity() != null ? po.getTargetQuantity() : BigDecimal.ZERO,
                         po.getActualOutputQuantity() != null ? po.getActualOutputQuantity() : BigDecimal.ZERO,
-                        matCost,
-                        po.getStartDate() != null ? po.getStartDate().toString() : today.toString(),
+                        matCost, po.getStartDate() != null ? po.getStartDate().toString() : null,
                         po.getStatus().name()
                 ));
             }
         }
 
-        if (wipItems.isEmpty()) {
-            wipValuation = BigDecimal.valueOf(68_400.00);
-            wipItems.add(new ManufacturingWipItem("wip-1", "PRD-2026-001", "وحدة خلط وتعبئة أوتوماتيكية", BigDecimal.valueOf(200), BigDecimal.valueOf(85), BigDecimal.valueOf(34_200), today.minusDays(5).toString(), "IN_PROGRESS"));
-            wipItems.add(new ManufacturingWipItem("wip-2", "PRD-2026-002", "ألواح عزل حراري ومقاومة للرطوبة", BigDecimal.valueOf(500), BigDecimal.valueOf(140), BigDecimal.valueOf(34_200), today.minusDays(2).toString(), "IN_PROGRESS"));
-        }
-
-        // 10. Project Budget vs Actual
-        List<Project> projects = projectRepository != null ? projectRepository.findAll() : List.of();
-        List<ProjectBudgetVarianceItem> projectControlItems = new ArrayList<>();
-        BigDecimal totalProjectBudget = BigDecimal.ZERO;
-        BigDecimal totalProjectActual = BigDecimal.ZERO;
-
-        for (Project p : projects) {
-            if (p.getStatus() != ProjectStatus.CLOSED) {
-                BigDecimal contractVal = p.getContractValue() != null ? p.getContractValue() : BigDecimal.ZERO;
-                BigDecimal budget = contractVal.multiply(BigDecimal.valueOf(0.85)).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal actual = costLedgerRepository != null ? costLedgerRepository.sumAmountByProjectIdAndEntryType(p.getId(), CostLedgerEntryType.ACTUAL) : BigDecimal.ZERO;
-                if (actual == null || actual.compareTo(BigDecimal.ZERO) == 0) {
-                    actual = budget.multiply(BigDecimal.valueOf(0.72)).setScale(2, RoundingMode.HALF_UP);
-                }
-                BigDecimal variance = budget.subtract(actual);
-                totalProjectBudget = totalProjectBudget.add(budget);
-                totalProjectActual = totalProjectActual.add(actual);
-                projectControlItems.add(new ProjectBudgetVarianceItem(
-                        p.getId(),
-                        p.getCode(),
-                        p.getName(),
-                        contractVal,
-                        budget,
-                        actual,
-                        variance,
-                        p.getStatus().name()
-                ));
-            }
-        }
-
-        if (projectControlItems.isEmpty()) {
-            totalProjectBudget = BigDecimal.valueOf(3_200_000.00);
-            totalProjectActual = BigDecimal.valueOf(2_450_000.00);
-            projectControlItems.add(new ProjectBudgetVarianceItem("p-1", "PRJ-01", "أبراج النيل الإدارية", BigDecimal.valueOf(2_500_000), BigDecimal.valueOf(2_000_000), BigDecimal.valueOf(1_580_000), BigDecimal.valueOf(420_000), "ACTIVE"));
-            projectControlItems.add(new ProjectBudgetVarianceItem("p-2", "PRJ-02", "مجمع العاصمة السكني", BigDecimal.valueOf(1_500_000), BigDecimal.valueOf(1_200_000), BigDecimal.valueOf(870_000), BigDecimal.valueOf(330_000), "ACTIVE"));
-        }
+        // 10. Project budget vs. actual — real approved budget + real cost-ledger actuals, batched
+        // (fixes the confirmed N+1 — one query per project — and removes the contractValue*0.85
+        // "budget" guess and the budget*0.72 "actual" guess).
+        ProjectFinancials projectFinancials = computeProjectFinancials();
+        List<ProjectBudgetVarianceItem> projectControlItems = projectFinancials.items();
+        BigDecimal totalProjectBudget = projectFinancials.totalBudget();
+        BigDecimal totalProjectActual = projectFinancials.totalActual();
         BigDecimal totalProjectVariance = totalProjectBudget.subtract(totalProjectActual);
 
-        // 11. Branch Leaderboard
-        List<Branch> branches = branchRepository != null ? branchRepository.findAllByOrderByCodeAsc() : List.of();
+        // 11. Branch leaderboard — real headcount (Employee.branchId) and real cash/bank position
+        // (Cashbox/BankAccount branchId via TreasuryPositionService). Revenue/COGS/OPEX/margin have
+        // no real per-branch attribution anywhere in the schema today (no branchId on
+        // CustomerInvoice/PosTransaction/ExpenseClaim/SalaryPayment) — reported as zero rather than
+        // a fabricated proportional split of the tenant totals. See
+        // docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Implementation Gap / Critical Finding C-1.
+        List<Employee> employees = employeeRepository.findAll();
+        Map<String, BigDecimal> cashByBranch = treasuryPositionService.cashBalanceByBranch();
+        Map<String, BigDecimal> bankByBranch = treasuryPositionService.bankBalanceByBranch();
+        List<Branch> branches = branchRepository.findAllByOrderByCodeAsc();
         List<BranchPerformanceItem> branchLeaderboard = new ArrayList<>();
-
         for (Branch b : branches) {
-            if (authEvaluator != null && !authEvaluator.hasBranchAccess(b.getId())) {
-                continue;
-            }
-            double weight = b.isMainBranch() ? 0.6 : (0.4 / Math.max(1, branches.size() - 1));
-            BigDecimal bRev = totalRevenue.multiply(BigDecimal.valueOf(weight)).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal bCogs = totalCogs.multiply(BigDecimal.valueOf(weight)).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal bGross = bRev.subtract(bCogs);
-            BigDecimal bMargin = bRev.compareTo(BigDecimal.ZERO) > 0 ? bGross.multiply(BigDecimal.valueOf(100)).divide(bRev, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
-            BigDecimal bOpex = totalOpex.multiply(BigDecimal.valueOf(weight)).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal bNet = bGross.subtract(bOpex);
-            BigDecimal bCash = (cashInHand.add(bankBalances)).multiply(BigDecimal.valueOf(weight)).setScale(2, RoundingMode.HALF_UP);
+            if (!authEvaluator.hasBranchAccess(b.getId())) continue;
+            int branchHeadcount = (int) employees.stream()
+                    .filter(e -> b.getId().equals(e.getBranchId()) && e.isActive())
+                    .count();
+            BigDecimal branchCash = cashByBranch.getOrDefault(b.getId(), BigDecimal.ZERO);
+            BigDecimal branchBank = bankByBranch.getOrDefault(b.getId(), BigDecimal.ZERO);
             branchLeaderboard.add(new BranchPerformanceItem(
-                    b.getId(),
-                    b.getCode(),
-                    b.getName(),
-                    b.isMainBranch(),
-                    bRev,
-                    bCogs,
-                    bGross,
-                    bMargin,
-                    bOpex,
-                    bNet,
-                    Math.max(1, (int) (12 * weight)),
-                    bCash
+                    b.getId(), b.getCode(), b.getName(), b.isMainBranch(),
+                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                    branchHeadcount, branchCash.add(branchBank)
             ));
         }
 
-        if (branchLeaderboard.isEmpty()) {
-            branchLeaderboard.add(new BranchPerformanceItem("br-1", "MAIN", "المقر الرئيسي (القاهرة)", true, totalRevenue, totalCogs, grossMarginAmount, grossMarginPercent, totalOpex, netProfit, 15, cashInHand.add(bankBalances)));
-        }
-
-        // 12. Top Customers
+        // 12. Top customers — real invoice aggregation only; empty when there are no invoices.
         Map<String, List<CustomerInvoice>> custInvoices = allInvoices.stream()
                 .filter(i -> i.getCustomerId() != null)
                 .collect(Collectors.groupingBy(CustomerInvoice::getCustomerId));
-
-        List<TopCustomerItem> topCustomers = new ArrayList<>();
-        custInvoices.entrySet().stream()
-                .sorted((e1, e2) -> {
-                    BigDecimal sum1 = e1.getValue().stream().map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal sum2 = e2.getValue().stream().map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
-                    return sum2.compareTo(sum1);
-                })
+        List<TopCustomerItem> topCustomers = custInvoices.entrySet().stream()
+                .sorted((e1, e2) -> sumAmounts(e2.getValue(), CustomerInvoice::getAmount)
+                        .compareTo(sumAmounts(e1.getValue(), CustomerInvoice::getAmount)))
                 .limit(5)
-                .forEach(e -> {
+                .map(e -> {
                     String custId = e.getKey();
                     List<CustomerInvoice> list = e.getValue();
-                    BigDecimal invoiced = list.stream().map(i -> i.getAmount() != null ? i.getAmount() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal outstanding = list.stream().map(i -> i.getOutstandingAmount() != null ? i.getOutstandingAmount() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal invoiced = sumAmounts(list, CustomerInvoice::getAmount);
+                    BigDecimal outstanding = sumAmounts(list, CustomerInvoice::getOutstandingAmount);
                     BigDecimal collected = invoiced.subtract(outstanding);
-                    String custName = "العميل " + (custId.length() > 6 ? custId.substring(0, 6) : custId);
-                    if (businessPartyRepository != null) {
-                        Optional<BusinessParty> bp = businessPartyRepository.findById(custId);
-                        if (bp.isPresent()) custName = bp.get().getName();
-                    }
-                    topCustomers.add(new TopCustomerItem(custId, custName, invoiced, collected, outstanding, list.size()));
-                });
+                    String custName = businessPartyRepository.findById(custId).map(BusinessParty::getName).orElse(custId);
+                    return new TopCustomerItem(custId, custName, invoiced, collected, outstanding, list.size());
+                })
+                .toList();
 
-        if (topCustomers.isEmpty()) {
-            topCustomers.add(new TopCustomerItem("c-1", "شركة الأهرام للمقاولات العامة", BigDecimal.valueOf(350_000), BigDecimal.valueOf(310_000), BigDecimal.valueOf(40_000), 6));
-            topCustomers.add(new TopCustomerItem("c-2", "مجموعة النيل للاستثمار العقاري", BigDecimal.valueOf(280_000), BigDecimal.valueOf(220_000), BigDecimal.valueOf(60_000), 4));
-            topCustomers.add(new TopCustomerItem("c-3", "دلتا للتجارة والتوزيع المحدودة", BigDecimal.valueOf(195_000), BigDecimal.valueOf(180_000), BigDecimal.valueOf(15_000), 3));
-            topCustomers.add(new TopCustomerItem("c-4", "المصرية لتوريدات الفنادق والمطاعم", BigDecimal.valueOf(145_000), BigDecimal.valueOf(130_000), BigDecimal.valueOf(15_000), 2));
-            topCustomers.add(new TopCustomerItem("c-5", "مكتب الشرق الأوسط للخدمات اللوجستية", BigDecimal.valueOf(110_000), BigDecimal.valueOf(110_000), BigDecimal.ZERO, 2));
-        }
+        // 13. Top products — real, from SalesDeliveryLine (quantity/unitPrice/cogsAmount), grouped
+        // by item and ranked by revenue. Previously this was *always* fabricated via
+        // `qty = 150 - i*20` array-index arithmetic whenever any inventory item existed at all,
+        // regardless of any real sales data.
+        Map<String, InventoryItem> itemsById = items.stream().collect(Collectors.toMap(InventoryItem::getId, i -> i));
+        List<TopProductItem> topProducts = periodDeliveryLines.stream()
+                .filter(l -> l.getItemId() != null)
+                .collect(Collectors.groupingBy(SalesDeliveryLine::getItemId))
+                .entrySet().stream()
+                .map(e -> {
+                    String itemId = e.getKey();
+                    List<SalesDeliveryLine> lines = e.getValue();
+                    BigDecimal qty = lines.stream().map(SalesDeliveryLine::getQuantity).filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal lineRevenue = lines.stream()
+                            .map(l -> l.getQuantity() != null && l.getUnitPrice() != null ? l.getQuantity().multiply(l.getUnitPrice()) : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal lineCogs = lines.stream().map(l -> l.getCogsAmount() != null ? l.getCogsAmount() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal marginPercent = percentOf(lineRevenue.subtract(lineCogs), lineRevenue);
+                    InventoryItem item = itemsById.get(itemId);
+                    String code = item != null ? item.getCode() : itemId;
+                    String name = item != null ? item.getName() : itemId;
+                    return new TopProductItem(itemId, code, name, qty, lineRevenue, lineCogs, marginPercent);
+                })
+                .sorted((a, b) -> b.revenue().compareTo(a.revenue()))
+                .limit(5)
+                .toList();
 
-        // 13. Top Products
-        List<TopProductItem> topProducts = new ArrayList<>();
-        if (!items.isEmpty()) {
-            for (int i = 0; i < Math.min(5, items.size()); i++) {
-                InventoryItem it = items.get(i);
-                BigDecimal qty = BigDecimal.valueOf(150 - (i * 20));
-                BigDecimal price = BigDecimal.valueOf(450 + (i * 120));
-                BigDecimal rev = qty.multiply(price);
-                BigDecimal cogs = rev.multiply(BigDecimal.valueOf(0.65)).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal margin = BigDecimal.valueOf(35.0);
-                topProducts.add(new TopProductItem(it.getId(), it.getCode(), it.getName(), qty, rev, cogs, margin));
-            }
-        }
-        if (topProducts.isEmpty()) {
-            topProducts.add(new TopProductItem("prod-1", "SKU-1001", "شاشة عرض ذكية 55 بوصة بدقة 4K", BigDecimal.valueOf(120), BigDecimal.valueOf(240_000), BigDecimal.valueOf(156_000), BigDecimal.valueOf(35.0)));
-            topProducts.add(new TopProductItem("prod-2", "SKU-1002", "وحدة تخزين سحابي وسيرفر بيانات محلي", BigDecimal.valueOf(45), BigDecimal.valueOf(180_000), BigDecimal.valueOf(117_000), BigDecimal.valueOf(35.0)));
-            topProducts.add(new TopProductItem("prod-3", "SKU-1003", "طابعة إيصالات حرارية عالية السرعة 80mm", BigDecimal.valueOf(95), BigDecimal.valueOf(142_500), BigDecimal.valueOf(92_625), BigDecimal.valueOf(35.0)));
-            topProducts.add(new TopProductItem("prod-4", "SKU-1004", "كابلات ألياف ضوئية فائقة التحمل (100 متر)", BigDecimal.valueOf(250), BigDecimal.valueOf(125_000), BigDecimal.valueOf(81_250), BigDecimal.valueOf(35.0)));
-            topProducts.add(new TopProductItem("prod-5", "SKU-1005", "ماسح باركود لاسلكي صناعي 2D QR", BigDecimal.valueOf(80), BigDecimal.valueOf(96_000), BigDecimal.valueOf(62_400), BigDecimal.valueOf(35.0)));
-        }
+        // 14. Expense breakdown — real per-category ExpenseClaim sums for the period, plus real
+        // payroll disbursed. Percentages are relative to their own combined total (this is an
+        // operational "what did we spend on" breakdown, not GL-reconciled OPEX — see class-level note).
+        List<ExpenseClaim> periodExpenseClaims = expenseClaimRepository.findAll().stream()
+                .filter(c -> c.getSpentOn() != null && !c.getSpentOn().isBefore(periodStart) && !c.getSpentOn().isAfter(periodEnd))
+                .toList();
+        List<ExpenseCategoryItem> expenseBreakdown = buildExpenseBreakdown(periodExpenseClaims, totalPayrollDisbursed);
 
-        // 14. Expense Categories Breakdown
-        List<ExpenseCategoryItem> expenseBreakdown = List.of(
-                new ExpenseCategoryItem("PAYROLL", "الرواتب والتعويضات", totalPayrollDisbursed, totalPayrollDisbursed.multiply(BigDecimal.valueOf(100)).divide(totalOpex, 1, RoundingMode.HALF_UP)),
-                new ExpenseCategoryItem("FACILITIES", "الإيجارات ومرافق التشغيل", totalOpex.multiply(BigDecimal.valueOf(0.18)).setScale(2, RoundingMode.HALF_UP), BigDecimal.valueOf(18.0)),
-                new ExpenseCategoryItem("OPERATIONS", "التوريدات والمستهلكات", totalOpex.multiply(BigDecimal.valueOf(0.12)).setScale(2, RoundingMode.HALF_UP), BigDecimal.valueOf(12.0)),
-                new ExpenseCategoryItem("MARKETING", "التسويق وتطوير الأعمال", totalOpex.multiply(BigDecimal.valueOf(0.08)).setScale(2, RoundingMode.HALF_UP), BigDecimal.valueOf(8.0)),
-                new ExpenseCategoryItem("ADMIN", "المصاريف الإدارية والعمومية", totalOpex.multiply(BigDecimal.valueOf(0.06)).setScale(2, RoundingMode.HALF_UP), BigDecimal.valueOf(6.0))
-        );
-
-        // 15. Targets
+        // 15. Targets — real, tenant-configured (or the documented system default when none exists).
         CockpitTargetResponse targets = getTargets(effectivePeriod);
 
         OwnerCockpitKpiSummary summary = new OwnerCockpitKpiSummary(
-                todaySales,
-                todayCollections,
-                netLiquidity,
-                cashInHand,
-                bankBalances,
-                totalRevenue,
-                totalCogs,
-                grossMarginAmount,
-                grossMarginPercent,
-                totalOpex,
-                operatingProfit,
-                netProfit,
-                netMarginPercent,
-                totalPayrollDisbursed,
-                BigDecimal.valueOf(35_000.00),
-                employeeRepository != null ? (int) employeeRepository.count() : 18,
-                wipItems.size(),
-                wipValuation,
-                totalProjectBudget,
-                totalProjectActual,
-                totalProjectVariance,
-                lowStockAlerts.size(),
-                deadStockAlerts.size(),
-                totalReceivables,
-                overdueReceivables,
-                totalPayables,
-                overduePayables
+                todaySales, todayCollections, netLiquidity, cashInHand, bankBalances,
+                totalRevenue, totalCogs, grossMarginAmount, grossMarginPercent, totalOpex,
+                operatingProfit, netProfit, netMarginPercent, totalPayrollDisbursed, payrollPending,
+                (int) employees.stream().filter(Employee::isActive).count(),
+                wipItems.size(), wipValuation, totalProjectBudget, totalProjectActual, totalProjectVariance,
+                lowStockAlerts.size(), deadStockAlerts.size(),
+                totalReceivables, overdueReceivables, totalPayables, overduePayables
         );
 
         return new OwnerCockpitResponse(
-                effectivePeriod,
-                companyId,
-                branchId,
-                Instant.now().toEpochMilli(),
-                summary,
-                arAging,
-                apAging,
-                branchLeaderboard,
-                topCustomers,
-                topProducts,
-                expenseBreakdown,
-                lowStockAlerts,
-                deadStockAlerts,
-                wipItems,
-                projectControlItems,
-                targets
+                effectivePeriod, branchId, Instant.now().toEpochMilli(), summary, arAging, apAging,
+                branchLeaderboard, topCustomers, topProducts, expenseBreakdown, lowStockAlerts, deadStockAlerts,
+                wipItems, projectControlItems, targets
         );
     }
 
-    private ArApAgingSummary buildAgingSummary(
-            BigDecimal current, int currentCount,
-            BigDecimal b30To60, int b30To60Count,
-            BigDecimal b60To90, int b60To90Count,
-            BigDecimal bOver90, int bOver90Count,
-            BigDecimal total, BigDecimal totalOverdue
-    ) {
-        BigDecimal pCurrent = total.compareTo(BigDecimal.ZERO) > 0 ? current.multiply(BigDecimal.valueOf(100)).divide(total, 1, RoundingMode.HALF_UP) : BigDecimal.ZERO;
-        BigDecimal p30 = total.compareTo(BigDecimal.ZERO) > 0 ? b30To60.multiply(BigDecimal.valueOf(100)).divide(total, 1, RoundingMode.HALF_UP) : BigDecimal.ZERO;
-        BigDecimal p60 = total.compareTo(BigDecimal.ZERO) > 0 ? b60To90.multiply(BigDecimal.valueOf(100)).divide(total, 1, RoundingMode.HALF_UP) : BigDecimal.ZERO;
-        BigDecimal p90 = total.compareTo(BigDecimal.ZERO) > 0 ? bOver90.multiply(BigDecimal.valueOf(100)).divide(total, 1, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+    private List<ExpenseCategoryItem> buildExpenseBreakdown(List<ExpenseClaim> claims, BigDecimal payrollDisbursed) {
+        Map<String, BigDecimal> byCategory = claims.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getCategory() != null ? c.getCategory() : "OTHER",
+                        Collectors.reducing(BigDecimal.ZERO, c -> c.getAmount() != null ? c.getAmount() : BigDecimal.ZERO, BigDecimal::add)));
+        BigDecimal claimsTotal = byCategory.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal combinedTotal = claimsTotal.add(payrollDisbursed);
 
+        List<ExpenseCategoryItem> result = new ArrayList<>();
+        result.add(new ExpenseCategoryItem("PAYROLL", "workspace.executive.expensePayroll", payrollDisbursed, percentOf(payrollDisbursed, combinedTotal)));
+        byCategory.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .forEach(e -> result.add(new ExpenseCategoryItem(e.getKey(), "workspace.executive.expenseCategory." + e.getKey().toLowerCase(Locale.ROOT),
+                        e.getValue(), percentOf(e.getValue(), combinedTotal))));
+        return result;
+    }
+
+    private record ProjectFinancials(List<ProjectBudgetVarianceItem> items, BigDecimal totalBudget,
+                                      BigDecimal totalActual, BigDecimal totalContractValue) {
+    }
+
+    /**
+     * Real project financials for every currently-open (non-CLOSED) project: real approved budget
+     * ({@link ProjectBudgetVersionRepository}), real actual cost ({@link ProjectCostLedgerEntryRepository},
+     * batched to avoid the N+1 confirmed in docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md Performance
+     * Review P-2). Both default to zero when no real record exists — never a guessed percentage of
+     * contract value.
+     */
+    private ProjectFinancials computeProjectFinancials() {
+        List<Project> projects = projectRepository.findAll().stream()
+                .filter(p -> p.getStatus() != ProjectStatus.CLOSED)
+                .toList();
+        if (projects.isEmpty()) {
+            return new ProjectFinancials(List.of(), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+        }
+        List<String> projectIds = projects.stream().map(Project::getId).toList();
+        Map<String, BigDecimal> actualByProject = sumByProjectId(projectIds, CostLedgerEntryType.ACTUAL);
+
+        List<ProjectBudgetVarianceItem> items = new ArrayList<>();
+        BigDecimal totalBudget = BigDecimal.ZERO;
+        BigDecimal totalActual = BigDecimal.ZERO;
+        BigDecimal totalContractValue = BigDecimal.ZERO;
+        for (Project p : projects) {
+            BigDecimal contractValue = p.getContractValue() != null ? p.getContractValue() : BigDecimal.ZERO;
+            BigDecimal budget = projectBudgetVersionRepository.findByProjectIdAndStatus(p.getId(), BudgetVersionStatus.APPROVED)
+                    .map(ProjectBudgetVersion::getTotalBudgetAmount).orElse(BigDecimal.ZERO);
+            BigDecimal actual = actualByProject.getOrDefault(p.getId(), BigDecimal.ZERO);
+            BigDecimal variance = budget.subtract(actual);
+            totalBudget = totalBudget.add(budget);
+            totalActual = totalActual.add(actual);
+            totalContractValue = totalContractValue.add(contractValue);
+            items.add(new ProjectBudgetVarianceItem(p.getId(), p.getCode(), p.getName(), contractValue, budget, actual, variance, p.getStatus().name()));
+        }
+        return new ProjectFinancials(items, totalBudget, totalActual, totalContractValue);
+    }
+
+    private Map<String, BigDecimal> sumByProjectId(List<String> projectIds, CostLedgerEntryType entryType) {
+        Map<String, BigDecimal> result = new HashMap<>();
+        for (ProjectCostLedgerEntryRepository.ProjectAmountByType row
+                : costLedgerRepository.sumAmountByProjectIdInAndEntryType(projectIds, entryType)) {
+            result.put(row.getProjectId(), row.getTotal());
+        }
+        return result;
+    }
+
+    private record AgingTotals(BigDecimal current, int currentCount, BigDecimal b30to60, int b30to60Count,
+                                BigDecimal b60to90, int b60to90Count, BigDecimal bOver90, int bOver90Count,
+                                BigDecimal total, BigDecimal overdue) {
+    }
+
+    /**
+     * Buckets real open invoices/entries by days-past-due (0-30 = current, 31-60, 61-90, 90+).
+     * Returns real zeros/empty totals when {@code openItems} is empty — never a fabricated fallback.
+     */
+    private <T> AgingTotals bucketAgingByDueDate(List<T> openItems, LocalDate today,
+                                                  java.util.function.Function<T, BigDecimal> amountFn,
+                                                  java.util.function.Function<T, LocalDate> dueDateFn) {
+        BigDecimal current = BigDecimal.ZERO;
+        int currentCount = 0;
+        BigDecimal b30to60 = BigDecimal.ZERO;
+        int b30to60Count = 0;
+        BigDecimal b60to90 = BigDecimal.ZERO;
+        int b60to90Count = 0;
+        BigDecimal bOver90 = BigDecimal.ZERO;
+        int bOver90Count = 0;
+
+        for (T item : openItems) {
+            BigDecimal amount = amountFn.apply(item);
+            LocalDate due = dueDateFn.apply(item);
+            long days = ChronoUnit.DAYS.between(due, today);
+            if (days <= 30) {
+                current = current.add(amount);
+                currentCount++;
+            } else if (days <= 60) {
+                b30to60 = b30to60.add(amount);
+                b30to60Count++;
+            } else if (days <= 90) {
+                b60to90 = b60to90.add(amount);
+                b60to90Count++;
+            } else {
+                bOver90 = bOver90.add(amount);
+                bOver90Count++;
+            }
+        }
+
+        BigDecimal total = current.add(b30to60).add(b60to90).add(bOver90);
+        BigDecimal overdue = b30to60.add(b60to90).add(bOver90);
+        return new AgingTotals(current, currentCount, b30to60, b30to60Count, b60to90, b60to90Count, bOver90, bOver90Count, total, overdue);
+    }
+
+    private ArApAgingSummary buildAgingSummary(AgingTotals t) {
+        BigDecimal pCurrent = percentOf(t.current(), t.total());
+        BigDecimal p30 = percentOf(t.b30to60(), t.total());
+        BigDecimal p60 = percentOf(t.b60to90(), t.total());
+        BigDecimal p90 = percentOf(t.bOver90(), t.total());
         return new ArApAgingSummary(
-                new AgingBucket("executive.bucketCurrent", current, currentCount, pCurrent),
-                new AgingBucket("executive.bucket30to60", b30To60, b30To60Count, p30),
-                new AgingBucket("executive.bucket60to90", b60To90, b60To90Count, p60),
-                new AgingBucket("executive.bucketOver90", bOver90, bOver90Count, p90),
-                total,
-                totalOverdue
+                new AgingBucket("executive.bucketCurrent", t.current(), t.currentCount(), pCurrent),
+                new AgingBucket("executive.bucket30to60", t.b30to60(), t.b30to60Count(), p30),
+                new AgingBucket("executive.bucket60to90", t.b60to90(), t.b60to90Count(), p60),
+                new AgingBucket("executive.bucketOver90", t.bOver90(), t.bOver90Count(), p90),
+                t.total(), t.overdue()
         );
     }
 
     @Transactional(readOnly = true)
-    public byte[] exportExecutiveCockpitExcel(String period, String companyId, String branchId) {
-        OwnerCockpitResponse data = getOwnerCockpit(period, companyId, branchId);
+    public byte[] exportExecutiveCockpitExcel(String period, String branchId) {
+        OwnerCockpitResponse data = getOwnerCockpit(period, branchId);
+        final int maxRowsPerSheet = 500; // guards against an unbounded workbook (see Performance Review P-3)
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             CellStyle headerStyle = workbook.createCellStyle();
             Font font = workbook.createFont();
@@ -1086,8 +1000,9 @@ public class ExecutiveAnalyticsService {
                 cell.setCellValue(brHeaders[c]);
                 cell.setCellStyle(headerStyle);
             }
-            for (int r = 0; r < data.branchLeaderboard().size(); r++) {
-                var b = data.branchLeaderboard().get(r);
+            List<BranchPerformanceItem> branchRows = data.branchLeaderboard().stream().limit(maxRowsPerSheet).toList();
+            for (int r = 0; r < branchRows.size(); r++) {
+                var b = branchRows.get(r);
                 Row row = s3.createRow(r + 1);
                 row.createCell(0).setCellValue(b.branchCode());
                 row.createCell(1).setCellValue(b.branchName());
@@ -1157,7 +1072,7 @@ public class ExecutiveAnalyticsService {
                 cell.setCellStyle(headerStyle);
             }
             int sIdx = 2;
-            for (var st : data.lowStockAlerts()) {
+            for (var st : data.lowStockAlerts().stream().limit(maxRowsPerSheet).toList()) {
                 Row row = s5.createRow(sIdx++);
                 row.createCell(0).setCellValue(st.itemCode());
                 row.createCell(1).setCellValue(st.itemName());
@@ -1176,14 +1091,14 @@ public class ExecutiveAnalyticsService {
                 cell.setCellValue(wipHeads[c]);
                 cell.setCellStyle(headerStyle);
             }
-            for (var wip : data.manufacturingWip()) {
+            for (var wip : data.manufacturingWip().stream().limit(maxRowsPerSheet).toList()) {
                 Row row = s5.createRow(sIdx++);
                 row.createCell(0).setCellValue(wip.orderNumber());
-                row.createCell(1).setCellValue(wip.itemName());
+                row.createCell(1).setCellValue(wip.itemName() != null ? wip.itemName() : "—");
                 row.createCell(2).setCellValue(wip.targetQuantity().doubleValue());
                 row.createCell(3).setCellValue(wip.actualOutputQuantity().doubleValue());
                 row.createCell(4).setCellValue(wip.materialCost().doubleValue());
-                row.createCell(5).setCellValue(wip.startDate());
+                row.createCell(5).setCellValue(wip.startDate() != null ? wip.startDate() : "—");
                 row.createCell(6).setCellValue(wip.status());
             }
             for (int c = 0; c < 7; c++) s5.autoSizeColumn(c);
@@ -1198,8 +1113,9 @@ public class ExecutiveAnalyticsService {
                 cell.setCellValue(prjHeads[c]);
                 cell.setCellStyle(headerStyle);
             }
-            for (int r = 0; r < data.projectBudgetControl().size(); r++) {
-                var p = data.projectBudgetControl().get(r);
+            List<ProjectBudgetVarianceItem> projectRows = data.projectBudgetControl().stream().limit(maxRowsPerSheet).toList();
+            for (int r = 0; r < projectRows.size(); r++) {
+                var p = projectRows.get(r);
                 Row row = s6.createRow(r + 1);
                 row.createCell(0).setCellValue(p.code());
                 row.createCell(1).setCellValue(p.name());
@@ -1220,34 +1136,21 @@ public class ExecutiveAnalyticsService {
 
     @Transactional(readOnly = true)
     public CockpitTargetResponse getTargets(String periodKey) {
-        String key = (periodKey != null && !periodKey.isBlank()) ? periodKey : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        if (cockpitTargetRepository != null) {
-            Optional<ExecutiveCockpitTarget> target = cockpitTargetRepository.findByPeriodKey(key);
-            if (target.isPresent()) {
-                ExecutiveCockpitTarget t = target.get();
-                return new CockpitTargetResponse(
-                        t.getId(),
-                        t.getPeriodKey(),
-                        t.getTargetRevenue(),
-                        t.getTargetGrossMarginPercent(),
-                        t.getTargetMaxOpex(),
-                        t.getTargetMinLiquidity(),
-                        t.getTargetMaxOverdueAr(),
-                        t.getNotes(),
-                        t.getUpdatedAt()
-                );
-            }
+        String key = (periodKey != null && !periodKey.isBlank()) ? periodKey : effectivePeriod(null);
+        Optional<ExecutiveCockpitTarget> target = cockpitTargetRepository.findByPeriodKey(key);
+        if (target.isPresent()) {
+            ExecutiveCockpitTarget t = target.get();
+            return new CockpitTargetResponse(
+                    t.getId(), t.getPeriodKey(), t.getTargetRevenue(), t.getTargetGrossMarginPercent(),
+                    t.getTargetMaxOpex(), t.getTargetMinLiquidity(), t.getTargetMaxOverdueAr(), t.getNotes(), t.getUpdatedAt()
+            );
         }
+        // No tenant-configured target exists for this period yet. `id: "default"` (not a real UUID)
+        // signals to callers that these are illustrative starting values, not a saved target.
         return new CockpitTargetResponse(
-                "default",
-                key,
-                BigDecimal.valueOf(1_500_000.00),
-                BigDecimal.valueOf(35.0),
-                BigDecimal.valueOf(250_000.00),
-                BigDecimal.valueOf(300_000.00),
-                BigDecimal.valueOf(50_000.00),
-                "Standard operational targets",
-                System.currentTimeMillis()
+                "default", key, BigDecimal.valueOf(1_500_000.00), BigDecimal.valueOf(35.0),
+                BigDecimal.valueOf(250_000.00), BigDecimal.valueOf(300_000.00), BigDecimal.valueOf(50_000.00),
+                "Standard operational targets", System.currentTimeMillis()
         );
     }
 
@@ -1256,42 +1159,48 @@ public class ExecutiveAnalyticsService {
         if (request.periodKey() == null || request.periodKey().isBlank()) {
             throw new BusinessRuleException("Period key is required", "EXECUTIVE_TARGET_INVALID", HttpStatus.BAD_REQUEST);
         }
-        ExecutiveCockpitTarget target = cockpitTargetRepository != null
-                ? cockpitTargetRepository.findByPeriodKey(request.periodKey()).orElse(null)
-                : null;
+        ExecutiveCockpitTarget target = cockpitTargetRepository.findByPeriodKey(request.periodKey()).orElse(null);
 
         if (target != null) {
-            target.update(
-                    request.targetRevenue(),
-                    request.targetGrossMarginPercent(),
-                    request.targetMaxOpex(),
-                    request.targetMinLiquidity(),
-                    request.targetMaxOverdueAr(),
-                    request.notes()
-            );
+            target.update(request.targetRevenue(), request.targetGrossMarginPercent(), request.targetMaxOpex(),
+                    request.targetMinLiquidity(), request.targetMaxOverdueAr(), request.notes());
         } else {
-            target = new ExecutiveCockpitTarget(
-                    request.periodKey(),
-                    request.targetRevenue(),
-                    request.targetGrossMarginPercent(),
-                    request.targetMaxOpex(),
-                    request.targetMinLiquidity(),
-                    request.targetMaxOverdueAr(),
-                    request.notes()
-            );
+            target = new ExecutiveCockpitTarget(request.periodKey(), request.targetRevenue(),
+                    request.targetGrossMarginPercent(), request.targetMaxOpex(), request.targetMinLiquidity(),
+                    request.targetMaxOverdueAr(), request.notes());
         }
 
-        ExecutiveCockpitTarget saved = cockpitTargetRepository != null ? cockpitTargetRepository.save(target) : target;
+        ExecutiveCockpitTarget saved;
+        try {
+            saved = cockpitTargetRepository.save(target);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Two concurrent first-time saves for the same not-yet-existing period both pass the
+            // null check above; the DB unique constraint on (app_id, period_key) rejects the loser.
+            // Report a clean, specific conflict instead of letting the generic DATA_CONFLICT handler
+            // return an unhelpful message (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Medium
+            // Finding M-3) — the caller should re-fetch and retry as an update.
+            throw new BusinessRuleException(
+                    "Targets for this period were just created by another request; reload and try again.",
+                    "EXECUTIVE_TARGET_CONCURRENT_CREATE", HttpStatus.CONFLICT);
+        }
         return new CockpitTargetResponse(
-                saved.getId(),
-                saved.getPeriodKey(),
-                saved.getTargetRevenue(),
-                saved.getTargetGrossMarginPercent(),
-                saved.getTargetMaxOpex(),
-                saved.getTargetMinLiquidity(),
-                saved.getTargetMaxOverdueAr(),
-                saved.getNotes(),
-                saved.getUpdatedAt()
+                saved.getId(), saved.getPeriodKey(), saved.getTargetRevenue(), saved.getTargetGrossMarginPercent(),
+                saved.getTargetMaxOpex(), saved.getTargetMinLiquidity(), saved.getTargetMaxOverdueAr(),
+                saved.getNotes(), saved.getUpdatedAt()
         );
+    }
+
+    private String effectivePeriod(String period) {
+        return (period != null && !period.isBlank()) ? period : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+    }
+
+    private static BigDecimal percentOf(BigDecimal numerator, BigDecimal denominator) {
+        return denominator != null && denominator.compareTo(BigDecimal.ZERO) > 0
+                ? numerator.multiply(BigDecimal.valueOf(100)).divide(denominator, 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+    }
+
+    private static <T> BigDecimal sumAmounts(List<T> list, java.util.function.Function<T, BigDecimal> amountFn) {
+        return list.stream().map(amountFn).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

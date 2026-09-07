@@ -162,7 +162,7 @@ describe('ExecutiveAnalyticsPage', () => {
     timestamp: 123456,
     totalRevenue: 1500000,
     totalOpex: 900000,
-    grossProfit: 600000,
+    netProfit: 600000,
     netMarginPercent: 40.0,
     operatingCashFlow: 510000,
     salesBookings: 300000,

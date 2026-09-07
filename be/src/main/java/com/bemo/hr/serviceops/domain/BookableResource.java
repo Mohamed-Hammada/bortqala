@@ -72,7 +72,12 @@ public class BookableResource {
         this.capacity = capacity != null ? capacity : 1;
         this.location = location;
         this.active = true;
-        this.version = 0L;
+        // Do NOT set `version` here — Spring Data JPA's isNew() check for @Version entities relies
+        // on version being null to route save() through entityManager.persist() (insert). Setting it
+        // to 0L here makes isNew() return false, routes save() through merge() instead, and merge()
+        // on a not-yet-persisted row throws ObjectOptimisticLockingFailureException on every create
+        // call (see docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md remediation notes — this was a latent,
+        // untested bug: every BookingController create request failed with 409 before this fix).
         long now = System.currentTimeMillis();
         this.createdAt = now;
         this.updatedAt = now;

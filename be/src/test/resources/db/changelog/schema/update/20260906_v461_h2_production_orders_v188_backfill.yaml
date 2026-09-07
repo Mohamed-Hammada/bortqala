@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260906-v461-h2-production-orders-v188-backfill
+      author: bemo-tech-lead
+      comment: >
+        H2-only schema-drift fix (2026-09-06 deep-engineering remediation): the H2 test changelog
+        master never included db/changelog/schema/create/20260810_v188_manufacturing_transactional.yaml,
+        which is present in the production changelog master and adds these 7 columns to
+        production_orders. ProductionOrder.java maps all 7 (finishedItemId, bomRevision,
+        actualOutputQuantity, scrapQuantity, actualMaterialCost, actualUnitCost, completionDate,
+        notes), so ANY real Hibernate query against ProductionOrder failed against the H2 test
+        database with "Column not found" — confirmed by
+        ExecutiveAnalyticsAuthorizationIntegrationTests (GET /cockpit, previously only ever
+        exercised through Mockito-mocked repositories, never a live H2 schema). Deliberately does
+        NOT include v188's boms/bom_lines dropTable+createTable — this file only backfills the
+        production_orders columns actually needed, to avoid touching unrelated BOM schema/data
+        this remediation did not otherwise need to change.
+      changes:
+        - addColumn:
+            tableName: production_orders
+            columns:
+              - column:
+                  name: finished_item_id
+                  type: varchar(36)
+              - column:
+                  name: bom_revision
+                  type: varchar(20)
+              - column:
+                  name: actual_output_quantity
+                  type: numeric(12, 2)
+              - column:
+                  name: scrap_quantity
+                  type: numeric(12, 2)
+              - column:
+                  name: actual_material_cost
+                  type: numeric(15, 2)
+              - column:
+                  name: actual_unit_cost
+                  type: numeric(15, 2)
+              - column:
+                  name: completion_date
+                  type: date
+              - column:
+                  name: notes
+                  type: varchar(500)

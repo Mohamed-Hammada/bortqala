@@ -3,12 +3,19 @@ package com.bemo.hr.serviceops.api;
 import com.bemo.hr.serviceops.application.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * No {@code @TenantId}-scoped entity here carries a branchId, so no branch-access check applies
+ * to this module (unlike branch-scoped modules such as finance/treasury) — confirmed by inspection
+ * of BookableResource/ResourceBooking during the 2026-09-06 security remediation.
+ */
 @RestController
 @RequestMapping("/api/v1/service-ops/bookings")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER', 'GENERAL_MANAGER')")
 public class BookingController {
 
     private final BookingService bookingService;
@@ -20,6 +27,7 @@ public class BookingController {
     // Resources
     @PostMapping("/resources")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER')")
     public ServiceOpsApi.BookableResourceResponse createResource(@Valid @RequestBody ServiceOpsApi.BookableResourceCreateRequest request) {
         return bookingService.createResource(request);
     }
@@ -37,6 +45,7 @@ public class BookingController {
     // Bookings
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER')")
     public ServiceOpsApi.ResourceBookingResponse createBooking(@Valid @RequestBody ServiceOpsApi.ResourceBookingCreateRequest request) {
         return bookingService.createBooking(request);
     }
@@ -50,6 +59,7 @@ public class BookingController {
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'INVENTORY_MANAGER')")
     public ServiceOpsApi.ResourceBookingResponse cancelBooking(@PathVariable String id) {
         return bookingService.cancelBooking(id);
     }

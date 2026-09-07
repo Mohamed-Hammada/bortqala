@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260906-v461-dedupe-executive-kpi-snapshots
+      author: bemo-tech-lead
+      comment: >
+        Pre-cleanup for v461: any environment that already exercised the pre-fix
+        ExecutiveAnalyticsService.recordSnapshot (no upsert, no constraint) may already hold
+        duplicate rows for the same app_id/period_key/category/kpi_key. Keep only the most
+        recently created row per group so the uniqueness constraint below can be added safely.
+      changes:
+        - sql:
+            sql: >
+              DELETE FROM executive_kpi_snapshots WHERE id NOT IN (
+                SELECT id FROM (
+                  SELECT id, ROW_NUMBER() OVER (
+                    PARTITION BY app_id, period_key, category, kpi_key
+                    ORDER BY created_at DESC, id DESC
+                  ) AS rn
+                  FROM executive_kpi_snapshots
+                ) ranked WHERE rn = 1
+              )
+  - changeSet:
+      id: 20260906-v461-executive-kpi-snapshot-uniqueness
+      author: bemo-tech-lead
+      comment: >
+        Deep-engineering remediation (2026-09-06): executive_kpi_snapshots had no uniqueness
+        guard, so repeated/concurrent POST /snapshots calls for the same period/category/KPI key
+        silently created unbounded duplicate rows (docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md,
+        Medium Finding M-2). ExecutiveAnalyticsService.recordSnapshot is now an upsert backed by
+        this constraint.
+      changes:
+        - addUniqueConstraint:
+            tableName: executive_kpi_snapshots
+            columnNames: app_id, period_key, category, kpi_key
+            constraintName: uq_exec_kpi_snapshot_app_period_cat_key

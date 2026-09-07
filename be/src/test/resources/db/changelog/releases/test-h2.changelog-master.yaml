@@ -1150,6 +1150,16 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/update/20260905_v460_owner_executive_cockpit_translations.yaml
       relativeToChangelogFile: false
+  # 2026-09-06 deep-engineering remediation: executive_kpi_snapshots uniqueness
+  - include:
+      file: db/changelog/schema/update/20260906_v461_executive_kpi_snapshot_uniqueness.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260906_v461_executive_target_concurrent_translation.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260906_v461_h2_production_orders_v188_backfill.yaml
+      relativeToChangelogFile: false
 
 
 

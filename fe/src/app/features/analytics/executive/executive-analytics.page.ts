@@ -66,15 +66,13 @@ export class ExecutiveAnalyticsPage implements OnInit {
   cockpitFilterForm = this.fb.group({
     periodPreset: ['THIS_MONTH'],
     period: [''],
-    companyId: [''],
     branchId: [''],
   });
 
+  // companyId/branchId/projectId removed from this filter — the /overview endpoint never used
+  // them to filter anything (docs/DEEP_ENGINEERING_REVIEW_2026-09-06.md, Medium Finding M-1).
   filterForm = this.fb.group({
     period: [''],
-    companyId: [''],
-    branchId: [''],
-    projectId: [''],
   });
 
   snapshotForm = this.fb.group({
@@ -124,11 +122,7 @@ export class ExecutiveAnalyticsPage implements OnInit {
     try {
       const val = this.cockpitFilterForm.value;
       const data = await firstValueFrom(
-        this.service.getCockpit(
-          val.period || undefined,
-          val.companyId || undefined,
-          val.branchId || undefined
-        )
+        this.service.getCockpit(val.period || undefined, val.branchId || undefined)
       );
       this.cockpitData.set(data);
     } catch (err) {
@@ -213,11 +207,7 @@ export class ExecutiveAnalyticsPage implements OnInit {
     try {
       const formVal = this.cockpitFilterForm.value;
       const blob = await firstValueFrom(
-        this.service.exportCockpitExcel(
-          formVal.period || undefined,
-          formVal.companyId || undefined,
-          formVal.branchId || undefined
-        )
+        this.service.exportCockpitExcel(formVal.period || undefined, formVal.branchId || undefined)
       );
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -241,7 +231,7 @@ export class ExecutiveAnalyticsPage implements OnInit {
     try {
       const formVal = this.filterForm.value;
       const [overviewData, trendsData, registryData, snapshotsData] = await Promise.all([
-        firstValueFrom(this.service.getOverview(formVal.period || undefined, formVal.companyId || undefined, formVal.branchId || undefined, formVal.projectId || undefined)),
+        firstValueFrom(this.service.getOverview(formVal.period || undefined)),
         firstValueFrom(this.service.getTrends(this.selectedMonths())),
         firstValueFrom(this.service.getKpiRegistry()),
         firstValueFrom(this.service.getSnapshots()),
