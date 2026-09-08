@@ -272,16 +272,16 @@ class PunchSourceIdentityMigrationTests {
         try (ResultSet sourceFk = statement.executeQuery("""
                 SELECT constraint_name FROM information_schema.table_constraints
                 WHERE table_name = 'punch_records' AND constraint_type = 'FOREIGN KEY'
+                  AND constraint_name = 'fk_punch_records_source'
                 """)) {
-            assertThat(sourceFk.next()).isTrue();
-            assertThat(sourceFk.getString(1)).isEqualTo("fk_punch_records_source");
+            assertThat(sourceFk.next()).as("fk_punch_records_source exists").isTrue();
         }
         try (ResultSet batchFk = statement.executeQuery("""
                 SELECT constraint_name FROM information_schema.table_constraints
                 WHERE table_name = 'import_batches' AND constraint_type = 'FOREIGN KEY'
+                  AND constraint_name = 'fk_import_batches_source'
                 """)) {
-            assertThat(batchFk.next()).isTrue();
-            assertThat(batchFk.getString(1)).isEqualTo("fk_import_batches_source");
+            assertThat(batchFk.next()).as("fk_import_batches_source exists").isTrue();
         }
     }
 
