@@ -7,9 +7,12 @@ import com.bemo.hr.project.infrastructure.*;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -29,7 +32,13 @@ public class ProjectDailyReportService {
     private final DailyMaterialConsumptionRepository materialConsumptionRepository;
     private final ProjectRepository projectRepository;
     private final WbsNodeRepository wbsNodeRepository;
+    private final DailyReportAttachmentRepository attachmentRepository;
     private final AuditService auditService;
+
+    private static final long MAX_ATTACHMENT_SIZE_BYTES = 10L * 1024 * 1024;
+    private static final Set<String> ALLOWED_ATTACHMENT_CONTENT_TYPES = Set.of(
+            "application/pdf", "image/png", "image/jpeg",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
     public ProjectDailyReportService(
             ProjectDailyReportRepository dailyReportRepository,
@@ -39,6 +48,7 @@ public class ProjectDailyReportService {
             DailyMaterialConsumptionRepository materialConsumptionRepository,
             ProjectRepository projectRepository,
             WbsNodeRepository wbsNodeRepository,
+            DailyReportAttachmentRepository attachmentRepository,
             AuditService auditService) {
         this.dailyReportRepository = dailyReportRepository;
         this.progressLineRepository = progressLineRepository;
@@ -47,6 +57,7 @@ public class ProjectDailyReportService {
         this.materialConsumptionRepository = materialConsumptionRepository;
         this.projectRepository = projectRepository;
         this.wbsNodeRepository = wbsNodeRepository;
+        this.attachmentRepository = attachmentRepository;
         this.auditService = auditService;
     }
 
@@ -62,7 +73,7 @@ public class ProjectDailyReportService {
         requireProject(projectId);
         ProjectDailyReport report = requireReport(reportId);
         if (!report.getProjectId().equals(projectId)) {
-            throw new NotFoundException("DPR_NOT_FOUND");
+            throw new NotFoundException("Daily report not found for this project.", "DPR_NOT_FOUND");
         }
         return mapFullResponse(report);
     }
@@ -73,7 +84,8 @@ public class ProjectDailyReportService {
         ReportShift shift = req.shift() != null ? req.shift() : ReportShift.DAY;
 
         if (dailyReportRepository.findByProjectIdAndReportDateAndShift(projectId, reportDate, shift).isPresent()) {
-            throw new BusinessRuleException("DPR_ALREADY_EXISTS_FOR_DATE_SHIFT");
+            throw new BusinessRuleException("A daily report already exists for this project, date, and shift.",
+                    "DPR_ALREADY_EXISTS_FOR_DATE_SHIFT", HttpStatus.CONFLICT);
         }
 
         String reportNumber = String.format("DPR-%s-%s-%s", project.getCode(), reportDate, shift);
@@ -111,7 +123,8 @@ public class ProjectDailyReportService {
         ProjectDailyReport report = requireReport(reportId);
 
         if (report.getStatus() == DailyReportStatus.APPROVED) {
-            throw new BusinessRuleException("DPR_CANNOT_EDIT_APPROVED");
+            throw new BusinessRuleException("An approved daily report cannot be edited. Reopen it first.",
+                    "DPR_CANNOT_EDIT_APPROVED", HttpStatus.CONFLICT);
         }
 
         report.updateDraft(
@@ -217,13 +230,15 @@ public class ProjectDailyReportService {
         requireProject(projectId);
         ProjectDailyReport report = requireReport(reportId);
         if (report.getStatus() == DailyReportStatus.APPROVED) {
-            throw new BusinessRuleException("DPR_CANNOT_DELETE_APPROVED");
+            throw new BusinessRuleException("An approved daily report cannot be deleted. Reopen it first.",
+                    "DPR_CANNOT_DELETE_APPROVED", HttpStatus.CONFLICT);
         }
 
         progressLineRepository.deleteByDailyReportId(report.getId());
         laborSnapshotRepository.deleteByDailyReportId(report.getId());
         equipmentLogRepository.deleteByDailyReportId(report.getId());
         materialConsumptionRepository.deleteByDailyReportId(report.getId());
+        attachmentRepository.deleteByDailyReportId(report.getId());
         dailyReportRepository.delete(report);
 
         auditService.record(
@@ -242,7 +257,7 @@ public class ProjectDailyReportService {
 
         List<ProjectDailyReport> previousReports = dailyReportRepository.findLatestBeforeDate(projectId, targetDate);
         if (previousReports.isEmpty()) {
-            throw new NotFoundException("DPR_NO_PREVIOUS_REPORT_FOUND");
+            throw new NotFoundException("No earlier daily report exists to copy from.", "DPR_NO_PREVIOUS_REPORT_FOUND");
         }
 
         ProjectDailyReport prev = previousReports.get(0);
@@ -396,6 +411,108 @@ public class ProjectDailyReportService {
                 wbsSummaries,
                 laborSummaries,
                 materialSummaries
+        );
+    }
+
+    // ─── Attachments / Evidence ──────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<AttachmentResponse> listAttachments(String projectId, String reportId) {
+        requireProject(projectId);
+        requireReport(reportId);
+        return attachmentRepository.findByDailyReportIdOrderByUploadedAtDesc(reportId).stream()
+                .map(this::mapAttachmentResponse)
+                .toList();
+    }
+
+    public AttachmentResponse addAttachment(String projectId, String reportId, AttachmentRequest req,
+                                            MultipartFile file, String userId) {
+        requireProject(projectId);
+        ProjectDailyReport report = requireReport(reportId);
+
+        if (file == null || file.isEmpty()) {
+            throw new BusinessRuleException("An attachment file is required.",
+                    "DPR_ATTACHMENT_FILE_REQUIRED", HttpStatus.CONFLICT);
+        }
+        if (file.getSize() > MAX_ATTACHMENT_SIZE_BYTES) {
+            throw new BusinessRuleException("Daily report attachments cannot exceed 10 MB.",
+                    "DPR_ATTACHMENT_FILE_TOO_LARGE", HttpStatus.CONFLICT);
+        }
+        String contentType = file.getContentType() == null ? "application/octet-stream" : file.getContentType();
+        if (!ALLOWED_ATTACHMENT_CONTENT_TYPES.contains(contentType)) {
+            throw new BusinessRuleException("Unsupported daily report attachment type: " + contentType,
+                    "DPR_ATTACHMENT_FILE_TYPE_INVALID", HttpStatus.CONFLICT);
+        }
+        byte[] content;
+        try {
+            content = file.getBytes();
+        } catch (IOException ex) {
+            log.error("Failed to read daily report attachment for reportId={}", reportId, ex);
+            throw new BusinessRuleException("The attachment could not be read.",
+                    "DPR_ATTACHMENT_FILE_READ_FAILED", HttpStatus.CONFLICT);
+        }
+        String fileName = file.getOriginalFilename() == null || file.getOriginalFilename().isBlank()
+                ? "attachment" : file.getOriginalFilename();
+
+        DailyReportAttachment attachment = new DailyReportAttachment(
+                report.getId(), fileName, contentType, content,
+                req != null ? req.description() : null, userId);
+        attachment = attachmentRepository.save(attachment);
+
+        auditService.record(
+                "PROJECT_DPR_ATTACHMENT_ADD",
+                "PROJECT_DAILY_REPORT",
+                report.getId(),
+                userId,
+                "Added attachment " + attachment.getFileName() + " to daily report " + report.getReportNumber(),
+                null
+        );
+
+        return mapAttachmentResponse(attachment);
+    }
+
+    @Transactional(readOnly = true)
+    public DailyReportAttachment downloadAttachment(String projectId, String reportId, String attachmentId) {
+        requireProject(projectId);
+        requireReport(reportId);
+        DailyReportAttachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new NotFoundException("Attachment not found: " + attachmentId, "DPR_ATTACHMENT_NOT_FOUND"));
+        if (!attachment.getDailyReportId().equals(reportId)) {
+            throw new NotFoundException("Attachment not found for this daily report.", "DPR_ATTACHMENT_NOT_FOUND");
+        }
+        return attachment;
+    }
+
+    public void deleteAttachment(String projectId, String reportId, String attachmentId, String userId) {
+        requireProject(projectId);
+        ProjectDailyReport report = requireReport(reportId);
+        DailyReportAttachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new NotFoundException("Attachment not found: " + attachmentId, "DPR_ATTACHMENT_NOT_FOUND"));
+        if (!attachment.getDailyReportId().equals(reportId)) {
+            throw new NotFoundException("Attachment not found for this daily report.", "DPR_ATTACHMENT_NOT_FOUND");
+        }
+        attachmentRepository.delete(attachment);
+
+        auditService.record(
+                "PROJECT_DPR_ATTACHMENT_DELETE",
+                "PROJECT_DAILY_REPORT",
+                report.getId(),
+                userId,
+                "Deleted attachment " + attachment.getFileName() + " from daily report " + report.getReportNumber(),
+                null
+        );
+    }
+
+    private AttachmentResponse mapAttachmentResponse(DailyReportAttachment attachment) {
+        return new AttachmentResponse(
+                attachment.getId(),
+                attachment.getDailyReportId(),
+                attachment.getFileName(),
+                attachment.getContentType(),
+                attachment.getFileSize(),
+                attachment.getDescription(),
+                attachment.getUploadedBy(),
+                instantToEpoch(attachment.getUploadedAt())
         );
     }
 
@@ -629,12 +746,12 @@ public class ProjectDailyReportService {
 
     private Project requireProject(String projectId) {
         return projectRepository.findById(projectId)
-                .orElseThrow(() -> new NotFoundException("PROJECT_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Project not found: " + projectId, "PROJECT_NOT_FOUND"));
     }
 
     private ProjectDailyReport requireReport(String reportId) {
         return dailyReportRepository.findById(reportId)
-                .orElseThrow(() -> new NotFoundException("DPR_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Daily report not found: " + reportId, "DPR_NOT_FOUND"));
     }
 
     private static LocalDate epochToLocalDate(Long epoch) {

@@ -1,5 +1,14 @@
 # Test Evidence — Bemo ERP
 
+## 2026-09-08 — PostgreSQL/Testcontainers access restored; PAY-001's last open gate closed
+
+- Docker Desktop's WSL integration, previously unavailable in this working environment (every entry below from 2026-08-13 through 2026-08-30 recorded this block), was enabled. This is the first entry in this log with real PostgreSQL execution evidence, not a compile-only or blocked claim.
+- `PayrollPaymentConcurrencyTests` (10 repetitions, `extends PostgresIntegrationTest`) executed against a real `postgres:17-alpine` Testcontainers instance: **10/10 pass**. Real two-thread race, real optimistic-lock/version conflict, real DB state confirms exactly one `PAID` payment per period — not a mocked exception. This closes `PAY-001`'s previously-blocked concurrency gate; see `docs/BORTQALA_CURRENT_CODE_REVIEW_REMAINING_WORK_2026-08-13.md` (PAY-001 section) for full detail.
+- The same real-PostgreSQL run also covered `SupplierPaymentConcurrencyTests` (10/10), `VendorPaymentProposalConcurrencyTests` (5/5), `PunchSourceIdentityConcurrencyTests` (7/7), `ReportingBulkDecisionConcurrencyTests` (1/1), `WorkforceImportCommitConcurrencyTests` (10/10), `LiquibaseUpgradePathTests` (1/1), `PunchSourceIdentityMigrationTests` (2/2), and a new `ExecutiveAnalyticsAuthorizationPostgresIntegrationTests` (2/2, added to directly prove the Executive Analytics snapshot-upsert and target-creation-race mechanisms against real PostgreSQL) — **48/48 total** across all 9 Testcontainers-gated classes.
+- Getting there also surfaced and fixed one critical, previously-invisible production bug (`@Lob`→`oid` PostgreSQL schema-validation mismatch across 5 fields in 3 entities, which would have blocked application startup entirely against real PostgreSQL) plus several test-fixture/test-assertion bugs unrelated to production code. Full detail: `docs/FINAL_REMEDIATION_VERIFICATION_2026-09-07.md` §0.7–§0.8, `docs/PRODUCTION_READINESS_AUDIT_2026-09-08.md`.
+- Full backend H2 regression suite (`./gradlew test -PskipDockerTests`) re-run after all of the above: `BUILD SUCCESSFUL`, 0 failures — no regression introduced.
+- Release-readiness status: with `PAY-001` now fully verified, every item in the canonical tracker (`docs/BORTQALA_CURRENT_CODE_REVIEW_REMAINING_WORK_2026-08-13.md`) is `VERIFIED DONE`; see `docs/PRODUCTION_READINESS_AUDIT_2026-09-08.md` for the final GO verdict.
+
 ## 2026-08-30 — Full Production Finalization & Complete Work Packages Release
 
 - **All 52 Work Packages Completed & Shipped**:

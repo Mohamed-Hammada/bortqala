@@ -48,6 +48,9 @@ class ProjectDailyReportServiceTests {
     private WbsNodeRepository wbsNodeRepository;
 
     @Mock
+    private DailyReportAttachmentRepository attachmentRepository;
+
+    @Mock
     private AuditService auditService;
 
     private ProjectDailyReportService service;
@@ -65,6 +68,7 @@ class ProjectDailyReportServiceTests {
                 materialConsumptionRepository,
                 projectRepository,
                 wbsNodeRepository,
+                attachmentRepository,
                 auditService
         );
 
@@ -160,9 +164,14 @@ class ProjectDailyReportServiceTests {
                 "", "", "", List.of(), List.of(), List.of(), List.of()
         );
 
+        // Regression test: this must throw with getCode() == "DPR_ALREADY_EXISTS_FOR_DATE_SHIFT" (the
+        // three-argument constructor), not merely a message that happens to contain the code string.
+        // BusinessRuleException(message) alone sets code to the generic "BUSINESS_CONFLICT" fallback,
+        // which ApiExceptionHandler resolves to a generic message instead of this specific one.
         assertThatThrownBy(() -> service.createDailyReport(project.getId(), req, "user-1"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("DPR_ALREADY_EXISTS_FOR_DATE_SHIFT");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("DPR_ALREADY_EXISTS_FOR_DATE_SHIFT"));
     }
 
     @Test
@@ -216,5 +225,100 @@ class ProjectDailyReportServiceTests {
         DailyReportResponse reopened = service.reopenDailyReport(project.getId(), report.getId(), "خطأ في كميات الحفر", "pm-1");
 
         assertThat(reopened.status()).isEqualTo(DailyReportStatus.REOPENED);
+    }
+
+    // ─── Attachments / Evidence ──────────────────────────────────────
+
+    private ProjectDailyReport newReport() {
+        return new ProjectDailyReport(project.getId(), "DPR-01", LocalDate.of(2026, 3, 1),
+                ReportShift.DAY, WeatherCondition.SUNNY, BigDecimal.valueOf(25), "u-1", "", "", "");
+    }
+
+    @Test
+    void addAttachment_savesRealFileContentAndReturnsMetadata() {
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        ProjectDailyReport report = newReport();
+        when(dailyReportRepository.findById(report.getId())).thenReturn(Optional.of(report));
+        when(attachmentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        byte[] content = "site-photo-bytes".getBytes();
+        var file = new org.springframework.mock.web.MockMultipartFile("file", "site-1.jpg", "image/jpeg", content);
+
+        AttachmentResponse response = service.addAttachment(
+                project.getId(), report.getId(), new AttachmentRequest("Excavation progress photo"), file, "u-1");
+
+        assertThat(response.fileName()).isEqualTo("site-1.jpg");
+        assertThat(response.contentType()).isEqualTo("image/jpeg");
+        assertThat(response.fileSize()).isEqualTo(content.length);
+        assertThat(response.description()).isEqualTo("Excavation progress photo");
+        assertThat(response.uploadedBy()).isEqualTo("u-1");
+
+        // Real content is what was actually saved, not merely the metadata.
+        org.mockito.ArgumentCaptor<DailyReportAttachment> captor = org.mockito.ArgumentCaptor.forClass(DailyReportAttachment.class);
+        verify(attachmentRepository).save(captor.capture());
+        assertThat(captor.getValue().contentCopy()).isEqualTo(content);
+        verify(auditService).record(eq("PROJECT_DPR_ATTACHMENT_ADD"), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void addAttachment_rejectsOversizedFile() {
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        ProjectDailyReport report = newReport();
+        when(dailyReportRepository.findById(report.getId())).thenReturn(Optional.of(report));
+
+        byte[] tooLarge = new byte[11 * 1024 * 1024];
+        var file = new org.springframework.mock.web.MockMultipartFile("file", "big.pdf", "application/pdf", tooLarge);
+
+        assertThatThrownBy(() -> service.addAttachment(project.getId(), report.getId(), null, file, "u-1"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("DPR_ATTACHMENT_FILE_TOO_LARGE"));
+        verify(attachmentRepository, never()).save(any());
+    }
+
+    @Test
+    void addAttachment_rejectsUnsupportedContentType() {
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        ProjectDailyReport report = newReport();
+        when(dailyReportRepository.findById(report.getId())).thenReturn(Optional.of(report));
+
+        var file = new org.springframework.mock.web.MockMultipartFile(
+                "file", "script.exe", "application/x-msdownload", "malicious".getBytes());
+
+        assertThatThrownBy(() -> service.addAttachment(project.getId(), report.getId(), null, file, "u-1"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("DPR_ATTACHMENT_FILE_TYPE_INVALID"));
+        verify(attachmentRepository, never()).save(any());
+    }
+
+    @Test
+    void downloadAttachment_rejectsAttachmentFromADifferentReport() {
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        ProjectDailyReport report = newReport();
+        when(dailyReportRepository.findById(report.getId())).thenReturn(Optional.of(report));
+
+        DailyReportAttachment foreignAttachment = new DailyReportAttachment(
+                "some-other-report-id", "f.pdf", "application/pdf", "x".getBytes(), null, "u-1");
+        when(attachmentRepository.findById(foreignAttachment.getId())).thenReturn(Optional.of(foreignAttachment));
+
+        assertThatThrownBy(() -> service.downloadAttachment(project.getId(), report.getId(), foreignAttachment.getId()))
+                .isInstanceOf(com.bemo.hr.shared.domain.NotFoundException.class);
+    }
+
+    @Test
+    void deleteAttachment_removesRowAndRecordsAudit() {
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        ProjectDailyReport report = newReport();
+        when(dailyReportRepository.findById(report.getId())).thenReturn(Optional.of(report));
+
+        DailyReportAttachment attachment = new DailyReportAttachment(
+                report.getId(), "f.pdf", "application/pdf", "x".getBytes(), null, "u-1");
+        when(attachmentRepository.findById(attachment.getId())).thenReturn(Optional.of(attachment));
+
+        service.deleteAttachment(project.getId(), report.getId(), attachment.getId(), "u-1");
+
+        verify(attachmentRepository).delete(attachment);
+        verify(auditService).record(eq("PROJECT_DPR_ATTACHMENT_DELETE"), any(), any(), any(), any(), any());
     }
 }

@@ -681,6 +681,8 @@ databaseChangeLog:
       file: db/changelog/data/update/20260907_v463_fiscal_period_status_translations.yaml
   - include:
       file: db/changelog/data/update/20260907_v463_ar_aging_methodology_hint_translation.yaml
+  - include:
+      file: db/changelog/schema/create/20260908_v465_daily_report_attachments.yaml
 
 
 

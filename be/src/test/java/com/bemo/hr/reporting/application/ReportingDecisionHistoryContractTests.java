@@ -187,10 +187,17 @@ class ReportingDecisionHistoryContractTests {
         reportingService.decideDaily(reportId, row.id(),
                 new ReportingApi.DecisionRequest(AttendanceDecision.ABSENCE, 0, null, row.version()), "reviewerB");
 
+        // Asserts on getCode(), not getMessage(): ReportingService correctly throws with code
+        // RPT_VERSION_CONFLICT (which does have a real ar-EG translation containing "مراجع آخر" —
+        // see translations.csv), but that localization only happens later, in ApiExceptionHandler,
+        // by looking up the code against the caller's locale over real HTTP. Calling the service
+        // directly (as this test does, with no MockMvc/HTTP in the picture) can never observe a
+        // localized getMessage() — asserting on the raw message for Arabic text was never correct.
         assertThatThrownBy(() -> reportingService.decideDaily(reportId, row.id(),
                 new ReportingApi.DecisionRequest(AttendanceDecision.NORMAL_DAY, 480, null, row.version()), "reviewerA"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("مراجع آخر");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode())
+                        .isEqualTo("RPT_VERSION_CONFLICT"));
 
         var reloaded = reportingService.get(reportId).dailyResults().stream()
                 .filter(item -> item.id().equals(row.id())).findFirst().orElseThrow();

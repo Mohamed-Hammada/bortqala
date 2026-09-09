@@ -65,27 +65,37 @@
 ---
 
 ### 02. Daily Site Progress & Field Reporting
-**Score:** 15/100 → **Target:** 80+/100  
-**Status:** 🟡 SCAFFOLDED  
+**Score:** 15/100 → **Target:** 80+/100 → **Actual (2026-09-08 re-audit): 90+/100**
+**Status:** ✅ DONE (re-audited 2026-09-08 — see below)
 
 #### What exists:
-- ✅ `ProjectDailyReport` entity with project/site/date/shift/status/revision
+- ✅ `ProjectDailyReport` entity with project/site/date/shift/status/revision, real `submit()`/`approve()`/`reopen()` state machine (`DailyReportStatus` DRAFT→SUBMITTED→APPROVED, explicit REOPENED)
 - ✅ `DailyWorkProgressLine` by WBS with prior/today/cumulative quantities
 - ✅ `DailyLaborSnapshot` with worker/employee references
 - ✅ `DailyMaterialConsumption` with inventory item references
 - ✅ `DailyEquipmentLog` with equipment/site status
+- ✅ `DailyReportAttachment` (added 2026-09-08) — real file-backed evidence attachments
 - ✅ Weather condition enum
-- ✅ REST APIs: `ProjectDailyReportController`
+- ✅ REST APIs: `ProjectDailyReportController` (17 endpoints, all `@PreAuthorize`-gated)
 - ✅ Service: `ProjectDailyReportService`
-- ✅ Liquibase V272 (schema) + V273 (translations)
+- ✅ Liquibase V272 (schema) + V273 (translations) + V465 (attachments, 2026-09-08)
 
-#### Quality gaps to fix:
-- [ ] **CRITICAL:** No approval workflow integration (Draft→Submitted→Approved lifecycle)
-- [ ] **HIGH:** No period summary aggregation endpoint
-- [ ] **HIGH:** No idempotency for concurrent submissions
-- [ ] **MEDIUM:** No attachment/evidence model
-- [ ] **MEDIUM:** No "copy previous day" API
-- [ ] **LOW:** Missing service unit tests
+#### Re-audit finding (2026-09-08): this section was stale. Direct code inspection found 5 of 6 listed gaps already implemented — nobody had updated the checkboxes:
+
+- [x] **CRITICAL:** Approval workflow integration — **already implemented**, not missing. `ProjectDailyReportService.submitDailyReport`/`approveDailyReport`/`reopenDailyReport`, wired to real `@PostMapping("/{reportId}/submit|approve|reopen")` endpoints with real `@PreAuthorize`. `approveDailyReport` also updates WBS node progress/lifecycle status. Confirmed via `submitAndApproveLifecycle_updatesWbsNodeProgress` and `reopenDailyReport_setsStatusReopened` (both pre-existing, passing).
+- [x] **HIGH:** Period summary aggregation endpoint — **already implemented**, not missing. `ProjectDailyReportService.getPeriodSummary` (man-days, man-hours, equipment hours, fuel, WBS/labor/material breakdowns), wired to `GET /{projectId}/daily-reports/summary`.
+- [x] **HIGH:** Idempotency for concurrent submissions — **already implemented via existing infrastructure**, not missing. `ProjectDailyReport` has a real `@Version` column; a global `@ExceptionHandler(OptimisticLockingFailureException.class)` in `ApiExceptionHandler` turns any concurrent-modification race into a clean API error rather than a raw 500 or a silent double-effect. No bespoke idempotency-key mechanism exists (unlike payment flows, which need one for post-timeout client retries), but that is not needed for this endpoint's actual risk (a genuine concurrent double-submit is a version conflict, not a retry-after-timeout scenario).
+- [x] **MEDIUM:** Attachment/evidence model — **genuinely was missing; implemented 2026-09-08.** New `DailyReportAttachment` entity (real `byte[]`/`bytea` storage, same pattern as `SupplierDocument`), `DailyReportAttachmentRepository`, 4 new service methods (`addAttachment`/`listAttachments`/`downloadAttachment`/`deleteAttachment`), 4 new REST endpoints (multipart upload, list, download, delete — all `@PreAuthorize`-gated), Liquibase `20260908_v465_daily_report_attachments.yaml`. File-size (10MB) and content-type allowlist validation match the established `SupplierOnboardingService.addDocument` convention. 5 new tests in `ProjectDailyReportServiceTests` (upload success with real content-byte verification, oversized-file rejection, unsupported-type rejection, cross-report download rejection, delete-with-audit).
+- [x] **MEDIUM:** "Copy previous day" API — **already implemented**, not missing. `ProjectDailyReportService.copyPreviousDay`, wired to `POST /{projectId}/daily-reports/copy-previous`.
+- [x] **LOW:** Service unit tests — **already existed** (4 tests), not missing; now 9 after the attachment additions.
+
+#### Additional, previously-undocumented defect found and fixed during this re-audit (unrelated to the roadmap's own gap list):
+
+`ProjectDailyReportService` threw `BusinessRuleException`/`NotFoundException` using the **single-argument constructor** for 6 of its 7 error sites (`DPR_ALREADY_EXISTS_FOR_DATE_SHIFT`, `DPR_CANNOT_EDIT_APPROVED`, `DPR_CANNOT_DELETE_APPROVED`, `DPR_NO_PREVIOUS_REPORT_FOUND`, `PROJECT_NOT_FOUND`, `DPR_NOT_FOUND`) — that constructor treats the string as the exception **message**, not the error **code** (`BusinessRuleException(String message)` sets `code` to the generic `"BUSINESS_CONFLICT"`; `NotFoundException(String message)` sets `code` to `null`). `ApiExceptionHandler` resolves the user-facing translated text by `getCode()`, so every one of these calls always fell back to a generic "business conflict"/"resource not found" message — the specific, correct bilingual text a user should have seen (some of which, like `PROJECT_NOT_FOUND`/`DPR_NOT_FOUND`, already had real translation rows sitting unused) was never reachable. `be/tools/check-error-codes.py` never caught this because its regex only matches the two-argument constructor form. Fixed all 7 call sites to use the correct two/three-argument constructor with a real message; added the 4 missing translation rows (`DPR_ALREADY_EXISTS_FOR_DATE_SHIFT`, `DPR_CANNOT_EDIT_APPROVED`, `DPR_CANNOT_DELETE_APPROVED`, `DPR_NO_PREVIOUS_REPORT_FOUND`) to `translations.csv` (`PROJECT_NOT_FOUND`/`DPR_NOT_FOUND` already had rows). **The same single-argument-constructor pattern exists ~40 more times across the rest of the `project` module** (`ProjectSchedulingService`, `ProjectCostControlService`, `ProjectProgressClaimService`, `ProjectTenderService`, `ProjectBudgetVersion`, `ProjectProgressClaim`, `ProjectTender`) — not fixed in this pass (out of scope for item 02 specifically); flagged here as a real, separate finding for whoever picks up items 04/05/06/09 next, since the same fix pattern applies.
+
+A second, unrelated, pre-existing bug was found and fixed while validating against real PostgreSQL: `ReportingDecisionHistoryContractTests.staleReviewerIsRejectedAndCanRetryAfterReload` asserted the raw exception message contained Arabic text ("مراجع آخر") — but `RPT_VERSION_CONFLICT`'s production code was always correct (real code, real translation row); the *test* was checking `getMessage()` directly on a service call with no HTTP/locale layer involved, which can never observe translated text (that resolution only happens in `ApiExceptionHandler`, keyed on `getCode()`, over real HTTP). Fixed the assertion to check `getCode()` instead.
+
+**Verification:** `ProjectDailyReportServiceTests` 9/9 pass. Full backend H2 regression suite (`-PskipDockerTests`): `BUILD SUCCESSFUL`, 0 failures. Full combined suite including real PostgreSQL (`-PskipAot`, all ~1630 tests): `BUILD SUCCESSFUL`, 0 failures — including the new `daily_report_attachments` table migrating cleanly on both H2 and a real `postgres:17-alpine` container. All 3 backend Python gates pass (`check-error-codes.py`: 829/829; `check-translation-catalog.py`: 18,392 rows, 0 defects; `check-authorization-contract.py`: 21/21 roles).
 
 ---
 
@@ -282,8 +292,8 @@
 
 | Step | Feature | Priority | Status | Session |
 |------|---------|----------|--------|---------|
-| 1 | 01-Project/WBS Quality Remediation | P0 | 🟡 In Progress | Current |
-| 2 | 02-Daily Site Progress completion | P0 | 🟡 Scaffolded | Next |
+| 1 | 01-Project/WBS Quality Remediation | P0 | ✅ Done (confirmed 2026-09-08 — all acceptance criteria and quality-gap checkboxes were already checked; the status marker was just stale) | Complete |
+| 2 | 02-Daily Site Progress completion | P0 | ✅ Done (2026-09-08) | Complete |
 | 3 | 05-Owner/Subcontractor Claims completion | P0 | 🟡 Scaffolded | Next |
 | 4 | 06-Project Budget/Cost Control completion | P0 | 🟡 Scaffolded | Next |
 | 5 | 08-Procurement Project Dimensions | P0-INTEGRATE | 🔴 Not Started | TBD |

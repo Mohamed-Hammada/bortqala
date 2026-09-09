@@ -18376,3 +18376,19 @@ t-009242-ar;executive.fiscalPeriodContainsClosed;ar-EG;جزء من هذه الف
 t-009242-en;executive.fiscalPeriodContainsClosed;en-US;Part of this period is already closed in Finance. Check Fiscal Periods to confirm these figures are final.
 t-009243-ar;executive.arAgingMethodologyHint;ar-EG;تصنيف حسب تاريخ استحقاق الفاتورة الفعلي (يشمل "حالي" ما لم يتجاوز استحقاقه 30 يومًا). لتصنيف مبني على شروط السداد الخاصة بكل عميل، راجع شاشة المركز المالي للأطراف.
 t-009243-en;executive.arAgingMethodologyHint;en-US;Buckets by each invoice's actual due date ("current" includes anything up to 30 days past due). For payment-terms-aware, per-customer aging, see Party Financial Position.
+t-009244-ar;DPR_ALREADY_EXISTS_FOR_DATE_SHIFT;ar-EG;يوجد تقرير يومي بالفعل لهذا المشروع والتاريخ والوردية.
+t-009244-en;DPR_ALREADY_EXISTS_FOR_DATE_SHIFT;en-US;A daily report already exists for this project, date, and shift.
+t-009245-ar;DPR_CANNOT_EDIT_APPROVED;ar-EG;لا يمكن تعديل تقرير يومي معتمد. أعد فتحه أولاً.
+t-009245-en;DPR_CANNOT_EDIT_APPROVED;en-US;An approved daily report cannot be edited. Reopen it first.
+t-009246-ar;DPR_CANNOT_DELETE_APPROVED;ar-EG;لا يمكن حذف تقرير يومي معتمد. أعد فتحه أولاً.
+t-009246-en;DPR_CANNOT_DELETE_APPROVED;en-US;An approved daily report cannot be deleted. Reopen it first.
+t-009248-ar;DPR_ATTACHMENT_FILE_REQUIRED;ar-EG;يجب إرفاق ملف.
+t-009248-en;DPR_ATTACHMENT_FILE_REQUIRED;en-US;An attachment file is required.
+t-009249-ar;DPR_ATTACHMENT_FILE_TOO_LARGE;ar-EG;لا يمكن أن يتجاوز حجم مرفق التقرير اليومي 10 ميجابايت.
+t-009249-en;DPR_ATTACHMENT_FILE_TOO_LARGE;en-US;Daily report attachments cannot exceed 10 MB.
+t-009250-ar;DPR_ATTACHMENT_FILE_TYPE_INVALID;ar-EG;نوع ملف المرفق غير مدعوم.
+t-009250-en;DPR_ATTACHMENT_FILE_TYPE_INVALID;en-US;Unsupported daily report attachment type.
+t-009251-ar;DPR_ATTACHMENT_FILE_READ_FAILED;ar-EG;تعذرت قراءة المرفق.
+t-009251-en;DPR_ATTACHMENT_FILE_READ_FAILED;en-US;The attachment could not be read.
+t-009252-ar;DPR_ATTACHMENT_NOT_FOUND;ar-EG;المرفق غير موجود.
+t-009252-en;DPR_ATTACHMENT_NOT_FOUND;en-US;Attachment not found.

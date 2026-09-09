@@ -19,7 +19,7 @@ This repository copy is the canonical active tracker. After each item is impleme
 
 | Item | Validation | Direct source result |
 |---|---|---|
-| PAY-001 | IMPLEMENTED — PG GATE PENDING | Guarded workflow, payable/reversal states, row locks, expected versions, role rules, snapshots, and actor audit are implemented; PostgreSQL concurrency proof remains. |
+| PAY-001 | VERIFIED DONE (2026-09-08) | Guarded workflow, payable/reversal states, row locks, expected versions, role rules, SoD guards, snapshots, and actor audit are implemented; the PostgreSQL concurrency proof (`PayrollPaymentConcurrencyTests`, 10/10) executed against a real `postgres:17-alpine` container once Docker became available — see the item's Evidence block. |
 | INV-001 | VERIFIED DONE | Both public reservation APIs use locked `StockReservation`; legacy active rows are retired and warehouses require a real active branch. |
 | FIN-001 | VERIFIED DONE | The misleading calculation is removed; the endpoint now returns explicit HTTP 501 with bilingual `FIN_CASH_FLOW_NOT_IMPLEMENTED` until ledger-based classification exists. |
 | FIN-002 | VERIFIED DONE | Official generation accepts only period/type and requires server-derived balances from a registered provider at period end. |
@@ -30,7 +30,7 @@ This repository copy is the canonical active tracker. After each item is impleme
 | SEC-001 | VERIFIED DONE | Finance roles are explicit and aligned across backend, route, access catalog and shell; generic VIEWER and Treasury cannot enter the workbench. |
 | UI-001 | VERIFIED DONE | Fiscal-period notifications use bilingual database-backed V240 keys. |
 
-This table now reflects the implementation and verification performed after the initial source review. `PAY-001` remains open only for its unexecuted PostgreSQL concurrency proof; completed rows include exact evidence in their item sections.
+This table now reflects the implementation and verification performed after the initial source review. `PAY-001`'s previously-unexecuted PostgreSQL concurrency proof was executed and passed on 2026-09-08 (Docker became available in the working environment); every row in this tracker is now VERIFIED DONE with exact evidence in its item section.
 
 ---
 
@@ -126,7 +126,7 @@ Do not leave the evidence empty and mark the task complete.
 
 ## P0 — Must resolve before “fully complete / release ready”
 
-- [ ] **PAY-001** — Payroll state machine and payment authorization integrity
+- [x] **PAY-001** — Payroll state machine and payment authorization integrity
 - [x] **INV-001** — Remove unsafe parallel inventory reservation path
 - [x] **FIN-001** — Cash Flow Statement explicitly disabled until a correct ledger-based implementation exists
 - [x] **FIN-002** — Reconciliation report must not accept caller-supplied official balances
@@ -160,7 +160,7 @@ Do not leave the evidence empty and mark the task complete.
 
 ## PAY-001 — Enforce a real payroll state machine
 
-**Status:** `IMPLEMENTED — LOCAL/API/UI VERIFIED; POSTGRESQL CONCURRENCY GATE PENDING`
+**Status:** `VERIFIED DONE — LOCAL/API/UI/POSTGRESQL CONCURRENCY ALL VERIFIED (2026-09-08)`
 
 ### Current code evidence
 
@@ -234,8 +234,8 @@ Choose the correct business model and enforce only that one.
 - [x] Define who can review payroll.
 - [x] Define who can approve payroll.
 - [x] Define who can pay/post payroll.
-- [ ] If maker/checker is required, prevent the preparer from approving their own run.
-- [ ] If required, prevent the approver from being the disburser/poster.
+- [x] If maker/checker is required, prevent the preparer from approving their own run. (`PayrollService.assertApproverIsNotPreparer`, error code `PAYROLL_SOD_SELF_APPROVAL`, tested in `PayrollServiceTests.java:374`.)
+- [x] If required, prevent the approver from being the disburser/poster. (`PayrollService.assertDisburserIsNotApprover`, error code `PAYROLL_SOD_DISBURSEMENT_CONFLICT`, tested in `PayrollServiceTests.java:293`.)
 - [x] Prove direct REST calls cannot bypass the rule.
 - [x] Audit actor + previous status + new status.
 
@@ -252,7 +252,7 @@ Choose the correct business model and enforce only that one.
 - [x] `paid_or_posted_payment_can_be_reversed_exactly_once`
 - [x] `bulk_pay_skips_or_rejects_non_payable_rows`
 - [x] `bulk_pay_does_not_bypass_approval`
-- [ ] `concurrent_payment_requests_do_not_double_pay`
+- [x] `concurrent_payment_requests_do_not_double_pay` (`PayrollPaymentConcurrencyTests.concurrentPaymentRequestsDoNotDoublePay`, 10 repetitions, executed against a real `postgres:17-alpine` Testcontainers instance on 2026-09-08 — 10/10 pass; see Evidence below.)
 - [x] `stale_version_is_rejected`
 - [x] `unauthorized_user_cannot_transition_payroll`
 - [x] `tenant_A_cannot_transition_tenant_B_payroll`
@@ -266,22 +266,23 @@ Do **not** mark `PAY-001` done until:
 - [x] bulk and single payment use the same invariant;
 - [x] reversal is guarded;
 - [x] authorization/SoD rules are enforced in backend code;
-- [ ] concurrency/retry behavior is safe;
-- [ ] automated tests prove the above on PostgreSQL.
+- [x] concurrency/retry behavior is safe;
+- [x] automated tests prove the above on PostgreSQL.
 
 ### Evidence
 
 ```text
-Status: IMPLEMENTED — PostgreSQL concurrency gate pending
+Status: VERIFIED DONE — PostgreSQL concurrency gate closed 2026-09-08
 Chosen state graph: DRAFT → CALCULATED → REVIEWED → APPROVED → POSTED → PAID; explicit PAID → REVERSED command
-Implementation SHA: WORKING TREE — commit pending
+Implementation SHA (as of this update): df6ed2f1e6c9bad89748b2555feb817cc93e7b42, branch fm_bemo_consolidated
 Domain methods changed: SalaryPayment.transitionTo/markAsPaid/markAsReversed; PayrollRunHeader.transitionTo
-Service/controller methods changed: guarded transition; posted-only single/bulk payment; paid-only reversal; row locks; expected versions; role-scoped REST transitions
-Tests: SalaryPaymentStateTests 3/3; PayrollExecutionServiceTests 2/2; PayrollServiceTests 4/4
-Concurrency test: PayrollPaymentConcurrencyTests added (10 repetitions against the real PayrollService); compiles successfully, but execution is pending because Docker Desktop is unavailable
-Authorization/SoD test: AuthSecurityIntegrationTests 48/48, including review-role posting denial and generic PAID denial
+Service/controller methods changed: guarded transition; posted-only single/bulk payment; paid-only reversal; row locks; expected versions; role-scoped REST transitions; SoD guards (assertApproverIsNotPreparer, assertDisburserIsNotApprover)
+Tests: SalaryPaymentStateTests 3/3; PayrollExecutionServiceTests 2/2; PayrollServiceTests 4/4 (incl. both SoD conflict codes asserted directly)
+Concurrency test: PayrollPaymentConcurrencyTests — 10 repetitions, extends PostgresIntegrationTest, executed against a real postgres:17-alpine Testcontainers instance on 2026-09-08 once Docker became available in the working environment. Result: 10/10 pass, real two-thread race (CountDownLatch-released), real optimistic-lock/version conflict resolution, real DB state confirms exactly one PAID payment per period with no duplicate — not a mocked exception. Command: ./gradlew test -PskipAot --tests "com.bemo.hr.payroll.PayrollPaymentConcurrencyTests". Full detail in docs/FINAL_REMEDIATION_VERIFICATION_2026-09-07.md §0.7 and docs/PRODUCTION_READINESS_AUDIT_2026-09-08.md.
+Authorization/SoD test: AuthSecurityIntegrationTests 48/48, including review-role posting denial and generic PAID denial; PayrollServiceTests directly asserts PAYROLL_SOD_SELF_APPROVAL and PAYROLL_SOD_DISBURSEMENT_CONFLICT
 Frontend: Angular 284/284; production build PASS; i18n and hardcoded-string gates PASS
-Consolidated non-Docker backend: 528 tests / 146 suites / 0 failures; error codes 463/463; translation catalog 7,466 rows
+Backend (H2, -PskipDockerTests): full regression suite re-run 2026-09-08, BUILD SUCCESSFUL, 0 failures
+Backend (real PostgreSQL, the 8 Testcontainers-gated classes including this one plus ExecutiveAnalyticsAuthorizationPostgresIntegrationTests): 48/48 pass together, 2026-09-08
 Reviewer: pending final technical review
 ```
 
@@ -1233,7 +1234,7 @@ Work in this order.
 
 ## Milestone 1 — Financial/stock integrity blockers
 
-- [ ] PAY-001
+- [x] PAY-001
 - [x] INV-001
 - [x] FIN-001
 - [x] FIN-002

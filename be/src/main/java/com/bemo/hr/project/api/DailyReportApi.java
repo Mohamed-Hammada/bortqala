@@ -86,6 +86,21 @@ public final class DailyReportApi {
             String reason
     ) {}
 
+    public record AttachmentRequest(
+            String description
+    ) {}
+
+    public record AttachmentResponse(
+            String id,
+            String dailyReportId,
+            String fileName,
+            String contentType,
+            long fileSize,
+            String description,
+            String uploadedBy,
+            Long uploadedAt
+    ) {}
+
     public record DailyReportResponse(
             String id,
             String projectId,

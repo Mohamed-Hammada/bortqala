@@ -3,10 +3,15 @@ package com.bemo.hr.project.api;
 import com.bemo.hr.project.api.DailyReportApi.*;
 import com.bemo.hr.project.application.ProjectDailyReportService;
 import jakarta.validation.Valid;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -117,5 +122,52 @@ public class ProjectDailyReportController {
             @RequestParam Long startDate,
             @RequestParam Long endDate) {
         return dailyReportService.getPeriodSummary(projectId, startDate, endDate);
+    }
+
+    @GetMapping("/{reportId}/attachments")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
+    public List<AttachmentResponse> listAttachments(
+            @PathVariable String projectId,
+            @PathVariable String reportId) {
+        return dailyReportService.listAttachments(projectId, reportId);
+    }
+
+    @PostMapping(value = "/{reportId}/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
+    public AttachmentResponse addAttachment(
+            @PathVariable String projectId,
+            @PathVariable String reportId,
+            @RequestPart(value = "metadata", required = false) AttachmentRequest metadata,
+            @RequestPart("file") MultipartFile file,
+            Authentication auth) {
+        String userId = auth != null ? auth.getName() : null;
+        return dailyReportService.addAttachment(projectId, reportId, metadata, file, userId);
+    }
+
+    @GetMapping("/{reportId}/attachments/{attachmentId}/download")
+    @PreAuthorize("@auth.hasAnyPermission('projects.read', 'projects.manage')")
+    public ResponseEntity<byte[]> downloadAttachment(
+            @PathVariable String projectId,
+            @PathVariable String reportId,
+            @PathVariable String attachmentId) {
+        var attachment = dailyReportService.downloadAttachment(projectId, reportId, attachmentId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(attachment.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(attachment.getFileName(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .body(attachment.contentCopy());
+    }
+
+    @DeleteMapping("/{reportId}/attachments/{attachmentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@auth.hasPermission('projects.manage')")
+    public void deleteAttachment(
+            @PathVariable String projectId,
+            @PathVariable String reportId,
+            @PathVariable String attachmentId,
+            Authentication auth) {
+        String userId = auth != null ? auth.getName() : null;
+        dailyReportService.deleteAttachment(projectId, reportId, attachmentId, userId);
     }
 }
